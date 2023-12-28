@@ -654,10 +654,13 @@ namespace NFTMarketServer.NFT
             result.CollectionName = collectionExtension.TokenName;
             result.OfDtoInfo(nftInfoIndex, lastDealInfo);
 
+            const int maxResultCount = 20;
             var getNftListingsDto = new GetNFTListingsDto
             {
                 ChainId = nftInfoIndex.ChainId,
                 Symbol = nftInfoIndex.Symbol,
+                SkipCount = 0,
+                MaxResultCount = maxResultCount
             };
             
             var currentUser = await _userAppService.GetCurrentUserAsync();
@@ -665,13 +668,20 @@ namespace NFTMarketServer.NFT
             {
                 getNftListingsDto.ExcludedAddress = currentUser.Address;
             }
-            var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
-
+            
             long availableQuantity = 0;
-            listingDto.Items.ToList().ForEach(listing =>
+            long remain = 0;
+            do
             {
-                availableQuantity += listing.Quantity;
-            });
+                var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
+                listingDto.Items.ToList().ForEach(listing =>
+                {
+                    availableQuantity += listing.Quantity;
+                });
+                
+                getNftListingsDto.SkipCount += maxResultCount;
+                remain = listingDto.TotalCount - getNftListingsDto.SkipCount;
+            } while (remain > 0);
             
             result.AvailableQuantity = availableQuantity;
             

@@ -256,7 +256,9 @@ namespace NFTMarketServer.Users
                 return null;
             }
             var userIndex = await _userInformationProvider.GetByIdAsync(userId.Value);
-            return ObjectMapper.Map<UserIndex, UserDto>(userIndex);
+            var user = ObjectMapper.Map<UserIndex, UserDto>(userIndex);
+            user.Address = userIndex.AelfAddress;
+            return user;
         }
     }
 }
