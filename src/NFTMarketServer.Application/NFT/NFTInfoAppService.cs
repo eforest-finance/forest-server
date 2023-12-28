@@ -653,6 +653,37 @@ namespace NFTMarketServer.NFT
             var result = _objectMapper.Map<NFTCollectionExtensionIndex, NFTForSaleDto>(collectionExtension);
             result.CollectionName = collectionExtension.TokenName;
             result.OfDtoInfo(nftInfoIndex, lastDealInfo);
+
+            var getNftListingsDto = new GetNFTListingsDto
+            {
+                ChainId = nftInfoIndex.ChainId,
+                Symbol = nftInfoIndex.Symbol,
+            };
+            
+            var currentUser = await _userAppService.GetCurrentUserAsync();
+            if (currentUser != null)
+            {
+                getNftListingsDto.ExcludedAddress = currentUser.Address;
+            }
+            var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
+
+            long availableQuantity = 0;
+            listingDto.Items.ToList().ForEach(listing =>
+            {
+                availableQuantity += listing.Quantity;
+            });
+            
+            result.AvailableQuantity = availableQuantity;
+            
+            var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(input.Id);
+            if (indexerNFTOffer == null || indexerNFTOffer.Id.IsNullOrEmpty())
+            {
+                return result;
+            }
+            
+            result.MaxOfferPrice = indexerNFTOffer.Price;
+            result.MaxOfferPriceSymbol = indexerNFTOffer.PurchaseToken.Symbol;
+            
             return result;
         }
 

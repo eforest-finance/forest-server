@@ -250,12 +250,12 @@ namespace NFTMarketServer.Users
 
         public async Task<UserDto> GetCurrentUserAsync()
         {
-            var userId = CurrentUser.GetId();
-            if (userId == Guid.Empty)
+            var userId = CurrentUser.Id;
+            if (userId == null || userId == Guid.Empty)
             {
                 return null;
             }
-            var userIndex = await _userInformationProvider.GetByIdAsync(userId);
+            var userIndex = await _userInformationProvider.GetByIdAsync(userId.Value);
             return ObjectMapper.Map<UserIndex, UserDto>(userIndex);
         }
     }
