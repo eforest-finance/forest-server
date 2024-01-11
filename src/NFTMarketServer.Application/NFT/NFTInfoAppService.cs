@@ -663,10 +663,9 @@ namespace NFTMarketServer.NFT
                 MaxResultCount = maxResultCount
             };
             
-            var currentUser = await _userAppService.GetCurrentUserAsync();
-            if (currentUser != null)
+            if (!input.ExcludedAddress.IsNullOrEmpty())
             {
-                getNftListingsDto.ExcludedAddress = currentUser.Address;
+                getNftListingsDto.ExcludedAddress = input.ExcludedAddress;
             }
             
             long availableQuantity = 0;

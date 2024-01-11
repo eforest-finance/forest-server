@@ -247,18 +247,5 @@ namespace NFTMarketServer.Users
             var resp = await _userExtraIndexRepository.CountAsync(Filter);
             return resp.Count;
         }
-
-        public async Task<UserDto> GetCurrentUserAsync()
-        {
-            var userId = CurrentUser.Id;
-            if (userId == null || userId == Guid.Empty)
-            {
-                return null;
-            }
-            var userIndex = await _userInformationProvider.GetByIdAsync(userId.Value);
-            var user = ObjectMapper.Map<UserIndex, UserDto>(userIndex);
-            user.Address = userIndex.AelfAddress;
-            return user;
-        }
     }
 }
