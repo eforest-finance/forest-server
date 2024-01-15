@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Volo.Abp.BackgroundWorkers.Quartz" Version="7.0.0" />
+    </ItemGroup>
+
+</Project>

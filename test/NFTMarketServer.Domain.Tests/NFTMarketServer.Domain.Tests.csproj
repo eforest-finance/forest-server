@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>CAServer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NFTMarketServer.TestBase\NFTMarketServer.TestBase.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="Volo.Abp.Core" Version="7.0.0" />
+    <PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
+  </ItemGroup>
+
+</Project>

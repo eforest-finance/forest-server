@@ -1,0 +1,147 @@
+/**
+ * Forest Contract.
+ */
+syntax = "proto3";
+
+package Inscription;
+
+import "aelf/core.proto";
+import "aelf/options.proto";
+import "acs12.proto";
+import "acs2.proto";
+import "authority_info.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "token_contract.proto";
+
+option csharp_namespace = "Forest.Inscription";
+
+service InscriptionContract {
+  option (aelf.csharp_state) = "Forest.Inscription.InscriptionContractState";
+  option (aelf.base) = "acs12.proto";
+  option (aelf.base) = "acs2.proto";
+
+  rpc Initialize (InitializeInput) returns (google.protobuf.Empty) {}
+
+  // deploy inscription
+  rpc DeployInscription (DeployInscriptionInput) returns (google.protobuf.Empty) {}
+
+  // Side chain - issue inscription
+  rpc IssueInscription (IssueInscriptionInput) returns (google.protobuf.Empty) {}
+
+  // Side chain - Inscribe (transfer inscription to user)
+  rpc Inscribe (InscribedInput) returns (google.protobuf.Empty) {}
+
+  // get inscribed limit
+  rpc GetInscribedLimit(google.protobuf.StringValue) returns (google.protobuf.Int64Value){
+    option (aelf.is_view) = true;
+  }
+  // get distributor address list
+  rpc GetDistributorList(google.protobuf.StringValue) returns (AddressList){
+    option (aelf.is_view) = true;
+  }
+
+}
+
+message InitializeInput{
+
+}
+
+message DeployInscriptionInput{
+  string seed_symbol = 1;
+  string tick = 2;
+  int32 issue_chain_id = 3;
+  int64 max = 4;
+  int64 limit = 5;
+  string image = 6;
+}
+
+message IssueInscriptionInput{
+  string tick = 1;
+}
+
+message InscribedInput{
+  string tick = 1;
+  int64 amt = 2;
+}
+
+message HashList {
+  repeated aelf.Hash values = 1;
+}
+
+message AddressList {
+  repeated aelf.Address values = 1;
+}
+
+enum SymbolType {
+  UNSPECIFIED = 0;
+  NFT_COLLECTION = 1;
+  NFT = 2;
+}
+
+// Event
+message InscriptionCreated{
+  option (aelf.is_event) = true;
+  // The symbol of the inscription collection.
+  string collection_symbol = 1;
+  // The symbol of the inscription item.
+  string item_symbol = 2;
+  // The tick of the inscription.
+  string tick = 3;
+  // The total supply of the inscription.
+  int64 total_supply = 4;
+  // The precision of the inscription.
+  int32 decimals = 5;
+  // The address that has permission to issue the inscription.
+  aelf.Address issuer = 6;
+  // A flag indicating if this inscription is burnable.
+  bool is_burnable = 7;
+  // The chain id of the inscription.
+  int32 issue_chain_id = 8;
+  // The external information of the inscription collection.
+  ExternalInfos collection_external_info = 9;
+  // The external information of the inscription item.
+  ExternalInfos item_external_info = 10;
+  // The address that owns the inscription.
+  aelf.Address owner = 11;
+  int64 limit = 12;
+  aelf.Address deployer = 13;
+}
+
+message ExternalInfos {
+  map<string, string> value = 1;
+}
+
+message InscriptionIssued{
+  option (aelf.is_event) = true;
+  // The symbol of issued inscription.
+  string symbol = 1;
+  // The tick of issued inscription.
+  string tick = 2;
+  // The amount of issued inscription.
+  int64 amt = 3;
+  // The issued target address.
+  aelf.Address to = 4;
+  // p:"aelf",op:"deploy","tick:"ELFS","max":"210000","lim":"100"
+  string inscription_info = 5;
+}
+
+message InscriptionTransferred {
+  option (aelf.is_event) = true;
+  // The source address of the transferred inscription.
+  aelf.Address from = 1 [(aelf.is_indexed) = true];
+  // The destination address of the transferred inscription.
+  aelf.Address to = 2 [(aelf.is_indexed) = true];
+  // The symbol of the transferred inscription.
+  string symbol = 3 [(aelf.is_indexed) = true];
+  // The tick of the transferred inscription.
+  string tick = 4 [(aelf.is_indexed) = true];
+  // The amount of the transferred inscription.
+  int64 amt = 5;
+  // p:"aelf",op:"mint",tick:"ELFS",amt:amt
+  string inscription_info = 6;
+}
+  
+
+
+

@@ -1,0 +1,131 @@
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using GraphQL;
+using NFTMarketServer.Common;
+using NFTMarketServer.NFT.Index;
+using Volo.Abp.DependencyInjection;
+
+namespace NFTMarketServer.NFT.Provider;
+
+public interface INFTOfferProvider
+{
+    public Task<IndexerNFTOffers> GetNFTOfferIndexesAsync(int skipCount, int maxResultCount,
+        string chainId, string nftInfoId);
+    
+    public Task<IndexerNFTOffer> GetMaxOfferInfoAsync(string nftInfoId);
+    Task<List<ExpiredNftMaxOfferDto>> GetNftMaxOfferAsync(string chainId, long expiredSecond);
+}
+
+public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
+{
+    private readonly IGraphQLHelper _graphQlHelper;
+
+    public NFTOfferProvider(IGraphQLHelper graphQlHelper)
+    {
+        _graphQlHelper = graphQlHelper;
+    }
+
+    public async Task<IndexerNFTOffers> GetNFTOfferIndexesAsync(int inputSkipCount,
+        int inputMaxResultCount,
+        string inputChainId,
+        string inputNFTInfoId)
+    {
+        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTOffers>(new GraphQLRequest
+        {
+            Query = @"
+			    query($skipCount:Int!,$maxResultCount:Int!,$chainId:String!,$nftInfoId:String,$expireTimeGt:Long) {
+                    data:nftOffers(dto:{skipCount:$skipCount,maxResultCount:$maxResultCount,chainId:$chainId,nFTInfoId:$nftInfoId,expireTimeGt:$expireTimeGt}){
+                        totalRecordCount,
+                        indexerNFTOfferList:data{
+                          id,
+                          chainId,
+                          from,
+                          to,
+                          price,
+                          quantity,
+                          realQuantity,
+                          expireTime,
+                          purchaseToken{
+                            id,chainId,symbol,decimals,address:issuer
+                          }
+                       }
+                    }
+                }",
+            Variables = new
+            {
+                skipCount = inputSkipCount,
+                maxResultCount = inputMaxResultCount,
+                chainId = inputChainId,
+                nftInfoId = inputNFTInfoId,
+                expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
+            }
+        });
+        return indexerCommonResult?.Data;
+    }
+
+    public async Task<IndexerNFTOffer> GetMaxOfferInfoAsync(string nftInfoId)
+    {
+        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTOffer>(new GraphQLRequest
+        {
+            Query = @"
+			    query($nftInfoId:String!) {
+                    data:getMaxOfferInfo(dto:{nftInfoId:$nftInfoId}){
+                          id,
+                          chainId,
+                          from,
+                          to,
+                          price,
+                          quantity,
+                          expireTime,
+                          purchaseToken{
+                            id,chainId,symbol,decimals,address:issuer
+                          },
+                          bizInfoId,
+                          bizSymbol,
+                          realQuantity   
+                    }
+                }",
+            Variables = new
+            {
+                nftInfoId
+            }
+        });
+        return indexerCommonResult?.Data;
+    }
+    
+    public async Task<List<ExpiredNftMaxOfferDto>> GetNftMaxOfferAsync(string chainId, long expiredSecond)
+    {
+        var graphQlResponse = await _graphQlHelper.QueryAsync<ExpiredNftMaxOfferResultDto>(new GraphQLRequest
+        {
+            Query = @"
+			    query($chainId:String!, $expireTimeGt:Long!) {
+                    getExpiredNftMaxOffer(input:
+                    {
+                      chainId:$chainId,
+                      expireTimeGt:$expireTimeGt
+                    }){
+                      key,
+                      value {
+                        id,
+                        expireTime,
+                        prices
+                       }
+                    }
+                }",
+            Variables = new
+            {
+                chainId = chainId, 
+                expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow.AddSeconds(-expiredSecond))
+            }
+        });
+        if (graphQlResponse == default(ExpiredNftMaxOfferResultDto))
+        {
+            return new List<ExpiredNftMaxOfferDto>();
+        }
+
+        return graphQlResponse.GetExpiredNftMaxOffer.IsNullOrEmpty()
+            ? new List<ExpiredNftMaxOfferDto>()
+            : graphQlResponse.GetExpiredNftMaxOffer;
+    }
+}
