@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>NFTMarketServer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NFTMarketServer.Application.Contracts\NFTMarketServer.Application.Contracts.csproj" />
+    <ProjectReference Include="..\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Account.HttpApi" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.Core" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.Identity.HttpApi" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.HttpApi" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.TenantManagement.HttpApi" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.HttpApi" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.SettingManagement.HttpApi" Version="7.0.0" />
+    <PackageReference Include="AElf.Whitelist.HttpApi" Version="0.0.3" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.1.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.SignalR" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>

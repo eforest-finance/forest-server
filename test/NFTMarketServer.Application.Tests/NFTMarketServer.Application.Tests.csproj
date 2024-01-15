@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>NFTMarketServer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
+    <ProjectReference Include="..\..\src\NFTMarketServer.AuthServer\NFTMarketServer.AuthServer.csproj" />
+    <ProjectReference Include="..\..\src\NFTMarketServer.CoinGeckoApi\NFTMarketServer.CoinGeckoApi.csproj" />
+    <ProjectReference Include="..\..\src\NFTMarketServer.Dealer\NFTMarketServer.Dealer.csproj" />
+    <ProjectReference Include="..\..\src\NFTMarketServer.EntityEventHandler\NFTMarketServer.EntityEventHandler.csproj" />
+    <ProjectReference Include="..\NFTMarketServer.Domain.Tests\NFTMarketServer.Domain.Tests.csproj" />
+    <ProjectReference Include="..\NFTMarketServer.Orleans.TestBase\NFTMarketServer.Orleans.TestBase.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AElf.Client" Version="1.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="Moq" Version="4.18.4" />
+    <PackageReference Include="coverlet.collector" Version="3.1.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
