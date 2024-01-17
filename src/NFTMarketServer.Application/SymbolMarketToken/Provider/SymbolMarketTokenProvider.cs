@@ -82,4 +82,29 @@ public class SymbolMarketTokenProvider : ISymbolMarketTokenProvider, ISingletonD
         });
         return indexerCommonResult.Data;
     }
+    
+    public async Task<IndexerSymbolMarketTokenExist> GetSymbolMarketTokenExistAsync(string issueChainId, string tokenSymbol)
+    {
+        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerSymbolMarketTokenExist>(new GraphQLRequest
+        {
+            Query = @"query(
+                $issueChainId: String!
+                ,$tokenSymbol: String!
+            ){
+                data: symbolMarketTokenExist(dto:{
+                issueChainId: $issueChainId
+                ,tokenSymbol: $tokenSymbol}){
+                        symbol,
+                        issueChain,
+                        tokenName
+                       }
+            }",
+            Variables = new
+            {
+                issueChainId = issueChainId,
+                tokenSymbol = tokenSymbol
+            }
+        });
+        return indexerCommonResult.Data;
+    }
 }
