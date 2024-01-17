@@ -8,4 +8,6 @@ public interface ISymbolMarketTokenAppService
     Task<PagedResultDto<SymbolMarketTokenDto>> GetSymbolMarketTokensAsync(GetSymbolMarketTokenInput input);
 
     Task<SymbolMarketTokenIssuerDto> GetSymbolMarketTokenIssuerAsync(GetSymbolMarketTokenIssuerInput input);
+    
+    Task<SymbolMarketTokenExistDto> GetSymbolMarketTokenExistAsync(GetSymbolMarketTokenExistInput input);
 }

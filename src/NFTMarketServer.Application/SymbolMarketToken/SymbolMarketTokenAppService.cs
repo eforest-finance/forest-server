@@ -176,4 +176,31 @@ public class SymbolMarketTokenAppService : ISymbolMarketTokenAppService, ISingle
         
         return false;
     }
+    
+    public async Task<SymbolMarketTokenExistDto> GetSymbolMarketTokenExistAsync(GetSymbolMarketTokenExistInput input)
+    {
+        var result = await _symbolMarketTokenProvider.GetSymbolMarketTokenExistAsync(input.IssueChainId,
+            input.TokenSymbol
+        );
+
+        if (result == null)
+        {
+            return new SymbolMarketTokenExistDto()
+            {
+                Exist = false
+            };
+        }
+
+        if (!result.Symbol.IsNullOrEmpty())
+        {
+            return new SymbolMarketTokenExistDto()
+            {
+                Exist = true
+            };
+        }
+        return new SymbolMarketTokenExistDto()
+        {
+            Exist = false
+        };
+    }
 }
