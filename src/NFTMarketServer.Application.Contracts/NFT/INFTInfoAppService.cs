@@ -20,5 +20,9 @@ namespace NFTMarketServer.NFT
         Task CreateNFTInfoExtensionAsync(CreateNFTExtensionInput input);
         
         Task AddOrUpdateNftInfoAsync(NFTInfoIndex nftInfo);
+        
+        Task<NFTForSaleDto> GetNFTForSaleAsync(GetNFTForSaleInput input);
+
+        Task<NFTOwnerDto> GetNFTOwnersAsync(GetNFTOwnersInput input);
     }
 }

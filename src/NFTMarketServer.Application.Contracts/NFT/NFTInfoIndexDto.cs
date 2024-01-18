@@ -52,7 +52,14 @@ namespace NFTMarketServer.NFT
         
         // seed only
         public CreateTokenInformation CreateTokenInformation { get; set; }
-
+        public string ShowPriceType { get; set; }
+        
+        public decimal MaxOfferPrice { get; set; }
+        
+        public DateTime? MaxOfferEndTime { get; set; }
+        
+        public TokenDto? MaxOfferToken { get; set; }
+        
         public InscriptionInfoDto InscriptionInfo { get; set; }
     }
 
@@ -63,4 +70,12 @@ namespace NFTMarketServer.NFT
         public long? Registered { get; set; }
         public long? Expires { get; set; }
     }
+}
+public enum ShowPriceType
+{
+    OTHERMINLISTING,
+    MYMINLISTING,
+    MAXOFFER,
+    LATESTDEAL,
+    OTHER
 }

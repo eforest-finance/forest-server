@@ -562,4 +562,39 @@ public class NFTInfoProvider : INFTInfoProvider, ISingletonDependency
         });
         return indexerCommonResult?.Data;
     }
+
+    public async Task<IndexerNFTOwners> GetNFTOwnersAsync(GetNFTOwnersInput input)
+    {
+        var indexerCommonResult =  await _graphQlHelper.QueryAsync<IndexerNFTOwners>(new GraphQLRequest
+        {
+            Query = @"query($skipCount: Int!
+                    ,$maxResultCount: Int!
+                    ,$nftInfoId: String
+                    ,$chainId: String!
+                ) {
+                data: queryOwnersByNftId(input: {
+                skipCount: $skipCount
+                ,maxResultCount: $maxResultCount
+                ,nftInfoId: $nftInfoId
+                ,chainId: $chainId
+                }) {
+                        totalCount
+                        indexerNftUserBalances:data {
+                          id,
+                          address,
+                          amount
+                        }
+                    }
+                }",
+            Variables = new
+            {
+                skipCount = input.SkipCount,
+                maxResultCount = input.MaxResultCount,
+                nftInfoId = input.Id,
+                chainId = input.ChainId
+            }
+        });
+
+        return indexerCommonResult?.Data;
+    }
 }

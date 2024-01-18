@@ -56,6 +56,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
          * Alternatively, you can split your mapping configurations
          * into multiple profile classes for a better organization. */
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
+        CreateMap<IndexerNFTListingChange, NFTListingChangeEto>();
         CreateMap<IndexerActivity, SymbolMarketActivityDto>();
         CreateMap<NFTInfoExtensionIndex,CompositeNFTInfoIndexDto>();
         CreateMap<IndexerSeedBriefInfo, CompositeNFTInfoIndexDto>();
@@ -134,6 +135,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                     => DateTimeHelper.ToUnixTimeMilliseconds(source.CreateTime)));
         CreateMap<NFTCollectionExtensionIndex, IndexerNFTCollection>();
         CreateMap<IndexerNFTInfoMarketData, NFTInfoMarketDataDto>();
+        CreateMap<AccountDto, UserInfo>();
 
         // listing
         CreateMap<IndexerNFTInfo, NFTImmutableInfoDto>();
@@ -232,6 +234,8 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<SeedSymbolIndex, IndexerNFTInfo>()
             .ForMember(d => d.CollectionId,
                 opt => opt.MapFrom(d => IdGenerateHelper.GetNFTCollectionId(d.ChainId, NFTSymbolBasicConstants.SeedCollectionSymbol)))
+            .ForMember(d => d.ImageUrl,
+                opt => opt.MapFrom(source => source.SeedImage))
             .ForMember(d => d.CollectionSymbol, opt 
                 => opt.MapFrom(d => NFTSymbolBasicConstants.SeedCollectionSymbol))
             .ForMember(d => d.CollectionName, opt 
@@ -240,6 +244,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<TokenInfoIndex, IndexerTokenInfo>();
         CreateMap<ExternalInfoDictionary, ExternalInfoDictionaryDto>();
         CreateMap<GetNFTListingsInput, GetNFTListingsDto>();
+        CreateMap<NFTCollectionExtensionIndex, NFTForSaleDto>();
         CreateMap<TsmSeedSymbolIndex, SeedRankingWeightDto>();
 
         CreateMap<InscriptionAmountGrainDto, InscriptionAmountDto>();

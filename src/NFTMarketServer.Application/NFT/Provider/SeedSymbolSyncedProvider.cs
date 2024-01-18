@@ -149,7 +149,7 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         }
 
         if (dto.PriceHigh != null && dto.PriceHigh != 0)
-        {
+        { 
             mustQuery.Add(q => q.Range(i
                 => i.Field(f => f.MinListingPrice).LessThanOrEquals(Convert.ToDouble(dto.PriceHigh))));
         }

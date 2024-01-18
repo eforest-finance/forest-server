@@ -1,11 +1,13 @@
 using System;
 using System.Threading.Tasks;
+using ImageMagick;
 using Microsoft.AspNetCore.SignalR;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Bid.Dtos;
+using NFTMarketServer.NFT;
 using Volo.Abp.AspNetCore.SignalR;
 
-namespace MarketServer.Hubs;
+namespace NFTMarketServer.Hubs;
 
 public class MarketHub  : AbpHub
 {
@@ -34,6 +36,34 @@ public class MarketHub  : AbpHub
         await Groups.AddToGroupAsync(Context.ConnectionId,
             _marketHubGroupProvider.GetMarketBidInfoGroupName(seedSymbol));
         await Clients.Caller.SendAsync("ReceiveSymbolBidInfos", list);
+    }
+    
+    public async Task RequestListingChangeSignal(string nftId)
+    {
+        if (string.IsNullOrEmpty(nftId) || !SymbolHelper.MatchCommonSymbolPattern(nftId))
+        {
+            return;
+        }
+        
+        var seedSymbol = nftId.Substring(nftId.IndexOf(SymbolHelper.GetHyphen())+1);
+        await Groups.AddToGroupAsync(Context.ConnectionId,
+            _marketHubGroupProvider.QueryNameForReceiveListingChangeSignal(seedSymbol));
+        
+        var signal = new ChangeSignalBaseDto
+        {
+            HasChanged = true
+        };
+        await Clients.Caller.SendAsync(_marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal(), signal);
+    }
+    
+    public async Task UnsubscribeListingChangeSignal(string seedSymbol)
+    {
+        if (string.IsNullOrEmpty(seedSymbol))
+        {
+            return;
+        }
+        await TryRemoveFromGroupAsync(Context.ConnectionId,
+            _marketHubGroupProvider.QueryNameForReceiveListingChangeSignal(seedSymbol));
     }
     
     public async Task UnsubscribeSymbolBidInfo(string seedSymbol)
@@ -73,6 +103,32 @@ public class MarketHub  : AbpHub
             _marketHubGroupProvider.GetMarketAuctionInfoGroupName(seedSymbol));
     }
     
+    public async Task RequestNftOfferChange(string nftId)
+    {
+        if (string.IsNullOrEmpty(nftId))
+        {
+            return;
+        }
+
+        var signal = new NFTOfferChangeSignalDto
+        {
+            hasChanged = true
+        };
+        
+        await Groups.AddToGroupAsync(Context.ConnectionId, _marketHubGroupProvider.GetNtfOfferChangeGroupName(nftId));
+        await Clients.Caller.SendAsync("ReceiveOfferChangeSignal", signal);
+    }
+    
+    public async Task UnsubscribeNftOfferChange(string nftId)
+    {
+        if (string.IsNullOrEmpty(nftId))
+        {
+            return;
+        }
+    
+        await TryRemoveFromGroupAsync(Context.ConnectionId, _marketHubGroupProvider.GetNtfOfferChangeGroupName(nftId));
+    }
+    
     private async Task<bool> TryRemoveFromGroupAsync(string connectionId, string groupName)
     {
         try
@@ -96,6 +152,12 @@ public class MarketHub  : AbpHub
     
         var auctionGroups = _marketHubGroupProvider.GetAllAuctionInfoGroup();
         foreach (var group in auctionGroups)
+        {
+            await TryRemoveFromGroupAsync(Context.ConnectionId, group);
+        }
+        
+        var offerChangeGroups = _marketHubGroupProvider.GetAllNftOfferChangeGroup();
+        foreach (var group in offerChangeGroups)
         {
             await TryRemoveFromGroupAsync(Context.ConnectionId, group);
         }

@@ -20,6 +20,9 @@ public interface INFTListingProvider
     Task<List<IndexerNFTListingInfoResult>> GetExpiredListingNftAsync(string chainId, long expireTimeGt);
     
     Task<List<ExpiredNftMinPriceDto>> GetNftMinPriceAsync(string chainId, long expiredSecond);
+    
+    public Task<IndexerNFTListingChangePage> GetIndexerNFTListingChangePageByBlockHeightAsync(int skipCount,
+        string chainId, long startBlockHeight);
 
 }
 
@@ -54,6 +57,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     $maxResultCount:Int!,
                     $chainId:String,
                     $symbol:String,
+                    $owner: String,
                     $address: String,
                     $excludedAddress: String,
                     $expireTimeGt:Long
@@ -64,6 +68,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                       maxResultCount:$maxResultCount,
                       chainId:$chainId,
                       symbol:$symbol,
+                      owner:$owner,
                       address:$address,
                       excludedAddress:$excludedAddress,
                       expireTimeGt:$expireTimeGt
@@ -93,6 +98,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 {
                     chainId = dto.ChainId, 
                     symbol = dto.Symbol, 
+                    owner = dto.Address,
                     address = dto.Address,
                     excludedAddress = dto.ExcludedAddress,
                     skipCount = dto.SkipCount, 
@@ -192,7 +198,8 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                          {
                              id,
                              expireTime,
-                             prices          
+                             prices,
+                             symbol     
                          }
                     }
                 }",
@@ -210,5 +217,31 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
         return graphQlResponse.GetExpiredNftMinPrice.IsNullOrEmpty()
             ? new List<ExpiredNftMinPriceDto>()
             : graphQlResponse.GetExpiredNftMinPrice;
+    }
+
+    public async Task<IndexerNFTListingChangePage> GetIndexerNFTListingChangePageByBlockHeightAsync(int skipCount, string chainId, long startBlockHeight)
+    {
+        var indexerCommonResult =
+            await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerNFTListingChangePage>>(new GraphQLRequest
+            {
+                Query = @"
+			    query($skipCount:Int!,$chainId:String,$startBlockHeight:Long!) {
+                    data:nftListingChange(dto:{skipCount:$skipCount,chainId:$chainId,blockHeight:$startBlockHeight}) {
+                        totalRecordCount,
+                        indexerNFTListingChangeList:data{
+                             chainId,
+                             symbol,
+                             blockHeight
+                        }
+                    }
+                  }",
+                Variables = new
+                {
+                    skipCount,
+                    chainId,
+                    startBlockHeight
+                }
+            });
+        return indexerCommonResult?.Data;
     }
 }
