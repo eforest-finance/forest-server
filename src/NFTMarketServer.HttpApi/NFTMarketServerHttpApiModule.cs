@@ -80,10 +80,10 @@ namespace NFTMarketServer
                     });
 
                     var clientQueueName = rabbitMqConfig.ClientQueueName;
-                    var machineName = Environment.MachineName;
-                    if (!machineName.IsNullOrEmpty())
+                    var clientId = configuration.GetSection("ClientId").Get<string>();
+                    if (!clientId.IsNullOrEmpty())
                     {
-                        clientQueueName = clientQueueName + machineName;
+                        clientQueueName = clientQueueName + "_" + clientId;
                     }
 
                     cfg.ReceiveEndpoint(clientQueueName, e =>
