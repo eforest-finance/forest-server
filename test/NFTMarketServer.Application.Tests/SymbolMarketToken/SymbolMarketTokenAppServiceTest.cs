@@ -64,12 +64,27 @@ public class SymbolMarketTokenAppServiceTest : NFTMarketServerApplicationTestBas
         result.Issuer.ShouldBe("2tnFV5RQ8UWrAsCHTzJwZzB28rtmPMEKdaXPwtRCEGPJ5r1beg");
     }
     
+    [Fact]
+    public async Task TestGetSymbolMarketTokenExistAsync()
+    {
+        var input = new GetSymbolMarketTokenExistInput()
+        {
+            IssueChainId = "AELF",
+            TokenSymbol = "WUGEHHHHH"
+        };
+        var result = await _symbolMarketTokenAppService.GetSymbolMarketTokenExistAsync(input);
+        result.ShouldNotBeNull();
+        result.Exist.ShouldBeTrue();
+    }
+    
     private static IGraphQLHelper MockIGraphQLHelper()
     {
         var result1 =
             "{\"Data\":{\"TotalRecordCount\":4,\"IndexerSymbolMarketTokenList\":[{\"Symbol\":\"WUGEHHHHH\",\"TokenName\":\"WUGEHHHHH\",\"Issuer\":\"2tnFV5RQ8UWrAsCHTzJwZzB28rtmPMEKdaXPwtRCEGPJ5r1beg\",\"IssueChainId\":1866392,\"Decimals\":0,\"TotalSupply\":10,\"Supply\":1,\"Issued\":1,\"IssueManagerList\":[\"2r7fwM7z3LczMbGDxn7DDpNEBqbytCmEh7RLK3uMzraHqYkaM7\"]}]}}";
         var result2 =  "{\"Data\":{\"SymbolMarketTokenIssuer\":\"2tnFV5RQ8UWrAsCHTzJwZzB28rtmPMEKdaXPwtRCEGPJ5r1beg\"}}";
-
+        var result3 =
+            "{\"Data\":{\"Symbol\":\"WUGEHHHHH\",\"IssueChain\":\"AELF\",\"TokenName\":\"WUGEHHHHH\"}}";
+        
         var mockIGraphQLHelper = new Mock<IGraphQLHelper>();
 
         mockIGraphQLHelper.Setup(cals =>
@@ -78,6 +93,10 @@ public class SymbolMarketTokenAppServiceTest : NFTMarketServerApplicationTestBas
         mockIGraphQLHelper.Setup(cals =>
                 cals.QueryAsync<IndexerSymbolMarketIssuer>(It.Is<GraphQLRequest>(x => x.Query.IndexOf("symbolMarketTokenIssuer")>0)))
             .ReturnsAsync(JsonConvert.DeserializeObject<IndexerSymbolMarketIssuer>(result2));
+        mockIGraphQLHelper.Setup(cals =>
+                cals.QueryAsync<IndexerSymbolMarketTokenExist>(It.Is<GraphQLRequest>(x =>
+                    x.Query.IndexOf("symbolMarketTokenExist") > 0)))
+            .ReturnsAsync(JsonConvert.DeserializeObject<IndexerSymbolMarketTokenExist>(result3));
         
         return mockIGraphQLHelper.Object;
     }
@@ -88,5 +107,5 @@ public class SymbolMarketTokenAppServiceTest : NFTMarketServerApplicationTestBas
             new Mock<IBidAppService>();
         return mockIBidAppService.Object;
     }
-    
+
 }

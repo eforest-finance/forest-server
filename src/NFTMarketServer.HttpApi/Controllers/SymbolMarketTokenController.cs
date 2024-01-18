@@ -35,4 +35,11 @@ public class SymbolMarketTokenController : AbpController
     {
         return await _symbolMarketTokenAppService.GetSymbolMarketTokenIssuerAsync(input);
     }
+    
+    [HttpGet]
+    [Route("token-exist")]
+    public async Task<SymbolMarketTokenExistDto> GetSymbolMarketTokenExistAsync(GetSymbolMarketTokenExistInput input)
+    {
+        return await _symbolMarketTokenAppService.GetSymbolMarketTokenExistAsync(input);
+    }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Nest;
@@ -23,6 +24,7 @@ using NFTMarketServer.Tokens;
 using Orleans;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Caching;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
 
@@ -35,6 +37,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private readonly IObjectMapper _objectMapper;
     private readonly ILogger<SeedAppService> _logger;
     private readonly IClusterClient _clusterClient;
+    private readonly IDistributedCache<PriceInfo> _distributedCache;
     private readonly IDistributedEventBus _distributedEventBus;
     private readonly ISynchronizeTransactionProvider _synchronizeTransactionProvider;
     private readonly ITokenAppService _tokenAppService;
@@ -49,6 +52,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     private readonly ITsmSeedProvider _tsmSeedProvider;
     private const decimal MinMarkupDenominator = 10000;
+    private const double ExpirationDays = 2;
 
     public SeedAppService(ILogger<SeedAppService> logger, ITokenAppService tokenAppService,
         IBidAppService bidAppService, ISeedProvider seedProvider,
@@ -59,7 +63,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         INESTRepository<UniqueSeedPriceIndex, string> uniqueSeedPriceIndexRepository,
         IOptionsMonitor<TransactionFeeOption> optionsMonitor,
         ITsmSeedProvider tsmSeedProvider, 
-        INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository)
+        INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
+        IDistributedCache<PriceInfo> distributedCache)
     {
         _objectMapper = objectMapper;
         _logger = logger;
@@ -76,6 +81,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         _optionsMonitor = optionsMonitor;
         _tsmSeedProvider = tsmSeedProvider;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
+        _distributedCache = distributedCache;
     }
     
     public async Task<CreateSeedResultDto> CreateSeedAsync(CreateSeedDto input)
@@ -199,6 +205,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         mustQuery.Add(q => q.Term(i => i.Field(f => f.IsBurned).Value(false)));
         mustQuery.Add(q => q.Terms(i => i.Field(f => f.Status).Terms(SeedStatus.AVALIABLE, SeedStatus.UNREGISTERED)));
+        mustQuery.Add(q => q.Exists(i => i.Field(f => f.ChainId)));
         
         var shouldQuery = new List<Func<QueryContainerDescriptor<TsmSeedSymbolIndex>, QueryContainer>>();
         shouldQuery.Add(q => q.Term(i => i.Field(f => f.AuctionEndTime).Value(0)));
@@ -359,6 +366,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             QueryContainer Filter(QueryContainerDescriptor<TsmSeedSymbolIndex> f)
                 => f.Bool(b => b.Must(mustQuery));
             var tsmSeedSymbolIndex = await _tsmSeedSymbolIndexRepository.GetAsync(Filter);
+            var cacheKey = GetPopularTokenPriceCacheKey(input.Symbol);
             if (tsmSeedSymbolIndex != null && tsmSeedSymbolIndex.TokenPrice != null)
             {
                 seedInfoDto.TokenPrice = new PriceInfo()
@@ -366,8 +374,34 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                     Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
                     Symbol = tsmSeedSymbolIndex.TokenPrice.Symbol
                 };
+                var cache = await _distributedCache.GetAsync(cacheKey);
+                if (cache == null)
+                {
+                    var priceInfo = new PriceInfo
+                    {
+                        Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
+                        Symbol = NFTMarketServerConsts.AElfNativeTokenSymbol
+                    };
+                    _logger.LogInformation("[SeedAppService][SearchSeedInfoAsync] set seed price symbol: {symbol} {amount}", input.Symbol,(tsmSeedSymbolIndex.TokenPrice.Amount));
+                    await _distributedCache.SetAsync(cacheKey, priceInfo, new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(ExpirationDays)
+                    });
+                }
             }
-            
+            if (seedInfoDto.TokenPrice == null || seedInfoDto.TokenPrice.Amount == 0)
+            {
+                _logger.LogInformation("[SeedAppService][SearchSeedInfoAsync] seed price 4 symbol: {symbol}", input.Symbol);
+                var priceData = await _distributedCache.GetAsync(cacheKey);
+                if (null != priceData)
+                {
+                    seedInfoDto.TokenPrice = priceData;
+                }
+                else
+                {
+                    _logger.LogInformation("[SeedAppService][SearchSeedInfoAsync] seed price 0 symbol: {symbol}", input.Symbol);
+                }
+            }
             //recalculate token price for unique seed
             if (seedInfoDto.Status == SeedStatus.AVALIABLE && 
                 (seedInfoDto.SeedType == SeedType.Regular|| seedInfoDto.SeedType == SeedType.UNIQUE))
@@ -458,6 +492,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         QueryContainer Filter(QueryContainerDescriptor<TsmSeedSymbolIndex> f)
             => f.Bool(b => b.Must(mustQuery));
         var tsmSeedSymbolIndex = await _tsmSeedSymbolIndexRepository.GetAsync(Filter);
+        var cacheKey = GetPopularTokenPriceCacheKey(input.Symbol);
         if (tsmSeedSymbolIndex != null && tsmSeedSymbolIndex.TokenPrice != null)
         {
             seedInfoDto.TokenPrice = new PriceInfo()
@@ -465,6 +500,33 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
                 Symbol = tsmSeedSymbolIndex.TokenPrice.Symbol
             };
+            var cache = await _distributedCache.GetAsync(cacheKey);
+            if (cache == null)
+            {
+                var priceInfo = new PriceInfo
+                {
+                    Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
+                    Symbol = NFTMarketServerConsts.AElfNativeTokenSymbol
+                };
+                _logger.LogInformation("[SeedAooService][GetSeedInfoAsync] set seed price symbol: {symbol} {amount}", input.Symbol,(tsmSeedSymbolIndex.TokenPrice.Amount));
+                await _distributedCache.SetAsync(cacheKey, priceInfo, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(ExpirationDays)
+                });
+            }
+        }
+        if (seedInfoDto.TokenPrice == null || seedInfoDto.TokenPrice.Amount == 0)
+        {
+            _logger.LogInformation("[SeedAooService][GetSeedInfoAsync] seed price 4 symbol: {symbol}", input.Symbol);
+            var priceData = await _distributedCache.GetAsync(cacheKey);
+            if (null != priceData)
+            {
+                seedInfoDto.TokenPrice = priceData;
+            }
+            else
+            {
+                _logger.LogInformation("[SeedAooService][GetSeedInfoAsync] seed price 0 symbol: {symbol}", input.Symbol);
+            }
         }
 
         return await ConvertSeedDtoAsync(seedInfoDto);
@@ -605,6 +667,11 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             TotalCount = seedRankingWeightDtoList.Count,
             Items = seedRankingWeightDtoList
         };
+    }
+    
+    private string GetPopularTokenPriceCacheKey(string symbol)
+    {
+        return $"popular:price:{symbol}";
     }
 
 }

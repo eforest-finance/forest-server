@@ -10,4 +10,6 @@ public interface ISymbolMarketTokenProvider
         long maxResultCount);
     
     public Task<IndexerSymbolMarketIssuer> GetSymbolMarketTokenIssuerAsync(int issueChainId, string tokenSymbol);
+    
+    public Task<IndexerSymbolMarketTokenExist> GetSymbolMarketTokenExistAsync(string issueChain, string tokenSymbol);
 }

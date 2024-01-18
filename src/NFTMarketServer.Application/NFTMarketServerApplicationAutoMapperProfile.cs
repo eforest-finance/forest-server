@@ -63,7 +63,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<IndexerSymbolMarketToken, SymbolMarketTokenDto>()
             .ForMember(des => des.TokenImage, opt => opt.MapFrom(source => source.SymbolMarketTokenLogoImage
             ))
-            .ForMember(des => des.CurrentSupply, opt => opt.MapFrom(source => source.Supply
+            .ForMember(des => des.CurrentSupply, opt => opt.MapFrom(source => source.Issued
             ))
             .ForMember(des => des.IssueChain, opt => opt.MapFrom(source => ChainIdHelper.MaskChainId(source.IssueChainId)
             ))
