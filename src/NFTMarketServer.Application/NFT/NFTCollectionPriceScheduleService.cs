@@ -37,30 +37,28 @@ public class NFTCollectionPriceScheduleService : ScheduleSyncDataService, ITrans
         long maxProcessedBlockHeight = -1;
         var processCollectionChanges = new List<IndexerNFTCollectionPriceChange>();
         //Paging for logical processing
-        do
+        
+        var nftCollectionChanges =
+            await _nftCollectionProvider.GetNFTCollectionPriceChangesByBlockHeightAsync(skipCount, chainId,
+                lastEndHeight);
+
+        if (nftCollectionChanges == null || nftCollectionChanges.IndexerNftCollectionPriceChanges.IsNullOrEmpty())
         {
-            var nftCollectionChanges =
-                await _nftCollectionProvider.GetNFTCollectionPriceChangesByBlockHeightAsync(skipCount, chainId,
-                    lastEndHeight);
+            return 0;
+        }
 
-            if (nftCollectionChanges == null || nftCollectionChanges.IndexerNftCollectionPriceChanges.IsNullOrEmpty())
-            {
-                break;
-            }
+        var count = nftCollectionChanges.IndexerNftCollectionPriceChanges.Count;
+        _logger.LogInformation(
+            "GetNFTCollectionPriceChangesByBlockHeightAsync queryList chainId:{chainId} count: {count}",
+            chainId, count);
 
-            var count = nftCollectionChanges.IndexerNftCollectionPriceChanges.Count;
-            _logger.LogInformation(
-                "GetNFTCollectionPriceChangesByBlockHeightAsync queryList chainId:{chainId} count: {count}",
-                chainId, count);
+        processCollectionChanges = nftCollectionChanges.IndexerNftCollectionPriceChanges;
 
-            skipCount += count;
+        var blockHeight = await _nftCollectionChangeService.HandlePriceChangesAsync(chainId, processCollectionChanges,
+            lastEndHeight, GetBusinessType().ToString());
 
-            processCollectionChanges = nftCollectionChanges.IndexerNftCollectionPriceChanges;
-
-            var blockHeight = await _nftCollectionChangeService.HandlePriceChangesAsync(chainId, processCollectionChanges);
-
-            maxProcessedBlockHeight = Math.Max(maxProcessedBlockHeight, blockHeight);
-        } while (!processCollectionChanges.IsNullOrEmpty());
+        maxProcessedBlockHeight = Math.Max(maxProcessedBlockHeight, blockHeight);
+       
 
         return maxProcessedBlockHeight;
     }

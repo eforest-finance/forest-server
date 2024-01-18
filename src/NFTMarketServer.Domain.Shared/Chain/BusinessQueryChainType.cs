@@ -19,5 +19,7 @@ public enum BusinessQueryChainType
     ExpiredNftMinPriceSync,
     ExpiredNftMaxOfferSync,
     ExpiredListingNftHandle,
+    NftListingChangeNoMainChain,
+    NftOfferSync,
     InscriptionCrossChain
 }

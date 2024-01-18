@@ -103,6 +103,13 @@ namespace NFTMarketServer.Controllers
         {
             return _nftAppService.GetNFTInfoAsync(input);
         }
+        
+        [HttpGet]
+        [Route("nft-for-sale")]
+        public Task<NFTForSaleDto> GetNFTForSaleAsync(GetNFTForSaleInput input)
+        {
+            return _nftAppService.GetNFTForSaleAsync(input);
+        }
 
         [HttpPost]
         [Route("nft-infos")]
@@ -145,6 +152,13 @@ namespace NFTMarketServer.Controllers
         public Task<PagedResultDto<NFTActivityDto>> GetListAsync(GetActivitiesInput input)
         {
             return _nftActivityAppService.GetListAsync(input);
+        }
+        
+        [HttpGet]
+        [Route("nft-info-owners")]
+        public Task<NFTOwnerDto> GetNFTOwners(GetNFTOwnersInput input)
+        {
+            return _nftAppService.GetNFTOwnersAsync(input);
         }
     }
 }

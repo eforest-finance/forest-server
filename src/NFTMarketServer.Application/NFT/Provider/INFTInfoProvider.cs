@@ -28,5 +28,6 @@ public interface INFTInfoProvider
     public Task<IndexerNFTInfo> GetNFTSupplyAsync(string nftInfoId);
     
     public Task<IndexerNFTBriefInfos> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput input);
-
+    
+    public Task<IndexerNFTOwners> GetNFTOwnersAsync(GetNFTOwnersInput input);
 }

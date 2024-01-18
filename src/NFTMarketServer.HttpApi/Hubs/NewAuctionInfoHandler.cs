@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using MarketServer.Hubs;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;

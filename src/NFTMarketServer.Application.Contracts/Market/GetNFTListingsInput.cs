@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Helper;
 using Volo.Abp.Application.Dtos;
 
@@ -10,8 +11,8 @@ namespace NFTMarketServer.Market
     {
         [Required] public string ChainId { get; set; }
         [Required] public string Symbol { get; set; }
-        public string Address { get; set; }
         
+        public string Address { get; set; }
         
         public IEnumerable<ValidationResult> Validate(
             ValidationContext validationContext)

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using NFTMarketServer;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Chains;
@@ -12,7 +11,7 @@ using NFTMarketServer.Seed;
 using NFTMarketServer.Tokens;
 using Volo.Abp.DependencyInjection;
 
-namespace MarketServer.Hubs;
+namespace NFTMarketServer.Hubs;
 
 public class NewBidInfoHandler : IConsumer<NewIndexEvent<BidInfoDto>>, ITransientDependency
 {

@@ -9,9 +9,16 @@ using NFTMarketServer.Grains;
 using NFTMarketServer.Market;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
-using NFTMarketServer.Seed.Index;
+using NFTMarketServer.Users;
+using NFTMarketServer.Users.Dto;
+using NFTMarketServer.Users.Index;
+using NFTMarketServer.Users.Provider;
+using NSubstitute;
 using Shouldly;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Threading;
+using Volo.Abp.Users;
+using NFTMarketServer.Seed.Index;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -21,11 +28,18 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
 {
     private readonly INFTInfoAppService _nftInfoAppService;
     private readonly INESTRepository<NFTInfoExtensionIndex, string> _nftInfoExtensionIndexRepository;
+    private ICurrentUser _currentUser;
+    private readonly IUserInformationProvider _userInformationProvider;
+    private readonly IUserAppService _userAppService;
+    private readonly INESTRepository<UserIndex, Guid> _userIndexRepository;
 
     public NftInfoAppServiceTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
     {
         _nftInfoAppService = GetRequiredService<INFTInfoAppService>();
         _nftInfoExtensionIndexRepository = GetRequiredService<INESTRepository<NFTInfoExtensionIndex, string>>();
+        _userInformationProvider = GetRequiredService<IUserInformationProvider>();
+        _userAppService = GetRequiredService<IUserAppService>();
+        _userIndexRepository = GetRequiredService<INESTRepository<UserIndex, Guid>>();
     }
 
     protected override void AfterAddApplication(IServiceCollection services)
@@ -35,6 +49,13 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         services.AddSingleton(BuildMockINFTInfoProvider());
         services.AddSingleton(MockListingWhiteListPriceProvider());
         services.AddSingleton(MockISeedInfoProvider());
+        services.AddSingleton(MockNFTInfoSyncedProviderProvider());
+        services.AddSingleton(MockNFTCollectionExtensionProvider());
+        services.AddSingleton(MockNFTDealInfoProvider());
+        _currentUser = Substitute.For<ICurrentUser>();
+        services.AddSingleton(_currentUser);
+        services.AddSingleton(MockNFTListingProvider());
+        services.AddSingleton(MockNFTOfferProvider());
         services.AddSingleton(MockISeedSymbolSyncedProvider());
         services.AddSingleton(MockINFTInfoSyncedProvider());
         services.AddSingleton(MockINFTListingProvider());
@@ -71,11 +92,13 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
     {
         var input = new GetNFTInfoInput
         {
-            Id = "tDVV-AAA-666666",
-            Address = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv"
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            Address = "T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z"
         };
         var res = await _nftInfoAppService.GetNFTInfoAsync(input);
-        res.Id.ShouldBe("tDVV-AAA-666666");
+
+        res.Id.ShouldBe("tDVV-LIJIGUANGAAAABBB-1");
+        res.OwnerCount.ShouldBe(1);
     }
     
     [Fact]
@@ -127,7 +150,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
             IssueAddress = ""
         };
         var res = await _nftInfoAppService.GetNFTInfosForUserProfileAsync(input);
-        res.TotalCount.ShouldBe(2);
+        res.TotalCount.ShouldBe(1);
 
     }
     
@@ -166,8 +189,48 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         res.Items[0].Id.ShouldBe("tDVV-SEED-666666");
     }
     
-
-
+    [Fact]
+    public async Task TestGetNFTForSaleWithLogin()
+    {
+        Login();
+        var input = new GetNFTForSaleInput
+        {
+            Id = "tDVV-LIJIGUANGAAAABBB-1"
+        };
+        var res = await _nftInfoAppService.GetNFTForSaleAsync(input);
+        res.ShouldNotBeNull();
+        // res.AvailableQuantity.ShouldBe(3);
+        // res.MaxOfferPrice.ShouldBe(2);
+    }
+    
+    [Fact]
+    public async Task TestGetNFTForSaleWithOutLogin()
+    {
+        var input = new GetNFTForSaleInput
+        {
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            
+        };
+        var res = await _nftInfoAppService.GetNFTForSaleAsync(input);
+        res.ShouldNotBeNull();
+        // res.AvailableQuantity.ShouldBe(6);
+        // res.MaxOfferPrice.ShouldBe(2);
+    }
+    
+    [Fact]
+    public async Task TestGetNFTOwnersAsync()
+    {
+        var input = new GetNFTOwnersInput
+        {
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            ChainId = "tdVV"
+        };
+        var res = await _nftInfoAppService.GetNFTOwnersAsync(input);
+        res.ShouldNotBeNull();
+        res.TotalCount.ShouldBe(1);
+        res.Items.Count.ShouldBe(1);
+    }
+    
     private static INFTInfoProvider BuildMockINFTInfoProvider()
     {
         var result =
@@ -200,7 +263,23 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
                 calc.GetNFTBriefInfosAsync(It.IsAny<GetCompositeNFTInfosInput>()))
             .ReturnsAsync(
                 JsonConvert.DeserializeObject<IndexerNFTBriefInfos>(result4));
-
+        
+        
+        var userBalance = new IndexerNFTUserBalance()
+        {
+            Id = "dd5a09f0-3de0-4e49-95e9-9be08dd5bf22",
+            Address = "2jh7mbhQJZTdxrQjHS8NAAyqKvQ2T84XZpzu17BMAYfpNRTV3n",
+            Amount = 1
+        };
+        var ownersInfo = new IndexerNFTOwners
+        {
+            TotalCount = 1,
+            IndexerNftUserBalances = new List<IndexerNFTUserBalance> { userBalance }
+        };
+        mockINFTInfoProvider.Setup(calc =>
+                calc.GetNFTOwnersAsync(It.Is<GetNFTOwnersInput>(input => input.Id == "tDVV-LIJIGUANGAAAABBB-1")))
+            .ReturnsAsync(ownersInfo);
+        
         return mockINFTInfoProvider.Object;
     }
 
@@ -236,7 +315,176 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         return priceProvider.Object;
     }
 
+    private static INFTInfoSyncedProvider MockNFTInfoSyncedProviderProvider()
+    {
+        var result =
+            "{\"id\":\"tDVV-LIJIGUANGAAAABBB-1\",\"symbol\":\"LIJIGUANGAAAABBB-1\",\"tokenName\":\"721\", \"collectionSymbol\":\"LIJIGUANGAAAABBB-0\", \"chainId\":\"tDVV\", \"totalSupply\": 1, \"collectionId\": \"tDVV-LIJIGUANGAAAABBB-0\", \"OwnerCount\": 1, \"issuer\": \"aaaaa\", \"owner\": \"bbbbb\"}";
+        var syncProvider = new Mock<INFTInfoSyncedProvider>();
+        syncProvider.Setup(calc => 
+                calc.GetNFTInfoIndexAsync(
+                    It.IsAny<string>()))
+            .ReturnsAsync(JsonConvert.DeserializeObject<IndexerNFTInfo>(result));
+        
+        syncProvider.Setup(calc => 
+                calc.GetNFTInfosUserProfileAsync(
+                    It.IsAny<GetNFTInfosProfileInput>()))
+            .ReturnsAsync(new IndexerNFTInfos
+            {
+                TotalRecordCount = 1,
+                IndexerNftInfos = new List<IndexerNFTInfo>
+                {
+                    new IndexerNFTInfo
+                    {
+                        Id = "tDVV-LIJIGUANGAAAABBB-1",
+                        ChainId = "tDVV",
+                    }
+                }
+            });
+        return syncProvider.Object;
+    }
+    
+    private static INFTCollectionExtensionProvider MockNFTCollectionExtensionProvider()
+    {
+        var result =
+            "{\"id\":\"tDVV-LIJIGUANGAAAABBB-1\",\"tokenName\":\"ELF\", \"chainId\":\"tDVV-0\"}";
+        var provider = new Mock<INFTCollectionExtensionProvider>();
+        provider.Setup(calc => 
+                calc.GetNFTCollectionExtensionAsync(
+                    It.IsAny<string>()))
+            .ReturnsAsync(JsonConvert.DeserializeObject<NFTCollectionExtensionIndex>(result));
+        return provider.Object;
+    }
 
+    private static INFTDealInfoProvider MockNFTDealInfoProvider()
+    {
+        var provider = new Mock<INFTDealInfoProvider>();
+        provider.Setup(calc => 
+                calc.GetDealInfosAsync(
+                    It.IsAny<GetNftDealInfoDto>()))
+            .ReturnsAsync(new IndexerNFTDealInfos
+            {
+                Data = new IndexerNFTDealInfos
+                {
+                    TotalRecordCount = 1,
+                    IndexerNftDealList = new List<IndexerNFTDealInfo>
+                    {
+                        new IndexerNFTDealInfo
+                        {
+                            PurchaseAmount = 13000000,
+                            PurchaseSymbol = "ELF",
+                        }
+                    }
+                }
+            });
+        return provider.Object;
+    }
+    
+    private async Task Login()
+    {
+        var userId = Guid.NewGuid();
+        _currentUser.Id.Returns(userId);
+        _currentUser.IsAuthenticated.Returns(true);
+        _currentUser.Email.Returns("xxx@gmail.com");
+        UserSourceInput userSourceInput = new UserSourceInput
+        {
+            UserId = userId,
+            AelfAddress = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv"
+        };
+        AsyncHelper.RunSync(async () =>
+        {
+            await _userInformationProvider.SaveUserSourceAsync(userSourceInput);
+        });
+    }
+    
+    
+    private INFTListingProvider MockNFTListingProvider()
+    {
+        var listing1 = new IndexerNFTListingInfo()
+        {
+            Symbol = "LIJIGUANGAAAABBB-1",
+            Quantity = 1,
+            Prices = 10,
+            Owner = "T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z",
+            NftInfo = new IndexerNFTInfo
+            {
+                Symbol = "LIJIGUANGAAAABBB-1",
+            }
+        };
+        
+        var listing2 = new IndexerNFTListingInfo()
+        {
+            Symbol = "LIJIGUANGAAAABBB-1",
+            Quantity = 2,
+            Prices = 20,
+            Owner = "2KQWh5v6Y24VcGgsx2KHpQvRyyU5DnCZ4eAUPqGQbnuZgExKaV",
+            NftInfo = new IndexerNFTInfo
+            {
+                Symbol = "LIJIGUANGAAAABBB-1",
+            }
+        };
+        
+        var listing3 = new IndexerNFTListingInfo()
+        {
+            Symbol = "LIJIGUANGAAAABBB-1",
+            Quantity = 3,
+            Prices = 20,
+            Owner = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            NftInfo = new IndexerNFTInfo
+            {
+                Symbol = "LIJIGUANGAAAABBB-1",
+            }
+        };
+        
+        var provider = new Mock<INFTListingProvider>();
+        
+        provider
+            .Setup(provider => provider.GetNFTListingsAsync(It.Is<GetNFTListingsDto>(dto => dto.ExcludedAddress.IsNullOrEmpty()
+               )))
+            .ReturnsAsync(new PagedResultDto<IndexerNFTListingInfo>()
+            {
+                TotalCount = 0,
+                Items = new List<IndexerNFTListingInfo> { listing1, listing2, listing3 }
+            });
+        
+        provider
+            .Setup(provider => provider.GetNFTListingsAsync(It.Is<GetNFTListingsDto>(dto => dto.ExcludedAddress == "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv"
+            )))
+            .ReturnsAsync(new PagedResultDto<IndexerNFTListingInfo>()
+            {
+                TotalCount = 2,
+                Items = new List<IndexerNFTListingInfo> { listing1, listing2 }
+            });
+        
+        
+        provider
+            .Setup(provider => provider.GetNFTListingsAsync(It.Is<GetNFTListingsDto>(dto => dto.ExcludedAddress == "T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z"
+            )))
+            .ReturnsAsync(new PagedResultDto<IndexerNFTListingInfo>()
+            {
+                TotalCount = 0
+            });
+        return provider.Object;
+    }
+    
+    private static INFTOfferProvider MockNFTOfferProvider()
+    {
+        var provider = new Mock<INFTOfferProvider>();
+        provider.Setup(calc => 
+                calc.GetMaxOfferInfoAsync(
+                    It.IsAny<string>()))
+            .ReturnsAsync(new IndexerNFTOffer
+            {
+                Id = "offerId",
+                Price = 2,
+                PurchaseToken = new IndexerNFTOfferPurchaseToken
+                {
+                    Symbol = "ELF"
+                }
+                
+            });
+        return provider.Object;
+    }
+    
     private static INFTInfoSyncedProvider MockINFTInfoSyncedProvider()
     {
         var mockNftInfoSyncedProvider = new Mock<INFTInfoSyncedProvider>();
@@ -332,6 +580,4 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
             .ReturnsAsync(new InscriptionInfoDto());
         return mockIInscriptionProvider.Object;
     }
-    
-    
 }

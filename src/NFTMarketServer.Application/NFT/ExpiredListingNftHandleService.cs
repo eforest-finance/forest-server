@@ -2,14 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
+using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Options;
 using NFTMarketServer.Provider;
+using Serilog;
 
 namespace NFTMarketServer.NFT;
 
@@ -33,25 +36,30 @@ public class ExpiredListingNftHandleService : ScheduleSyncDataService
         _optionsMonitor = optionsMonitor;
         _nftCollectionChangeService = nftCollectionChangeService;
     }
-
+    
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
     {
         var option = _optionsMonitor.CurrentValue;
         var expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow.AddSeconds(-option.Duration));
         var expiredListingNft = await _nftListingProvider.GetExpiredListingNftAsync(chainId, expireTimeGt);
+        if (expiredListingNft == null || expiredListingNft.IsNullOrEmpty())
+        {
+            return 0;
+        }
         //handle task
-        return await HandleCollectionPriceAsync(chainId, expiredListingNft);
+        return await HandleCollectionPriceAsync(chainId, expiredListingNft, lastEndHeight);
     }
 
     private async Task<long> HandleCollectionPriceAsync(string chainId,
-        List<IndexerNFTListingInfoResult> expiredListingNft)
+        List<IndexerNFTListingInfoResult> expiredListingNft, long lastEndHeight)
     {
         var collectionSymbols = expiredListingNft.Select(info => info.CollectionSymbol).ToHashSet();
 
         var changes = collectionSymbols
             .Select(collectionSymbol => new IndexerNFTCollectionPriceChange(chainId, collectionSymbol, -1)).ToList();
 
-        return await _nftCollectionChangeService.HandlePriceChangesAsync(chainId, changes);
+        return await _nftCollectionChangeService.HandlePriceChangesAsync(chainId, changes, lastEndHeight,
+            GetBusinessType().ToString());
     }
 
     public override async Task<List<string>> GetChainIdsAsync()

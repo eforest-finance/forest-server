@@ -1,7 +1,6 @@
 ﻿using System;
 using AElf.Whitelist;
 using Localization.Resources.AbpUi;
-using MarketServer.Hubs;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,6 +68,8 @@ namespace NFTMarketServer
                 var configuration = context.Services.GetConfiguration();
                 x.AddConsumer<NewAuctionInfoHandler>();
                 x.AddConsumer<NewBidInfoHandler>();
+                x.AddConsumer<NewOfferChangeHandler>();
+                x.AddConsumer<NFTListingChangeHandler>();
                 x.UsingRabbitMq((ctx, cfg) =>
                 {
                     var rabbitMqConfig = configuration.GetSection("MassTransit:RabbitMQ").Get<RabbitMqOptions>();
@@ -89,6 +90,8 @@ namespace NFTMarketServer
                     {
                         e.ConfigureConsumer<NewAuctionInfoHandler>(ctx);
                         e.ConfigureConsumer<NewBidInfoHandler>(ctx);
+                        e.ConfigureConsumer<NewOfferChangeHandler>(ctx);
+                        e.ConfigureConsumer<NFTListingChangeHandler>(ctx);
                     });
                 });
     

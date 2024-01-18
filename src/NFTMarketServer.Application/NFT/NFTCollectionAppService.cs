@@ -33,7 +33,7 @@ namespace NFTMarketServer.NFT
         private readonly INFTCollectionExtensionProvider _collectionExtensionProvider;
         private readonly IOptionsMonitor<RecommendedCollectionsOptions> _optionsMonitor;
         private readonly IOptionsMonitor<NFTImageUrlOptions> _nftImageUrlOptionsMonitor;
-
+        private const string BiztypeCreateCollectionExtensionAsync = "CreateCollectionExtensionAsync";
         
         public NFTCollectionAppService(
             IClusterClient clusterClient,
@@ -261,7 +261,8 @@ namespace NFTMarketServer.NFT
             await _nftCollectionChangeService.HandleItemsChangesAsync(grainDto.ChainId,
                 new List<IndexerNFTCollectionChange> { new(grainDto.ChainId, grainDto.NFTSymbol, -1) });
             await _nftCollectionChangeService.HandlePriceChangesAsync(grainDto.ChainId,
-                new List<IndexerNFTCollectionPriceChange> { new(grainDto.ChainId, grainDto.NFTSymbol, -1) });
+                new List<IndexerNFTCollectionPriceChange> { new(grainDto.ChainId, grainDto.NFTSymbol, -1) }, 0L,
+                BiztypeCreateCollectionExtensionAsync);
         }
 
         public async Task CollectionMigrateAsync(CollectionMigrateInput input)
@@ -299,7 +300,7 @@ namespace NFTMarketServer.NFT
                 await _nftCollectionChangeService.HandleItemsChangesAsync(grainDto.ChainId,
                     new List<IndexerNFTCollectionChange> { new(grainDto.ChainId, grainDto.NFTSymbol, -1) });
                 await _nftCollectionChangeService.HandlePriceChangesAsync(grainDto.ChainId,
-                    new List<IndexerNFTCollectionPriceChange> { new(grainDto.ChainId, grainDto.NFTSymbol, -1) });
+                    new List<IndexerNFTCollectionPriceChange> { new(grainDto.ChainId, grainDto.NFTSymbol, -1) }, 0L,BiztypeCreateCollectionExtensionAsync);
                 
             }
         }

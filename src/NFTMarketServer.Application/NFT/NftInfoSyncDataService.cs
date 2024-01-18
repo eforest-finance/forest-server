@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
 using NFTMarketServer.Provider;
+using Orleans.Runtime;
+using Volo.Abp.Caching;
 
 namespace NFTMarketServer.NFT;
 
@@ -15,10 +18,13 @@ public class NftInfoSyncDataService : ScheduleSyncDataService
     private readonly IGraphQLProvider _graphQlProvider;
     private readonly INFTInfoAppService _nftInfoAppService;
     private readonly IChainAppService _chainAppService;
+    private const int HeightExpireMinutes = 5;
+    private readonly IDistributedCache<List<string>> _distributedCache;
 
     public NftInfoSyncDataService(ILogger<NftInfoSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         INFTInfoAppService nftInfoAppService, 
+        IDistributedCache<List<string>> distributedCache,
         IChainAppService chainAppService)
         : base(logger, graphQlProvider, chainAppService)
     {
@@ -26,6 +32,7 @@ public class NftInfoSyncDataService : ScheduleSyncDataService
         _graphQlProvider = graphQlProvider;
         _nftInfoAppService = nftInfoAppService;
         _chainAppService = chainAppService;
+        _distributedCache = distributedCache;
     }
 
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
@@ -40,10 +47,29 @@ public class NftInfoSyncDataService : ScheduleSyncDataService
             return 0;
         }
 
+        var cacheKey = GetBusinessType() + chainId + lastEndHeight;
+        List<string> symbolList = await _distributedCache.GetAsync(cacheKey);
         foreach (var nftInfo in queryList)
         {
+            var innerKey = nftInfo.Symbol + nftInfo.BlockHeight;
+            if (symbolList != null && symbolList.Contains(innerKey))
+            {
+                _logger.Debug("GetSyncNftInfoRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
+                continue;
+            }
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);
             await _nftInfoAppService.AddOrUpdateNftInfoAsync(nftInfo);
+        }
+        if (blockHeight > 0)
+        {
+            symbolList = queryList.Where(obj => obj.BlockHeight == blockHeight)
+                .Select(obj => obj.Symbol + obj.BlockHeight)
+                .ToList();
+            await _distributedCache.SetAsync(cacheKey, symbolList,
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
+                });
         }
 
         return blockHeight;
