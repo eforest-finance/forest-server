@@ -31,6 +31,12 @@ public class NFTForSaleDto
     public decimal LastDealPrice { get; set; }
 
     public string LastDealPriceSymbol { get; set; }
+    
+    public decimal MaxOfferPrice { get; set; }
+
+    public string MaxOfferPriceSymbol { get; set; }
+    
+    public long AvailableQuantity { get; set; }
 
     public void OfDtoInfo(IndexerNFTInfo nftInfoIndex, IndexerNFTDealInfo lastDealInfo)
     {
