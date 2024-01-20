@@ -14,6 +14,8 @@ namespace NFTMarketServer.Market
         
         public string Address { get; set; }
         
+        public string ExcludedAddress { get; set; }
+        
         public IEnumerable<ValidationResult> Validate(
             ValidationContext validationContext)
         {

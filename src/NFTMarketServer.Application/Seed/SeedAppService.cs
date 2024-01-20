@@ -555,7 +555,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         return new TransactionFeeDto
         {
             TransactionFee = transactionFeeOption.TransactionFee,
-            TransactionFeeOfUsd = roundedResult
+            TransactionFeeOfUsd = roundedResult,
+            ForestServiceRate = transactionFeeOption.ForestServiceRate,
+            CreatorLoyaltyRate = transactionFeeOption.CreatorLoyaltyRate
         };
     }
 
