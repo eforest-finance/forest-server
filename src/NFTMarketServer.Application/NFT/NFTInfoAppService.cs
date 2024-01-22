@@ -675,7 +675,7 @@ namespace NFTMarketServer.NFT
                 var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
                 listingDto.Items.ToList().ForEach(listing =>
                 {
-                    availableQuantity += listing.Quantity;
+                    availableQuantity += listing.RealQuantity;
                 });
                 
                 getNftListingsDto.SkipCount += maxResultCount;
