@@ -8,6 +8,8 @@ public class ExpiredNftMinPriceInfo
     public string Id  { get; set; }
     public DateTime ExpireTime { get; set; }
     public decimal Prices  { get; set; }
+    
+    public string Symbol  { get; set; }
 }
 
 public class ExpiredNftMinPriceDto

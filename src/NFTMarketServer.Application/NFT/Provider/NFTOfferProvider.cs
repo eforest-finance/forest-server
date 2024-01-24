@@ -15,6 +15,7 @@ public interface INFTOfferProvider
     
     public Task<IndexerNFTOffer> GetMaxOfferInfoAsync(string nftInfoId);
     Task<List<ExpiredNftMaxOfferDto>> GetNftMaxOfferAsync(string chainId, long expiredSecond);
+    public Task<List<NFTOfferChangeDto>> GetNFTOfferChangeAsync(string chainId, long blockHeight);
 }
 
 public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
@@ -109,7 +110,8 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
                       value {
                         id,
                         expireTime,
-                        prices
+                        prices,
+                        symbol
                        }
                     }
                 }",
@@ -127,5 +129,30 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
         return graphQlResponse.GetExpiredNftMaxOffer.IsNullOrEmpty()
             ? new List<ExpiredNftMaxOfferDto>()
             : graphQlResponse.GetExpiredNftMaxOffer;
+    }
+    
+    public async Task<List<NFTOfferChangeDto>> GetNFTOfferChangeAsync(string chainId, long blockHeight)
+    {
+        var graphQlResponse = await _graphQlHelper.QueryAsync<NFTOfferChangeResultDto>(new GraphQLRequest
+        {
+            Query =
+                @"query($chainId:String!, $blockHeight:Long!){
+            getNftOfferChange(dto: 
+            {
+                chainId:$chainId,
+                blockHeight:$blockHeight
+            })
+            {
+                nftId,
+                chainId,
+                blockHeight
+            }}",
+            Variables = new
+            {
+                chainId,
+                blockHeight
+            }
+        });
+        return graphQlResponse.GetNFTOfferChange.IsNullOrEmpty() ? new List<NFTOfferChangeDto>() : graphQlResponse.GetNFTOfferChange;
     }
 }

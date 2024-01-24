@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
+using MassTransit;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
+using Orleans.Runtime;
+using Volo.Abp.Caching;
 
 namespace NFTMarketServer.NFT;
 
@@ -13,12 +19,25 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
 {
     private readonly ILogger<NFTCollectionChangeService> _logger;
     private readonly INFTCollectionProvider _nftCollectionProvider;
+    private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
+    private readonly IDistributedCache<List<string>> _distributedCache;
+    private const int HeightExpireMinutes = 5;
+    private readonly IBus _bus;
     private readonly INFTCollectionProviderAdapter _nftCollectionProviderAdapter;
+
     public NFTCollectionChangeService(ILogger<NFTCollectionChangeService> logger,
         INFTCollectionProvider nftCollectionProvider,
-        INFTCollectionProviderAdapter nftCollectionProviderAdapter)
+        IDistributedCache<List<string>> distributedCache,
+        IBus bus,
+        INFTCollectionProviderAdapter nftCollectionProviderAdapter,
+        INFTCollectionExtensionProvider nftCollectionExtensionProvider)
     {
         _logger = logger;
+        _nftCollectionProvider = nftCollectionProvider;
+        _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
+        _distributedCache = distributedCache;
+        _bus = bus;
+        
         _nftCollectionProvider = nftCollectionProvider;
         _nftCollectionProviderAdapter = nftCollectionProviderAdapter;
     }
@@ -29,6 +48,7 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
         var stopwatch = new Stopwatch();
         try
         {
+            
             foreach (var collectionChange in collectionChanges)
             {
                 //mark maxProcessedBlockHeight
@@ -62,15 +82,26 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
     }
 
     public async Task<long> HandlePriceChangesAsync(string chainId,
-        List<IndexerNFTCollectionPriceChange> collectionChanges)
+        List<IndexerNFTCollectionPriceChange> collectionChanges, long lastEndHeight,
+        string businessType)
     {
         long blockHeight = -1;
         var stopwatch = new Stopwatch();
 
         try
         {
+            var cacheKey = businessType + chainId + lastEndHeight;
+            List<string> symbolList = await _distributedCache.GetAsync(cacheKey);
+
             foreach (var collectionChange in collectionChanges)
             {
+                var innerKey = collectionChange.Symbol + collectionChange.BlockHeight;
+                if (symbolList != null && symbolList.Contains(innerKey))
+                {
+                    _logger.Debug("GetNFTCollectionPriceAsync duplicated symbol: {symbol}", collectionChange.Symbol);
+                    continue;
+                }
+
                 blockHeight = Math.Max(blockHeight, collectionChange.BlockHeight);
                 stopwatch.Start();
                 var collectionId =
@@ -87,6 +118,27 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
                     FloorPrice = collectionPrice.floorPrice
                 };
                 await _nftCollectionProviderAdapter.AddOrUpdateNftCollectionExtensionAsync(dto);
+                await _bus.Publish(new NewIndexEvent<NFTListingChangeEto>
+                {
+                    Data = new NFTListingChangeEto
+                    {
+                        Symbol = collectionChange.Symbol
+                    }
+                });
+
+
+
+                if (blockHeight > 0)
+                {
+                    symbolList = collectionChanges.Where(obj => obj.BlockHeight == blockHeight)
+                        .Select(obj => obj.Symbol + collectionChange.BlockHeight)
+                        .ToList();
+                    await _distributedCache.SetAsync(cacheKey, symbolList,
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
+                        });
+                }
             }
         }
         catch (Exception e)

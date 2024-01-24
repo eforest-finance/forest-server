@@ -143,14 +143,13 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
             var userId = Guid.NewGuid();
 
             var syncTxData =
-                await _synchronizeTransactionProvider.GetSynchronizeJobByTxHashAsync(userId, input.TransactionId);
+                await _synchronizeTransactionProvider.GetSynchronizeJobByTxHashAsync(null, input.TransactionId);
 
-            if (syncTxData.TxHash != null && string.IsNullOrEmpty(syncTxData.Status))
+            if (syncTxData.TxHash != null && !string.IsNullOrEmpty(syncTxData.Status))
             {
-                _logger.LogError("This transaction {TxHash} status {Status} had registry.", input.TransactionId,
+                _logger.LogError("SendSeedMainChainCreateSyncAsync error This transaction {TxHash} status {Status} had registry.", input.TransactionId,
                     syncTxData.Status);
-                throw new UserFriendlyException(
-                    $"This transaction {input.TransactionId} status {syncTxData.Status} had registry.");
+                return;
             }
 
             var synchronizeTransactionJobGrain = _clusterClient.GetGrain<ISynchronizeTxJobGrain>(input.TransactionId);

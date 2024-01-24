@@ -78,6 +78,7 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, RegularSeedPriceRuleScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, UniqueSeedPriceRuleScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, SeedMainChainCreateScheduleService>();
+            context.Services.AddTransient<IScheduleSyncDataService, NFTListingChangeScheduleService>();
 
             context.Services.AddTransient<IScheduleSyncDataService, BidScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionStatisticalDataScheduleService>(); 
@@ -89,6 +90,7 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, ExpiredListingNftHandleService>();
             context.Services.AddTransient<IScheduleSyncDataService, ExpiredNftMinPriceSyncDataService>();
             context.Services.AddTransient<IScheduleSyncDataService, ExpiredNftMaxOfferSyncDataService>();
+            context.Services.AddTransient<IScheduleSyncDataService, NFTOfferChangeScheduleService>();
 
             context.Services.AddTransient<IScheduleSyncDataService, InscriptionCrossChainScheduleService>();
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Volo.Abp.DependencyInjection;
 
-namespace MarketServer.Hubs;
+namespace NFTMarketServer.Hubs;
 
 
 public interface IMarketHubGroupProvider
@@ -15,12 +15,21 @@ public interface IMarketHubGroupProvider
     List<string> GetAllBidInfoGroup();
 
     List<string> GetAllAuctionInfoGroup();
+
+    string QueryNameForReceiveListingChangeSignal(string symbol);
+    string QueryMethodNameForReceiveListingChangeSignal();
+
+    string GetNtfOfferChangeGroupName(string nftId);
+    List<string> GetAllNftOfferChangeGroup();
 }
 
 public class MarketHubGroupProvider : IMarketHubGroupProvider, ISingletonDependency
 {
+    private const string RECEIVE_LISTING_CHANGE_SIGNAL_NAME = "ReceiveListingChangeSignal";
+    
     private readonly ConcurrentDictionary<string, string> _bidInfoGroups = new();
     private readonly ConcurrentDictionary<string, string> _auctionInfoGroups = new();
+    private readonly ConcurrentDictionary<string, string> _nftOfferChangeGroups = new();
 
     public string GetMarketBidInfoGroupName(string symbol)
     {
@@ -44,5 +53,29 @@ public class MarketHubGroupProvider : IMarketHubGroupProvider, ISingletonDepende
     public List<string> GetAllAuctionInfoGroup()
     {
         return _auctionInfoGroups.Keys.ToList();
+    }
+
+    public string QueryNameForReceiveListingChangeSignal(string symbol)
+    {
+        var groupName = RECEIVE_LISTING_CHANGE_SIGNAL_NAME + "-" + symbol;
+        _bidInfoGroups.TryAdd(groupName, string.Empty);
+        return groupName;
+    }
+
+    public string QueryMethodNameForReceiveListingChangeSignal()
+    {
+        return RECEIVE_LISTING_CHANGE_SIGNAL_NAME;
+    }
+
+    public string GetNtfOfferChangeGroupName(string nftId)
+    {
+        var groupName = $"NFTOfferChange-{nftId}";
+        _nftOfferChangeGroups.TryAdd(groupName, string.Empty);
+        return groupName;
+    }
+    
+    public List<string> GetAllNftOfferChangeGroup()
+    {
+        return _nftOfferChangeGroups.Keys.ToList();
     }
 }

@@ -19,12 +19,14 @@ public class UserInformationProviderTest : NFTMarketServerApplicationTestBase
     private readonly IUserAppService _userAppService;
     private readonly INESTRepository<UserIndex, Guid> _userIndexRepository;
     private ICurrentUser _currentUser; 
+    private readonly INESTRepository<UserExtraIndex, Guid> _userExtraIndexRepository;
     
     public UserInformationProviderTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
     {
         _userInformationProvider = GetRequiredService<IUserInformationProvider>();
         _userAppService = GetRequiredService<IUserAppService>();
         _userIndexRepository = GetRequiredService<INESTRepository<UserIndex, Guid>>();
+        _userExtraIndexRepository = GetRequiredService<INESTRepository<UserExtraIndex, Guid>>();
     }
     protected override void AfterAddApplication(IServiceCollection services)
     {
@@ -160,6 +162,16 @@ public class UserInformationProviderTest : NFTMarketServerApplicationTestBase
         });
         UserMap[addressTdvv].ShouldNotBeNull();
         UserMap[addressTdvw].ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GetUserCountTest()
+    {
+        var timeEnd = DateTime.UtcNow;
+        var timeBegin = timeEnd.AddHours(-21);
+
+        var ret = await _userAppService.GetUserCountAsync(timeBegin, timeEnd);
+        ret.ShouldBe(0);
     }
 
 }

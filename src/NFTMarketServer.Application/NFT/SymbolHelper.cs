@@ -15,6 +15,13 @@ public class SymbolHelper
     private const string FT_PATTERN = "^[A-Z]{1,10}$";
     private const string NFT_PREFIX_PATTERN = "^[A-Z]{1,28}$"; // NFT max length 30
     public const string NFTSymbolPattern = @"^.+-(?!0+$)[0-9]+$";
+
+    private const string COMMON_NFT_PATTERN = "^.+-.+$";
+    public static string GetHyphen()
+    {
+        return HYPHEN;
+    }
+
     
     public static string CoinGeckoELF()
     {
@@ -29,6 +36,10 @@ public class SymbolHelper
     public static bool MatchSymbolPattern(string symbol)
     {
         return symbol.Match(FT_PATTERN);
+    }
+    public static bool MatchCommonSymbolPattern(string symbol)
+    {
+        return symbol.Match(COMMON_NFT_PATTERN);
     }
 
     public static bool MatchNFTPrefix(string symbol)

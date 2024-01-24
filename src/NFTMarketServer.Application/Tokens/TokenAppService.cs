@@ -3,8 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NFTMarketServer.Dealer.ContractInvoker;
-using NFTMarketServer.Dealer.Dtos;
+using NFTMarketServer.Options;
 using Volo.Abp;
 using Volo.Abp.Caching;
 
@@ -16,12 +15,15 @@ namespace NFTMarketServer.Tokens
         private readonly ITokenMarketDataProvider _tokenMarketDataProvider;
         private readonly IDistributedCache<TokenMarketData> _distributedCache;
         private readonly ILogger<TokenAppService> _logger;
-        
+        private readonly IOptionsMonitor<TokenPriceCacheOptions> _tokenPriceCacheOptionsMonitor;
+
         public TokenAppService(ILogger<TokenAppService> logger, ITokenMarketDataProvider tokenMarketDataProvider,
-            IDistributedCache<TokenMarketData> distributedCache)
+            IDistributedCache<TokenMarketData> distributedCache, 
+            IOptionsMonitor<TokenPriceCacheOptions> tokenPriceCacheOptionsMonitor)
         {
             _tokenMarketDataProvider = tokenMarketDataProvider;
             _distributedCache = distributedCache;
+            _tokenPriceCacheOptionsMonitor = tokenPriceCacheOptionsMonitor;
             _logger = logger;
         }
 
@@ -71,7 +73,7 @@ namespace NFTMarketServer.Tokens
             };
             await _distributedCache.SetAsync(cacheKey, marketData, new DistributedCacheEntryOptions
             {
-                AbsoluteExpiration = marketData.Timestamp.AddMinutes(5)
+                AbsoluteExpiration = marketData.Timestamp.AddMinutes(_tokenPriceCacheOptionsMonitor.CurrentValue.Minutes)
             });
 
             return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(marketData);
