@@ -51,7 +51,7 @@ public class MarketHub  : AbpHub
         
         var signal = new ChangeSignalBaseDto
         {
-            HasChanged = true
+            HasChanged = false
         };
         await Clients.Caller.SendAsync(_marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal(), signal);
     }
@@ -112,7 +112,7 @@ public class MarketHub  : AbpHub
 
         var signal = new NFTOfferChangeSignalDto
         {
-            hasChanged = true
+            hasChanged = false
         };
         
         await Groups.AddToGroupAsync(Context.ConnectionId, _marketHubGroupProvider.GetNtfOfferChangeGroupName(nftId));

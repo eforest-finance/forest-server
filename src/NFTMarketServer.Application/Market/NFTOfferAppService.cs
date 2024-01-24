@@ -17,13 +17,16 @@ namespace NFTMarketServer.Market
         private readonly IUserAppService _userAppService;
         private readonly INFTOfferProvider _nftOfferProvider;
         private readonly INFTCollectionProvider _nftCollectionProvider;
+        private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
         
         public NFTOfferAppService(IUserAppService userAppService, INFTOfferProvider nftOfferProvider
-                ,INFTCollectionProvider nftCollectionProvider)
+                ,INFTCollectionProvider nftCollectionProvider,
+                INFTCollectionExtensionProvider nftCollectionExtensionProvider)
         {
             _userAppService = userAppService;
             _nftOfferProvider = nftOfferProvider;
             _nftCollectionProvider = nftCollectionProvider;
+            _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
         }
 
         public async Task<PagedResultDto<NFTOfferDto>> GetNFTOffersAsync(GetNFTOffersInput input)
@@ -52,7 +55,15 @@ namespace NFTMarketServer.Market
 
             var accounts = await _userAppService.GetAccountsAsync(addresses.Distinct().ToList());
 
-            var result = nftOfferIndexes.IndexerNFTOfferList.Select(o => MapForIndexerNFTOffer(o, accounts)).ToList();
+            var nftCollectionExtensionIndexId = SymbolHelper.TransferNFTIdToCollectionId(input.NFTInfoId);
+            NFTCollectionExtensionIndex nftCollectionExtension = null;
+            if (!nftCollectionExtensionIndexId.IsNullOrWhiteSpace())
+            {
+                nftCollectionExtension = await _nftCollectionExtensionProvider.GetNFTCollectionExtensionAsync(nftCollectionExtensionIndexId);
+            }
+
+            var result = nftOfferIndexes.IndexerNFTOfferList.Select(o => MapForIndexerNFTOffer(o, accounts,
+                nftCollectionExtension)).ToList();
             return new PagedResultDto<NFTOfferDto>
             {
                 Items = result,
@@ -70,7 +81,7 @@ namespace NFTMarketServer.Market
         }
 
         private NFTOfferDto MapForIndexerNFTOffer(IndexerNFTOffer index
-            , Dictionary<string, AccountDto> accounts)
+            , Dictionary<string, AccountDto> accounts,NFTCollectionExtensionIndex nftCollectionExtensionIndex)
         {
             if (index == null)
             {
@@ -85,6 +96,12 @@ namespace NFTMarketServer.Market
             if (!index.To.IsNullOrWhiteSpace() && accounts.ContainsKey(index.To))
                 offer.To = index.To.IsNullOrWhiteSpace() ? null : accounts[index.To];
 
+            if (nftCollectionExtensionIndex != null)
+            {
+                offer.FloorPrice = nftCollectionExtensionIndex.FloorPrice;
+                offer.FloorPriceSymbol = nftCollectionExtensionIndex.FloorPriceSymbol;
+            }
+            
             return offer;
         }
     }
