@@ -122,6 +122,15 @@ public class NFTListingChangeScheduleService : ScheduleSyncDataService
         {
             Data = nftListingChangeEto
         });
+
+        await _bus.Publish<NewIndexEvent<NFTOfferChangeDto>>(new NewIndexEvent<NFTOfferChangeDto>
+        {
+            Data = new NFTOfferChangeDto
+            {
+                NftId = IdGenerateHelper.GetNFTInfoId(nftListingChange.ChainId, nftListingChange.Symbol),
+                ChainId = nftListingChange.ChainId
+            }
+        });
     }
     
     public override async Task<List<string>> GetChainIdsAsync()
