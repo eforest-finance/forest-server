@@ -44,42 +44,6 @@ public class FileController : AbpController
         return result;
     }
 
-    // [HttpPost]
-    // [Route("update-image")]
-    // public async Task<string> UpdateImage([Required] IFormFile file)
-    // {
-    //     try
-    //     {
-    //         // Check if the file is null or empty
-    //         if (file == null || file.Length == 0)
-    //         {
-    //             _logger.LogError("UpdateImage: File is null or empty");
-    //             return "File is null or empty";
-    //         }
-    //
-    //         // Validate file type
-    //         string extension = Path.GetExtension(file.FileName).ToLower();
-    //         string[] allowedExtensions = { ".jpg", ".jpeg", ".png" };
-    //         if (!allowedExtensions.Contains(extension))
-    //         {
-    //             _logger.LogError("UpdateImage: File type is not allowed");
-    //             return "File type is not allowed";
-    //         }
-    //
-    //         // Use a using statement to ensure proper disposal of resources
-    //         using (var stream = file.OpenReadStream())
-    //         {
-    //             // Now you can use stream directly for further processing
-    //             return await _symbolIconAppService.UpdateNFTIconAsync(stream, file.FileName);
-    //         }
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _logger.LogError($"UpdateImage: An unexpected error occurred - {ex.Message}");
-    //         return "An unexpected error occurred";
-    //     }
-    // }
-
     [HttpPost]
     [Authorize]
     [Route("update-image")]
@@ -103,7 +67,8 @@ public class FileController : AbpController
 
             await using var stream = file.OpenReadStream();
             byte[] utf8Bytes = stream.GetAllBytes();
-            return await _symbolIconAppService.UpdateNFTIconAsync(utf8Bytes, file.FileName);
+            return await _symbolIconAppService.UpdateNFTIconAsync(utf8Bytes,
+                DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "-" + file.FileName);
         }
         catch (Exception ex)
         {
