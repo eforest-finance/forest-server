@@ -55,12 +55,12 @@ public class AwsS3Client : ISingletonDependency
         {
             InputStream = steam,
             BucketName = _awsS3Option.BucketName,
-            Key = _awsS3Option.S3Key + "/" + fileName + ".svg",
+            Key = _awsS3Option.S3Key + "/" + fileName,
             CannedACL = S3CannedACL.PublicRead,
         };
         var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
         return putObjectResponse.HttpStatusCode == HttpStatusCode.OK ? 
-            $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}.svg" 
+            $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}" 
             : string.Empty;
     }
 
