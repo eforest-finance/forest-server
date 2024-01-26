@@ -48,6 +48,21 @@ public class AwsS3Client : ISingletonDependency
             $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}.svg" 
             : string.Empty;
     }
+    
+    public async Task<string> UpLoadFileForNFTAsync(Stream steam, string fileName)
+    {
+        var putObjectRequest = new PutObjectRequest
+        {
+            InputStream = steam,
+            BucketName = _awsS3Option.BucketName,
+            Key = _awsS3Option.S3Key + "/" + fileName + ".svg",
+            CannedACL = S3CannedACL.PublicRead,
+        };
+        var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
+        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK ? 
+            $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}.svg" 
+            : string.Empty;
+    }
 
     public async Task<string> GetSpecialSymbolUrl(string fileName)
     {

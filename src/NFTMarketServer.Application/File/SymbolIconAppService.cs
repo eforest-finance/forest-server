@@ -14,7 +14,6 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
     private readonly ISymbolIconProvider _symbolIconProvider;
 
 
-
     private const string SvgBackGroundData = @"<?xml version=""1.0"" encoding=""utf-8""?>
         <!-- Generator: Adobe Illustrator 27.8.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
         <svg version=""1.1"" id=""picture_1"" xmlns=""http://www.w3.org/2000/svg"" xmlns:xlink=""http://www.w3.org/1999/xlink"" x=""0px"" y=""0px""
@@ -40,7 +39,7 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
     private const string SvgBackGroundDataText =
         @"<text x=""500"" y=""500"" text-anchor=""middle"" dominant-baseline=""middle"" font-family=""Helvetica"" font-size=""{0}"" style=""fill:white;"">{1}</text>";
 
-    public SymbolIconAppService(AwsS3Client awsS3Client, 
+    public SymbolIconAppService(AwsS3Client awsS3Client,
         ISymbolIconProvider symbolIconProvider
     )
     {
@@ -68,6 +67,7 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
         {
             throw new Exception($"seedSymbol is null,symbol:{symbol}");
         }
+
         var fileUrl = await _symbolIconProvider.GetIconBySymbolAsync(seedSymbol);
         if (!string.IsNullOrEmpty(fileUrl))
         {
@@ -78,7 +78,12 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
         var upLoadIcon = await UpLoadIconAsync(waterMarkImageStream, seedSymbol, symbol);
         return upLoadIcon;
     }
-    
+
+    public async Task<string> UpdateNFTIconAsync(byte[] utf8Bytes, string symbol)
+    {
+        var stream = new MemoryStream(utf8Bytes);
+        return await _awsS3Client.UpLoadFileForNFTAsync(stream, symbol);
+    }
 
     private Stream AddWaterMarkByStream(string symbol)
     {
@@ -91,7 +96,7 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
         return stream;
     }
 
-    
+
     private int GetFontSize(string symbol)
     {
         if (symbol.Length <= 5) return 156;
