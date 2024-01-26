@@ -3,13 +3,13 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.File;
 using Volo.Abp;
 using Volo.Abp.AspNetCore.Mvc;
-using Volo.Abp.Content;
 
 namespace NFTMarketServer.Controllers;
 
@@ -81,6 +81,7 @@ public class FileController : AbpController
     // }
 
     [HttpPost]
+    [Authorize]
     [Route("update-image")]
     public async Task<string> UpdateImage([Required] IFormFile file)
     {

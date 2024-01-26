@@ -1,9 +1,11 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.AwsS3;
@@ -55,7 +57,7 @@ public class AwsS3Client : ISingletonDependency
         {
             InputStream = steam,
             BucketName = _awsS3Option.BucketName,
-            Key = _awsS3Option.S3Key + "/" + fileName,
+            Key = _awsS3Option.S3Key + "/update-" +  DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()+"-" +fileName,
             CannedACL = S3CannedACL.PublicRead,
         };
         var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
