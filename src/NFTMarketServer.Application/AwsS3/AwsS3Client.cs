@@ -57,7 +57,7 @@ public class AwsS3Client : ISingletonDependency
         {
             InputStream = steam,
             BucketName = _awsS3Option.BucketName,
-            Key = _awsS3Option.S3Key + "/updatenft-" +  fileName,
+            Key = _awsS3Option.S3Key + "/" +  fileName,
             CannedACL = S3CannedACL.PublicRead,
         };
         var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
