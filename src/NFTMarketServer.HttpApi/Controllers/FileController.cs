@@ -68,7 +68,7 @@ public class FileController : AbpController
             await using var stream = file.OpenReadStream();
             byte[] utf8Bytes = stream.GetAllBytes();
             return await _symbolIconAppService.UpdateNFTIconAsync(utf8Bytes,
-                "updatenft_" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "_" + file.FileName);
+                "drop_" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "_" + file.FileName);
         }
         catch (Exception ex)
         {
