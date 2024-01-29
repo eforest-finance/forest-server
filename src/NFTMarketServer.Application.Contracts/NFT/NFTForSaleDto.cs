@@ -45,7 +45,7 @@ public class NFTForSaleDto
         TokenName = nftInfoIndex.TokenName;
         CollectionSymbol = nftInfoIndex.CollectionSymbol;
         LogoImage = nftInfoIndex.ImageUrl;
-        LastDealPrice = lastDealInfo != null ? FTHelper.GetRealELFAmount(lastDealInfo.PurchaseAmount) : -1.0m;
+        LastDealPrice = lastDealInfo != null ? FTHelper.GetRealELFAmount(lastDealInfo.PurchaseAmount/long.Parse(lastDealInfo.NftQuantity)) : -1.0m;
         LastDealPriceSymbol = lastDealInfo != null ? lastDealInfo.PurchaseSymbol : CommonConstant.Coin_ELF;
     }
 }
