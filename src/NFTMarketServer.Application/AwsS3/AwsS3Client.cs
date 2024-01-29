@@ -6,6 +6,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.AwsS3;
@@ -14,7 +15,7 @@ public class AwsS3Client : ISingletonDependency
 {
     private readonly AwsS3Option _awsS3Option;
 
-    private  AmazonS3Client _amazonS3Client;
+    private AmazonS3Client _amazonS3Client;
 
     public AwsS3Client(IOptionsSnapshot<AwsS3Option> awsS3Option)
     {
@@ -34,7 +35,7 @@ public class AwsS3Client : ISingletonDependency
         };
         _amazonS3Client = new AmazonS3Client(accessKeyID, secretKey, config);
     }
-    
+
 
     public async Task<string> UpLoadFileAsync(Stream steam, string fileName)
     {
@@ -46,23 +47,31 @@ public class AwsS3Client : ISingletonDependency
             CannedACL = S3CannedACL.PublicRead,
         };
         var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
-        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK ? 
-            $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}.svg" 
+        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
+            ? $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}.svg"
             : string.Empty;
     }
-    
+
     public async Task<string> UpLoadFileForNFTAsync(Stream steam, string fileName)
     {
         var putObjectRequest = new PutObjectRequest
         {
             InputStream = steam,
             BucketName = _awsS3Option.BucketName,
-            Key = _awsS3Option.S3Key + "/" +  fileName,
+            Key = _awsS3Option.S3KeyForest + "/" + fileName,
             CannedACL = S3CannedACL.PublicRead,
         };
         var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
-        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK ? 
-            $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}" 
+
+        UriBuilder uriBuilder = new UriBuilder
+        {
+            Scheme = "https",
+            Host = _awsS3Option.BucketName + ".s3.amazonaws.com",
+            Path = "/" + _awsS3Option.S3KeyForest.IsNullOrEmpty() + "/{fileName}"
+        };
+
+        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
+            ? uriBuilder.ToString()
             : string.Empty;
     }
 
