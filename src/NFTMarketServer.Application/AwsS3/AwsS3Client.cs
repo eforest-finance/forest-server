@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using MongoDB.Bson;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.AwsS3;
 
 public class AwsS3Client : ISingletonDependency
 {
+    private const string HttpSchema = "https";
+    private const string HostS3 = ".s3.amazonaws.com";
     private readonly AwsS3Option _awsS3Option;
 
     private AmazonS3Client _amazonS3Client;
@@ -65,9 +65,9 @@ public class AwsS3Client : ISingletonDependency
 
         UriBuilder uriBuilder = new UriBuilder
         {
-            Scheme = "https",
-            Host = _awsS3Option.BucketName + ".s3.amazonaws.com",
-            Path = "/" + _awsS3Option.S3KeyForest + "/{fileName}"
+            Scheme = HttpSchema,
+            Host = _awsS3Option.BucketName + HostS3,
+            Path = "/" + _awsS3Option.S3KeyForest + "/" + fileName
         };
 
         return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
