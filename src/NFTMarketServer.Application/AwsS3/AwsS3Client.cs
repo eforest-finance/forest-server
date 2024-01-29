@@ -67,7 +67,7 @@ public class AwsS3Client : ISingletonDependency
         {
             Scheme = "https",
             Host = _awsS3Option.BucketName + ".s3.amazonaws.com",
-            Path = "/" + _awsS3Option.S3KeyForest.IsNullOrEmpty() + "/{fileName}"
+            Path = "/" + _awsS3Option.S3KeyForest + "/{fileName}"
         };
 
         return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
