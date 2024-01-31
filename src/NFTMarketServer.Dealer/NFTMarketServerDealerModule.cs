@@ -22,6 +22,7 @@ using NFTMarketServer.Dealer.ContractInvoker;
 using NFTMarketServer.Dealer.Options;
 using NFTMarketServer.Dealer.Provider;
 using NFTMarketServer.Grains;
+using NFTMarketServer.NFT.Provider;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Providers.MongoDB.Configuration;
@@ -74,6 +75,8 @@ namespace NFTMarketServer.Dealer
             context.Services.AddSingleton<IHostedService, InitJobsService>();
             
             context.Services.AddSingleton<ContractInvokeProvider>();
+            context.Services.AddSingleton<INFTDropInfoProvider, NFTDropInfoProvider>();
+            context.Services.AddSingleton<IContractInvokerFactory, ContractInvokerFactory>();
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)

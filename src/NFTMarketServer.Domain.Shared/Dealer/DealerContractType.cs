@@ -3,6 +3,7 @@ namespace NFTMarketServer.Dealer;
 public class DealerContractType
 {
    public static string MainChainId = "AELF";
+   public static string SideChainId = "tdVV";
       
    public static string AuctionContractName = "Forest.AuctionContract";
    
@@ -26,4 +27,9 @@ public class DealerContractType
 
    public static string InscriptionContractName = "Inscription";
    public static string IssueInscription = "IssueInscription";
+   
+   public static string DropContractName = "Drop";
+   public static string DropFinishMethod = "FinishDrop";
+   public static string DropFinishAccount = "DropFinishAccount";
+   
 }
