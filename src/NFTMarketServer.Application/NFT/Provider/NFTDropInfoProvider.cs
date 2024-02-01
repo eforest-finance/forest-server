@@ -101,7 +101,7 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
             }
         });
 
-        return indexerCommonResult.Data;
+        return indexerCommonResult?.Data;
     }
 
     public async Task<NFTDropInfoIndexList> GetExpireNFTDropListAsync()

@@ -195,6 +195,12 @@ namespace NFTMarketServer.NFT
             }
             
             var claimInfo = await _dropInfoProvider.GetNFTDropClaimIndexAsync(input.DropId, input.Address);
+            if (claimInfo == null)
+            {
+                _logger.LogInformation("claim not exist");
+                return dropDetailDto;
+            }
+            
             dropDetailDto.AddressClaimAmount = claimInfo.ClaimAmount;
             _logger.Debug("Fill claimInfo: {claimInfo}", JsonConvert.SerializeObject(claimInfo));
 
@@ -215,6 +221,12 @@ namespace NFTMarketServer.NFT
             _objectMapper.Map(dropInfo, nftDropQuotaDto);
             
             var claimInfo = await _dropInfoProvider.GetNFTDropClaimIndexAsync(input.DropId, input.Address);
+            if (claimInfo == null)
+            {
+                _logger.LogInformation("claim not exist");
+                return nftDropQuotaDto;
+            }
+            
             nftDropQuotaDto.AddressClaimAmount = claimInfo.ClaimAmount;
            
             return nftDropQuotaDto;
