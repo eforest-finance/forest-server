@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -10,9 +11,11 @@ namespace NFTMarketServer.AwsS3;
 
 public class AwsS3Client : ISingletonDependency
 {
+    private const string HttpSchema = "https";
+    private const string HostS3 = ".s3.amazonaws.com";
     private readonly AwsS3Option _awsS3Option;
 
-    private  AmazonS3Client _amazonS3Client;
+    private AmazonS3Client _amazonS3Client;
 
     public AwsS3Client(IOptionsSnapshot<AwsS3Option> awsS3Option)
     {
@@ -32,7 +35,7 @@ public class AwsS3Client : ISingletonDependency
         };
         _amazonS3Client = new AmazonS3Client(accessKeyID, secretKey, config);
     }
-    
+
 
     public async Task<string> UpLoadFileAsync(Stream steam, string fileName)
     {
@@ -44,8 +47,31 @@ public class AwsS3Client : ISingletonDependency
             CannedACL = S3CannedACL.PublicRead,
         };
         var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
-        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK ? 
-            $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}.svg" 
+        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
+            ? $"https://{_awsS3Option.BucketName}.s3.amazonaws.com/{_awsS3Option.S3Key}/{fileName}.svg"
+            : string.Empty;
+    }
+
+    public async Task<string> UpLoadFileForNFTAsync(Stream steam, string fileName)
+    {
+        var putObjectRequest = new PutObjectRequest
+        {
+            InputStream = steam,
+            BucketName = _awsS3Option.BucketName,
+            Key = _awsS3Option.S3KeyForest + "/" + fileName,
+            CannedACL = S3CannedACL.PublicRead,
+        };
+        var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
+
+        UriBuilder uriBuilder = new UriBuilder
+        {
+            Scheme = HttpSchema,
+            Host = _awsS3Option.BucketName + HostS3,
+            Path = "/" + _awsS3Option.S3KeyForest + "/" + fileName
+        };
+
+        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
+            ? uriBuilder.ToString()
             : string.Empty;
     }
 
