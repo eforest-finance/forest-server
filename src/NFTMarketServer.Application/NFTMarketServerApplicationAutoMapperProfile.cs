@@ -258,7 +258,9 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTDropInfoIndex, NFTDropDetailDto>()
             .ForMember(destination => destination.AddressClaimLimit, 
                 opt => opt.MapFrom(source => source.ClaimMax));
-        CreateMap<NFTDropExtensionIndex, NFTDropDetailDto>();
+        CreateMap<NFTDropExtensionIndex, NFTDropDetailDto>()
+            .Ignore(o => o.StartTime)
+            .Ignore(o => o.ExpireTime);
         CreateMap<NFTDropInfoIndex, NFTDropQuotaDto>()
             .ForMember(destination => destination.AddressClaimLimit,
                 opt => opt.MapFrom(source => source.ClaimMax));

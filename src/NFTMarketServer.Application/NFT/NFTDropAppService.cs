@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,6 +38,7 @@ namespace NFTMarketServer.NFT
             IObjectMapper objectMapper,
             INFTDropExtensionProvider dropExtensionProvider,
             INFTDropInfoProvider dropInfoProvider,
+            INFTCollectionExtensionProvider dropCollectionExtensionProvider,
             IOptionsMonitor<RecommendedDropOptions> optionsMonitor)
         {
             _logger = logger;
@@ -44,6 +46,7 @@ namespace NFTMarketServer.NFT
             _objectMapper = objectMapper;
             _dropExtensionProvider = dropExtensionProvider;
             _dropInfoProvider = dropInfoProvider;
+            _dropCollectionExtensionProvider = dropCollectionExtensionProvider;
             _optionsMonitor = optionsMonitor;
         }
 
@@ -93,10 +96,22 @@ namespace NFTMarketServer.NFT
 
             var dropList = dropInfoList.DropInfoIndexList.Select(i =>
             {
-                var dropIndexDto =
-                    _objectMapper.Map<NFTDropExtensionIndex, NFTDropIndexDto>(dropExtensionMap[i.DropId]);
+                if (dropExtensionMap.ContainsKey(i.DropId))
+                {
+                    var dropIndexDto =
+                        _objectMapper.Map<NFTDropExtensionIndex, NFTDropIndexDto>(dropExtensionMap[i.DropId]);
 
-                return dropIndexDto;
+                    return dropIndexDto;
+                }
+                else
+                {
+                    return new NFTDropIndexDto
+                    {
+                        DropId = i.DropId,
+                        StartTime = i.StartTime,
+                        ExpireTime = i.ExpireTime
+                    };
+                }
             }).ToList();
 
             return new PagedResultDto<NFTDropIndexDto>
@@ -119,10 +134,20 @@ namespace NFTMarketServer.NFT
             
             var res = recommendedOptions.RecommendedDropIds.Select(i =>
             {
-                var dropIndexDto =
-                    _objectMapper.Map<NFTDropExtensionIndex, RecommendedNFTDropIndexDto>(dropExtensionMap[i]);
+                if (dropExtensionMap.ContainsKey(i))
+                {
+                    var dropIndexDto =
+                        _objectMapper.Map<NFTDropExtensionIndex, RecommendedNFTDropIndexDto>(dropExtensionMap[i]);
 
-                return dropIndexDto;
+                    return dropIndexDto;
+                }
+                else
+                {
+                    return new RecommendedNFTDropIndexDto
+                    {
+                        DropId = i
+                    };
+                }
             }).ToList();
 
 
@@ -133,12 +158,19 @@ namespace NFTMarketServer.NFT
         {
             _logger.LogInformation("GetNFTDropDetailAsync, req:{req}", JsonConvert.SerializeObject(input));
             var dropInfo = await _dropInfoProvider.GetNFTDropInfoIndexAsync(input.DropId);
+            
             var dropDetailDto = _objectMapper.Map<NFTDropInfoIndex, NFTDropDetailDto>(dropInfo);
+            
+            if (dropInfo == null)
+            {
+                return dropDetailDto;
+            }
 
             var ids = new List<string>
             {
                 input.DropId
             };
+            
             var dropExtensionMap = await _dropExtensionProvider.BatchGetNFTDropExtensionAsync(ids);
             if (!dropExtensionMap.IsNullOrEmpty())
             {
@@ -156,7 +188,7 @@ namespace NFTMarketServer.NFT
                 dropDetailDto.CollectionName = collectionInfo.TokenName;
             }
             
-            if (input.Address.NotNullOrEmpty())
+            if (input.Address.IsNullOrEmpty())
             {
                 return dropDetailDto;
             }

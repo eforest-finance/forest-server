@@ -10,13 +10,11 @@ namespace NFTMarketServer.Controllers
     [RemoteService]
     [Area("app")]
     [ControllerName("NFT")]
-    [Route("api/app/nft")]
+    [Route("api/app/drop")]
     public class NFTDropController : NFTMarketServerController
     {
-        // private readonly INFTInfoAppService _nftAppService;
         private readonly INFTDropAppService _nftDropAppService;
-
-
+        
         public NFTDropController(INFTDropAppService nftDropAppService
             )
         {

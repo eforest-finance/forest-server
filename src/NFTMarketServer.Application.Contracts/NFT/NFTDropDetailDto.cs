@@ -1,5 +1,7 @@
+using System;
 using Volo.Abp.Application.Dtos;
 using System.Collections.Generic;
+using NFTMarketServer.NFT.Index;
 
 namespace NFTMarketServer.NFT;
 
@@ -24,8 +26,8 @@ public class NFTDropDetailDto : EntityDto<string>
     public NFTDropState State { get; set; }
     
     public bool Burn { get; set; }
-    public long StartTime { get; set; }
-    public long ExpireTime { get; set; }
-    public List<SocialMedia> SocialMedia { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime ExpireTime { get; set; }
+    public List<NFTMarketServer.NFT.Index.SocialMedia> SocialMedia { get; set; }
 }
 

@@ -2,10 +2,10 @@ namespace NFTMarketServer.NFT;
 
 public enum NFTDropState
 {
-    Inactive,
-    Active,
-    Cancelled,
-    Finished
+    Create,
+    Submit,
+    Cancel,
+    Finish
 }
 
 public enum NFTDropType

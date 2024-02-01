@@ -10,34 +10,41 @@ namespace NFTMarketServer.NFT.Provider;
 public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
 {
     private readonly IGraphQLHelper _graphQlHelper;
-    private readonly IObjectMapper _objectMapper;
+    
+    public NFTDropInfoProvider(IGraphQLHelper graphQlHelper)
+    {
+        _graphQlHelper = graphQlHelper;
+    }
     public async Task<NFTDropInfoIndexList> GetNFTDropInfoIndexListAsync(GetNFTDropListInput input)
     {
         var indexerCommonResult = await _graphQlHelper.QueryAsync<NFTDropInfoIndexList>(new GraphQLRequest
         {
             Query = @"
-			    query($type:Int!) {
-                    data:nftDropList(dto:{type:$type}){
+			    query($type:SearchType!, 
+                      $skipCount: Int!,
+                      $maxResultCount: Int!) {
+                    data:nftDropList(dto:{type:$type, skipCount:$skipCount, maxResultCount:$maxResultCount}){
                         totalRecordCount,
                         dropInfoIndexList:data{
-                            Id,
-                            CollectionId,
-                            StartTime,
-                            ExpireTime,
-                            ClaimMax,  
-                            ClaimPrice,
-                            MaxIndex,
-                            TotalAmount,
-                            ClaimAmount,
-                            IsBurn,
-                            State,
-                            ClaimMax,
+                            dropId,
+                            collectionId,
+                            startTime,
+                            expireTime,
+                            claimMax,  
+                            claimPrice,
+                            maxIndex,
+                            totalAmount,
+                            claimAmount,
+                            isBurn,
+                            state,
                         }
                     }
                 }",
             Variables = new
             {
-                type = input.Type
+                type = input.Type,
+                skipCount = input.SkipCount,
+                maxResultCount = input.MaxResultCount
             }
         });
         
@@ -52,18 +59,17 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
             Query = @"
 			    query($dropId:String!) {
                     data:nftDrop(dropId:$dropId){
-                            Id,
-                            CollectionId,
-                            StartTime,
-                            ExpireTime,
-                            ClaimMax,  
-                            ClaimPrice,
-                            MaxIndex,
-                            TotalAmount,
-                            ClaimAmount,
-                            IsBurn,
-                            State,
-                            ClaimMax,
+                            dropId,
+                            collectionId,
+                            startTime,
+                            expireTime,
+                            claimMax,  
+                            claimPrice,
+                            maxIndex,
+                            totalAmount,
+                            claimAmount,
+                            isBurn,
+                            state,
                     }
                 }",
             Variables = new
@@ -72,7 +78,7 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
             }
         });
 
-        return indexerCommonResult.Data;
+        return indexerCommonResult?.Data;
     }
     
     
