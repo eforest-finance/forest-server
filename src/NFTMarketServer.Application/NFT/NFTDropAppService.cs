@@ -109,7 +109,8 @@ namespace NFTMarketServer.NFT
                     {
                         DropId = i.DropId,
                         StartTime = i.StartTime,
-                        ExpireTime = i.ExpireTime
+                        ExpireTime = i.ExpireTime,
+                        ClaimPrice = i.ClaimPrice
                     };
                 }
             }).ToList();
@@ -145,7 +146,7 @@ namespace NFTMarketServer.NFT
                 {
                     return new RecommendedNFTDropIndexDto
                     {
-                        DropId = i
+                        DropId = i,
                     };
                 }
             }).ToList();
