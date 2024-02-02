@@ -54,6 +54,17 @@ namespace NFTMarketServer.NFT
         {
             
             _logger.LogInformation("CreateNFTInfoExtensionAsync , req: {req}", JsonConvert.SerializeObject(input));
+            
+            var ids = new List<string>
+            {
+                input.DropId
+            };
+            var dropExtensionMap = await _dropExtensionProvider.BatchGetNFTDropExtensionAsync(ids);
+            if (!dropExtensionMap.IsNullOrEmpty())
+            {
+                throw new UserFriendlyException("drop already exist");
+            }
+            
             // var extension = new NftInfoExtensionGrainDto()
             // {
             //     Id = id,
