@@ -55,8 +55,7 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
             BizData = new FinishDropInput()
             {
                 DropId = Hash.LoadFromHex(dropFinishDto?.DropId),
-                // TODO 填入实际index
-                Index = 1
+                Index = dropFinishDto.Index
             }.ToByteString().ToBase64()
         };
         return contractParamDto;
