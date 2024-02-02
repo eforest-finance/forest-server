@@ -47,16 +47,18 @@ public class NFTDropFinishWorker : INFTDropFinishWorker, ISingletonDependency
         var expireDropList = await _dropInfoProvider.GetExpireNFTDropListAsync();
         foreach (var dropInfo in expireDropList.DropInfoIndexList)
         {
-            var index = dropInfo.MaxIndex;
+            var maxIndex = dropInfo.MaxIndex;
+            var index = 1;
             _logger.LogInformation("CheckExpireDropWorker drop index: {index}", index);
-            while (index > 0)
+            while (index <= maxIndex)
             {
                 await _contractInvokerFactory.Invoker(BizType.NFTDropFinish.ToString()).InvokeAsync(
                     new NFTDropFinishBizDto
                     {
-                        DropId = dropInfo.DropId
+                        DropId = dropInfo.DropId,
+                        Index = index
                     });
-                index -= 1;
+                index += 1;
             }
         }
     }
