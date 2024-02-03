@@ -9,13 +9,11 @@ namespace NFTMarketServer.NFT.Provider;
 
 public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
 {
-    private readonly IGraphQLHelper _graphQlHelper;
     private readonly IGraphQLClientFactory _graphQlClientFactory;
     private const GraphQLClientEnum ClientType = GraphQLClientEnum.DropClient;
     
-    public NFTDropInfoProvider(IGraphQLHelper graphQlHelper, IGraphQLClientFactory graphQlClientFactory)
+    public NFTDropInfoProvider(IGraphQLClientFactory graphQlClientFactory)
     {
-        _graphQlHelper = graphQlHelper;
         _graphQlClientFactory = graphQlClientFactory;
     }
     public async Task<NFTDropInfoIndexList> GetNFTDropInfoIndexListAsync(GetNFTDropListInput input)
@@ -153,9 +151,9 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
             Query = @"
 			    query($dropId:String!, $address:String!) {
                     data:dropClaim(dto:{dropId:$dropId, address:$address}){
-                            DropId,
-                            ClaimTotal,
-                            ClaimAmount,
+                            dropId,
+                            claimTotal,
+                            claimAmount,
                     }
                 }",
             Variables = new
@@ -192,22 +190,12 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
         var indexerCommonResult = await client.SendQueryAsync<NFTDropInfoIndexList>(new GraphQLRequest
         {
             Query = @"
-			    query() {
+			    query {
                     data:expiredDropList{
                         totalRecordCount,
                         dropInfoIndexList:data{
-                            Id,
-                            CollectionId,
-                            StartTime,
-                            ExpireTime,
-                            ClaimMax,  
-                            ClaimPrice,
-                            MaxIndex,
-                            TotalAmount,
-                            ClaimAmount,
-                            IsBurn,
-                            State,
-                            ClaimMax,
+                            dropId,
+                            maxIndex
                         }
                     }
                 }"
