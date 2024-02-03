@@ -14,8 +14,8 @@ public class NFTDropIndexDto : EntityDto<string>
     public decimal ClaimPrice { get; set; }
     public decimal ClaimPriceUsd { get; set; }
     public string Introduction { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime ExpireTime { get; set; }
+    public long StartTime { get; set; }
+    public long ExpireTime { get; set; }
 }
 
 public class RecommendedNFTDropIndexDto : EntityDto<string>
@@ -26,6 +26,6 @@ public class RecommendedNFTDropIndexDto : EntityDto<string>
     public decimal ClaimPrice { get; set; }
     public decimal ClaimPriceUsd { get; set; }
     public string Introduction { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime ExpireTime { get; set; }
+    public long StartTime { get; set; }
+    public long ExpireTime { get; set; }
 }

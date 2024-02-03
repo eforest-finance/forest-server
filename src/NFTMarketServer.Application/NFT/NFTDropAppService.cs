@@ -119,8 +119,8 @@ namespace NFTMarketServer.NFT
                     return new NFTDropIndexDto
                     {
                         DropId = i.DropId,
-                        StartTime = i.StartTime,
-                        ExpireTime = i.ExpireTime,
+                        StartTime = TimeHelper.ToUtcMilliSeconds(i.StartTime),
+                        ExpireTime = TimeHelper.ToUtcMilliSeconds(i.ExpireTime),
                         ClaimPrice = i.ClaimPrice
                     };
                 }
