@@ -154,7 +154,7 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
 			    query($dropId:String!, $address:String!) {
                     data:dropClaim(dto:{dropId:$dropId, address:$address}){
                             DropId,
-                            ClaimLimit,
+                            ClaimTotal,
                             ClaimAmount,
                     }
                 }",
