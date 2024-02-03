@@ -12,6 +12,8 @@ namespace NFTMarketServer.NFT
         [Required]public string BannerUrl { get; set; }
         [Required]public string LogoUrl { get; set; }
         [Required]public string TransactionId { get; set; }
+        public long StartTime { get; set; }
+        public long ExpireTime { get; set; }
         public List<SocialMedia> SocialMedia { get; set; }
     }
 
