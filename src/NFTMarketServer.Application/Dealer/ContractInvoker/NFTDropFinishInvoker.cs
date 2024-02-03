@@ -56,7 +56,7 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
             ChainId = sideChainId,
             ContractName = DealerContractType.DropContractName,
             ContractMethod = DealerContractType.DropFinishMethod,
-            Sender = DealerContractType.DropFinishMethod,
+            Sender = DealerContractType.DropFinishAccount,
             BizData = new FinishDropInput()
             {
                 DropId = Hash.LoadFromHex(dropFinishDto?.DropId),

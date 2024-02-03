@@ -177,6 +177,7 @@ namespace NFTMarketServer.NFT
             {
                 return dropDetailDto;
             }
+            dropDetailDto.AddressClaimLimit = dropInfo.ClaimMax;
 
             var ids = new List<string>
             {
@@ -212,6 +213,7 @@ namespace NFTMarketServer.NFT
                 return dropDetailDto;
             }
             
+            
             dropDetailDto.AddressClaimAmount = claimInfo.ClaimAmount;
             _logger.Debug("Fill claimInfo: {claimInfo}", JsonConvert.SerializeObject(claimInfo));
 
@@ -230,6 +232,7 @@ namespace NFTMarketServer.NFT
             }
             
             _objectMapper.Map(dropInfo, nftDropQuotaDto);
+            nftDropQuotaDto.AddressClaimLimit = dropInfo.ClaimMax;
             
             var claimInfo = await _dropInfoProvider.GetNFTDropClaimIndexAsync(input.DropId, input.Address);
             if (claimInfo == null)
@@ -238,7 +241,7 @@ namespace NFTMarketServer.NFT
                 return nftDropQuotaDto;
             }
             
-            nftDropQuotaDto.AddressClaimAmount = claimInfo.ClaimAmount;
+            nftDropQuotaDto.AddressClaimAmount = claimInfo.ClaimTotal;
            
             return nftDropQuotaDto;
         }
