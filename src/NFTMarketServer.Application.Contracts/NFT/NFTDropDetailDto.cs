@@ -26,8 +26,8 @@ public class NFTDropDetailDto : EntityDto<string>
     public NFTDropState State { get; set; }
     
     public bool Burn { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime ExpireTime { get; set; }
+    public long StartTime { get; set; }
+    public long ExpireTime { get; set; }
     public List<NFTMarketServer.NFT.Index.SocialMedia> SocialMedia { get; set; }
 }
 
