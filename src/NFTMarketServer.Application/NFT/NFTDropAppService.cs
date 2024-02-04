@@ -15,6 +15,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
 using Newtonsoft.Json;
+using NFTMarketServer.Tokens;
 using Orleans.Runtime;
 
 
@@ -31,6 +32,7 @@ namespace NFTMarketServer.NFT
         private readonly INFTDropInfoProvider _dropInfoProvider;
         private readonly INFTCollectionExtensionProvider _dropCollectionExtensionProvider;
         private readonly IOptionsMonitor<RecommendedDropOptions> _optionsMonitor;
+        private readonly ITokenAppService _tokenAppService;
 
         public NFTDropAppService(
             ILogger<NFTDropAppService> logger,
@@ -39,7 +41,8 @@ namespace NFTMarketServer.NFT
             INFTDropExtensionProvider dropExtensionProvider,
             INFTDropInfoProvider dropInfoProvider,
             INFTCollectionExtensionProvider dropCollectionExtensionProvider,
-            IOptionsMonitor<RecommendedDropOptions> optionsMonitor)
+            IOptionsMonitor<RecommendedDropOptions> optionsMonitor,
+            ITokenAppService tokenAppService)
         {
             _logger = logger;
             _distributedEventBus = distributedEventBus;
@@ -48,6 +51,7 @@ namespace NFTMarketServer.NFT
             _dropInfoProvider = dropInfoProvider;
             _dropCollectionExtensionProvider = dropCollectionExtensionProvider;
             _optionsMonitor = optionsMonitor;
+            _tokenAppService = tokenAppService;
         }
 
         public async Task CreateNFTDropExtensionAsync(CreateNFTDropInput input)
@@ -143,27 +147,51 @@ namespace NFTMarketServer.NFT
             }
             
             var dropExtensionMap = await _dropExtensionProvider.BatchGetNFTDropExtensionAsync(recommendedOptions.RecommendedDropIds);
-            
-            var res = recommendedOptions.RecommendedDropIds.Select(i =>
+
+
+            var result = new List<RecommendedNFTDropIndexDto>();
+
+            foreach (var id in recommendedOptions.RecommendedDropIds)
             {
-                if (dropExtensionMap.ContainsKey(i))
+                var dto = new RecommendedNFTDropIndexDto
                 {
-                    var dropIndexDto =
-                        _objectMapper.Map<NFTDropExtensionIndex, RecommendedNFTDropIndexDto>(dropExtensionMap[i]);
-
-                    return dropIndexDto;
-                }
-                else
+                    DropId = id,
+                };
+               
+                if (dropExtensionMap.ContainsKey(id))
                 {
-                    return new RecommendedNFTDropIndexDto
-                    {
-                        DropId = i,
-                    };
+                    _objectMapper.Map(dropExtensionMap[id], dto);
                 }
-            }).ToList();
+                
+                var dropInfo = await _dropInfoProvider.GetNFTDropInfoIndexAsync(id);
+                if (dropInfo != null && dropInfo.State != NFTDropState.Cancel)
+                {
+                    dto.ClaimPrice = dropInfo.ClaimPrice;
+                    result.Add(dto);
+                }
+            }
+            
+            
+            // var res = recommendedOptions.RecommendedDropIds.Select(i =>
+            // {
+            //     if (dropExtensionMap.ContainsKey(i))
+            //     {
+            //         var dropIndexDto =
+            //             _objectMapper.Map<NFTDropExtensionIndex, RecommendedNFTDropIndexDto>(dropExtensionMap[i]);
+            //
+            //         return dropIndexDto;
+            //     }
+            //     else
+            //     {
+            //         return new RecommendedNFTDropIndexDto
+            //         {
+            //             DropId = i,
+            //         };
+            //     }
+            // }).ToList();
 
 
-            return res;
+            return result;
         }
 
         public async Task<NFTDropDetailDto> GetNFTDropDetailAsync(GetNFTDropDetailInput input)
@@ -178,7 +206,11 @@ namespace NFTMarketServer.NFT
                 return dropDetailDto;
             }
             dropDetailDto.AddressClaimLimit = dropInfo.ClaimMax;
-
+            
+            var usdPrice =
+                await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
+            dropDetailDto.ClaimPriceUsd = usdPrice;
+            
             var ids = new List<string>
             {
                 input.DropId
@@ -212,7 +244,6 @@ namespace NFTMarketServer.NFT
                 _logger.LogInformation("claim not exist");
                 return dropDetailDto;
             }
-            
             
             dropDetailDto.AddressClaimAmount = claimInfo.ClaimAmount;
             _logger.Debug("Fill claimInfo: {claimInfo}", JsonConvert.SerializeObject(claimInfo));
