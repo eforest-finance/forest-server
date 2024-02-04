@@ -35,6 +35,7 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
                             expireTime,
                             claimMax,  
                             claimPrice,
+                            claimSymbol,
                             maxIndex,
                             totalAmount,
                             claimAmount,

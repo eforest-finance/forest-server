@@ -11,8 +11,8 @@ public class NFTDropDetailDto : EntityDto<string>
     public string DropName { get; set; }
     public string LogoUrl { get; set; }
     public string BannerUrl { get; set; }
-    public decimal ClaimPrice { get; set; }
-    public decimal ClaimPriceUsd { get; set; }
+    public decimal MintPrice { get; set; }
+    public decimal MintPriceUsd { get; set; }
     public string Introduction { get; set; }
     
     public string CollectionId { get; set; }
