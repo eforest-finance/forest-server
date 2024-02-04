@@ -57,19 +57,17 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
         AssertHelper.NotNull(dropFinishDto, "DropFinishBizDto empty");
 
         var chainList = _optionsMonitor.CurrentValue.Chains;
-        // AssertHelper.NotNull();
-        // if (chainList.IsNullOrEmpty())
-        // {
-        //     _logger.LogInformation("empthchainList", );
-        // }
+        if (chainList.IsNullOrEmpty() || chainList.Count < 2)
+        {
+            _logger.LogInformation("invalid chain list");
+        }
         
         
-        var sideChainId = "a";
         var contractParamDto = new ContractParamDto
         {
             BizId = dropFinishDto?.DropId,
             BizType = BizType(),
-            ChainId = sideChainId,
+            ChainId = chainList[1],
             ContractName = DealerContractType.DropContractName,
             ContractMethod = DealerContractType.DropFinishMethod,
             Sender = DealerContractType.DropFinishAccount,
