@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.NFT;
 using Volo.Abp;
@@ -23,7 +24,7 @@ namespace NFTMarketServer.Controllers
         
 
         [HttpPost]
-        // [Authorize]
+        [Authorize]
         [Route("drop-infos")]
         public Task CreateNFTDropAsync(CreateNFTDropInput input)
         {

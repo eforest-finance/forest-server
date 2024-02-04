@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Client.Dto;
 using AElf.Types;
@@ -10,6 +11,11 @@ using NFTMarketServer.Chains;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using NFTMarketServer.NFT;
+using NFTMarketServer.Options;
+using NFTMarketServer.Provider;
 using Orleans.Runtime;
 
 namespace NFTMarketServer.Dealer.ContractInvoker;
@@ -19,19 +25,21 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
     private readonly IObjectMapper _objectMapper;
     private readonly IDistributedEventBus _distributedEventBus;
     private readonly ILogger<NFTDropFinishInvoker> _logger;
-    private readonly IChainAppService _chainAppService;
+    private readonly IOptionsMonitor<ForestChainOptions> _optionsMonitor;
+    // private readonly IChainAppService _chainAppService;
 
     public NFTDropFinishInvoker(IDistributedEventBus distributedEventBus,
         ContractInvokeProvider contractInvokeProvider, 
         IObjectMapper objectMapper,
         ILogger<NFTDropFinishInvoker> logger,
-        IChainAppService chainAppService) : base(distributedEventBus,
+        IOptionsMonitor<ForestChainOptions> optionsMonitor) : base(distributedEventBus,
         contractInvokeProvider, objectMapper)
     {
         _objectMapper = objectMapper;
         _distributedEventBus = distributedEventBus;
         _logger = logger;
-        _chainAppService = chainAppService;
+        _optionsMonitor = optionsMonitor;
+        // _chainAppService = chainAppService;
     }
 
     public override string BizType()
@@ -41,19 +49,25 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
 
     public override async Task<ContractParamDto> AdaptToContractParamAsync<TDropFinishBizDto>(TDropFinishBizDto invokeBizDto)
     {
-        _logger.Debug("NFTDrop Finish AdaptToContractParamAsync");
+        _logger.Debug("NFTDrop Finish AdaptToContractParamAsync begin");
         AssertHelper.NotNull(invokeBizDto, "DropFinish empty");
         AssertHelper.NotNull(invokeBizDto is NFTDropFinishBizDto, "Invalid DropFinishBizDto type");
         
         var dropFinishDto = invokeBizDto as NFTDropFinishBizDto;
         AssertHelper.NotNull(dropFinishDto, "DropFinishBizDto empty");
 
-        var sideChainId = await _chainAppService.GetChainIdAsync(1);
+        var chainList = _optionsMonitor.CurrentValue.Chains;
+        if (chainList.IsNullOrEmpty() || chainList.Count < 2)
+        {
+            _logger.LogInformation("invalid chain list");
+        }
+        
+        
         var contractParamDto = new ContractParamDto
         {
             BizId = dropFinishDto?.DropId,
             BizType = BizType(),
-            ChainId = sideChainId,
+            ChainId = chainList[1],
             ContractName = DealerContractType.DropContractName,
             ContractMethod = DealerContractType.DropFinishMethod,
             Sender = DealerContractType.DropFinishAccount,
@@ -63,6 +77,8 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
                 Index = dropFinishDto.Index
             }.ToByteString().ToBase64()
         };
+        
+        _logger.Debug("NFTDrop Finish AdaptToContractParamAsync end, param: {data}", JsonConvert.SerializeObject(contractParamDto));
         return contractParamDto;
     }
 
