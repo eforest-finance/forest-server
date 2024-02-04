@@ -9,9 +9,11 @@ namespace NFTMarketServer.NFT
         [Required][MaxLength(100)]public string DropName { get; set; }
         [MaxLength(300)] public string Introduction { get; set; }
         
-        public string BannerUrl { get; set; }
-        public string LogoUrl { get; set; }
-        public string TransactionId { get; set; }
+        [Required]public string BannerUrl { get; set; }
+        [Required]public string LogoUrl { get; set; }
+        [Required]public string TransactionId { get; set; }
+        public long StartTime { get; set; }
+        public long ExpireTime { get; set; }
         public List<SocialMedia> SocialMedia { get; set; }
     }
 

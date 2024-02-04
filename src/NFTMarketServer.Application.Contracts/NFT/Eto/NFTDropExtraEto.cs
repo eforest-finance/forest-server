@@ -13,5 +13,7 @@ public class NFTDropExtraEto
     public string BannerUrl { get; set; }
     public string LogoUrl { get; set; }
     public string TransactionId { get; set; }
+    public long StartTime { get; set; }
+    public long ExpireTime { get; set; }
     public List<SocialMedia> SocialMedia { get; set; }
 }

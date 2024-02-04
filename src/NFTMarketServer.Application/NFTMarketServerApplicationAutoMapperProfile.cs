@@ -250,17 +250,19 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<InscriptionAmountGrainDto, InscriptionAmountDto>();
         CreateMap<CreateNFTDropInput, NFTDropExtraEto>();
         CreateMap<NFTDropExtensionIndex, NFTDropIndexDto>()
-            .ForMember(destination => destination.DropId, 
+            .ForMember(destination => destination.DropId,
                 opt => opt.MapFrom(source => source.Id));
         CreateMap<NFTDropExtensionIndex, RecommendedNFTDropIndexDto>()
             .ForMember(destination => destination.DropId, 
                 opt => opt.MapFrom(source => source.Id));
         CreateMap<NFTDropInfoIndex, NFTDropDetailDto>()
-            .ForMember(destination => destination.AddressClaimLimit, 
-                opt => opt.MapFrom(source => source.ClaimMax));
-        CreateMap<NFTDropExtensionIndex, NFTDropDetailDto>()
-            .Ignore(o => o.StartTime)
-            .Ignore(o => o.ExpireTime);
+            .ForMember(destination => destination.AddressClaimLimit,
+                opt => opt.MapFrom(source => source.ClaimMax)).
+            ForMember(destination => destination.StartTime,
+                opt => opt.MapFrom(source => TimeHelper.ToUtcMilliSeconds(source.StartTime))).
+            ForMember(destination => destination.ExpireTime,
+                opt => opt.MapFrom(source => TimeHelper.ToUtcMilliSeconds(source.ExpireTime)));
+        CreateMap<NFTDropExtensionIndex, NFTDropDetailDto>();
         CreateMap<NFTDropInfoIndex, NFTDropQuotaDto>()
             .ForMember(destination => destination.AddressClaimLimit,
                 opt => opt.MapFrom(source => source.ClaimMax));
