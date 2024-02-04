@@ -58,7 +58,7 @@ public class FileController : AbpController
             }
 
             string extension = Path.GetExtension(file.FileName).ToLower();
-            string[] allowedExtensions = { ".jpg", ".jpeg", ".png" };
+            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", "gif" };
             if (!allowedExtensions.Contains(extension))
             {
                 _logger.LogError("UpdateImage: File type is not allowed");
