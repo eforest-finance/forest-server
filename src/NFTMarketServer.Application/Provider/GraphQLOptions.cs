@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace NFTMarketServer.Provider;
 
 public class GraphQLOptions
@@ -6,4 +8,9 @@ public class GraphQLOptions
     public string InscriptionConfiguration { get; set; }
     
     public string DropConfiguration { get; set; }
+}
+
+public class ForestChainOptions
+{
+    public List<string> Chains { get; set; }
 }

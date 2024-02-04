@@ -20,24 +20,18 @@ public class NFTDropFinishWorker : INFTDropFinishWorker, ISingletonDependency
     private const string LockKeyPrefix = "ContractInvokerProvider:";
 
     private readonly ILogger<NFTDropFinishWorker> _logger;
-
-    private readonly IOptionsMonitor<ChainOption> _chainOption;
+    
     private readonly INFTDropInfoProvider _dropInfoProvider;
-    private IContractProvider _contractProvider;
     private readonly IContractInvokerFactory _contractInvokerFactory;
     
     public NFTDropFinishWorker(
         ILogger<NFTDropFinishWorker> logger,
         INFTDropInfoProvider dropInfoProvider,
-        IContractProvider contractProvider, 
-        IContractInvokerFactory contractInvokerFactory,
-        IOptionsMonitor<ChainOption> chainOption)
+        IContractInvokerFactory contractInvokerFactory)
     {
         _logger = logger;
         _dropInfoProvider = dropInfoProvider;
-        _contractProvider = contractProvider;
         _contractInvokerFactory = contractInvokerFactory;
-        _chainOption = chainOption;
     }
 
     public async Task CheckExpireDrop()
