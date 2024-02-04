@@ -109,26 +109,28 @@ namespace NFTMarketServer.NFT
             var ids = dropInfoList.DropInfoIndexList.Select(i => i.DropId).ToList();
             var dropExtensionMap = await _dropExtensionProvider.BatchGetNFTDropExtensionAsync(ids);
 
-            var dropList = dropInfoList.DropInfoIndexList.Select(i =>
+            
+            var dropList = new List<NFTDropIndexDto>();
+            foreach (var dropInfo in dropInfoList.DropInfoIndexList)
             {
-                if (dropExtensionMap.ContainsKey(i.DropId))
+                var dropIndexDto = new NFTDropIndexDto
                 {
-                    var dropIndexDto =
-                        _objectMapper.Map<NFTDropExtensionIndex, NFTDropIndexDto>(dropExtensionMap[i.DropId]);
-
-                    return dropIndexDto;
-                }
-                else
+                    DropId = dropInfo.DropId,
+                    StartTime = TimeHelper.ToUtcMilliSeconds(dropInfo.StartTime),
+                    ExpireTime = TimeHelper.ToUtcMilliSeconds(dropInfo.ExpireTime),
+                    MintPrice = dropInfo.ClaimPrice
+                };
+                
+                var usdPrice =
+                    await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
+                dropIndexDto.MintPriceUsd = usdPrice;
+                
+                if (dropExtensionMap.ContainsKey(dropInfo.DropId))
                 {
-                    return new NFTDropIndexDto
-                    {
-                        DropId = i.DropId,
-                        StartTime = TimeHelper.ToUtcMilliSeconds(i.StartTime),
-                        ExpireTime = TimeHelper.ToUtcMilliSeconds(i.ExpireTime),
-                        ClaimPrice = i.ClaimPrice
-                    };
+                    _objectMapper.Map(dropExtensionMap[dropInfo.DropId], dropIndexDto);
                 }
-            }).ToList();
+                dropList.Add(dropIndexDto);
+            }
 
             return new PagedResultDto<NFTDropIndexDto>
             {
@@ -166,7 +168,10 @@ namespace NFTMarketServer.NFT
                 var dropInfo = await _dropInfoProvider.GetNFTDropInfoIndexAsync(id);
                 if (dropInfo != null && dropInfo.State != NFTDropState.Cancel)
                 {
-                    dto.ClaimPrice = dropInfo.ClaimPrice;
+                    dto.MintPrice = dropInfo.ClaimPrice;
+                    var usdPrice =
+                        await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
+                    dto.MintPriceUsd = usdPrice;
                     result.Add(dto);
                 }
             }
@@ -209,7 +214,7 @@ namespace NFTMarketServer.NFT
             
             var usdPrice =
                 await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
-            dropDetailDto.ClaimPriceUsd = usdPrice;
+            dropDetailDto.MintPriceUsd = usdPrice;
             
             var ids = new List<string>
             {
