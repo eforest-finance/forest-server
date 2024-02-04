@@ -261,7 +261,9 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             ForMember(destination => destination.StartTime,
                 opt => opt.MapFrom(source => TimeHelper.ToUtcMilliSeconds(source.StartTime))).
             ForMember(destination => destination.ExpireTime,
-                opt => opt.MapFrom(source => TimeHelper.ToUtcMilliSeconds(source.ExpireTime)));
+                opt => opt.MapFrom(source => TimeHelper.ToUtcMilliSeconds(source.ExpireTime))).
+            ForMember(destination => destination.Burn,
+                opt => opt.MapFrom(source => source.IsBurn));
         CreateMap<NFTDropExtensionIndex, NFTDropDetailDto>();
         CreateMap<NFTDropInfoIndex, NFTDropQuotaDto>()
             .ForMember(destination => destination.AddressClaimLimit,
