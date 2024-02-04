@@ -207,9 +207,9 @@ namespace NFTMarketServer.NFT
             }
             dropDetailDto.AddressClaimLimit = dropInfo.ClaimMax;
             
-            // var usdPrice =
-            //     await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
-            // dropDetailDto.ClaimPriceUsd = usdPrice;
+            var usdPrice =
+                await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
+            dropDetailDto.ClaimPriceUsd = usdPrice;
             
             var ids = new List<string>
             {
