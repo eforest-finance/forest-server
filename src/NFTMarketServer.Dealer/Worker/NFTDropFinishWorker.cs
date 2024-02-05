@@ -1,9 +1,6 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using NFTMarketServer.Dealer.Dtos;
-using NFTMarketServer.Dealer.Options;
-using NFTMarketServer.Dealer.Provider;
 using NFTMarketServer.NFT.Provider;
 using Volo.Abp.DependencyInjection;
 using NFTMarketServer.Dealer.ContractInvoker;
