@@ -22,5 +22,6 @@ public static class CommonConstant
     public const string NFTResetHeightFlagCacheKey = "NFTResetHeightFlagCacheKey";
     public const string SeedResetHeightFlagCacheKey = "SeedResetHeightFlagCacheKey";
     public const int CacheExpirationMinutes = 60*24;
+    public const int BeginHeight = 1;
 
 }
