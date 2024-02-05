@@ -22,6 +22,7 @@ using NFTMarketServer.Seed.Index;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
 using Orleans;
+using Orleans.Runtime;
 using Serilog;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -54,7 +55,9 @@ namespace NFTMarketServer.NFT
         private readonly IInscriptionProvider _inscriptionProvider;
         private readonly NFTCollectionAppService _nftCollectionAppService;
         private readonly IDistributedCache<string> _distributedCache;
-        private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> _resetNFTSyncHeightExpireMinutesOptionsMonitor;
+
+        private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
+            _resetNFTSyncHeightExpireMinutesOptionsMonitor;
 
         public NFTInfoAppService(
             ITokenAppService tokenAppService, IUserAppService userAppService,
@@ -220,7 +223,11 @@ namespace NFTMarketServer.NFT
                     return await MapForCompositeNftInfoIndexDtoPage(result);
                 }
 
-                var resetSyncHeightFlag = await _distributedCache.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
+                var resetSyncHeightFlag =
+                    await _distributedCache.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
+                _logger.Debug("GetCompositeNFTInfosAsync origin {ResetSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
+                    resetSyncHeightFlag,
+                    _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
                 if (resetSyncHeightFlag.IsNullOrEmpty())
                 {
                     var resetNftSyncHeightExpireMinutes =
@@ -235,7 +242,7 @@ namespace NFTMarketServer.NFT
             }
             catch (Exception e)
             {
-                _logger.LogError("Something is wrong {Message}",e.Message);
+                _logger.LogError("Something is wrong {Message}", e.Message);
             }
 
             return await MapForCompositeNftInfoIndexDtoPage(result);

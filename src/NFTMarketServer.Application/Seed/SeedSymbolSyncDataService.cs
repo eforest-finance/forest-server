@@ -52,6 +52,9 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
         {
             var resetSyncHeightFlag = await _distributedCache.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
             var seedSyncHeightFlag = await _distributedCache.GetAsync(CommonConstant.SeedResetHeightFlagCacheKey);
+            _logger.Debug("GetCompositeNFTInfosAsync seed {ResetSyncHeightFlag} {SeedSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
+                resetSyncHeightFlag, seedSyncHeightFlag,
+                _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
             if (!resetSyncHeightFlag.IsNullOrEmpty())
             {
                 if (seedSyncHeightFlag.IsNullOrEmpty())

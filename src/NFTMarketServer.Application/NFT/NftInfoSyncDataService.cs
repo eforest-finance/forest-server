@@ -52,6 +52,9 @@ public class NftInfoSyncDataService : ScheduleSyncDataService
         {
             var resetSyncHeightFlag = await _distributedCache.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
             var nftSyncHeightFlag = await _distributedCache.GetAsync(CommonConstant.NFTResetHeightFlagCacheKey);
+            _logger.Debug("GetCompositeNFTInfosAsync nft {ResetSyncHeightFlag} {NFTSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
+                resetSyncHeightFlag, nftSyncHeightFlag,
+                _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
             if (!resetSyncHeightFlag.IsNullOrEmpty())
             {
                 if (nftSyncHeightFlag.IsNullOrEmpty())
