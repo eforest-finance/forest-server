@@ -18,6 +18,9 @@ public static class CommonConstant
     public const string FILE_TYPE_IMAGE = "image";
     public const string TokenExist = "Token already exists";
     public const string InscriptionIssueRepeat = "Total supply exceeded";
-
+    public const string ResetNFTSyncHeightFlagCacheKey = "ResetNFTSyncHeightFlagCacheKey";
+    public const string NFTResetHeightFlagCacheKey = "NFTResetHeightFlagCacheKey";
+    public const string SeedResetHeightFlagCacheKey = "SeedResetHeightFlagCacheKey";
+    public const int CacheExpirationMinutes = 60*24;
 
 }
