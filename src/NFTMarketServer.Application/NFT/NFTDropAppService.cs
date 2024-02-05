@@ -97,12 +97,12 @@ namespace NFTMarketServer.NFT
                     DropId = dropInfo.DropId,
                     StartTime = TimeHelper.ToUtcMilliSeconds(dropInfo.StartTime),
                     ExpireTime = TimeHelper.ToUtcMilliSeconds(dropInfo.ExpireTime),
-                    MintPrice = dropInfo.ClaimPrice
+                    MintPrice = dropInfo.ClaimPrice.ToString()
                 };
                 
                 var usdPrice =
                     await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
-                dropIndexDto.MintPriceUsd = usdPrice;
+                dropIndexDto.MintPriceUsd = usdPrice.ToString();
                 
                 if (dropExtensionMap.ContainsKey(dropInfo.DropId))
                 {
@@ -147,10 +147,10 @@ namespace NFTMarketServer.NFT
                 var dropInfo = await _dropInfoProvider.GetNFTDropInfoIndexAsync(id);
                 if (dropInfo != null && dropInfo.State != NFTDropState.Cancel)
                 {
-                    dto.MintPrice = dropInfo.ClaimPrice;
+                    dto.MintPrice = dropInfo.ClaimPrice.ToString();
                     var usdPrice =
                         await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
-                    dto.MintPriceUsd = usdPrice;
+                    dto.MintPriceUsd = usdPrice.ToString();
                     result.Add(dto);
                 }
             }
@@ -173,7 +173,8 @@ namespace NFTMarketServer.NFT
             
             var usdPrice =
                 await _tokenAppService.GetCurrentDollarPriceAsync(dropInfo.ClaimSymbol, dropInfo.ClaimPrice);
-            dropDetailDto.MintPriceUsd = usdPrice;
+            dropDetailDto.MintPriceUsd = usdPrice.ToString();
+            dropDetailDto.MintPrice = dropInfo.ClaimPrice.ToString();
             
             var ids = new List<string>
             {
