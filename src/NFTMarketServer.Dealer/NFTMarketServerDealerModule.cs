@@ -41,7 +41,6 @@ using Volo.Abp.EventBus.RabbitMq;
 using Volo.Abp.Modularity;
 using Volo.Abp.OpenIddict.Tokens;
 using Volo.Abp.Threading;
-using NFTMarketServer.Chains;
 
 namespace NFTMarketServer.Dealer
 {
@@ -81,7 +80,6 @@ namespace NFTMarketServer.Dealer
             context.Services.AddSingleton<IContractInvokerFactory, ContractInvokerFactory>();
             context.Services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
             context.Services.AddSingleton<INFTDropInfoProvider, NFTDropInfoProvider>();
-            // context.Services.AddScoped<IChainAppService, ChainAppService>();
             context.Services.AddSingleton<IContractInvoker, NFTDropFinishInvoker>();
             
             

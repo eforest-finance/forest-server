@@ -7,7 +7,7 @@ namespace NFTMarketServer.NFT
     {
         [Required]public string DropId { get; set; }
         [Required][MaxLength(100)]public string DropName { get; set; }
-        [MaxLength(300)] public string Introduction { get; set; }
+        [Required][MaxLength(300)] public string Introduction { get; set; }
         
         [Required]public string BannerUrl { get; set; }
         [Required]public string LogoUrl { get; set; }

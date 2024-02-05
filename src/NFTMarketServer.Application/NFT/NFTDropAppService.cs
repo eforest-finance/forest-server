@@ -68,27 +68,6 @@ namespace NFTMarketServer.NFT
             {
                 throw new UserFriendlyException("drop already exist");
             }
-            
-            // var extension = new NftInfoExtensionGrainDto()
-            // {
-            //     Id = id,
-            //     ChainId = input.ChainId,
-            //     Description = input.Description,
-            //     NFTSymbol = input.Symbol,
-            //     TransactionId = input.TransactionId,
-            //     ExternalLink = input.ExternalLink,
-            //     PreviewImage = input.PreviewImage,
-            //     File = input.File,
-            //     FileExtension = fileExtension,
-            //     CoverImageUrl = input.CoverImageUrl
-            // };
-            // var userGrain = _clusterClient.GetGrain<INftInfoExtensionGrain>(extension.Id);
-            // var result = await userGrain.CreateNftInfoExtensionAsync(extension);
-            // if (!result.Success)
-            // {
-            //     _logger.LogError("Create NftInfoExtension fail, NftInfoExtension id: {id}.", extension.Id);
-            //     return;
-            // }
 
             await _distributedEventBus.PublishAsync(
                 _objectMapper.Map<CreateNFTDropInput, NFTDropExtraEto>(input));
@@ -175,26 +154,6 @@ namespace NFTMarketServer.NFT
                     result.Add(dto);
                 }
             }
-            
-            
-            // var res = recommendedOptions.RecommendedDropIds.Select(i =>
-            // {
-            //     if (dropExtensionMap.ContainsKey(i))
-            //     {
-            //         var dropIndexDto =
-            //             _objectMapper.Map<NFTDropExtensionIndex, RecommendedNFTDropIndexDto>(dropExtensionMap[i]);
-            //
-            //         return dropIndexDto;
-            //     }
-            //     else
-            //     {
-            //         return new RecommendedNFTDropIndexDto
-            //         {
-            //             DropId = i,
-            //         };
-            //     }
-            // }).ToList();
-
 
             return result;
         }
