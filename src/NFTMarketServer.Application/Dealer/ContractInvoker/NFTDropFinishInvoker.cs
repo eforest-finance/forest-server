@@ -7,14 +7,11 @@ using Google.Protobuf;
 using NFTMarketServer.Common;
 using NFTMarketServer.Dealer.Dtos;
 using NFTMarketServer.Dealer.Provider;
-using NFTMarketServer.Chains;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using NFTMarketServer.NFT;
-using NFTMarketServer.Options;
 using NFTMarketServer.Provider;
 using Orleans.Runtime;
 

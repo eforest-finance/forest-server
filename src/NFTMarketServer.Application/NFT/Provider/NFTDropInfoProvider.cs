@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using NFTMarketServer.NFT.Index;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.ObjectMapping;
 using GraphQL;
 using NFTMarketServer.Common;
 
@@ -51,38 +50,7 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
                 maxResultCount = input.MaxResultCount
             }
         });
-        
-       //  var indexerCommonResult = await _graphQlHelper.QueryAsync<NFTDropInfoIndexList>(new GraphQLRequest
-       //  {
-       //      Query = @"
-			    // query($type:SearchType!, 
-       //                $skipCount: Int!,
-       //                $maxResultCount: Int!) {
-       //              data:nftDropList(dto:{type:$type, skipCount:$skipCount, maxResultCount:$maxResultCount}){
-       //                  totalRecordCount,
-       //                  dropInfoIndexList:data{
-       //                      dropId,
-       //                      collectionId,
-       //                      startTime,
-       //                      expireTime,
-       //                      claimMax,  
-       //                      claimPrice,
-       //                      maxIndex,
-       //                      totalAmount,
-       //                      claimAmount,
-       //                      isBurn,
-       //                      state,
-       //                  }
-       //              }
-       //          }",
-       //      Variables = new
-       //      {
-       //          type = input.Type,
-       //          skipCount = input.SkipCount,
-       //          maxResultCount = input.MaxResultCount
-       //      }
-       //  });
-        
+      
        return indexerCommonResult?.Data?.Data;
     }
 
@@ -116,30 +84,6 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
             }
         });
 
-       //  var indexerCommonResult = await _graphQlHelper.QueryAsync<NFTDropInfoIndex>(new GraphQLRequest
-       //  {
-       //      Query = @"
-			    // query($dropId:String!) {
-       //              data:nftDrop(dropId:$dropId){
-       //                      dropId,
-       //                      collectionId,
-       //                      startTime,
-       //                      expireTime,
-       //                      claimMax,  
-       //                      claimPrice,
-       //                      maxIndex,
-       //                      totalAmount,
-       //                      claimAmount,
-       //                      isBurn,
-       //                      state,
-       //              }
-       //          }",
-       //      Variables = new
-       //      {
-       //          dropId = dropId
-       //      }
-       //  });
-
        return indexerCommonResult?.Data?.Data;
     }
     
@@ -164,24 +108,7 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
                 address = address
             }
         });
-        
-       //  var indexerCommonResult = await _graphQlHelper.QueryAsync<NFTDropClaimIndex>(new GraphQLRequest
-       //  {
-       //      Query = @"
-			    // query($dropId:String!, $address:String!) {
-       //              data:dropClaim(dto:{dropId:$dropId, address:$address}){
-       //                      DropId,
-       //                      ClaimLimit,
-       //                      ClaimAmount,
-       //              }
-       //          }",
-       //      Variables = new
-       //      {
-       //          dropId = dropId,
-       //          address = address
-       //      }
-       //  });
-
+       
         return indexerCommonResult?.Data?.Data;
     }
 
@@ -202,30 +129,6 @@ public class NFTDropInfoProvider : INFTDropInfoProvider, ISingletonDependency
                     }
                 }"
         });
-
-       //  var indexerCommonResult = await _graphQlHelper.QueryAsync<NFTDropInfoIndexList>(new GraphQLRequest
-       //  {
-       //      Query = @"
-			    // query() {
-       //              data:expiredDropList{
-       //                  totalRecordCount,
-       //                  dropInfoIndexList:data{
-       //                      Id,
-       //                      CollectionId,
-       //                      StartTime,
-       //                      ExpireTime,
-       //                      ClaimMax,  
-       //                      ClaimPrice,
-       //                      MaxIndex,
-       //                      TotalAmount,
-       //                      ClaimAmount,
-       //                      IsBurn,
-       //                      State,
-       //                      ClaimMax,
-       //                  }
-       //              }
-       //          }"
-       //  });
         
         return indexerCommonResult?.Data?.Data;
     }
