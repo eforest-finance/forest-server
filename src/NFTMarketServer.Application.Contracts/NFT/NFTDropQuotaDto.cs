@@ -4,6 +4,7 @@ namespace NFTMarketServer.NFT;
 
 public class NFTDropQuotaDto :  EntityDto<string>
 {
+    public string DropId { get; set; }
     public long TotalAmount { get; set; }
     public long ClaimAmount { get; set; }
     public long AddressClaimLimit { get; set; }
