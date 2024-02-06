@@ -235,9 +235,11 @@ namespace NFTMarketServer.NFT
                     _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
                 if (resetSyncHeightFlag.IsNullOrEmpty())
                 {
+                    var temValue = _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue?
+                        .ResetNFTSyncHeightExpireMinutes ?? CommonConstant.IntZero;
                     var resetNftSyncHeightExpireMinutes =
-                        _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes ??
-                        CommonConstant.CacheExpirationMinutes;
+                        temValue != CommonConstant.IntZero ? temValue : CommonConstant.CacheExpirationMinutes;
+                    
                     await _distributedCacheForHeight.SetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey,
                         CommonConstant.ResetNFTSyncHeightFlagCacheKey, new DistributedCacheEntryOptions
                         {
