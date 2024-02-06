@@ -57,7 +57,7 @@ public class FileController : AbpController
                 return "";
             }
 
-            string extension = Path.GetExtension(file.FileName).ToLower();
+            var extension = Path.GetExtension(file.FileName).ToLower();
             string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
             if (!allowedExtensions.Contains(extension))
             {
@@ -66,7 +66,7 @@ public class FileController : AbpController
             }
 
             await using var stream = file.OpenReadStream();
-            byte[] utf8Bytes = stream.GetAllBytes();
+            var utf8Bytes = stream.GetAllBytes();
             return await _symbolIconAppService.UpdateNFTIconAsync(utf8Bytes,
                 "drop_" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "_" + file.FileName);
         }

@@ -21,3 +21,8 @@ public class HideCollectionInfoOptions
 {
     public List<string> HideCollectionInfoList { get; set; }
 }
+
+public class ResetNFTSyncHeightExpireMinutesOptions
+{
+    public int ResetNFTSyncHeightExpireMinutes { get; set; }
+}

@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using NFTMarketServer.AwsS3;
 using NFTMarketServer.Icon;
 
