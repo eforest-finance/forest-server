@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Indexing.Elasticsearch;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
@@ -16,6 +16,7 @@ using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Market;
 using NFTMarketServer.NFT.Eto;
+using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Seed.Index;
@@ -54,8 +55,9 @@ namespace NFTMarketServer.NFT
         private readonly INFTDealInfoProvider _nftDealInfoProvider;
         private readonly IInscriptionProvider _inscriptionProvider;
         private readonly NFTCollectionAppService _nftCollectionAppService;
-        private readonly IDistributedCache<string> _distributedCache;
-
+        private readonly IDistributedCache<string> _distributedCacheForHeight;
+        private readonly IBus _bus;
+        
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
 
@@ -68,6 +70,7 @@ namespace NFTMarketServer.NFT
             IObjectMapper objectMapper, INFTInfoExtensionProvider nftInfoExtensionProvider,
             INESTRepository<NFTInfoIndex, string> nftInfoIndexRepository,
             ISeedSymbolSyncedProvider seedSymbolSyncedProvider, INFTInfoSyncedProvider nftInfoSyncedProvider,
+            IBus bus,
             INFTOfferProvider nftOfferProvider,
             INFTListingProvider nftListingProvider,
             INFTDealInfoProvider nftDealInfoProvider,
@@ -75,7 +78,7 @@ namespace NFTMarketServer.NFT
             INFTListingWhitelistPriceProvider nftListingWhitelistPriceProvider,
             INFTCollectionExtensionProvider nftCollectionExtensionProvider,
             NFTCollectionAppService nftCollectionAppService,
-            IDistributedCache<string> distributedCache,
+            IDistributedCache<string> distributedCacheForHeight,
             IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> resetNFTSyncHeightExpireMinutesOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
@@ -97,8 +100,9 @@ namespace NFTMarketServer.NFT
             _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
             _inscriptionProvider = inscriptionProvider;
             _nftCollectionAppService = nftCollectionAppService;
-            _distributedCache = distributedCache;
+            _distributedCacheForHeight = distributedCacheForHeight;
             _resetNFTSyncHeightExpireMinutesOptionsMonitor = resetNFTSyncHeightExpireMinutesOptionsMonitor;
+            _bus = bus;
         }
 
         public async Task<PagedResultDto<NFTInfoIndexDto>> GetNFTInfosAsync(GetNFTInfosInput input)
@@ -204,15 +208,16 @@ namespace NFTMarketServer.NFT
 
             try
             {
-                var compositeNFTInfoIndexDto = result?.Items?.FirstOrDefault();
-                if (compositeNFTInfoIndexDto == null || compositeNFTInfoIndexDto.TokenName.IsNullOrEmpty())
+                var collectionInfo = await _nftCollectionProvider.GetNFTCollectionIndexAsync(input.CollectionId);
+                
+                if (collectionInfo == null || collectionInfo.TokenName.IsNullOrEmpty())
                 {
                     return await MapForCompositeNftInfoIndexDtoPage(result);
                 }
 
                 var checkInput = new SearchNFTCollectionsInput()
                 {
-                    TokenName = compositeNFTInfoIndexDto.TokenName
+                    TokenName = collectionInfo.TokenName
                 };
                 var collectionResult = await _nftCollectionAppService.SearchNFTCollectionsAsync(checkInput);
                 var searchNftCollectionsDto = collectionResult?.Items?.FirstOrDefault();
@@ -224,7 +229,7 @@ namespace NFTMarketServer.NFT
                 }
 
                 var resetSyncHeightFlag =
-                    await _distributedCache.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
+                    await _distributedCacheForHeight.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
                 _logger.Debug("GetCompositeNFTInfosAsync origin {ResetSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
                     resetSyncHeightFlag,
                     _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
@@ -233,12 +238,19 @@ namespace NFTMarketServer.NFT
                     var resetNftSyncHeightExpireMinutes =
                         _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes ??
                         CommonConstant.CacheExpirationMinutes;
-                    await _distributedCache.SetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey,
+                    await _distributedCacheForHeight.SetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey,
                         CommonConstant.ResetNFTSyncHeightFlagCacheKey, new DistributedCacheEntryOptions
                         {
                             AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(resetNftSyncHeightExpireMinutes)
                         });
+                    
+                    await _distributedEventBus.PublishAsync(new NFTResetFlagEto
+                    {
+                        FlagDesc = CommonConstant.ResetNFTSyncHeightFlagCacheKey,
+                        Minutes = resetNftSyncHeightExpireMinutes
+                    });
                 }
+
             }
             catch (Exception e)
             {

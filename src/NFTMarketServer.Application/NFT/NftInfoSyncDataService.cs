@@ -25,15 +25,11 @@ public class NftInfoSyncDataService : ScheduleSyncDataService
     private readonly IDistributedCache<List<string>> _distributedCache;
     private readonly IDistributedCache<string> _distributedCacheForHeight;
 
-    private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
-        _resetNFTSyncHeightExpireMinutesOptionsMonitor;
-
     public NftInfoSyncDataService(ILogger<NftInfoSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         INFTInfoAppService nftInfoAppService,
         IDistributedCache<List<string>> distributedCache,
         IDistributedCache<string> distributedCacheForHeight,
-        IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> resetNFTSyncHeightExpireMinutesOptionsMonitor,
         IChainAppService chainAppService)
         : base(logger, graphQlProvider, chainAppService)
     {
@@ -43,27 +39,24 @@ public class NftInfoSyncDataService : ScheduleSyncDataService
         _chainAppService = chainAppService;
         _distributedCache = distributedCache;
         _distributedCacheForHeight = distributedCacheForHeight;
-        _resetNFTSyncHeightExpireMinutesOptionsMonitor = resetNFTSyncHeightExpireMinutesOptionsMonitor;
     }
 
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
     {
         try
         {
-            var resetSyncHeightFlag = await _distributedCache.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
-            var nftSyncHeightFlag = await _distributedCache.GetAsync(CommonConstant.NFTResetHeightFlagCacheKey);
-            _logger.Debug("GetCompositeNFTInfosAsync nft {ResetSyncHeightFlag} {NFTSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
-                resetSyncHeightFlag, nftSyncHeightFlag,
-                _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
-            if (!resetSyncHeightFlag.IsNullOrEmpty())
+            var resetSyncHeightFlagMinutesStr = await _distributedCacheForHeight.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
+            var nftResetHeightFlagCacheValue = await _distributedCacheForHeight.GetAsync(CommonConstant.NFTResetHeightFlagCacheKey+chainId);
+            _logger.Debug("GetCompositeNFTInfosAsync nft {ResetSyncHeightFlag} {NFTSyncHeightFlag} {nftSyncHeightFlagMinuteStr}",
+                resetSyncHeightFlagMinutesStr, CommonConstant.NFTResetHeightFlagCacheKey,
+                resetSyncHeightFlagMinutesStr);
+            if (!resetSyncHeightFlagMinutesStr.IsNullOrEmpty())
             {
-                if (nftSyncHeightFlag.IsNullOrEmpty())
+                if (nftResetHeightFlagCacheValue.IsNullOrEmpty())
                 {
-                    var resetNftSyncHeightExpireMinutes =
-                        _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes ??
-                        CommonConstant.CacheExpirationMinutes;
+                    var resetNftSyncHeightExpireMinutes = int.Parse(resetSyncHeightFlagMinutesStr);
 
-                    await _distributedCacheForHeight.SetAsync(CommonConstant.NFTResetHeightFlagCacheKey,
+                        await _distributedCacheForHeight.SetAsync(CommonConstant.NFTResetHeightFlagCacheKey+chainId,
                         CommonConstant.NFTResetHeightFlagCacheKey, new DistributedCacheEntryOptions
                         {
                             AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(resetNftSyncHeightExpireMinutes)
