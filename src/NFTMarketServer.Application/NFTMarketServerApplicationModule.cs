@@ -67,6 +67,7 @@ namespace NFTMarketServer
             context.Services.AddSingleton<IContractInvoker, InscriptionItemCrossChainCreateInvoker>();
             context.Services.AddSingleton<IContractInvoker, InscriptionCollectionCrossChainCreateInvoker>();
             context.Services.AddSingleton<IContractInvoker, InscriptionIssueInvoker>();
+            context.Services.AddSingleton<IContractInvoker, NFTDropFinishInvoker>();
 
             context.Services.AddSingleton<InscriptionItemCrossChainCreateInvoker>();
             context.Services.AddSingleton<InscriptionCollectionCrossChainCreateInvoker>();

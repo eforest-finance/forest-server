@@ -31,6 +31,8 @@ public class InitJobsService : BackgroundService
         {
             _recurringJobs.AddOrUpdate<IContractInvokerWorker>("IContractInvokerWorker",
                 x => x.Invoke(), _workerOptionsMonitor.CurrentValue?.Workers?.GetValueOrDefault("IContractInvokerWorker")?.Cron ?? WorkerOption.DefaultCron);
+            _recurringJobs.AddOrUpdate<INFTDropFinishWorker>("INFTDropFinishWorker",
+                x => x.CheckExpireDrop(), _workerOptionsMonitor.CurrentValue?.Workers?.GetValueOrDefault("INFTDropFinishWorker")?.Cron ?? WorkerOption.DefaultCron);
         }
         catch (Exception e)
         {

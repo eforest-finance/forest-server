@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
 using NFTMarketServer.Provider;
@@ -20,12 +21,13 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
     private readonly IChainAppService _chainAppService;
     private const int HeightExpireMinutes = 5;
     private readonly IDistributedCache<List<string>> _distributedCache;
-
-
+    private readonly IDistributedCache<string> _distributedCacheForHeight;
+    
     public SeedSymbolSyncDataService(ILogger<SeedSymbolSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         ISeedAppService seedAppService,
         IDistributedCache<List<string>> distributedCache,
+        IDistributedCache<string> distributedCacheForHeight,
         IChainAppService chainAppService)
         : base(logger, graphQlProvider, chainAppService)
     {
@@ -34,10 +36,40 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
         _seedAppService = seedAppService;
         _chainAppService = chainAppService;
         _distributedCache = distributedCache;
+        _distributedCacheForHeight = distributedCacheForHeight;
     }
 
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
     {
+        try
+        {
+            var resetSyncHeightFlagMinutesStr = await _distributedCacheForHeight.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
+            var seedResetHeightFlagCacheValue = await _distributedCacheForHeight.GetAsync(CommonConstant.SeedResetHeightFlagCacheKey+chainId);
+            _logger.Debug("GetCompositeNFTInfosAsync seed {ResetSyncHeightFlag} {SeedSyncHeightFlag} {SeedSyncHeightFlagMinuteStr}",
+                resetSyncHeightFlagMinutesStr, seedResetHeightFlagCacheValue,
+                resetSyncHeightFlagMinutesStr);
+            if (!resetSyncHeightFlagMinutesStr.IsNullOrEmpty())
+            {
+                if (seedResetHeightFlagCacheValue.IsNullOrEmpty())
+                {
+                    var resetSeedSyncHeightExpireMinutes =
+                        int.Parse(resetSyncHeightFlagMinutesStr);
+
+                    await _distributedCacheForHeight.SetAsync(CommonConstant.SeedResetHeightFlagCacheKey+chainId,
+                        CommonConstant.SeedResetHeightFlagCacheKey, new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(resetSeedSyncHeightExpireMinutes)
+                        });
+
+                    return CommonConstant.BeginHeight;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.Error(CommonConstant.IntError, "Something is wrong for SyncIndexerRecordsAsync reset height", e);
+        }
+        
         var queryList = await _graphQlProvider.GetSyncSeedSymbolRecordsAsync(chainId, lastEndHeight, 0);
         _logger.LogInformation(
             "SyncSeedSymbolRecords queryList startBlockHeight: {lastEndHeight} endBlockHeight: {newIndexHeight} count: {count}",

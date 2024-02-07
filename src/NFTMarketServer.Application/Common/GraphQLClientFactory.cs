@@ -32,11 +32,20 @@ namespace NFTMarketServer.Common
             {
                 if (!_clientDic.TryGetValue(clientName, out client))
                 {
-                    client = clientEnum == GraphQLClientEnum.InscriptionClient
-                        ? new GraphQLHttpClient(_graphQlClientOptions.InscriptionConfiguration,
-                            new NewtonsoftJsonSerializer())
-                        : new GraphQLHttpClient(_graphQlClientOptions.Configuration,
-                            new NewtonsoftJsonSerializer());
+                    client = new GraphQLHttpClient(_graphQlClientOptions.Configuration,
+                        new NewtonsoftJsonSerializer());
+                    switch (clientEnum)
+                    {
+                        case GraphQLClientEnum.InscriptionClient:
+                            client = new GraphQLHttpClient(_graphQlClientOptions.InscriptionConfiguration,
+                                new NewtonsoftJsonSerializer());
+                            break;
+                        case GraphQLClientEnum.DropClient:
+                            client = new GraphQLHttpClient(_graphQlClientOptions.DropConfiguration,
+                                new NewtonsoftJsonSerializer());
+                            break;
+                    }
+                   
                     _clientDic[clientName] = client;
                 }
             }

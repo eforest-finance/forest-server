@@ -26,4 +26,9 @@ public class DealerContractType
 
    public static string InscriptionContractName = "Inscription";
    public static string IssueInscription = "IssueInscription";
+   
+   public static string DropContractName = "Forest.DropContract";
+   public static string DropFinishMethod = "FinishDrop";
+   public static string DropFinishAccount = "DropFinishAccount";
+   
 }
