@@ -35,7 +35,7 @@ public class NFTDropExtensionProvider :  INFTDropExtensionProvider, ISingletonDe
 
         var extensions =
             await _nftDropExtensionIndexRepository.GetListAsync(Filter);
-        if (extensions == null || extensions.Item2 == null)
+        if (extensions?.Item2 == null)
         {
             return result;
         }
