@@ -19,11 +19,8 @@ namespace NFTMarketServer.Dealer.ContractInvoker;
 
 public class NFTDropFinishInvoker : AbstractContractInvoker
 {
-    private readonly IObjectMapper _objectMapper;
-    private readonly IDistributedEventBus _distributedEventBus;
     private readonly ILogger<NFTDropFinishInvoker> _logger;
     private readonly IOptionsMonitor<ForestChainOptions> _optionsMonitor;
-    // private readonly IChainAppService _chainAppService;
 
     public NFTDropFinishInvoker(IDistributedEventBus distributedEventBus,
         ContractInvokeProvider contractInvokeProvider, 
@@ -32,11 +29,8 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
         IOptionsMonitor<ForestChainOptions> optionsMonitor) : base(distributedEventBus,
         contractInvokeProvider, objectMapper)
     {
-        _objectMapper = objectMapper;
-        _distributedEventBus = distributedEventBus;
         _logger = logger;
         _optionsMonitor = optionsMonitor;
-        // _chainAppService = chainAppService;
     }
 
     public override string BizType()
@@ -82,7 +76,7 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
     public override async Task ResultCallbackAsync(string bizId, bool invokeSuccess, TransactionResultDto result,
         string rawTransaction)
     {
-        _logger.Debug("NFTDrop Finish ResultCallbackAsync");
+        _logger.Debug($"NFTDrop Finish ResultCallbackAsync， result: {result}", JsonConvert.SerializeObject(result));
         return;
     }
 }
