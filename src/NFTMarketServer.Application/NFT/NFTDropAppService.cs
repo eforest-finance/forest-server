@@ -210,7 +210,7 @@ namespace NFTMarketServer.NFT
                 return dropDetailDto;
             }
             
-            dropDetailDto.AddressClaimAmount = claimInfo.ClaimAmount;
+            dropDetailDto.AddressClaimAmount = claimInfo.ClaimTotal;
             _logger.Debug("Fill claimInfo: {claimInfo}", JsonConvert.SerializeObject(claimInfo));
 
             return dropDetailDto;
