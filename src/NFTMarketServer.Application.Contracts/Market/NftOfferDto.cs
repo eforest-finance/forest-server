@@ -13,6 +13,8 @@ namespace NFTMarketServer.Market
         public AccountDto From { get; set; }
         public AccountDto To { get; set; }
         public decimal Price { get; set; }
+        public decimal FloorPrice { get; set; } = -1;
+        public string FloorPriceSymbol { get; set; }
         public long Quantity { get; set; }
         public long ExpireTime { get; set; }
         public NFTImmutableInfoDto NftInfo { get; set; }

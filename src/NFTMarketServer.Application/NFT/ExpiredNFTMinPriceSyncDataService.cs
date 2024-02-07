@@ -125,6 +125,14 @@ public class ExpiredNftMinPriceSyncDataService : ScheduleSyncDataService
                     Symbol = data.Value.Symbol
                 }
             });
+            await _bus.Publish<NewIndexEvent<NFTOfferChangeDto>>(new NewIndexEvent<NFTOfferChangeDto>
+            {
+                Data = new NFTOfferChangeDto
+                {
+                    NftId = IdGenerateHelper.GetNFTInfoId(chainId, data.Value.Symbol),
+                    ChainId = chainId
+                }
+            });
         }
         
         await _distributedCache.SetAsync(cacheKey, nftInfoIdWithTimeListNew,

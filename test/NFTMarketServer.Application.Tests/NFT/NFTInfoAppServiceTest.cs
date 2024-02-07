@@ -199,8 +199,8 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         };
         var res = await _nftInfoAppService.GetNFTForSaleAsync(input);
         res.ShouldNotBeNull();
-        // res.AvailableQuantity.ShouldBe(3);
-        // res.MaxOfferPrice.ShouldBe(2);
+        res.AvailableQuantity.ShouldBe(3);
+        res.MaxOfferPrice.ShouldBe(2);
     }
     
     [Fact]
@@ -213,8 +213,8 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         };
         var res = await _nftInfoAppService.GetNFTForSaleAsync(input);
         res.ShouldNotBeNull();
-        // res.AvailableQuantity.ShouldBe(6);
-        // res.MaxOfferPrice.ShouldBe(2);
+        res.AvailableQuantity.ShouldBe(6);
+        res.MaxOfferPrice.ShouldBe(2);
     }
     
     [Fact]
@@ -319,12 +319,13 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
     {
         var result =
             "{\"id\":\"tDVV-LIJIGUANGAAAABBB-1\",\"symbol\":\"LIJIGUANGAAAABBB-1\",\"tokenName\":\"721\", \"collectionSymbol\":\"LIJIGUANGAAAABBB-0\", \"chainId\":\"tDVV\", \"totalSupply\": 1, \"collectionId\": \"tDVV-LIJIGUANGAAAABBB-0\", \"OwnerCount\": 1, \"issuer\": \"aaaaa\", \"owner\": \"bbbbb\"}";
+
         var syncProvider = new Mock<INFTInfoSyncedProvider>();
         syncProvider.Setup(calc => 
                 calc.GetNFTInfoIndexAsync(
                     It.IsAny<string>()))
             .ReturnsAsync(JsonConvert.DeserializeObject<IndexerNFTInfo>(result));
-        
+
         syncProvider.Setup(calc => 
                 calc.GetNFTInfosUserProfileAsync(
                     It.IsAny<GetNFTInfosProfileInput>()))
@@ -442,6 +443,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
                )))
             .ReturnsAsync(new PagedResultDto<IndexerNFTListingInfo>()
             {
+
                 TotalCount = 0,
                 Items = new List<IndexerNFTListingInfo> { listing1, listing2, listing3 }
             });
@@ -454,8 +456,8 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
                 TotalCount = 2,
                 Items = new List<IndexerNFTListingInfo> { listing1, listing2 }
             });
-        
-        
+
+
         provider
             .Setup(provider => provider.GetNFTListingsAsync(It.Is<GetNFTListingsDto>(dto => dto.ExcludedAddress == "T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z"
             )))

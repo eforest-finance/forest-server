@@ -12,6 +12,7 @@ public class SymbolHelper
     private const string Coin_Gecko_ELF = "ELF";
     private const string HYPHEN = "-";
     public const string SEED_COLLECTION = "SEED-0";
+    public const string COLLECTION_SUFFIX = "-0";
     private const string FT_PATTERN = "^[A-Z]{1,10}$";
     private const string NFT_PREFIX_PATTERN = "^[A-Z]{1,28}$"; // NFT max length 30
     public const string NFTSymbolPattern = @"^.+-(?!0+$)[0-9]+$";
@@ -67,7 +68,17 @@ public class SymbolHelper
     {
         return symbol.Equals(SEED_COLLECTION);
     }
-    
+
+    public static string TransferNFTIdToCollectionId(string nftId)
+    {
+        if (nftId.IsNullOrEmpty() || nftId.LastIndexOf(HYPHEN, StringComparison.Ordinal) < 0)
+        {
+            return "";
+        }
+
+        return nftId.Substring(0, nftId.LastIndexOf(HYPHEN, StringComparison.Ordinal)) + COLLECTION_SUFFIX;
+    }
+
     public static string GainInscriptionInfoTick(string symbol)
     {
         return symbol.Substring(0,symbol.IndexOf(HYPHEN, StringComparison.Ordinal));
