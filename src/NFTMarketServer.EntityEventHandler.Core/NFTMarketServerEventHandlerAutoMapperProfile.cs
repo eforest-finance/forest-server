@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AutoMapper;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
@@ -26,5 +27,9 @@ public class NFTMarketServerEventHandlerAutoMapperProfile : Profile
         
         CreateMap<UserInformationEto, UserIndex>();
         CreateMap<SynchronizeTransactionInfoEto, SynchronizeTransactionInfoIndex>();
+        CreateMap<NFT.SocialMedia, SocialMedia>();
+        CreateMap<NFTDropExtraEto, NFTDropExtensionIndex>
+            ().ForMember(destination => destination.Id, 
+            opt => opt.MapFrom(source => source.DropId));
     }
 }

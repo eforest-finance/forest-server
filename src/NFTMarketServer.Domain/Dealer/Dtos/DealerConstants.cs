@@ -35,5 +35,5 @@ public enum BizType
     InscriptionCollectionCrossChainCreate = 4,
     InscriptionItemCrossChainCreate = 5,
     InscriptionIssue = 6,
-    
+    NFTDropFinish = 7,
 }

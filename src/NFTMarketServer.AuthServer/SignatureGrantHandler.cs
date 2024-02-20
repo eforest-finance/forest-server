@@ -37,6 +37,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
     private readonly string _lockKeyPrefix = "NFTMarketServer:Auth:SignatureGrantHandler:";
     private readonly string _source_portkey = "portkey";
     private readonly string _source_nightaelf = "nightElf";
+    private readonly string _V2 = "v2";
 
     public string Name { get; } = "signature";
 
@@ -84,7 +85,9 @@ public class SignatureGrantHandler: ITokenExtensionGrant
             
             foreach (var account in accountInfoList)
             {
-                var caHolderInfos = await GetCAHolderInfo(graphqlConfig.PortkeyUrl,
+                var version = context.Request.GetParameter("version").ToString();
+                var portkeyUrl = version == _V2 ? graphqlConfig.PortkeyV2Url : graphqlConfig.PortkeyUrl;
+                var caHolderInfos = await GetCAHolderInfo(portkeyUrl,
                     new List<string>(){ account.Address} , account.ChainId);
                 if (caHolderInfos == null || caHolderInfos.CaHolderManagerInfo==null || caHolderInfos.CaHolderManagerInfo.Count == 0)
                 {

@@ -5,6 +5,7 @@ public static class CommonConstant
     public const string Coin_ELF = "ELF";
     public const long LongError = -1;
     public const long LongEmpty = 0;
+    public const int IntZero = 0;
     public const int IntError = -1;
     public const string MainChainId = "AELF";
     
@@ -19,6 +20,10 @@ public static class CommonConstant
     public const string FILE_TYPE_IMAGE = "image";
     public const string TokenExist = "Token already exists";
     public const string InscriptionIssueRepeat = "Total supply exceeded";
-
+    public const string ResetNFTSyncHeightFlagCacheKey = "ResetNFTSyncHeightFlagCacheKey";
+    public const string NFTResetHeightFlagCacheKey = "NFTResetHeightFlagCacheKey";
+    public const string SeedResetHeightFlagCacheKey = "SeedResetHeightFlagCacheKey";
+    public const int CacheExpirationMinutes = 60*24;
+    public const int BeginHeight = 1;
 
 }

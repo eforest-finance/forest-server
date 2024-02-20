@@ -248,5 +248,27 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<TsmSeedSymbolIndex, SeedRankingWeightDto>();
 
         CreateMap<InscriptionAmountGrainDto, InscriptionAmountDto>();
+        CreateMap<CreateNFTDropInput, NFTDropExtraEto>();
+        CreateMap<NFTDropExtensionIndex, NFTDropIndexDto>()
+            .ForMember(destination => destination.DropId,
+                opt => opt.MapFrom(source => source.Id));
+        CreateMap<NFTDropExtensionIndex, RecommendedNFTDropIndexDto>()
+            .ForMember(destination => destination.DropId, 
+                opt => opt.MapFrom(source => source.Id));
+        CreateMap<NFTDropInfoIndex, NFTDropDetailDto>()
+            .ForMember(destination => destination.AddressClaimLimit,
+                opt => opt.MapFrom(source => source.ClaimMax)).
+            ForMember(destination => destination.StartTime,
+                opt => opt.MapFrom(source => TimeHelper.ToUtcMilliSeconds(source.StartTime))).
+            ForMember(destination => destination.ExpireTime,
+                opt => opt.MapFrom(source => TimeHelper.ToUtcMilliSeconds(source.ExpireTime))).
+            ForMember(destination => destination.Burn,
+                opt => opt.MapFrom(source => source.IsBurn)).
+            ForMember(destination => destination.MintPrice,
+                opt => opt.MapFrom(source => source.ClaimPrice));
+        CreateMap<NFTDropExtensionIndex, NFTDropDetailDto>();
+        CreateMap<NFTDropInfoIndex, NFTDropQuotaDto>()
+            .ForMember(destination => destination.AddressClaimLimit,
+                opt => opt.MapFrom(source => source.ClaimMax));
     }
 }

@@ -18,10 +18,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using NFTMarketServer.Basic;
+using NFTMarketServer.Common;
 using NFTMarketServer.Dealer.ContractInvoker;
 using NFTMarketServer.Dealer.Options;
 using NFTMarketServer.Dealer.Provider;
 using NFTMarketServer.Grains;
+using NFTMarketServer.NFT.Provider;
+using NFTMarketServer.Provider;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Providers.MongoDB.Configuration;
@@ -74,6 +77,14 @@ namespace NFTMarketServer.Dealer
             context.Services.AddSingleton<IHostedService, InitJobsService>();
             
             context.Services.AddSingleton<ContractInvokeProvider>();
+            context.Services.AddSingleton<IContractInvokerFactory, ContractInvokerFactory>();
+            context.Services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
+            context.Services.AddSingleton<INFTDropInfoProvider, NFTDropInfoProvider>();
+            context.Services.AddSingleton<IContractInvoker, NFTDropFinishInvoker>();
+            
+            
+            Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
+            Configure<ForestChainOptions>(configuration.GetSection("Forest"));
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
