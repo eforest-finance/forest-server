@@ -114,7 +114,14 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
 
         var sort = GetSortForNFTBrife(dto.Sorting);
         var result = await _nftInfoIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: dto.MaxResultCount);
-        return result;
+        if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
+        {
+            return result;
+        }
+        
+        var count = await QueryRealCountAsync(mustQuery);
+        var newResult = new Tuple<long, List<NFTInfoIndex>>(count, result?.Item2);
+        return newResult;
     }
 
     public async Task<IndexerNFTInfos> GetNFTInfosUserProfileAsync(GetNFTInfosProfileInput dto)
@@ -184,7 +191,14 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
             TotalRecordCount = result.Item1,
             IndexerNftInfos = _objectMapper.Map<List<NFTInfoIndex>, List<IndexerNFTInfo>>(result.Item2)
         };
-        return indexerInfos;
+         if (result?.Item1 != CommonConstant.EsLimitTotalNumber)
+         {
+             return indexerInfos;
+         }
+        
+         var count = await QueryRealCountAsync(mustQuery);
+         indexerInfos.TotalRecordCount = count;
+         return indexerInfos;
     }
 
     private static void AddQueryForMinListingPrice(
@@ -236,5 +250,24 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
                 break;
         }
         return s => sortDescriptor;
+    }
+    
+    private async Task<long> QueryRealCountAsync(List<Func<QueryContainerDescriptor<NFTInfoIndex>, QueryContainer>> mustQuery)
+    {
+        var countRequest = new SearchRequest<NFTInfoIndex>
+        {
+            Query = new BoolQuery
+            {
+                Must = mustQuery
+                    .Select(func => func(new QueryContainerDescriptor<NFTInfoIndex>()))
+                    .ToList()
+                    .AsEnumerable()
+            },
+            Size = 0
+        };
+        
+        Func<QueryContainerDescriptor<NFTInfoIndex>, QueryContainer> queryFunc = q => countRequest.Query;
+        var realCount = await _nftInfoIndexRepository.CountAsync(queryFunc);
+        return realCount.Count;
     }
 }
