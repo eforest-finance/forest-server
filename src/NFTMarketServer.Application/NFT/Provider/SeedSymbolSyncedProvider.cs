@@ -109,7 +109,14 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         var sort = GetSortForSeedBrife(dto.Sorting);
         var result = await _seedSymbolIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount,
             limit: dto.MaxResultCount);
-        return result;
+        if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
+        {
+            return result;
+        }
+
+        var count = await QueryRealCountAsync(mustQuery);
+        var newResult = new Tuple<long, List<SeedSymbolIndex>>(count, result?.Item2);
+        return newResult;
     }
 
     public async Task<IndexerSeedInfos> GetSeedInfosUserProfileAsync(GetNFTInfosProfileInput dto)
@@ -181,6 +188,14 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
             TotalRecordCount = result.Item1,
             IndexerSeedInfoList = _objectMapper.Map<List<SeedSymbolIndex>, List<IndexerSeedInfo>>(result.Item2)
         };
+         
+        if (result?.Item1 != CommonConstant.EsLimitTotalNumber)
+        {
+            return indexerInfos;
+        }
+        
+        var count = await QueryRealCountAsync(mustQuery);
+        indexerInfos.TotalRecordCount = count;
         return indexerInfos;
     }
 
@@ -296,5 +311,24 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         {
             sortDescriptor.Descending(field);
         }
+    }
+    
+    private async Task<long> QueryRealCountAsync(List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>> mustQuery)
+    {
+        var countRequest = new SearchRequest<SeedSymbolIndex>
+        {
+            Query = new BoolQuery
+            {
+                Must = mustQuery
+                    .Select(func => func(new QueryContainerDescriptor<SeedSymbolIndex>()))
+                    .ToList()
+                    .AsEnumerable()
+            },
+            Size = 0
+        };
+        
+        Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer> queryFunc = q => countRequest.Query;
+        var realCount = await _seedSymbolIndexRepository.CountAsync(queryFunc);
+        return realCount.Count;
     }
 }

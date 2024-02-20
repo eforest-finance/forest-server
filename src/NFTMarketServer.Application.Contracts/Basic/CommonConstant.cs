@@ -12,7 +12,8 @@ public static class CommonConstant
     public const string CollectionSymbolSuffix = "0";
     
     public const int CacheExpirationDays = 365;
-
+    public const long EsLimitTotalNumber = 10000;
+    
     public const string CollectionTypeSeed = "seed";
     public const string CollectionTypeNFT = "nft";
     public const string FILE_TYPE_IMAGE = "image";
