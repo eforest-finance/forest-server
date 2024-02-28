@@ -25,5 +25,8 @@ public static class CommonConstant
     public const string SeedResetHeightFlagCacheKey = "SeedResetHeightFlagCacheKey";
     public const int CacheExpirationMinutes = 60*24;
     public const int BeginHeight = 1;
+    public const int HttpSuccessCode = 200;
+    public const int HttpFileUploadSuccessCode = 20000;
+    
 
 }

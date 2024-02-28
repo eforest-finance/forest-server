@@ -6,12 +6,12 @@ using NFTMarketServer.Basic;
 
 namespace NFTMarketServer.Middleware;
 
-public class TimeTrackingStatisticsMiddleware
+public class TimeTrackingStatisticsAuthMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<TimeTrackingStatisticsMiddleware> _logger;
+    private readonly ILogger<TimeTrackingStatisticsAuthMiddleware> _logger;
 
-    public TimeTrackingStatisticsMiddleware(RequestDelegate next, ILogger<TimeTrackingStatisticsMiddleware> logger)
+    public TimeTrackingStatisticsAuthMiddleware(RequestDelegate next, ILogger<TimeTrackingStatisticsAuthMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -33,14 +33,14 @@ public class TimeTrackingStatisticsMiddleware
             if (context.Response.StatusCode == CommonConstant.HttpSuccessCode || context.Response.StatusCode == CommonConstant.HttpFileUploadSuccessCode)
             {
                 _logger.LogInformation(
-                    "TimeTrackingStatisticsMiddleware Path {path} Method {Method} StatusCode {StatusCode} Authorization {Authorization} Request took {elapsedMilliseconds} ms ",
+                    "TimeTrackingStatisticsAuthMiddleware Path {path} Method {Method} StatusCode {StatusCode} Authorization {Authorization} Request took {elapsedMilliseconds} ms ",
                     context.Request.Path, context.Request.Method, context.Response.StatusCode,
                     context.Request.Headers.Authorization, elapsedMilliseconds);
             }
             else
             {
                 _logger.LogInformation(
-                    "TimeTrackingStatisticsMiddleware Path {path} Method {Method} StatusCode {StatusCode} Request took {elapsedMilliseconds} ms ",
+                    "TimeTrackingStatisticsAuthMiddleware Path {path} Method {Method} StatusCode {StatusCode} Request took {elapsedMilliseconds} ms ",
                     context.Request.Path, context.Request.Method, context.Response.StatusCode, elapsedMilliseconds);
             }
         }
