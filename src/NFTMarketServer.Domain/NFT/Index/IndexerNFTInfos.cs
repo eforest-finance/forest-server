@@ -6,7 +6,7 @@ namespace NFTMarketServer.NFT.Index;
 
 public class IndexerNFTInfos : IndexerCommonResult<IndexerNFTInfos>
 {
-    public long TotalRecordCount { get; set; }
+    public long? TotalRecordCount { get; set; }
     public List<IndexerNFTInfo> IndexerNftInfos { get; set; }
 }
 

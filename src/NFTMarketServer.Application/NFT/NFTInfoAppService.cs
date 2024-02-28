@@ -143,7 +143,7 @@ namespace NFTMarketServer.NFT
             return new PagedResultDto<NFTInfoIndexDto>
             {
                 Items = result,
-                TotalCount = pageResult.TotalRecordCount
+                TotalCount = (long)(pageResult.TotalRecordCount == null ? 0 : pageResult.TotalRecordCount)
             };
         }
 
@@ -171,7 +171,7 @@ namespace NFTMarketServer.NFT
             return new PagedResultDto<UserProfileNFTInfoIndexDto>
             {
                 Items = _objectMapper.Map<List<NFTInfoIndexDto>, List<UserProfileNFTInfoIndexDto>>(result),
-                TotalCount = totalRecordCount
+                TotalCount = (long)(totalRecordCount == null ? 0 : totalRecordCount)
             };
         }
 
@@ -370,7 +370,6 @@ namespace NFTMarketServer.NFT
             if (!input.Address.IsNullOrWhiteSpace())
             {
                 canBuyFlag = await GetCanBuyFlagAsync(nftInfoIndex.ChainId, nftInfoIndex.Symbol, input.Address);
-                await FillWhitelistPriceAsync(new List<NFTInfoIndexDto> { nftInfoIndexDto }, input.Address);
             }
 
             nftInfoIndexDto.CanBuyFlag = canBuyFlag;
@@ -504,11 +503,6 @@ namespace NFTMarketServer.NFT
             var result = nftInfos
                 .Select(o => MapForIndexerNFTInfos(o, accounts, nftExtensions, collectionInfos)).ToList();
 
-            if (!address.IsNullOrWhiteSpace())
-            {
-                result = await FillWhitelistPriceAsync(result, address);
-            }
-
             return result;
         }
 
@@ -627,50 +621,6 @@ namespace NFTMarketServer.NFT
             }
 
             return true;
-        }
-
-        private async Task<List<NFTInfoIndexDto>> FillWhitelistPriceAsync(List<NFTInfoIndexDto> dtos, string address)
-        {
-            var nftInfoIds = dtos?.Select(dto => dto.Id).Where(id => !id.IsNullOrEmpty()).ToList() ??
-                             new List<string>();
-            try
-            {
-                if (nftInfoIds.IsNullOrEmpty())
-                {
-                    return new List<NFTInfoIndexDto>();
-                }
-
-                // async query graphQL by page
-                const int pageSize = 10;
-                var pages = nftInfoIds.Select((item, index) => new { Item = item, Index = index })
-                    .GroupBy(x => x.Index / pageSize)
-                    .Select(g => g.Select(x => x.Item).ToList())
-                    .ToList();
-                var queryTaskList = pages.Select(ids =>
-                    _nftListingWhitelistPriceProvider.GetNFTListingWhitelistPricesAsync(address, nftInfoIds)).ToList();
-
-                var whitelistPrices = new List<IndexerListingWhitelistPrice>();
-                foreach (var task in queryTaskList)
-                {
-                    whitelistPrices.AddRange(await task);
-                }
-
-                var whitelistPriceDic = whitelistPrices.ToDictionary(o => o.NftInfoId, o => o);
-                foreach (var dto in dtos!)
-                {
-                    if (whitelistPriceDic.TryGetValue(dto.Id, out var value))
-                    {
-                        ObjectMapper.Map(value, dto);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "FillWhitelistPriceAsync fail, Address={Address}, NftInfoIds={Join}", address,
-                    string.Join(",", nftInfoIds));
-            }
-
-            return dtos;
         }
 
         [Authorize]
