@@ -27,6 +27,7 @@ public static class CommonConstant
     public const int BeginHeight = 1;
     public const int HttpSuccessCode = 200;
     public const int HttpFileUploadSuccessCode = 20000;
+    public const long DefaultValueNone = -1;
     
 
 }

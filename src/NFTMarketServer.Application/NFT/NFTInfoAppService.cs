@@ -256,7 +256,7 @@ namespace NFTMarketServer.NFT
             }
             catch (Exception e)
             {
-                _logger.LogError("Something is wrong {Message}", e.Message);
+                _logger.LogError("Something is wrong {Message}", e.Message, e);
             }
 
             return await MapForCompositeNftInfoIndexDtoPage(result);
@@ -391,9 +391,20 @@ namespace NFTMarketServer.NFT
                 nftInfoIndexDto);
 
             var tick = SymbolHelper.GainInscriptionInfoTick(nftInfoIndex.Symbol);
-            var inscriptionInfoDto =
-                await _inscriptionProvider.GetIndexerInscriptionInfoAsync(nftInfoIndex.ChainId, tick);
-            nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
+            try
+            {
+                var inscriptionInfoDto =
+                    await _inscriptionProvider.GetIndexerInscriptionInfoAsync(nftInfoIndex.ChainId, tick);
+                if (inscriptionInfoDto != null && inscriptionInfoDto.MintLimit == 0)
+                {
+                    inscriptionInfoDto.MintLimit = CommonConstant.DefaultValueNone;
+                }
+                nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Query inscriptionInfo from graphQl error tick={Tick}",tick,e);
+            }
 
             return nftInfoIndexDto;
         }

@@ -72,7 +72,7 @@ public class FileController : AbpController
         }
         catch (Exception ex)
         {
-            _logger.LogError("UpdateImage: An unexpected error occurred - {Message}", ex.Message);
+            _logger.LogError("UpdateImage: An unexpected error occurred - {Message}", ex.Message, ex);
             return "";
         }
     }
