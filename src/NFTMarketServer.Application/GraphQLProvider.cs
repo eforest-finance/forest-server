@@ -6,6 +6,7 @@ using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Chain;
@@ -264,6 +265,40 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
             }
         });
         return graphQlResponse.Data.DataList.IsNullOrEmpty() ? new List<NFTInfoIndex>() : graphQlResponse.Data.DataList;
+    }
+
+    public async Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string nftInfoId, string chainId)
+    {
+        var graphQlResponse = await _graphQLClient.SendQueryAsync<JObject>(new GraphQLRequest
+        {
+            Query =
+                @"query($nftInfoId:String!,$chainId:String!){
+            getSyncNFTInfoRecord(dto: {nftInfoId:$nftInfoId,chainId:$chainId})
+            {
+                id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},
+                issueManagerSet,randomIssueManager,creatorAddress,imageUrl,collectionSymbol,collectionName,collectionId,otherOwnerListingFlag,
+                listingId,listingAddress,listingPrice,listingQuantity,listingEndTime,latestListingTime,latestOfferTime,latestDealPrice,latestDealTime,offerPrice,offerQuantity,offerExpireTime,
+                offerToken{id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},prices},
+                listingToken{id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},prices},
+                latestDealToken{id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},prices},
+                whitelistPriceToken{id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},prices},
+                previewImage,file,fileExtension,description,isOfficial,hasListingFlag,minListingPrice,minListingExpireTime,minListingId,hasOfferFlag,maxOfferPrice
+            }}",
+            Variables = new
+            {
+                nftInfoId,
+                chainId
+            }
+            
+        });
+        var responseData = graphQlResponse.Data;
+        if (responseData != null)
+        {
+            var nftInfoRecord = responseData[CommonConstant.Graphql_Method].ToObject<NFTInfoIndex>();
+            return nftInfoRecord;
+        }
+
+        return null;
     }
 
     public async Task<List<SeedSymbolIndex>> GetSyncSeedSymbolRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight)

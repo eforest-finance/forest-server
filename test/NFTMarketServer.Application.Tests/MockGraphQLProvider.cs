@@ -92,4 +92,9 @@ public class MockGraphQLProvider : IGraphQLProvider, ISingletonDependency
     {
         throw new System.NotImplementedException();
     }
+
+    public Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string nftInfoId, string chainId)
+    {
+        throw new System.NotImplementedException();
+    }
 }

@@ -118,15 +118,6 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
                     FloorPrice = collectionPrice.floorPrice
                 };
                 await _nftCollectionProviderAdapter.AddOrUpdateNftCollectionExtensionAsync(dto);
-                await _bus.Publish(new NewIndexEvent<NFTListingChangeEto>
-                {
-                    Data = new NFTListingChangeEto
-                    {
-                        Symbol = collectionChange.Symbol
-                    }
-                });
-
-
 
                 if (blockHeight > 0)
                 {

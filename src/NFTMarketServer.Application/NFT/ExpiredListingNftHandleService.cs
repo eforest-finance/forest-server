@@ -22,11 +22,13 @@ public class ExpiredListingNftHandleService : ScheduleSyncDataService
     private readonly IChainAppService _chainAppService;
     private readonly INFTCollectionChangeService _nftCollectionChangeService;
     private readonly IOptionsMonitor<ExpiredNFTSyncOptions> _optionsMonitor;
+    private readonly IBus _bus;
 
     public ExpiredListingNftHandleService(ILogger<ScheduleSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         IChainAppService chainAppService,
         INFTCollectionChangeService nftCollectionChangeService,
+        IBus bus,
         INFTListingProvider nftListingProvider, IOptionsMonitor<ExpiredNFTSyncOptions> optionsMonitor
     ) :
         base(logger, graphQlProvider, chainAppService)
@@ -35,6 +37,7 @@ public class ExpiredListingNftHandleService : ScheduleSyncDataService
         _nftListingProvider = nftListingProvider;
         _optionsMonitor = optionsMonitor;
         _nftCollectionChangeService = nftCollectionChangeService;
+        _bus = bus;
     }
     
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
@@ -53,6 +56,24 @@ public class ExpiredListingNftHandleService : ScheduleSyncDataService
     private async Task<long> HandleCollectionPriceAsync(string chainId,
         List<IndexerNFTListingInfoResult> expiredListingNft, long lastEndHeight)
     {
+        
+        var distinctListings = expiredListingNft
+            .GroupBy(nft => nft.NftInfoId)
+            .Select(group => group.First())
+            .ToList();
+        foreach (var item in distinctListings)
+        {
+            await _bus.Publish(new NewIndexEvent<NFTListingChangeEto>
+            {
+                Data = new NFTListingChangeEto
+                {
+                    Symbol = item.Symbol,
+                    ChainId = chainId,
+                    NftId = item.NftInfoId
+                }
+            });
+        }
+        
         var collectionSymbols = expiredListingNft.Select(info => info.CollectionSymbol).ToHashSet();
 
         var changes = collectionSymbols

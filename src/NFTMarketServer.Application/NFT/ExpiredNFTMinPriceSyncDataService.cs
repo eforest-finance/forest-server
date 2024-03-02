@@ -122,7 +122,9 @@ public class ExpiredNftMinPriceSyncDataService : ScheduleSyncDataService
             {
                 Data = new NFTListingChangeEto
                 {
-                    Symbol = data.Value.Symbol
+                    Symbol = data.Value.Symbol,
+                    ChainId = chainId,
+                    NftId = IdGenerateHelper.GetNFTInfoId(chainId,data.Value.Symbol)
                 }
             });
             await _bus.Publish<NewIndexEvent<NFTOfferChangeDto>>(new NewIndexEvent<NFTOfferChangeDto>

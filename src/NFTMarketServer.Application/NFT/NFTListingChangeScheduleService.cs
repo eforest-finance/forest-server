@@ -117,10 +117,18 @@ public class NFTListingChangeScheduleService : ScheduleSyncDataService
 
     private async Task ReceiveListingChangeSignalAsync(IndexerNFTListingChange nftListingChange)
     {
-        var nftListingChangeEto = _objectMapper.Map<IndexerNFTListingChange, NFTListingChangeEto>(nftListingChange);
+        if (nftListingChange == null)
+        {
+            return;
+        }
         await _bus.Publish(new NewIndexEvent<NFTListingChangeEto>
         {
-            Data = nftListingChangeEto
+            Data = new NFTListingChangeEto()
+            {
+                ChainId = nftListingChange.ChainId,
+                NftId = IdGenerateHelper.GetNFTInfoId(nftListingChange.ChainId,nftListingChange.Symbol),
+                Symbol = nftListingChange.Symbol
+            }
         });
 
         await _bus.Publish<NewIndexEvent<NFTOfferChangeDto>>(new NewIndexEvent<NFTOfferChangeDto>
