@@ -267,13 +267,13 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         return graphQlResponse.Data.DataList.IsNullOrEmpty() ? new List<NFTInfoIndex>() : graphQlResponse.Data.DataList;
     }
 
-    public async Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string nftInfoId, string chainId)
+    public async Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string id, string chainId)
     {
         var graphQlResponse = await _graphQLClient.SendQueryAsync<JObject>(new GraphQLRequest
         {
             Query =
-                @"query($nftInfoId:String!,$chainId:String!){
-            getSyncNFTInfoRecord(dto: {nftInfoId:$nftInfoId,chainId:$chainId})
+                @"query($Id:String!,$chainId:String!){
+            getSyncNFTInfoRecord(dto: {Id:$id,chainId:$chainId})
             {
                 id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},
                 issueManagerSet,randomIssueManager,creatorAddress,imageUrl,collectionSymbol,collectionName,collectionId,otherOwnerListingFlag,
@@ -286,7 +286,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
             }}",
             Variables = new
             {
-                nftInfoId,
+                id,
                 chainId
             }
             
