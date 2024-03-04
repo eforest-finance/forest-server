@@ -10,6 +10,7 @@ using NFTMarketServer.Chains;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
 using Orleans.Runtime;
+using Orleans.Runtime.Configuration;
 using Volo.Abp.Caching;
 
 namespace NFTMarketServer.NFT;
@@ -90,6 +91,7 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
         List<string> symbolList = await _distributedCache.GetAsync(cacheKey);
         foreach (var nftInfo in queryList)
         {
+            if (nftInfo == null) continue;
             var innerKey = nftInfo.Symbol + nftInfo.BlockHeight;
             if (symbolList != null && symbolList.Contains(innerKey))
             {
