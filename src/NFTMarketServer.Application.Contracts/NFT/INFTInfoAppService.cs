@@ -32,7 +32,7 @@ namespace NFTMarketServer.NFT
         
         Task AddOrUpdateNftInfoAsync(NFTInfoIndex nftInfo);
 
-        Task<NFTInfoNewIndex> AddOrUpdateNftInfoNewAsync(NFTInfoIndex nftInfo, NFTInfoNewIndex localNFTInfo);
+        Task<NFTInfoNewIndex> AddOrUpdateNftInfoNewAsync(NFTInfoIndex nftInfo, string nftInfoid, string chainId);
 
         Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId, string chainId);
         

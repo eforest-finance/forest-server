@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Index;
+using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.NFT.Provider;
 
@@ -14,7 +15,7 @@ public interface INFTTraitProvider
     public Task CheckAndUpdateTraitInfo(NFTInfoNewIndex nftInfoNewIndex);
 }
 
-public class NFTTraitProvider : INFTTraitProvider
+public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
 {
     private readonly INESTRepository<NFTCollectionTraitKeyIndex, string> _nftCollectionTraitKeyIndexRepository;
     private readonly INESTRepository<NFTCollectionTraitPairsIndex, string> _nftCollectionTraitPairsIndexRepository;

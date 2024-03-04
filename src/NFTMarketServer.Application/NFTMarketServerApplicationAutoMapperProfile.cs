@@ -56,6 +56,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
          * Alternatively, you can split your mapping configurations
          * into multiple profile classes for a better organization. */
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
+        CreateMap<NFTInfoIndex,NFTInfoNewIndex>();
         CreateMap<IndexerTokenInfo, TokenInfoIndex>();
         CreateMap<IndexerNFTListingChange, NFTListingChangeEto>();
         CreateMap<IndexerActivity, SymbolMarketActivityDto>();

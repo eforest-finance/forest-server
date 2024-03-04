@@ -847,38 +847,38 @@ namespace NFTMarketServer.NFT
             await _nftInfoIndexRepository.AddOrUpdateAsync(nftInfo);
         }
 
-        public async Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId,string chainId)
+        public async Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId, string chainId)
         {
             if (string.IsNullOrEmpty(nftInfoId) || string.IsNullOrEmpty(chainId))
             {
                 return;
             }
-            var localNFTInfo = await _nftInfoNewIndexRepository.GetAsync(nftInfoId);
-            if (localNFTInfo == null)
-            {
-                var indexerNFTInfo = await _graphQlProvider.GetSyncNftInfoRecordAsync(nftInfoId, chainId);
-                await AddOrUpdateNftInfoNewAsync(indexerNFTInfo, null);
-            }
-            else
-            {
-                await AddOrUpdateNftInfoNewAsync(null, localNFTInfo);
-            }
-            
+
+            await AddOrUpdateNftInfoNewAsync(null, nftInfoId, chainId);
         }
 
-        public async Task<NFTInfoNewIndex> AddOrUpdateNftInfoNewAsync(NFTInfoIndex fromNFTInfo,NFTInfoNewIndex localNFTInfo)
+        public async Task<NFTInfoNewIndex> AddOrUpdateNftInfoNewAsync(NFTInfoIndex fromNFTInfo, string nftInfoId,
+            string chainId)
         {
-            if (fromNFTInfo == null && localNFTInfo == null)
-            {
-                _logger.LogError("AddOrUpdateNftInfoNewAsync fromNFTInfo and localNFTInfo are null!");
-                return null;
-            }
+            var localNFTInfo = await _nftInfoNewIndexRepository.GetAsync(nftInfoId);
+
             NFTInfoNewIndex nftInfo;
 
             var changeFlag = false;
             if (localNFTInfo == null)
             {
-                nftInfo = fromNFTInfo as NFTInfoNewIndex;
+                if (fromNFTInfo == null)
+                {
+                    fromNFTInfo = await _graphQlProvider.GetSyncNftInfoRecordAsync(nftInfoId, chainId);
+                }
+
+                if (fromNFTInfo == null)
+                {
+                    _logger.LogError("AddOrUpdateNftInfoNewAsync fromNFTInfo and localNFTInfo are null!");
+                    return null;
+                }
+
+                nftInfo = _objectMapper.Map<NFTInfoIndex, NFTInfoNewIndex>(fromNFTInfo);
                 changeFlag = true;
                 if (nftInfo?.ExternalInfoDictionary != null && !nftInfo.ExternalInfoDictionary.IsNullOrEmpty())
                 {
@@ -887,8 +887,8 @@ namespace NFTMarketServer.NFT
                     {
                         if (item.Key == CommonConstant.NFT_ExternalInfo_Metadata_Key)
                         {
-                            var metadata = JsonConvert.DeserializeObject<ExternalInfoDictionary>(item.Value);
-                            nftInfo.TraitPairsDictionary.Add(metadata);
+                            var metadata = JsonConvert.DeserializeObject<List<ExternalInfoDictionary>>(item.Value);
+                            nftInfo.TraitPairsDictionary.AddRange(metadata);
                             break;
                         }
                     }
@@ -901,6 +901,13 @@ namespace NFTMarketServer.NFT
                 nftInfo = localNFTInfo;
             }
 
+            if (nftInfo == null)
+            {
+                _logger.LogError("localNFTInfo should not be null , fromNFTInfo={From} localNFTInfo={Local}",
+                    JsonConvert.SerializeObject(fromNFTInfo), JsonConvert.SerializeObject(localNFTInfo));
+                return null;
+            }
+
             var checkFlag = await CheckOrUpdateNFTOtherInfoAsync(nftInfo);
             if (checkFlag)
             {
@@ -911,7 +918,7 @@ namespace NFTMarketServer.NFT
             {
                 await _nftInfoNewIndexRepository.AddOrUpdateAsync(nftInfo);
             }
-            
+
             return nftInfo;
         }
 

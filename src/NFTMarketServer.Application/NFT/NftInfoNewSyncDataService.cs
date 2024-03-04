@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
-using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
 using Orleans.Runtime;
@@ -26,7 +24,6 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
     private readonly IDistributedCache<List<string>> _distributedCache;
     private readonly IDistributedCache<string> _distributedCacheForHeight;
     private readonly INFTTraitProvider _inftTraitProvider;
-    private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
 
     public NftInfoNewSyncDataService(ILogger<NftInfoNewSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
@@ -34,7 +31,6 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
         IDistributedCache<List<string>> distributedCache,
         IDistributedCache<string> distributedCacheForHeight,
         INFTTraitProvider inftTraitProvider,
-        INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         IChainAppService chainAppService)
         : base(logger, graphQlProvider, chainAppService)
     {
@@ -45,7 +41,6 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
         _distributedCache = distributedCache;
         _distributedCacheForHeight = distributedCacheForHeight;
         _inftTraitProvider = inftTraitProvider;
-        _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
     }
 
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
@@ -103,8 +98,7 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
             }
 
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);
-            var localNFTInfo = await _nftInfoNewIndexRepository.GetAsync(nftInfo.Id);
-            var nftInfoNewIndex = await _nftInfoAppService.AddOrUpdateNftInfoNewAsync(nftInfo, localNFTInfo);
+            var nftInfoNewIndex = await _nftInfoAppService.AddOrUpdateNftInfoNewAsync(nftInfo, nftInfo.Id, chainId);
             if (nftInfoNewIndex != null && !nftInfoNewIndex.TraitPairsDictionary.IsNullOrEmpty())
             {
                 await _inftTraitProvider.CheckAndUpdateTraitInfo(nftInfoNewIndex);
@@ -128,9 +122,8 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
 
     public override async Task<List<string>> GetChainIdsAsync()
     {
-        //add multiple chains
-        var chainIds = await _chainAppService.GetListAsync();
-        return chainIds.ToList();
+        var chainId = await _chainAppService.GetChainIdAsync(CommonConstant.IntOne);
+        return new List<string> { chainId };
     }
 
     public override BusinessQueryChainType GetBusinessType()

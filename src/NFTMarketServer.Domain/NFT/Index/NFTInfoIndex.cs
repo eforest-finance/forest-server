@@ -24,7 +24,7 @@ public class NFTInfoIndex : TokenInfoBase, IIndexBuild
     [Keyword] public string ListingAddress { get; set; }
     public decimal ListingPrice { get; set; }
     public long ListingQuantity { get; set; }
-    public DateTime ListingEndTime { get; set; }
+    public DateTime? ListingEndTime { get; set; }
     public DateTime? LatestListingTime { get; set; }
     public DateTime? LatestOfferTime { get; set; }
     public decimal LatestDealPrice { get; set; }

@@ -110,7 +110,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error");
+            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error",e);
             throw;
         }
     }
