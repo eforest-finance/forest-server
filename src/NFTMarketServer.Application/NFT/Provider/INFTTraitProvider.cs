@@ -149,7 +149,16 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         var floorPriceNFT = await _nftInfoAppService.QueryFloorPriceNFTForNFTWithTraitPair(trait.Key,
             trait.Value,
             nftInfoNewIndex.CollectionId);
-        if (floorPriceNFT?.ListingPrice != nftInfoNewIndex.ListingPrice)
+        if (floorPriceNFT == null && nftInfoNewIndex.ListingToken != null)
+        {
+            changeFlag = true;
+            nftInfoNewIndex.ListingPrice = CommonConstant.DefaultValueNone;
+            nftInfoNewIndex.ListingEndTime = new DateTime().ToUniversalTime();
+            nftInfoNewIndex.ListingToken = null;
+        }
+        else if (floorPriceNFT != null
+                 && floorPriceNFT.ListingToken != null
+                 && floorPriceNFT.ListingPrice != nftInfoNewIndex.ListingPrice)
         {
             changeFlag = true;
             nftInfoNewIndex.ListingPrice = (decimal)floorPriceNFT?.ListingPrice;
