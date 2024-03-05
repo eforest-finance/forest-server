@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Index;
@@ -13,6 +15,7 @@ namespace NFTMarketServer.NFT.Provider;
 public interface INFTTraitProvider
 {
     public Task CheckAndUpdateTraitInfo(NFTInfoNewIndex nftInfoNewIndex);
+    public Task CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(NFTInfoNewIndex nftInfoNewIndex);
 }
 
 public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
@@ -52,7 +55,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         {
             return;
         }
-
+        
         foreach (var item in nftInfoNewIndex.TraitPairsDictionary)
         {
             if (item == null || string.IsNullOrEmpty(item.Key) || string.IsNullOrEmpty(item.Value))
@@ -62,8 +65,8 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
 
             await CheckAndUpdateNFTCollectionTraitKeyIndexInfo(nftInfoNewIndex, item);
             await CheckAndUpdateNFTCollectionTraitPairsIndexInfo(nftInfoNewIndex, item);
-            await CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(nftInfoNewIndex, item);
         }
+
     }
 
     private async Task<NFTCollectionTraitKeyIndex> QueryNFTCollectionTraitKeyIndexById(string id)
@@ -172,9 +175,13 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         }
     }
 
-    private async Task CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(NFTInfoNewIndex nftInfoNewIndex,
-        ExternalInfoDictionary trait)
+    public async Task CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(NFTInfoNewIndex nftInfoNewIndex)
     {
+        if (nftInfoNewIndex == null)
+        {
+            return;
+        }
+        
         var id = IdGenerateHelper.GetNFTCollectionTraitGenerationId(nftInfoNewIndex.CollectionSymbol);
         var nftCollectionTraitGenerationIndex = await QueryNFTCollectionTraitGenerationIndexById(id);
         if (nftCollectionTraitGenerationIndex == null)
@@ -188,16 +195,17 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                 Generation = nftInfoNewIndex.Generation
             };
         }
-
+        
         var newCount = await _nftInfoAppService.QueryItemCountForNFTCollectionGenerationAsync(
             nftInfoNewIndex.CollectionId, nftInfoNewIndex.Generation);
-        if (nftCollectionTraitGenerationIndex.ItemCount == newCount)
+        
+        if (nftCollectionTraitGenerationIndex.ItemCount == newCount && newCount != CommonConstant.IntZero)
         {
             return;
         }
         
         nftCollectionTraitGenerationIndex.ItemCount = newCount;
-        
+
         await _nftCollectionTraitGenerationIndexRepository.AddOrUpdateAsync(nftCollectionTraitGenerationIndex);
     }
 }

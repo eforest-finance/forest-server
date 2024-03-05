@@ -101,6 +101,7 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
 
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);
             var nftInfoNewIndex = await _nftInfoAppService.AddOrUpdateNftInfoNewAsync(nftInfo, nftInfo.Id, chainId);
+            await _inftTraitProvider.CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(nftInfoNewIndex);
             if (nftInfoNewIndex != null && !nftInfoNewIndex.TraitPairsDictionary.IsNullOrEmpty())
             {
                 await _inftTraitProvider.CheckAndUpdateTraitInfo(nftInfoNewIndex);
