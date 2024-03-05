@@ -431,7 +431,7 @@ namespace NFTMarketServer.NFT
             }
             catch (Exception e)
             {
-                _logger.LogError("Something is wrong {Message}", e.Message, e);
+                _logger.LogError(e, "Something is wrong {Message}", e.Message);
             }
 
             return await MapForCompositeNftInfoIndexDtoPage(result);
@@ -580,7 +580,7 @@ namespace NFTMarketServer.NFT
             }
             catch (Exception e)
             {
-                _logger.LogError("Query inscriptionInfo from graphQl error tick={Tick}", tick, e);
+                _logger.LogError(e, "Query inscriptionInfo from graphQl error tick={Tick}", tick);
             }
 
             return nftInfoIndexDto;

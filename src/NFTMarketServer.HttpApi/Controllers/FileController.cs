@@ -70,9 +70,9 @@ public class FileController : AbpController
             return await _symbolIconAppService.UpdateNFTIconAsync(utf8Bytes,
                 "drop_" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "_" + file.FileName);
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            _logger.LogError("UpdateImage: An unexpected error occurred - {Message}", ex.Message, ex);
+            _logger.LogError(e, "UpdateImage: An unexpected error occurred - {Message}", e.Message);
             return "";
         }
     }
