@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Dtos;
 
 namespace NFTMarketServer.NFT.Index;
@@ -53,6 +54,10 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public string Description { get; set; }
     public bool IsOfficial { get; set; }
     public List<ExternalInfoDictionaryDto> ExternalInfoDictionary { get; set; }
+    
+    public int Generation { get; set; } = 0;
+    public List<ExternalInfoDictionary> TraitPairsDictionary { get; set; }
+
     
     // seed only
     public string SeedOwnedSymbol { get; set; }

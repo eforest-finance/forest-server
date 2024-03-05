@@ -1,4 +1,6 @@
-﻿using AElf;
+﻿using System.Collections.Generic;
+using System.Linq;
+using AElf;
 using AutoMapper;
 using NFTMarketServer.Activity;
 using NFTMarketServer.Activity.Index;
@@ -123,9 +125,14 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(des => des.Symbol, opt
                 => opt.MapFrom(source => source.NFTSymbol));
         CreateMap<IndexerNFTCollection, RecommendedNFTCollectionsDto>();
-        
         CreateMap<IndexerSeedInfo, IndexerNFTInfo>();
-        CreateMap<IndexerNFTInfo, NFTInfoIndexDto>();
+        CreateMap<IndexerNFTInfo, NFTInfoIndexDto>().ForMember(
+            destination => destination.TraitPairsDictionary, opt => opt.MapFrom(
+                source => source.TraitPairsDictionary.IsNullOrEmpty()
+                    ? null
+                    : source.TraitPairsDictionary
+                        .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList())
+        );
         CreateMap<NFTInfoIndexDto, UserProfileNFTInfoIndexDto>();
         CreateMap<TokenDto, UserProfileTokenDto>();
         CreateMap<NFTCollectionIndexDto, UserProfileNFTCollectionIndexDto>();
@@ -223,6 +230,16 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
 
         CreateMap<TsmSeedSymbolIndex, SeedDto>().ReverseMap();
         CreateMap<TsmSeedSymbolIndex, SpecialSeedItem>();
+        CreateMap<NFTInfoIndex, IndexerNFTInfo>()
+            .ForMember(
+                destination => destination.CreatorAddress,
+                opt => opt.MapFrom(source => source.RandomIssueManager))
+            .ForMember(
+                destination => destination.Issuer,
+                opt => opt.MapFrom(source => source.RandomIssueManager))
+            .ForMember(
+                destination => destination.ProxyIssuerAddress,
+                opt => opt.MapFrom(source => source.Issuer));
         CreateMap<NFTInfoIndex, IndexerNFTInfo>()
             .ForMember(
                 destination => destination.CreatorAddress,

@@ -50,6 +50,9 @@ namespace NFTMarketServer.NFT
         public string PriceSymbol { get; set; }
         public string PriceType { get; set; }
         
+        public int Generation { get; set; } = 0;
+        public List<MetadataDto> TraitPairsDictionary { get; set; }
+        
         // seed only
         public CreateTokenInformation CreateTokenInformation { get; set; }
         public string ShowPriceType { get; set; }
