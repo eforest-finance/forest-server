@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Index;
@@ -15,7 +14,6 @@ namespace NFTMarketServer.NFT.Provider;
 public interface INFTTraitProvider
 {
     public Task CheckAndUpdateTraitInfo(NFTInfoNewIndex nftInfoNewIndex);
-    public Task CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(NFTInfoNewIndex nftInfoNewIndex);
 }
 
 public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
@@ -50,6 +48,8 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         {
             return;
         }
+        
+        await CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(nftInfoNewIndex);
 
         if (nftInfoNewIndex.TraitPairsDictionary.IsNullOrEmpty())
         {
@@ -175,7 +175,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         }
     }
 
-    public async Task CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(NFTInfoNewIndex nftInfoNewIndex)
+    private async Task CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(NFTInfoNewIndex nftInfoNewIndex)
     {
         if (nftInfoNewIndex == null)
         {
