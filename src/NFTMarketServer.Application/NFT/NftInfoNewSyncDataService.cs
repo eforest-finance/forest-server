@@ -98,6 +98,9 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
                 _logger.Debug("GetSyncNftInfoRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
                 continue;
             }
+            
+            _logger.Debug("GetSyncNftInfoRecordsAsync NFTInfoSymbol {NFTInfoSymbol}",nftInfo.Symbol);
+            
 
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);
             var nftInfoNewIndex = await _nftInfoAppService.AddOrUpdateNftInfoNewAsync(nftInfo, nftInfo.Id, chainId);

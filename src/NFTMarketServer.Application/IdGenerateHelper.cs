@@ -69,9 +69,9 @@ public class IdGenerateHelper
         return GetId(nftCollectionSymbol, TransferToHashStr(traitKey), TransferToHashStr(traitValue));
     }
 
-    public static string GetNFTCollectionTraitGenerationId(string nftSymbol)
+    public static string GetNFTCollectionTraitGenerationId(string collectionSymbol, int Generation)
     {
-        return GetId(nftSymbol);
+        return GetId(collectionSymbol, Generation);
     }
 
     private static string TransferToHashStr(string str)

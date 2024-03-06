@@ -126,7 +126,7 @@ namespace NFTMarketServer.NFT
             var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
             mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(nftCollectionId)));
             mustQuery.Add(q =>
-                q.Range(i => i.Field(f => f.Supply).GreaterThan(CommonConstant.IntZero)));
+                q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
 
             var nestedQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
             nestedQuery.Add(q => q
@@ -165,7 +165,7 @@ namespace NFTMarketServer.NFT
             var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
             mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(nftCollectionId)));
             mustQuery.Add(q =>
-                q.Range(i => i.Field(f => f.Supply).GreaterThan(CommonConstant.IntZero)));
+                q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
 
             var nestedQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
             nestedQuery.Add(q => q
@@ -211,7 +211,7 @@ namespace NFTMarketServer.NFT
             mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(nftCollectionId)));
             mustQuery.Add(q => q.Term(i => i.Field(f => f.Generation).Value(generation)));
             mustQuery.Add(q =>
-                q.Range(i => i.Field(f => f.Supply).GreaterThan(CommonConstant.IntZero)));
+                q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
             
             QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
                 => f.Bool(b => b.Must(mustQuery));
@@ -879,6 +879,7 @@ namespace NFTMarketServer.NFT
                 }
 
                 nftInfo = _objectMapper.Map<NFTInfoIndex, NFTInfoNewIndex>(fromNFTInfo);
+                nftInfo.CountedFlag = FTHelper.IsGreaterThanEqualToOne(nftInfo.Supply, nftInfo.Decimals);
                 changeFlag = true;
                 if (nftInfo?.ExternalInfoDictionary != null && !nftInfo.ExternalInfoDictionary.IsNullOrEmpty())
                 {
@@ -899,13 +900,6 @@ namespace NFTMarketServer.NFT
             else
             {
                 nftInfo = localNFTInfo;
-            }
-
-            if (nftInfo == null)
-            {
-                _logger.LogError("localNFTInfo should not be null , fromNFTInfo={From} localNFTInfo={Local}",
-                    JsonConvert.SerializeObject(fromNFTInfo), JsonConvert.SerializeObject(localNFTInfo));
-                return null;
             }
 
             var checkFlag = await CheckOrUpdateNFTOtherInfoAsync(nftInfo);

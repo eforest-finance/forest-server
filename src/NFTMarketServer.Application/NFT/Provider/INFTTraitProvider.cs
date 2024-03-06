@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
+using NFTMarketServer.Common;
 using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Index;
 using Volo.Abp.DependencyInjection;
@@ -97,7 +98,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                 Id = id,
                 NFTCollectionSymbol = nftInfoNewIndex.CollectionSymbol,
                 TraitKey = trait.Key,
-                ItemCount = nftInfoNewIndex.Supply > CommonConstant.IntZero
+                ItemCount = FTHelper.IsGreaterThanEqualToOne(nftInfoNewIndex.Supply, nftInfoNewIndex.Decimals)
                     ? CommonConstant.LongOne
                     : CommonConstant.IntZero,
             };
@@ -129,7 +130,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                 NFTCollectionSymbol = nftInfoNewIndex.CollectionSymbol,
                 TraitKey = trait.Key,
                 TraitValue = trait.Value,
-                ItemCount = nftInfoNewIndex.Supply > CommonConstant.IntZero
+                ItemCount = FTHelper.IsGreaterThanEqualToOne(nftInfoNewIndex.Supply, nftInfoNewIndex.Decimals)
                     ? CommonConstant.LongOne
                     : CommonConstant.IntZero,
                 FloorPriceSymbol = CommonConstant.Coin_ELF,
@@ -181,15 +182,17 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         {
             return;
         }
-        
-        var id = IdGenerateHelper.GetNFTCollectionTraitGenerationId(nftInfoNewIndex.CollectionSymbol);
+
+        var id = IdGenerateHelper.GetNFTCollectionTraitGenerationId(nftInfoNewIndex.CollectionSymbol,
+            nftInfoNewIndex.Generation);
         var nftCollectionTraitGenerationIndex = await QueryNFTCollectionTraitGenerationIndexById(id);
         if (nftCollectionTraitGenerationIndex == null)
         {
             nftCollectionTraitGenerationIndex = new NFTCollectionTraitGenerationIndex()
             {
                 Id = id,
-                ItemCount = nftInfoNewIndex.Supply > CommonConstant.IntZero
+                CollectionSymbol = nftInfoNewIndex.CollectionSymbol,
+                ItemCount = FTHelper.IsGreaterThanEqualToOne(nftInfoNewIndex.Supply, nftInfoNewIndex.Decimals)
                     ? CommonConstant.LongOne
                     : CommonConstant.IntZero,
                 Generation = nftInfoNewIndex.Generation

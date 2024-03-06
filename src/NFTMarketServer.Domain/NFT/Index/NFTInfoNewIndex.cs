@@ -9,6 +9,7 @@ namespace NFTMarketServer.NFT.Index;
 
 public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
 {
+    public bool CountedFlag { get; set; } = false;
     public int Generation { get; set; } = 0;
     [Nested]
     public List<ExternalInfoDictionary> TraitPairsDictionary { get; set; }
@@ -47,7 +48,7 @@ public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
     [Keyword] public string FileExtension { get; set; }
     [Keyword] public string Description { get; set; }
     public bool IsOfficial { get; set; }
-    
+
     public bool HasListingFlag { get; set; }
     public decimal MinListingPrice { get; set; }
     
