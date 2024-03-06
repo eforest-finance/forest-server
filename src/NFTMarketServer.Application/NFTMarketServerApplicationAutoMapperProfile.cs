@@ -250,6 +250,16 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(
                 destination => destination.ProxyIssuerAddress,
                 opt => opt.MapFrom(source => source.Issuer));
+        CreateMap<NFTInfoNewIndex, IndexerNFTInfo>()
+            .ForMember(
+                destination => destination.CreatorAddress,
+                opt => opt.MapFrom(source => source.RandomIssueManager))
+            .ForMember(
+                destination => destination.Issuer,
+                opt => opt.MapFrom(source => source.RandomIssueManager))
+            .ForMember(
+                destination => destination.ProxyIssuerAddress,
+                opt => opt.MapFrom(source => source.Issuer));
         CreateMap<SeedSymbolIndex, IndexerNFTInfo>()
             .ForMember(d => d.CollectionId,
                 opt => opt.MapFrom(d => IdGenerateHelper.GetNFTCollectionId(d.ChainId, NFTSymbolBasicConstants.SeedCollectionSymbol)))

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,19 +32,17 @@ public interface ITraitInfoProvider
 
 public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
 {
-    private readonly IObjectMapper _objectMapper;
     private readonly INESTRepository<NFTCollectionTraitKeyIndex, string> _nftCollectionTraitKeyIndexRepository;
     private readonly INESTRepository<NFTCollectionTraitPairsIndex, string> _nftCollectionTraitPairsIndexRepository;
 
     private readonly INESTRepository<NFTCollectionTraitGenerationIndex, string>
         _nftCollectionTraitGenerationIndexRepository;
 
-    public TraitInfoProvider(IObjectMapper objectMapper,
+    public TraitInfoProvider(
         INESTRepository<NFTCollectionTraitKeyIndex, string> nftCollectionTraitKeyIndexRepository,
         INESTRepository<NFTCollectionTraitPairsIndex, string> nftCollectionTraitPairsIndexRepository,
         INESTRepository<NFTCollectionTraitGenerationIndex, string> nftCollectionTraitGenerationIndexRepository)
     {
-        _objectMapper = objectMapper;
         _nftCollectionTraitKeyIndexRepository = nftCollectionTraitKeyIndexRepository;
         _nftCollectionTraitPairsIndexRepository = nftCollectionTraitPairsIndexRepository;
         _nftCollectionTraitGenerationIndexRepository = nftCollectionTraitGenerationIndexRepository;
@@ -149,7 +146,7 @@ public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTCollectionTraitGenerationIndex>, QueryContainer>>();
 
-        mustQuery.Add(q => q.Term(i => i.Field(f => collectionSymbol).Value(collectionSymbol)));
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.Id).Value(collectionSymbol)));
         mustQuery.Add(q => q.Range(i => i.Field(f => f.Generation).GreaterThanOrEquals(CommonConstant.IntZero)));
         
         QueryContainer Filter(QueryContainerDescriptor<NFTCollectionTraitGenerationIndex> f)
