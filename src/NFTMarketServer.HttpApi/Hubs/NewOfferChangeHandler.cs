@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.NFT;
+using Orleans.Runtime;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.Hubs;
@@ -33,7 +34,12 @@ public class NewOfferChangeHandler : IConsumer<NewIndexEvent<NFTOfferChangeDto>>
     public async Task Consume(ConsumeContext<NewIndexEvent<NFTOfferChangeDto>> eventData)
     {
         var nftOfferChangeDto = eventData.Message.Data;
-
+        if (!SymbolHelper.CheckSymbolIsNFTInfoId(nftOfferChangeDto.NftId))
+        {
+            _logger.Debug("NewOfferChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftOfferChangeDto.NftId);
+            return;
+        }
+        
         var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
             .ChoiceNFTInfoNewFlagIsOn ?? false;
         if (choiceNFTInfoNewFlag && nftOfferChangeDto.NftId != null && nftOfferChangeDto.ChainId != null)
@@ -47,7 +53,10 @@ public class NewOfferChangeHandler : IConsumer<NewIndexEvent<NFTOfferChangeDto>>
         {
             hasChanged = true
         });
-        _logger.LogInformation("ReceiveOfferChangeSignal: {groupName}, chainId:{id}, blockHeight:{blockHeight}", 
-            groupName, nftOfferChangeDto.ChainId, nftOfferChangeDto.BlockHeight);
+        _logger.LogInformation(
+            "ReceiveOfferChangeSignal: {groupName}, chainId:{id}, NFTInfoIf:{NFTInfoId} blockHeight:{blockHeight}",
+            groupName, nftOfferChangeDto.ChainId, nftOfferChangeDto.NftId, nftOfferChangeDto.BlockHeight);
+
+
     }
 }

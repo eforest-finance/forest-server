@@ -140,6 +140,7 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
 
         return new CollectionGenerationInfoDto()
         {
+            Id = nftCollectionInfo.Symbol,
             TotalCount = result.Count,
             Items = result.Select(kvp => new GenerationInfoDto
                 { Generation = kvp.Key, GenerationItemsCount = kvp.Value }).ToList()

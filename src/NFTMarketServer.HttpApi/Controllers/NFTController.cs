@@ -83,7 +83,7 @@ namespace NFTMarketServer.Controllers
             return _nftAppService.GetNFTInfosAsync(input);
         }
         
-        [HttpGet]
+        [HttpPost]
         [Route("composite-nft-infos")]
         public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetCompositeNFTInfosAsync(GetCompositeNFTInfosInput input)
         {

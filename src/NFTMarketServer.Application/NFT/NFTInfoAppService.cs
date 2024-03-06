@@ -49,11 +49,12 @@ namespace NFTMarketServer.NFT
         private readonly IDistributedEventBus _distributedEventBus;
         private readonly IObjectMapper _objectMapper;
         private readonly INFTInfoExtensionProvider _nftInfoExtensionProvider;
-        private readonly INFTListingWhitelistPriceProvider _nftListingWhitelistPriceProvider;
+        
         private readonly INESTRepository<NFTInfoIndex, string> _nftInfoIndexRepository;
         private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
         private readonly ISeedSymbolSyncedProvider _seedSymbolSyncedProvider;
         private readonly INFTInfoSyncedProvider _nftInfoSyncedProvider;
+        private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
         private readonly INFTOfferProvider _nftOfferProvider;
         private readonly INFTListingProvider _nftListingProvider;
         private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
@@ -79,13 +80,14 @@ namespace NFTMarketServer.NFT
             IObjectMapper objectMapper, INFTInfoExtensionProvider nftInfoExtensionProvider,
             INESTRepository<NFTInfoIndex, string> nftInfoIndexRepository,
             INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
-            ISeedSymbolSyncedProvider seedSymbolSyncedProvider, INFTInfoSyncedProvider nftInfoSyncedProvider,
+            ISeedSymbolSyncedProvider seedSymbolSyncedProvider, 
+            INFTInfoSyncedProvider nftInfoSyncedProvider,
+            INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
             IBus bus,
             INFTOfferProvider nftOfferProvider,
             INFTListingProvider nftListingProvider,
             INFTDealInfoProvider nftDealInfoProvider,
             IInscriptionProvider inscriptionProvider,
-            INFTListingWhitelistPriceProvider nftListingWhitelistPriceProvider,
             INFTCollectionExtensionProvider nftCollectionExtensionProvider,
             NFTCollectionAppService nftCollectionAppService,
             IDistributedCache<string> distributedCacheForHeight,
@@ -102,10 +104,10 @@ namespace NFTMarketServer.NFT
             _distributedEventBus = distributedEventBus;
             _objectMapper = objectMapper;
             _nftInfoExtensionProvider = nftInfoExtensionProvider;
-            _nftListingWhitelistPriceProvider = nftListingWhitelistPriceProvider;
             _nftInfoIndexRepository = nftInfoIndexRepository;
             _seedSymbolSyncedProvider = seedSymbolSyncedProvider;
             _nftInfoSyncedProvider = nftInfoSyncedProvider;
+            _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
             _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
             _nftOfferProvider = nftOfferProvider;
             _nftListingProvider = nftListingProvider;
@@ -347,6 +349,9 @@ namespace NFTMarketServer.NFT
         {
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
 
+            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
+                .ChoiceNFTInfoNewFlagIsOn ?? false;
+            
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input);
@@ -362,8 +367,16 @@ namespace NFTMarketServer.NFT
 
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeNFT))
             {
-                var nftResult = await _nftInfoSyncedProvider.GetNFTBriefInfosAsync(input);
-
+                Tuple<long, List<NFTInfoIndex>> nftResult = null;
+                if (choiceNFTInfoNewFlag)
+                {
+                    nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
+                }
+                else
+                {
+                    nftResult = await _nftInfoSyncedProvider.GetNFTBriefInfosAsync(input);
+                }
+                
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
 
                 result = new PagedResultDto<CompositeNFTInfoIndexDto>()
@@ -394,10 +407,6 @@ namespace NFTMarketServer.NFT
                 {
                     return await MapForCompositeNftInfoIndexDtoPage(result);
                 }
-
-
-                var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                    .ChoiceNFTInfoNewFlagIsOn ?? false;
 
                 var resetNFTSyncHeightFlagCacheKey = choiceNFTInfoNewFlag
                     ? CommonConstant.ResetNFTNewSyncHeightFlagCacheKey
@@ -851,6 +860,12 @@ namespace NFTMarketServer.NFT
         {
             if (string.IsNullOrEmpty(nftInfoId) || string.IsNullOrEmpty(chainId))
             {
+                return;
+            }
+
+            if (!SymbolHelper.CheckSymbolIsCommonNFTInfoId(nftInfoId))
+            {
+                _logger.Debug("AddOrUpdateNftInfoNewByIdAsync nftInfoId is not common nft {NFTInfoId}", nftInfoId);
                 return;
             }
 

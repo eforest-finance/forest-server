@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Eto;
+using Orleans.Runtime;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.Hubs;
@@ -39,11 +40,20 @@ public class NFTListingChangeHandler : IConsumer<NewIndexEvent<NFTListingChangeE
     {
         try
         {
-            _logger.LogInformation(
-                "NFTListingChangeHandler: {groupName}, symbol:{Bidder}, start time {time}",
-                _marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal()
-                , eventData.Message.Data.Symbol, DateTime.Now.ToString());
             var nftListingChange = eventData.Message.Data;
+
+            if (!SymbolHelper.CheckSymbolIsNFTInfoId(nftListingChange.NftId))
+            {
+                _logger.Debug("NFTListingChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftListingChange.NftId);
+                return;
+            }
+            
+            _logger.LogInformation(
+                "NFTListingChangeHandler: {groupName}, symbol:{Bidder},nftInfoId:{NFTInfoId}, chainid:{ChainId} start time {time}",
+                _marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal()
+                , eventData.Message.Data.Symbol,eventData.Message.Data.NftId,eventData.Message.Data.ChainId, DateTime.Now.ToString());
+            
+            
             var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
                 .ChoiceNFTInfoNewFlagIsOn ?? false;
             if (choiceNFTInfoNewFlag && nftListingChange.NftId != null && nftListingChange.ChainId != null)

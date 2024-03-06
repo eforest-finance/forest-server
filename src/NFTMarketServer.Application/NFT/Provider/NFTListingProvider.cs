@@ -112,8 +112,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error dto={DTO}", JsonConvert.SerializeObject(dto),
-                e);
+            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error dto={DTO}", JsonConvert.SerializeObject(dto));
             throw;
         }
     }
