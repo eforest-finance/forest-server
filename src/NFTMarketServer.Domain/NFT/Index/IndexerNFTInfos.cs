@@ -24,6 +24,7 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public long Issued { get; set; }
     public string TokenName { get; set; }
     public long TotalSupply { get; set; }
+    public int Decimals { get; set; }
     public string WhitelistId { get; set; }
 
     public string CreatorAddress { get; set; }

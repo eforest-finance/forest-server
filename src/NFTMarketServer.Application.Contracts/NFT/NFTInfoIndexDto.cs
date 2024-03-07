@@ -22,6 +22,7 @@ namespace NFTMarketServer.NFT
         public string Uri { get; set; }
         public string? TokenName { get; set; }
         public long TotalQuantity { get; set; }
+        public int Decimals { get; set; }
         public bool CanBuyFlag { get; set; }
         public string? ListingId { get; set; }
         public string? ListingAddress { get; set; }

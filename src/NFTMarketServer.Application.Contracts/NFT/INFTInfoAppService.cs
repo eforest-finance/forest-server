@@ -18,8 +18,6 @@ namespace NFTMarketServer.NFT
         Task<NFTInfoNewIndex> QueryFloorPriceNFTForNFTWithTraitPair(string key, string value,
             string nftCollectionId);
 
-        Task<PagedResultDto<NFTInfoIndexDto>> GetNFTInfosAsync(GetNFTInfosInput input);
-        
         Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(GetNFTInfosProfileInput input);
         
         Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetCompositeNFTInfosAsync(GetCompositeNFTInfosInput input);
