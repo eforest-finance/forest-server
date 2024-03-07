@@ -59,6 +59,8 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
          * into multiple profile classes for a better organization. */
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTInfoIndex, NFTInfoNewIndex>();
+        CreateMap<AttributeDictionary, ExternalInfoDictionary>()
+            .ForMember(des => des.Key, opt => opt.MapFrom(source => source.TraitType));
         CreateMap<NFTInfoNewIndex, NFTInfoIndex>();
         CreateMap<IndexerTokenInfo, TokenInfoIndex>();
         CreateMap<IndexerNFTListingChange, NFTListingChangeEto>();

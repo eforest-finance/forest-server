@@ -557,7 +557,9 @@ namespace NFTMarketServer.NFT
             nftInfoIndexDto = await BuildShowPriceTypeAsync(input.Address, nftInfoIndex.ChainId, nftInfoIndex.Symbol,
                 nftInfoIndexDto);
 
-            if (nftInfoIndexDto?.Metadata?.Where(item => item.Key.Equals(CommonConstant.MetadataInscriptionImageKey))
+            if (nftInfoIndexDto?.Metadata?.Where(item =>
+                        item.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey) ||
+                        item.Key.Equals(CommonConstant.MetadataCommonInscriptionImageKey))
                     .ToList()
                     .FirstOrDefault() == null)
             {
@@ -749,7 +751,7 @@ namespace NFTMarketServer.NFT
                     .Select(kv => new MetadataDto { Key = kv.Key, Value = kv.Value }).ToList();
             }
 
-            var nftImageUrl = info?.Metadata?.FirstOrDefault(o => o.Key == "__nft_image_url");
+            var nftImageUrl = info?.Metadata?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUrlKey);
 
             if (info.PreviewImage.IsNullOrEmpty())
             {
@@ -883,9 +885,30 @@ namespace NFTMarketServer.NFT
                 nftInfo = _objectMapper.Map<NFTInfoIndex, NFTInfoNewIndex>(fromNFTInfo);
                 nftInfo.CountedFlag = FTHelper.IsGreaterThanEqualToOne(nftInfo.Supply, nftInfo.Decimals);
                 changeFlag = true;
+                
+                nftInfo.Generation = CommonConstant.IntNegativeOne;
                 if (nftInfo?.ExternalInfoDictionary != null && !nftInfo.ExternalInfoDictionary.IsNullOrEmpty())
                 {
                     nftInfo.TraitPairsDictionary = new List<ExternalInfoDictionary>();
+
+                    foreach (var item in nftInfo.ExternalInfoDictionary)
+                    {
+                        if (item.Key == CommonConstant.NFT_ExternalInfo_Attributes_Key)
+                        {
+                            var attributes = JsonConvert.DeserializeObject<List<AttributeDictionary>>(item.Value);
+                            if (attributes.IsNullOrEmpty())
+                            {
+                                nftInfo.Generation = CommonConstant.IntZero;
+                                break;
+                            }
+
+                            nftInfo.Generation = attributes.Count;
+                            nftInfo.TraitPairsDictionary.AddRange(
+                                _objectMapper.Map<List<AttributeDictionary>, List<ExternalInfoDictionary>>(attributes));
+                            break;
+                        }
+                    }
+                    
                     foreach (var item in nftInfo.ExternalInfoDictionary)
                     {
                         if (item.Key == CommonConstant.NFT_ExternalInfo_Metadata_Key)
@@ -896,7 +919,6 @@ namespace NFTMarketServer.NFT
                         }
                     }
 
-                    nftInfo.Generation = nftInfo.TraitPairsDictionary.Count;
                 }
             }
             else

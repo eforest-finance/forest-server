@@ -7,12 +7,16 @@ public static class CommonConstant
     public const long LongEmpty = 0;
     public const int IntZero = 0;
     public const int IntOne = 1;
+    public const int IntNegativeOne = 1;
     public const int IntTen = 10;
     public const long LongOne = 1;
     public const int IntError = -1;
     public const string MainChainId = "AELF";
     public const string NFT_ExternalInfo_Metadata_Key = "__nft_metadata";
-    public const string MetadataInscriptionImageKey = "inscription_image";
+    public const string NFT_ExternalInfo_Attributes_Key = "__nft_attributes";
+    public const string MetadataSpecialInscriptionImageKey = "inscription_image";
+    public const string MetadataCommonInscriptionImageKey = "__inscription_image";
+    public const string MetadataImageUrlKey = "__nft_image_url";
     public const string ES_NFT_TraitPairsDictionary_Path = "traitPairsDictionary";
     public const string Graphql_Method = "getSyncNFTInfoRecord";
     

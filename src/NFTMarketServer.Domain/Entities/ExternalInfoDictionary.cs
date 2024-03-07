@@ -10,3 +10,11 @@ public class ExternalInfoDictionary
     [JsonProperty(PropertyName = "value")]
     [Keyword] public string Value { get; set; }
 }
+
+public class AttributeDictionary
+{
+    [JsonProperty(PropertyName = "traitType")]
+    [Keyword] public string TraitType { get; set; }
+    [JsonProperty(PropertyName = "value")]
+    [Keyword] public string Value { get; set; }
+}
