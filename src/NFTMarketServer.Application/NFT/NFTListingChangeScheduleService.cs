@@ -50,7 +50,6 @@ public class NFTListingChangeScheduleService : ScheduleSyncDataService
     {
         var skipCount = 0;
         long maxProcessedBlockHeight = -1;
-        var processChangeList = new List<IndexerNFTListingChange>();
         //Paging for logical processing
     
         var changePageInfo = await _nftListingProvider.GetIndexerNFTListingChangePageByBlockHeightAsync(skipCount, chainId,
@@ -58,16 +57,20 @@ public class NFTListingChangeScheduleService : ScheduleSyncDataService
 
         if (changePageInfo == null || changePageInfo.IndexerNFTListingChangeList.IsNullOrEmpty())
         {
+            _logger.LogInformation(
+                "GetNFTListingChangeAsync no data");
             return 0;
         }
+        var processChangeOriginList = changePageInfo.IndexerNFTListingChangeList;
 
-        var count = changePageInfo.IndexerNFTListingChangeList.Count;
+        var processChangeList = processChangeOriginList
+            .GroupBy(dto => dto.Symbol)
+            .Select(group => group.OrderByDescending(dto => dto.BlockHeight).First())
+            .ToList();
         _logger.LogInformation(
-            "GetIndexerNFTListingChangePageByBlockHeightAsync queryList chainId:{chainId} count: {count}",
-            chainId, count);
-
-        processChangeList = changePageInfo.IndexerNFTListingChangeList;
-
+            "GetNFTListingChangeAsync queryOriginList count: {count} queryList count{count},chainId:{chainId} ",
+            processChangeOriginList.Count, processChangeList.Count, chainId);
+        
         var blockHeight = await HandleNFTListingChangeAsync(chainId, processChangeList, lastEndHeight);
 
         maxProcessedBlockHeight = Math.Max(maxProcessedBlockHeight, blockHeight);

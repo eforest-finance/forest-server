@@ -71,17 +71,28 @@ public class ExpiredNftMinPriceSyncDataService : ScheduleSyncDataService
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
     {
         var option = _optionsMonitor.CurrentValue;
-        var list = await _nftListingProvider.GetNftMinPriceAsync(chainId, option.Duration);
-        _logger.Debug("GetMinPriceNft, duration: {duration}", option.Duration);
+        var originList = await _nftListingProvider.GetNftMinPriceAsync(chainId, option.Duration);
+        
         long blockHeight = -1;
-        if (list.IsNullOrEmpty())
+        if (originList.IsNullOrEmpty())
         {
+            _logger.LogInformation("GetNftMinPriceAsync no data, duration: {Duration}", option.Duration);
             return 0;
         }
 
+        var list = originList
+            .Where(dto => dto.Value != null)
+            .GroupBy(dto => dto.Key)
+            .Select(group => group.MinBy(dto => dto.Value?.Prices ?? 0))
+            .ToList();
+        _logger.LogInformation(
+            "GetNftMinPriceAsync queryOriginList count: {count}, queryList count: {count}  from height: {lastEndHeight}, chain id: {chainId}",
+            originList.Count, list.Count, lastEndHeight, chainId);
+        
         var cacheKey = GetBusinessType() + chainId + lastEndHeight;
-        List<string> nftInfoIdWithTimeList = await _distributedCache.GetAsync(cacheKey);
-        List<string> nftInfoIdWithTimeListNew = new List<string>();
+        var nftInfoIdWithTimeList = await _distributedCache.GetAsync(cacheKey);
+        var nftInfoIdWithTimeListNew = new List<string>();
+        var changeFlag = false;
         foreach (var data in list)
         {
             var nftInfoIdWithTime = data.Key+ DateTimeHelper.ToUnixTimeMilliseconds(data.Value.ExpireTime);
@@ -92,6 +103,8 @@ public class ExpiredNftMinPriceSyncDataService : ScheduleSyncDataService
                 _logger.Debug($"ExpiredNftMinPriceSync duplicated nftInfoIdWithTime: {nftInfoIdWithTime}", nftInfoIdWithTime);
                 continue;
             }
+
+            changeFlag = true;
             var nftInfoId = data.Key;
             var isSeed = nftInfoId.Match(NFTSymbolBasicConstants.SeedIdPattern);
             if (isSeed)
@@ -136,12 +149,16 @@ public class ExpiredNftMinPriceSyncDataService : ScheduleSyncDataService
                 }
             });
         }
+
+        if (changeFlag)
+        {
+            await _distributedCache.SetAsync(cacheKey, nftInfoIdWithTimeListNew,
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
+                });
+        }
         
-        await _distributedCache.SetAsync(cacheKey, nftInfoIdWithTimeListNew,
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
-            });
         
         return blockHeight;
     }
