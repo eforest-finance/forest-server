@@ -53,7 +53,7 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
             var nftResetHeightFlagCacheValue =
                 await _distributedCacheForHeight.GetAsync(CommonConstant.NFTNewResetHeightFlagCacheKey + chainId);
             _logger.Debug(
-                "GetCompositeNFTInfosAsync nft {ResetSyncHeightFlag} {NFTSyncHeightFlag} {nftSyncHeightFlagMinuteStr}",
+                "GetCompositeNFTInfosAsync nftNew {ResetSyncHeightFlag} {NFTSyncHeightFlag} {nftSyncHeightFlagMinuteStr}",
                 resetSyncHeightFlagMinutesStr, CommonConstant.NFTNewResetHeightFlagCacheKey,
                 resetSyncHeightFlagMinutesStr);
             if (!resetSyncHeightFlagMinutesStr.IsNullOrEmpty())
@@ -74,12 +74,12 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
         }
         catch (Exception e)
         {
-            _logger.Error(CommonConstant.IntError, "Something is wrong for SyncIndexerRecordsAsync reset height", e);
+            _logger.Error(CommonConstant.IntError, "Something is wrong for SyncIndexerRecordsAsync nftNew reset height", e);
         }
 
         var queryList = await _graphQlProvider.GetSyncNftInfoRecordsAsync(chainId, lastEndHeight, 0);
         _logger.LogInformation(
-            "SyncNftInfoRecords queryList startBlockHeight: {lastEndHeight} endBlockHeight: {newIndexHeight} count: {count}",
+            "SyncNftInfoNewRecords queryList startBlockHeight: {lastEndHeight} endBlockHeight: {newIndexHeight} count: {count}",
             lastEndHeight, newIndexHeight, queryList?.Count);
         long blockHeight = -1;
         if (queryList.IsNullOrEmpty())
@@ -95,11 +95,11 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
             var innerKey = nftInfo.Symbol + nftInfo.BlockHeight;
             if (symbolList != null && symbolList.Contains(innerKey))
             {
-                _logger.Debug("GetSyncNftInfoRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
+                _logger.Debug("GetSyncNftInfoNewRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
                 continue;
             }
             
-            _logger.Debug("GetSyncNftInfoRecordsAsync NFTInfoSymbol {NFTInfoSymbol}",nftInfo.Symbol);
+            _logger.Debug("GetSyncNftInfoNewRecordsAsync NFTInfoSymbol {NFTInfoSymbol}",nftInfo.Symbol);
             
 
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);
