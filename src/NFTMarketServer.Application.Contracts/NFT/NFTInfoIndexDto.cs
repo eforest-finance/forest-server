@@ -51,7 +51,7 @@ namespace NFTMarketServer.NFT
         public string PriceSymbol { get; set; }
         public string PriceType { get; set; }
         
-        public int Generation { get; set; } = 0;
+        public int Generation { get; set; } = -1;
         public List<MetadataDto> TraitPairsDictionary { get; set; }
         
         // seed only
