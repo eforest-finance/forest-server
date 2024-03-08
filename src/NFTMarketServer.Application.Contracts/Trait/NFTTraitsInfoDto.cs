@@ -7,7 +7,7 @@ namespace NFTMarketServer.Trait;
 
 public class NFTTraitsInfoDto : EntityDto<string>
 {
-    public int Generation { get; set; }
+    public int Generation { get; set; } = -1;
     public List<NFTTraitInfoDto> TraitInfos { get; set; }
 }
 

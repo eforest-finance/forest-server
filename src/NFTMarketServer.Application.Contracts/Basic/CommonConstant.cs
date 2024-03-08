@@ -7,7 +7,7 @@ public static class CommonConstant
     public const long LongEmpty = 0;
     public const int IntZero = 0;
     public const int IntOne = 1;
-    public const int IntNegativeOne = 1;
+    public const int IntNegativeOne = -1;
     public const int IntTen = 10;
     public const long LongOne = 1;
     public const int IntError = -1;
