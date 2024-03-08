@@ -22,6 +22,7 @@ namespace NFTMarketServer.Worker
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SeedMainChainCreateSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTInfoSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTInfoNewSyncWorker>());
+            backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTInfoNewRecentSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SeedSymbolSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<ExpiredListingNftHandleWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<ExpiredNFTMinPriceSyncWorker>());
