@@ -148,14 +148,16 @@ public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
 
         mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionSymbol).Value(collectionSymbol)));
         mustQuery.Add(q => q.Range(i => i.Field(f => f.Generation).GreaterThanOrEquals(CommonConstant.IntZero)));
+        mustQuery.Add(q => q.Range(i => i.Field(f => f.ItemCount).GreaterThan(CommonConstant.IntOne)));
         
         QueryContainer Filter(QueryContainerDescriptor<NFTCollectionTraitGenerationIndex> f)
             => f.Bool(b => b.Must(mustQuery));
 
-        var result = await _nftCollectionTraitGenerationIndexRepository.GetSortListAsync(Filter);
+        var result = await _nftCollectionTraitGenerationIndexRepository.GetListAsync(Filter,
+            sortType: SortOrder.Ascending, sortExp: o => o.Generation);
         if (result?.Item1 == null || result?.Item1 == CommonConstant.EsLimitTotalNumber)
         {
-            return new Dictionary<int,long>();
+            return new Dictionary<int, long>();
         }
 
         return result.Item2.ToDictionary(x => x.Generation, x => x.ItemCount);
