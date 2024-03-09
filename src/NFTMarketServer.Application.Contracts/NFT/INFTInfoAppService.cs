@@ -7,17 +7,6 @@ namespace NFTMarketServer.NFT
 {
     public interface INFTInfoAppService
     {
-        Task<long> QueryItemCountForNFTCollectionWithTraitKeyAsync(string key,
-            string nftCollectionId);
-
-        Task<long> QueryItemCountForNFTCollectionWithTraitPairAsync(string key, string value,
-            string nftCollectionId);
-
-        Task<long> QueryItemCountForNFTCollectionGenerationAsync(string nftCollectionId, int generation);
-
-        Task<NFTInfoNewIndex> QueryFloorPriceNFTForNFTWithTraitPair(string key, string value,
-            string nftCollectionId);
-
         Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(GetNFTInfosProfileInput input);
         
         Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetCompositeNFTInfosAsync(GetCompositeNFTInfosInput input);
@@ -30,7 +19,7 @@ namespace NFTMarketServer.NFT
         
         Task AddOrUpdateNftInfoAsync(NFTInfoIndex nftInfo);
 
-        Task<NFTInfoNewIndex> AddOrUpdateNftInfoNewAsync(NFTInfoIndex nftInfo, string nftInfoid, string chainId);
+        Task AddOrUpdateNftInfoNewAsync(NFTInfoIndex nftInfo, string nftInfoid, string chainId);
 
         Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId, string chainId);
         

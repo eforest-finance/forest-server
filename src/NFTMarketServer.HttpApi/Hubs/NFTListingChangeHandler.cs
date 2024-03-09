@@ -56,6 +56,7 @@ public class NFTListingChangeHandler : IConsumer<NewIndexEvent<NFTListingChangeE
             
             var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
                 .ChoiceNFTInfoNewFlagIsOn ?? false;
+
             if (choiceNFTInfoNewFlag && nftListingChange.NftId != null && nftListingChange.ChainId != null)
             {
                 await _nftInfoAppService.AddOrUpdateNftInfoNewByIdAsync(nftListingChange.NftId,nftListingChange.ChainId);

@@ -272,8 +272,8 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var graphQlResponse = await _graphQLClient.SendQueryAsync<JObject>(new GraphQLRequest
         {
             Query =
-                @"query($Id:String!,$chainId:String!){
-            getSyncNFTInfoRecord(dto: {Id:$id,chainId:$chainId})
+                @"query($id:String!,$chainId:String!){
+            getSyncNFTInfoRecord(dto: {id:$id,chainId:$chainId})
             {
                 id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},
                 issueManagerSet,randomIssueManager,creatorAddress,imageUrl,collectionSymbol,collectionName,collectionId,otherOwnerListingFlag,

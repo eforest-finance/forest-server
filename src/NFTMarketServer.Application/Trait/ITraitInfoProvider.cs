@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
-using AutoMapper.Internal.Mappers;
 using Nest;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Entities;

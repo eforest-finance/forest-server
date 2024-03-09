@@ -165,7 +165,7 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
             var nftTraitInfoDto = new NFTTraitInfoDto();
             if (nftCollectionTraitKeyDic.TryGetValue(key, out var value))
             {
-                nftTraitInfoDto.ItemsCount = value.ItemCount;
+                nftTraitInfoDto.AllItemsCount = value.ItemCount;
             }
 
             if (nftCollectionTraitPairsDic.TryGetValue(key, out var dic))
@@ -173,7 +173,7 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
                 nftTraitInfoDto.Id = dic.Id;
                 nftTraitInfoDto.Key = dic.TraitKey;
                 nftTraitInfoDto.Value = dic.TraitValue;
-                nftTraitInfoDto.AllItemsCount = dic.ItemCount;
+                nftTraitInfoDto.ItemsCount = dic.ItemCount;
                 if (dic.FloorPriceToken?.Prices != null && dic.FloorPriceToken?.Prices > CommonConstant.IntZero)
                 {
                     nftTraitInfoDto.ItemFloorPrice = dic.FloorPriceToken.Prices;
