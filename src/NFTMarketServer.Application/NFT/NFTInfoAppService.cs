@@ -718,7 +718,7 @@ namespace NFTMarketServer.NFT
             NFTInfoNewIndex nftInfo;
 
             var changeFlag = false;
-            if (localNFTInfo == null)
+            if (localNFTInfo == null || !FTHelper.IsGreaterThanEqualToOne(localNFTInfo.Supply,localNFTInfo.Decimals))
             {
                 if (fromNFTInfo == null)
                 {
