@@ -742,16 +742,36 @@ namespace NFTMarketServer.NFT
 
                     foreach (var item in nftInfo.ExternalInfoDictionary)
                     {
+                        if (item.Key == CommonConstant.NFT_ExternalInfo_InscriptionDeploy_Key)
+                        {
+                            var inscriptionDeploy = JsonConvert.DeserializeObject<InscriptionDeploy>(item.Value);
+                            if (inscriptionDeploy != null && !inscriptionDeploy.Lim.IsNullOrEmpty())
+                            {
+                                nftInfo.Generation = CommonConstant.IntZero;
+                                break;
+                            }
+                        }
+                        else if (item.Key == CommonConstant.NFT_ExternalInfo_Inscription_Adopt_Key)
+                        {
+                            var inscriptionDeploy = JsonConvert.DeserializeObject<InscriptionAdop>(item.Value);
+                            if (inscriptionDeploy != null && !inscriptionDeploy.Gen.IsNullOrEmpty())
+                            {
+                                nftInfo.Generation = int.Parse(inscriptionDeploy.Gen);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    foreach (var item in nftInfo.ExternalInfoDictionary)
+                    {
                         if (item.Key == CommonConstant.NFT_ExternalInfo_Attributes_Key)
                         {
                             var attributes = JsonConvert.DeserializeObject<List<AttributeDictionary>>(item.Value);
                             if (attributes.IsNullOrEmpty())
                             {
-                                nftInfo.Generation = CommonConstant.IntZero;
                                 break;
                             }
-
-                            nftInfo.Generation = attributes.Count;
+                            
                             nftInfo.TraitPairsDictionary.AddRange(
                                 _objectMapper.Map<List<AttributeDictionary>, List<ExternalInfoDictionary>>(attributes));
                             break;
@@ -763,6 +783,11 @@ namespace NFTMarketServer.NFT
                         if (item.Key == CommonConstant.NFT_ExternalInfo_Metadata_Key)
                         {
                             var metadata = JsonConvert.DeserializeObject<List<ExternalInfoDictionary>>(item.Value);
+                            if (metadata.IsNullOrEmpty())
+                            {
+                                break;
+                            }
+
                             nftInfo.TraitPairsDictionary.AddRange(metadata);
                             break;
                         }

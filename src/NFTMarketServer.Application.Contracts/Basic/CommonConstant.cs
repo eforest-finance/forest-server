@@ -15,6 +15,8 @@ public static class CommonConstant
     public const string MainChainId = "AELF";
     public const string NFT_ExternalInfo_Metadata_Key = "__nft_metadata";
     public const string NFT_ExternalInfo_Attributes_Key = "__nft_attributes";
+    public const string NFT_ExternalInfo_InscriptionDeploy_Key = "__inscription_deploy";
+    public const string NFT_ExternalInfo_Inscription_Adopt_Key = "__inscription_adopt";
     public const string MetadataSpecialInscriptionImageKey = "inscription_image";
     public const string MetadataCommonInscriptionImageKey = "__inscription_image";
     public const string MetadataImageUrlKey = "__nft_image_url";

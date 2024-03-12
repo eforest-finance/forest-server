@@ -18,3 +18,15 @@ public class AttributeDictionary
     [JsonProperty(PropertyName = "value")]
     [Keyword] public string Value { get; set; }
 }
+
+public class InscriptionDeploy
+{
+    [JsonProperty(PropertyName = "lim")]
+    [Keyword] public string Lim { get; set; }
+}
+
+public class InscriptionAdop
+{
+    [JsonProperty(PropertyName = "gen")]
+    [Keyword] public string Gen { get; set; }
+}
