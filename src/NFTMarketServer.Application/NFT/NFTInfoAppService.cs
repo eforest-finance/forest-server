@@ -1086,7 +1086,7 @@ namespace NFTMarketServer.NFT
                     new NFTOwnerInfo
                     {
                         Owner = userInfo,
-                        ItemsNumber = nftOwners.IndexerNftUserBalances[i].Amount
+                        ItemsNumber = FTHelper.GetIntegerDivision(nftOwners.IndexerNftUserBalances[i].Amount,nftInfoIndex.Decimals)
                     });
                 _logger.LogInformation("GetNFTOwnersAsync-Add owner, address: {id}, cnt: {cnd}",
                     userInfo.Address, nftOwners.IndexerNftUserBalances[i].Amount);

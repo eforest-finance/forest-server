@@ -14,6 +14,17 @@ public class FTHelper
     {
         return amount / (decimal)Math.Pow(10, decimals);
     }
+    
+    public static long GetIntegerDivision(long number, int decimals)
+    {
+        if (decimals == CommonConstant.IntZero || number == CommonConstant.IntZero)
+        {
+            return number;
+        }
+
+        var divisor = (long)Math.Pow(CommonConstant.IntTen, decimals);
+        return number / divisor;
+    }
 
     public static bool IsGreaterThanEqualToOne(long supply, int decimalValue)
     {
