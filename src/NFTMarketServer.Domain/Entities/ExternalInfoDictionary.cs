@@ -21,8 +21,8 @@ public class AttributeDictionary
 
 public class InscriptionDeploy
 {
-    [JsonProperty(PropertyName = "lim")]
-    [Keyword] public string Lim { get; set; }
+    [JsonProperty(PropertyName = "gen")]
+    [Keyword] public string Gen { get; set; }
 }
 
 public class InscriptionAdop

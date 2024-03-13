@@ -738,18 +738,18 @@ namespace NFTMarketServer.NFT
                     if (item.Key == CommonConstant.NFT_ExternalInfo_InscriptionDeploy_Key)
                     {
                         var inscriptionDeploy = JsonConvert.DeserializeObject<InscriptionDeploy>(item.Value);
-                        if (inscriptionDeploy != null && !inscriptionDeploy.Lim.IsNullOrEmpty())
+                        if (inscriptionDeploy != null && !inscriptionDeploy.Gen.IsNullOrEmpty())
                         {
-                            nftInfo.Generation = CommonConstant.IntZero;
+                            nftInfo.Generation = int.Parse(inscriptionDeploy.Gen);
                             break;
                         }
                     }
                     else if (item.Key == CommonConstant.NFT_ExternalInfo_Inscription_Adopt_Key)
                     {
-                        var inscriptionDeploy = JsonConvert.DeserializeObject<InscriptionAdop>(item.Value);
-                        if (inscriptionDeploy != null && !inscriptionDeploy.Gen.IsNullOrEmpty())
+                        var inscriptionAdopt = JsonConvert.DeserializeObject<InscriptionAdop>(item.Value);
+                        if (inscriptionAdopt != null && !inscriptionAdopt.Gen.IsNullOrEmpty())
                         {
-                            nftInfo.Generation = int.Parse(inscriptionDeploy.Gen);
+                            nftInfo.Generation = int.Parse(inscriptionAdopt.Gen);
                             break;
                         }
                     }
@@ -786,15 +786,13 @@ namespace NFTMarketServer.NFT
                     }
                 }
             }
-                
-            await CheckOrUpdateNFTOtherInfoAsync(nftInfo);
-            await _nftInfoNewIndexRepository.AddOrUpdateAsync(nftInfo);
+            
+            await UpdateNFTOtherInfoAsync(nftInfo);
             await _inftTraitProvider.CheckAndUpdateTraitInfo(nftInfo);
         }
 
-        private async Task<bool> CheckOrUpdateNFTOtherInfoAsync(NFTInfoNewIndex nftInfoNewIndex)
+        private async Task UpdateNFTOtherInfoAsync(NFTInfoNewIndex nftInfoNewIndex)
         {
-            var changeFlag = false;
             var getNftListingsDto = new GetNFTListingsDto
             {
                 ChainId = nftInfoNewIndex.ChainId,
@@ -805,25 +803,17 @@ namespace NFTMarketServer.NFT
             var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
             if (listingDto != null && listingDto.TotalCount > CommonConstant.IntZero)
             {
-                var checkFlag = UpdateMinListingInfo(nftInfoNewIndex, listingDto.Items[CommonConstant.IntZero]);
-                if (checkFlag)
-                {
-                    changeFlag = true;
-                }
+                UpdateMinListingInfo(nftInfoNewIndex, listingDto.Items[CommonConstant.IntZero]);
             }
             
             
             var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoNewIndex.Id);
             if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
             {
-                var checkFlag = UpdateMaxOfferInfo(nftInfoNewIndex, indexerNFTOffer);
-                if (checkFlag)
-                {
-                    changeFlag = true;
-                }
+                UpdateMaxOfferInfo(nftInfoNewIndex, indexerNFTOffer);
             }
-
-            return changeFlag;
+            
+            await _nftInfoNewIndexRepository.AddOrUpdateAsync(nftInfoNewIndex);
         } 
         
         private bool UpdateMinListingInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTListingInfo listingDto)
