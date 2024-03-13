@@ -174,11 +174,12 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
                 nftTraitInfoDto.Key = dic.TraitKey;
                 nftTraitInfoDto.Value = dic.TraitValue;
                 nftTraitInfoDto.ItemsCount = dic.ItemCount;
-                if (dic.FloorPriceToken?.Prices != null && dic.FloorPriceToken?.Prices > CommonConstant.IntZero)
+                if (dic.ItemFloorPrice > CommonConstant.IntZero)
                 {
-                    nftTraitInfoDto.ItemFloorPrice = dic.FloorPriceToken.Prices;
+                    nftTraitInfoDto.ItemFloorPrice = dic.ItemFloorPrice;
                     nftTraitInfoDto.ItemFloorPriceToken =
-                        _objectMapper.Map<TokenInfoIndex, TokenDto>(dic.FloorPriceToken);
+                        _objectMapper.Map<IndexerTokenInfo, TokenDto>(
+                            _objectMapper.Map<TokenInfoIndex, IndexerTokenInfo>(dic.FloorPriceToken));
                 }
             }
 

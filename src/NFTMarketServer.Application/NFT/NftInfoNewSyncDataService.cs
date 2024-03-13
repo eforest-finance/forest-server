@@ -10,7 +10,6 @@ using NFTMarketServer.Chains;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
 using Orleans.Runtime;
-using Orleans.Runtime.Configuration;
 using Volo.Abp.Caching;
 
 namespace NFTMarketServer.NFT;
@@ -24,14 +23,12 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
     private const int HeightExpireMinutes = 5;
     private readonly IDistributedCache<List<string>> _distributedCache;
     private readonly IDistributedCache<string> _distributedCacheForHeight;
-    private readonly INFTTraitProvider _inftTraitProvider;
 
     public NftInfoNewSyncDataService(ILogger<NftInfoNewSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         INFTInfoAppService nftInfoAppService,
         IDistributedCache<List<string>> distributedCache,
         IDistributedCache<string> distributedCacheForHeight,
-        INFTTraitProvider inftTraitProvider,
         IChainAppService chainAppService)
         : base(logger, graphQlProvider, chainAppService)
     {
@@ -41,7 +38,6 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
         _chainAppService = chainAppService;
         _distributedCache = distributedCache;
         _distributedCacheForHeight = distributedCacheForHeight;
-        _inftTraitProvider = inftTraitProvider;
     }
 
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)

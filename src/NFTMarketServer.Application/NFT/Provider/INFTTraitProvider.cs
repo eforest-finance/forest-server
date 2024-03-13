@@ -6,11 +6,15 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Nest;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Index;
+using NFTMarketServer.Tokens;
+using Orleans.Runtime;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.NFT.Provider;
 
@@ -34,19 +38,19 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
 {
     private readonly INESTRepository<NFTCollectionTraitKeyIndex, string> _nftCollectionTraitKeyIndexRepository;
     private readonly INESTRepository<NFTCollectionTraitPairsIndex, string> _nftCollectionTraitPairsIndexRepository;
-
     private readonly INESTRepository<NFTCollectionTraitGenerationIndex, string>
         _nftCollectionTraitGenerationIndexRepository;
     private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
-
     private readonly ILogger<NFTTraitProvider> _logger;
+    private readonly IObjectMapper _objectMapper;
 
     public NFTTraitProvider(
         ILogger<NFTTraitProvider> logger,
         INESTRepository<NFTCollectionTraitKeyIndex, string> nftCollectionTraitKeyIndexRepository,
         INESTRepository<NFTCollectionTraitPairsIndex, string> nftCollectionTraitPairsIndexRepository,
         INESTRepository<NFTCollectionTraitGenerationIndex, string> nftCollectionTraitGenerationIndexRepository,
-        INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository
+        INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
+        IObjectMapper objectMapper
     )
     {
         _logger = logger;
@@ -54,6 +58,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         _nftCollectionTraitPairsIndexRepository = nftCollectionTraitPairsIndexRepository;
         _nftCollectionTraitGenerationIndexRepository = nftCollectionTraitGenerationIndexRepository;
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
+        _objectMapper = objectMapper;
     }
     
     public async Task<long> QueryItemCountForNFTCollectionWithTraitKeyAsync(string key,
@@ -298,17 +303,22 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                 TraitValue = trait.Value,
                 ItemCount = FTHelper.IsGreaterThanEqualToOne(nftInfoNewIndex.Supply, nftInfoNewIndex.Decimals)
                     ? CommonConstant.LongOne
-                    : CommonConstant.IntZero,
-                FloorPriceSymbol = CommonConstant.Coin_ELF,
-                FloorPriceToken = null,
+                    : CommonConstant.IntZero, 
+                ItemFloorPrice= CommonConstant.DefaultValueNone,
+                FloorPriceToken = new TokenInfoIndex
+                {
+                    Decimals = CommonConstant.Coin_ELF_Decimals,
+                    Symbol = CommonConstant.Coin_ELF
+                },
                 FloorPriceNFTSymbol = ""
             };
         }
 
-        bool changeFlag = false;
+        var changeFlag = false;
         var newItemCount = await QueryItemCountForNFTCollectionWithTraitPairAsync(trait.Key,
             trait.Value,
             nftInfoNewIndex.CollectionId);
+        
         if (nftCollectionTraitPairsIndex.ItemCount != newItemCount)
         {
             changeFlag = true;
@@ -319,23 +329,27 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         var floorPriceNFT = await QueryFloorPriceNFTForNFTWithTraitPair(trait.Key,
             trait.Value,
             nftInfoNewIndex.CollectionId);
-        if (floorPriceNFT == null && nftInfoNewIndex.ListingToken != null)
-        {
-            changeFlag = true;
-            nftInfoNewIndex.ListingPrice = CommonConstant.DefaultValueNone;
-            nftInfoNewIndex.ListingEndTime = new DateTime().ToUniversalTime();
-            nftInfoNewIndex.ListingToken = null;
-        }
-        else if (floorPriceNFT != null
-                 && floorPriceNFT.ListingToken != null
-                 && floorPriceNFT.ListingPrice != nftInfoNewIndex.ListingPrice)
-        {
-            changeFlag = true;
-            nftInfoNewIndex.ListingPrice = (decimal)floorPriceNFT?.ListingPrice;
-            nftInfoNewIndex.ListingEndTime = (DateTime)floorPriceNFT?.ListingEndTime;
-            nftInfoNewIndex.ListingToken = floorPriceNFT?.ListingToken;
-        }
 
+        if (floorPriceNFT == null || floorPriceNFT.HasListingFlag == null)
+        {
+            changeFlag = true;
+            nftCollectionTraitPairsIndex.FloorPriceNFTSymbol = "";
+            nftCollectionTraitPairsIndex.ItemFloorPrice = CommonConstant.DefaultValueNone;
+        }
+        else if (floorPriceNFT != null && !floorPriceNFT.HasListingFlag && nftCollectionTraitPairsIndex.ItemFloorPrice > CommonConstant.IntZero)
+        {
+            changeFlag = true;
+            nftCollectionTraitPairsIndex.FloorPriceNFTSymbol = "";
+            nftCollectionTraitPairsIndex.ItemFloorPrice = CommonConstant.DefaultValueNone;
+        }
+        else if (floorPriceNFT != null && floorPriceNFT?.ListingPrice != nftCollectionTraitPairsIndex.ItemFloorPrice)
+        {
+            changeFlag = true;
+            nftCollectionTraitPairsIndex.FloorPriceNFTSymbol = floorPriceNFT.Symbol;
+            nftCollectionTraitPairsIndex.FloorPriceToken = floorPriceNFT.ListingToken;
+            nftCollectionTraitPairsIndex.ItemFloorPrice = floorPriceNFT.ListingPrice;
+        }
+        
         if (changeFlag)
         {
             await _nftCollectionTraitPairsIndexRepository.AddOrUpdateAsync(nftCollectionTraitPairsIndex);
