@@ -33,15 +33,15 @@ public class TimeTrackingStatisticsMiddleware
             if (context.Response.StatusCode == CommonConstant.HttpSuccessCode || context.Response.StatusCode == CommonConstant.HttpFileUploadSuccessCode)
             {
                 _logger.LogInformation(
-                    "TimeTrackingStatisticsMiddleware Path {path} Method {Method} StatusCode {StatusCode} Authorization {Authorization} Request took {elapsedMilliseconds} ms ",
-                    context.Request.Path, context.Request.Method, context.Response.StatusCode,
-                    context.Request.Headers.Authorization, elapsedMilliseconds);
+                    "TimeTrackingStatisticsMiddleware Path {path} Method {Method} StatusCode {StatusCode} Request took {elapsedMilliseconds} ms ",
+                    context.Request.Path, context.Request.Method, context.Response.StatusCode, elapsedMilliseconds);
             }
             else
             {
                 _logger.LogInformation(
-                    "TimeTrackingStatisticsMiddleware Path {path} Method {Method} StatusCode {StatusCode} Request took {elapsedMilliseconds} ms ",
-                    context.Request.Path, context.Request.Method, context.Response.StatusCode, elapsedMilliseconds);
+                    "TimeTrackingStatisticsMiddleware Path {path} Method {Method} StatusCode {StatusCode} Authorization {Authorization} Request took {elapsedMilliseconds} ms ",
+                    context.Request.Path, context.Request.Method, context.Response.StatusCode,
+                    context.Request.Headers.Authorization, elapsedMilliseconds);
             }
         }
     }
