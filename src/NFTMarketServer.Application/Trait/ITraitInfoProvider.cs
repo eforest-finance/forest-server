@@ -146,8 +146,8 @@ public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTCollectionTraitGenerationIndex>, QueryContainer>>();
 
         mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionSymbol).Value(collectionSymbol)));
-        mustQuery.Add(q => q.Range(i => i.Field(f => f.Generation).GreaterThanOrEquals(CommonConstant.IntZero)));
-        mustQuery.Add(q => q.Range(i => i.Field(f => f.ItemCount).GreaterThan(CommonConstant.IntOne)));
+         mustQuery.Add(q => q.Range(i => i.Field(f => f.Generation).GreaterThan(CommonConstant.IntNegativeOne)));
+        mustQuery.Add(q => q.Range(i => i.Field(f => f.ItemCount).GreaterThanOrEquals(CommonConstant.IntOne)));
         
         QueryContainer Filter(QueryContainerDescriptor<NFTCollectionTraitGenerationIndex> f)
             => f.Bool(b => b.Must(mustQuery));
