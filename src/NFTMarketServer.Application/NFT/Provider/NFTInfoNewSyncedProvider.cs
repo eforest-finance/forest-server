@@ -221,7 +221,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         mustNotQuery.Add(q => q
             .Script(sc => sc
                 .Script(script =>
-                    script.Source($"{NFTSymbolBasicConstants.BurnedAllNftScript}")
+                    script.Source($"{NFTSymbolBasicConstants.BurnedAllNftScript}  || {NFTSymbolBasicConstants.IssuedLessThenOneGetThenZeroANftScript}")
                 )
             )
         );
