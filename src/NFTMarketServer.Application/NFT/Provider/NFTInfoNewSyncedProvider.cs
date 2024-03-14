@@ -161,7 +161,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             return new Tuple<long, List<NFTInfoIndex>>(result.Item1, nftInfoIndexList);
         }
 
-        var count = await QueryRealCountAsync(mustQuery);
+        var count = await QueryRealCountAsync(mustQuery,null);
         var newResult = new Tuple<long, List<NFTInfoIndex>>(count, nftInfoIndexList);
         return newResult;
     }
@@ -247,8 +247,8 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
          {
              return indexerInfos;
          }
-        
-         var count = await QueryRealCountAsync(mustQuery);
+
+         var count = await QueryRealCountAsync(mustQuery, mustNotQuery);
          indexerInfos.TotalRecordCount = count;
          return indexerInfos;
     }
@@ -304,7 +304,8 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         return s => sortDescriptor;
     }
     
-    private async Task<long> QueryRealCountAsync(List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>> mustQuery)
+    private async Task<long> QueryRealCountAsync(List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>> mustQuery,
+    List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>> mustNotQuery)
     {
         var countRequest = new SearchRequest<NFTInfoNewIndex>
         {
@@ -312,6 +313,9 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             {
                 Must = mustQuery
                     .Select(func => func(new QueryContainerDescriptor<NFTInfoNewIndex>()))
+                    .ToList()
+                    .AsEnumerable(),
+                MustNot = mustNotQuery.Select(func => func(new QueryContainerDescriptor<NFTInfoNewIndex>()))
                     .ToList()
                     .AsEnumerable()
             },
