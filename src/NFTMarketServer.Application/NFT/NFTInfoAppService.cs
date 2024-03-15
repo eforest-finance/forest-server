@@ -1065,7 +1065,7 @@ namespace NFTMarketServer.NFT
             }
 
             ret.TotalCount = nftOwners.TotalCount;
-            ret.Items = owners;
+            ret.Items = owners.Where(item => item.ItemsNumber > CommonConstant.IntZero).ToList();
 
             return ret;
         }
