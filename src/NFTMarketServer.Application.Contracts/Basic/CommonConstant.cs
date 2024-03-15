@@ -19,7 +19,6 @@ public static class CommonConstant
     public const string NFT_ExternalInfo_InscriptionDeploy_Key = "__inscription_deploy";
     public const string NFT_ExternalInfo_Inscription_Adopt_Key = "__inscription_adopt";
     public const string MetadataSpecialInscriptionImageKey = "inscription_image";
-    public const string MetadataCommonInscriptionImageKey = "__inscription_image";
     public const string MetadataImageUrlKey = "__nft_image_url";
     public const string MetadataImageUriKey = "__nft_image_uri";
     public const string MetadataImageUriKeyPre = "ipfs://";

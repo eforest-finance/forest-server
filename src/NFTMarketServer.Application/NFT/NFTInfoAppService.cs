@@ -130,6 +130,7 @@ namespace NFTMarketServer.NFT
             var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
                 .ChoiceNFTInfoNewFlagIsOn ?? false;
             IndexerNFTInfos nftInfos;
+            
             if (choiceNFTInfoNewFlag)
             {
                 nftInfos = await _nftInfoNewSyncedProvider.GetNFTInfosUserProfileAsync(input);
@@ -291,6 +292,8 @@ namespace NFTMarketServer.NFT
                     item.PreviewImage ??= extension.PreviewImage;
                 }
 
+                item.PreviewImage = FTHelper.BuildIpfsUrl(item.PreviewImage);
+
                 if (item.fileExtension.IsNullOrWhiteSpace())
                 {
                     item.fileExtension = CommonConstant.FILE_TYPE_IMAGE;
@@ -413,30 +416,40 @@ namespace NFTMarketServer.NFT
             nftInfoIndexDto = await BuildShowPriceTypeAsync(input.Address, nftInfoIndex.ChainId, nftInfoIndex.Symbol,
                 nftInfoIndexDto);
 
-            if (nftInfoIndexDto?.Metadata?.Where(item =>
-                        item.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey) ||
-                        item.Key.Equals(CommonConstant.MetadataCommonInscriptionImageKey))
-                    .ToList()
-                    .FirstOrDefault() == null)
+            var kv = nftInfoIndexDto?.Metadata?.Where(item =>
+                    item.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey) ||
+                    item.Key.Equals(CommonConstant.MetadataImageUriKey))
+                .ToList()
+                .FirstOrDefault();
+            if (kv == null || string.IsNullOrEmpty(kv.Key))
             {
                 return nftInfoIndexDto;
             }
-            var tick = SymbolHelper.GainInscriptionInfoTick(nftInfoIndex.Symbol);
-            try
-            {
-                var inscriptionInfoDto =
-                    await _inscriptionProvider.GetIndexerInscriptionInfoAsync(nftInfoIndex.ChainId, tick);
-                if (inscriptionInfoDto != null && inscriptionInfoDto.MintLimit == 0)
-                {
-                    inscriptionInfoDto.MintLimit = CommonConstant.DefaultValueNone;
-                }
 
-                nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
-            }
-            catch (Exception e)
+            if (kv.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey))
             {
-                _logger.LogError(e, "Query inscriptionInfo from graphQl error tick={Tick}", tick);
+                var tick = SymbolHelper.GainInscriptionInfoTick(nftInfoIndex.Symbol);
+                try
+                {
+                    var inscriptionInfoDto =
+                        await _inscriptionProvider.GetIndexerInscriptionInfoAsync(nftInfoIndex.ChainId, tick);
+                    if (inscriptionInfoDto != null && inscriptionInfoDto.MintLimit == 0)
+                    {
+                        inscriptionInfoDto.MintLimit = CommonConstant.DefaultValueNone;
+                    }
+
+                    nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Query inscriptionInfo from graphQl error tick={Tick}", tick);
+                }
+            }else if (kv.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey))
+            {
+                
             }
+            
+            
 
             return nftInfoIndexDto;
         }
