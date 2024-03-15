@@ -60,6 +60,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
 
         if (isSeed)
         {
+            res.Generation = CommonConstant.IntNegativeOne;
             res.SeedOwnedSymbol = EnumDescriptionHelper.GetExtraInfoValue(res.ExternalInfoDictionary,
                 TokenCreatedExternalInfoEnum.SeedOwnedSymbol, res.TokenName);
         }

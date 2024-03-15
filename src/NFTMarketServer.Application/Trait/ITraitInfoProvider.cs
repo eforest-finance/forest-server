@@ -126,6 +126,8 @@ public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
         mustQuery.Add(q => q.Term(i => i.Field(f => f.NFTCollectionSymbol).Value(collectionSymbol)));
 
         mustQuery.Add(q => q.Terms(i => i.Field(f => f.TraitKey).Terms(keyList)));
+        
+        mustQuery.Add(q=>q.Range(i=>i.Field(f=>f.ItemCount).GreaterThan(CommonConstant.IntZero)));
 
         QueryContainer Filter(QueryContainerDescriptor<NFTCollectionTraitPairsIndex> f)
             => f.Bool(b => b.Must(mustQuery));
