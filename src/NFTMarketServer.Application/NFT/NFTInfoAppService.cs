@@ -366,7 +366,7 @@ namespace NFTMarketServer.NFT
                 .ChoiceNFTInfoNewFlagIsOn ?? false;
 
             IndexerNFTInfo nftInfoIndex;
-            
+
             if (choiceNFTInfoNewFlag)
             {
                 nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
@@ -444,7 +444,7 @@ namespace NFTMarketServer.NFT
                 {
                     _logger.LogError(e, "Query inscriptionInfo from graphQl error tick={Tick}", tick);
                 }
-            }else if (kv.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey))
+            }else if (kv.Key.Equals(CommonConstant.MetadataImageUriKey))
             {
                 var tickKv = nftInfoIndexDto?.Metadata?.Where(item =>
                         item.Key.Equals(CommonConstant.NFT_ExternalInfo_InscriptionDeploy_Key) ||
