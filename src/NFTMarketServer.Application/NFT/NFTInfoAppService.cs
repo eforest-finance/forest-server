@@ -446,11 +446,30 @@ namespace NFTMarketServer.NFT
                 }
             }else if (kv.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey))
             {
+                var tickKv = nftInfoIndexDto?.Metadata?.Where(item =>
+                        item.Key.Equals(CommonConstant.NFT_ExternalInfo_InscriptionDeploy_Key) ||
+                        item.Key.Equals(CommonConstant.NFT_ExternalInfo_Inscription_Adopt_Key))
+                    .ToList()
+                    .FirstOrDefault();
+                var inscriptionInfoDto = new InscriptionInfoDto();
+                nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
+                if (tickKv == null || string.IsNullOrEmpty(tickKv.Key))
+                {
+                    return nftInfoIndexDto;
+                }
+
+                var tickDto = JsonConvert.DeserializeObject<TickDto>(tickKv.Value);
+                if (tickDto == null)
+                {
+                    return nftInfoIndexDto;
+                }
+
+                inscriptionInfoDto.Tick = tickDto.Tick;
+                inscriptionInfoDto.MintLimit =
+                    string.IsNullOrEmpty(tickDto.Lim) ? CommonConstant.IntNegativeOne : int.Parse(tickDto.Lim);
                 
             }
             
-            
-
             return nftInfoIndexDto;
         }
 

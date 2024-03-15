@@ -18,8 +18,8 @@ public class InscriptionInfoDtos
 
 public class InscriptionInfoDto
 {
-    public string Tick { get; set; }
-    public string IssuedTransactionId { get; set; }
-    public DateTime DeployTime { get; set; }
-    public long MintLimit { get; set; }
+    public string Tick { get; set; } = "";
+    public string IssuedTransactionId { get; set; } = "";
+    public DateTime? DeployTime { get; set; } = null;
+    public long MintLimit { get; set; } = -1;
 }
