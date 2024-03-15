@@ -21,6 +21,9 @@ public static class CommonConstant
     public const string MetadataSpecialInscriptionImageKey = "inscription_image";
     public const string MetadataCommonInscriptionImageKey = "__inscription_image";
     public const string MetadataImageUrlKey = "__nft_image_url";
+    public const string MetadataImageUriKey = "__nft_image_uri";
+    public const string MetadataImageUriKeyPre = "ipfs://";
+    public const string ImageIpfsUrlPre = "https://ipfs.io/ipfs/";
     public const string ES_NFT_TraitPairsDictionary_Path = "traitPairsDictionary";
     public const string Graphql_Method = "getSyncNFTInfoRecord";
     

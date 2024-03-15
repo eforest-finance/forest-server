@@ -41,4 +41,15 @@ public class FTHelper
         var value = supply / (decimal)Math.Pow(CommonConstant.IntTen, decimalValue);
         return value >= CommonConstant.IntOne;
     }
+
+    public static string BuildIpfsUrl(string previewImage)
+    {
+        if (!string.IsNullOrEmpty(previewImage) && previewImage?.IndexOf(CommonConstant.MetadataImageUriKeyPre) >= 0)
+        {
+            return CommonConstant.ImageIpfsUrlPre +
+                   previewImage.Substring(CommonConstant.MetadataImageUriKeyPre.Length);
+        }
+
+        return previewImage;
+    }
 }

@@ -156,7 +156,14 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
 
         var sort = GetSortForNFTBrife(dto.Sorting);
         var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: dto.MaxResultCount);
-        var nftInfoIndexList = _objectMapper.Map<List<NFTInfoNewIndex>, List<NFTInfoIndex>>(result?.Item2);
+        
+        var nftInfoIndexList = result?.Item2.Select(item =>
+        {
+            var newItem = _objectMapper.Map<NFTInfoNewIndex, NFTInfoIndex>(item);
+            newItem.PreviewImage = FTHelper.BuildIpfsUrl(newItem.PreviewImage);
+            return newItem;
+        }).ToList();
+        
         if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
         {
             return new Tuple<long, List<NFTInfoIndex>>(result.Item1, nftInfoIndexList);

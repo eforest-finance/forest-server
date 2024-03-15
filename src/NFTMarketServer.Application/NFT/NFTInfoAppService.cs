@@ -157,8 +157,14 @@ namespace NFTMarketServer.NFT
             var result = await BuildNFTInfoIndexListAsync(input.Address, resultNftInfos);
             return new PagedResultDto<UserProfileNFTInfoIndexDto>
             {
-                Items = _objectMapper.Map<List<NFTInfoIndexDto>, List<UserProfileNFTInfoIndexDto>>(result),
-                TotalCount = (long)(totalRecordCount == null ? 0 : totalRecordCount)
+                Items = result.Select(item =>
+                {
+                    var newItem = _objectMapper.Map<NFTInfoIndexDto, UserProfileNFTInfoIndexDto>(item);
+                    newItem.PreviewImage = FTHelper.BuildIpfsUrl(newItem.PreviewImage);
+                    return newItem;
+                }).ToList(),
+
+                TotalCount = (long)(totalRecordCount == null ? CommonConstant.IntZero : totalRecordCount)
             };
         }
 
@@ -357,6 +363,7 @@ namespace NFTMarketServer.NFT
                 .ChoiceNFTInfoNewFlagIsOn ?? false;
 
             IndexerNFTInfo nftInfoIndex;
+            
             if (choiceNFTInfoNewFlag)
             {
                 nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
@@ -599,12 +606,17 @@ namespace NFTMarketServer.NFT
                 info.Metadata = index.ExternalInfoDictionary
                     .Select(kv => new MetadataDto { Key = kv.Key, Value = kv.Value }).ToList();
             }
-
-            var nftImageUrl = info?.Metadata?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUrlKey);
-
+            
             if (info.PreviewImage.IsNullOrEmpty())
             {
+                var nftImageUrl = info?.Metadata?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUrlKey);
                 info.PreviewImage = nftImageUrl?.Value;
+            }
+            
+            if (info.PreviewImage.IsNullOrEmpty())
+            {
+                var nftImageUri = info?.Metadata?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUriKey);
+                info.PreviewImage = nftImageUri?.Value;
             }
 
             if (info.PreviewImage.IsNullOrEmpty())
@@ -612,6 +624,8 @@ namespace NFTMarketServer.NFT
                 info.PreviewImage = index.ImageUrl;
             }
 
+            info.PreviewImage = FTHelper.BuildIpfsUrl(info?.PreviewImage);
+            
             return info;
         }
 
