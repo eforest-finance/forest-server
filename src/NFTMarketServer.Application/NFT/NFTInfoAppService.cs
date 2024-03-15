@@ -465,8 +465,10 @@ namespace NFTMarketServer.NFT
                 }
 
                 inscriptionInfoDto.Tick = tickDto.Tick;
-                inscriptionInfoDto.MintLimit =
-                    string.IsNullOrEmpty(tickDto.Lim) ? CommonConstant.IntNegativeOne : int.Parse(tickDto.Lim);
+                inscriptionInfoDto.MintLimit = string.IsNullOrEmpty(tickDto.Lim)
+                    ? CommonConstant.IntNegativeOne
+                    : FTHelper.GetIntegerDivision(long.Parse(tickDto.Lim),
+                        nftInfoIndex.Decimals);
                 
             }
             
