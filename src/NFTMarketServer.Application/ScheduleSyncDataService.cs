@@ -49,13 +49,15 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "DealDataAsync error businessQueryChainType:{businessQueryChainType} chainId: {chainId}",
+                _logger.LogError(e,
+                    "DealDataAsync error businessQueryChainType:{businessQueryChainType} chainId: {chainId}",
                     businessQueryChainType.ToString(), chainId);
             }
         }
     }
 
-    public abstract Task<long> SyncIndexerRecordsAsync(string chainId,long lastEndHeight, long newIndexHeight);
+    public abstract Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight);
+
     /**
      * different businesses obtain different multiple chains
      */

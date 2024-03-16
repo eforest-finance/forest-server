@@ -65,6 +65,7 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
         Configure<RecommendedCollectionsOptions>(configuration);
         Configure<HideCollectionInfoOptions>(configuration);
         Configure<ResetNFTSyncHeightExpireMinutesOptions>(configuration);
+        Configure<ChoiceNFTInfoNewFlagOptions>(configuration);
         Configure<NFTImageUrlOptions>(configuration.GetSection("NFTImageUrls"));
         Configure<TokenPriceCacheOptions>(configuration.GetSection("TokenPriceCacheOptions"));
         Configure<RecommendedDropOptions>(configuration);

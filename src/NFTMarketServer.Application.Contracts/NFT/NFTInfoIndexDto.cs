@@ -22,6 +22,7 @@ namespace NFTMarketServer.NFT
         public string Uri { get; set; }
         public string? TokenName { get; set; }
         public long TotalQuantity { get; set; }
+        public int Decimals { get; set; }
         public bool CanBuyFlag { get; set; }
         public string? ListingId { get; set; }
         public string? ListingAddress { get; set; }
@@ -49,6 +50,9 @@ namespace NFTMarketServer.NFT
         public decimal Price { get; set; }
         public string PriceSymbol { get; set; }
         public string PriceType { get; set; }
+        
+        public int Generation { get; set; } = -1;
+        public List<MetadataDto> TraitPairsDictionary { get; set; }
         
         // seed only
         public CreateTokenInformation CreateTokenInformation { get; set; }

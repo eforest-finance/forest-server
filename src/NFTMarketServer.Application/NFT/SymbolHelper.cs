@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 
 namespace NFTMarketServer.NFT;
@@ -10,6 +11,7 @@ public class SymbolHelper
     public const string MAIN_CHAIN_PREFIX = "MainChain ";
     public const string SIDE_CHAIN_PREFIX = "SideChain ";
     private const string Coin_Gecko_ELF = "ELF";
+    private const string SEED = "SEED";
     private const string HYPHEN = "-";
     public const string SEED_COLLECTION = "SEED-0";
     public const string COLLECTION_SUFFIX = "-0";
@@ -100,5 +102,36 @@ public class SymbolHelper
     {
         return symbol.Length != 0 &&
                Regex.IsMatch(symbol, NFTSymbolPattern);
+    }
+
+    public static bool CheckSymbolIsCommonNFTInfoId(string nftInfoId)
+    {
+        var parts = nftInfoId.Split(HYPHEN);
+        if (parts.Length > CommonConstant.IntOne)
+        {
+            if (parts[CommonConstant.IntOne].Equals(SEED))
+            {
+                return false;
+            }
+
+            var symbol = string.Join(HYPHEN, parts, CommonConstant.IntOne, parts.Length - CommonConstant.IntOne);
+            return symbol.Length != CommonConstant.IntZero &&
+                   Regex.IsMatch(symbol, NFTSymbolPattern);
+        }
+
+        return false;
+    }
+
+    public static bool CheckSymbolIsNFTInfoId(string nftInfoId)
+    {
+        var parts = nftInfoId.Split(HYPHEN);
+        if (parts.Length > CommonConstant.IntOne)
+        {
+            var symbol = string.Join(HYPHEN, parts, CommonConstant.IntOne, parts.Length - CommonConstant.IntOne);
+            return symbol.Length != CommonConstant.IntZero &&
+                   Regex.IsMatch(symbol, NFTSymbolPattern);
+        }
+
+        return false;
     }
 }

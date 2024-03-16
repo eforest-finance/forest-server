@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using GraphQL;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NFTMarketServer.Common;
 using NFTMarketServer.Market;
 using NFTMarketServer.NFT.Index;
@@ -77,6 +78,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     TotalCount: totalRecordCount,
                     Message: message,
                     Items: data{
+                      id,
                       quantity,
                       realQuantity,
                       symbol,
@@ -106,11 +108,11 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
                 }
             });
-            return res.nftListingInfo;
+            return res?.nftListingInfo;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error");
+            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error dto={DTO}", JsonConvert.SerializeObject(dto));
             throw;
         }
     }

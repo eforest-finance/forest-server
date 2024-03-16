@@ -129,15 +129,19 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoIndex>, QueryContainer>>();
         var mustNotQuery = new List<Func<QueryContainerDescriptor<NFTInfoIndex>, QueryContainer>>();
         var sorting = new Tuple<SortOrder, Expression<Func<NFTInfoIndex, object>>>(SortOrder.Descending, o => o.LatestListingTime);
+        var skipCount = dto.SkipCount;
+        long? selfTotalCount = 0;
         if (dto.Status == NFTSymbolBasicConstants.NFTInfoQueryStatusSelf)
         {
+            skipCount = 0;
             //query match nft
             var indexerUserMatchedNft = await _userBalanceProvider.GetUserMatchedNftIdsAsync(dto, false);
+            selfTotalCount = indexerUserMatchedNft?.Count;
             if (indexerUserMatchedNft == null || indexerUserMatchedNft.NftIds.IsNullOrEmpty())
             {
                 return new IndexerNFTInfos
                 {
-                    TotalRecordCount = 0,
+                    TotalRecordCount = selfTotalCount,
                     IndexerNftInfos = new List<IndexerNFTInfo>()
                 };
             }
@@ -185,12 +189,18 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
             return f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
         }
         var result = await _nftInfoIndexRepository.GetListAsync(Filter, sortType: sorting.Item1, sortExp: sorting.Item2,
-            skip: dto.SkipCount, limit: dto.MaxResultCount);
+            skip: skipCount, limit: dto.MaxResultCount);
          var indexerInfos = new IndexerNFTInfos
         {
             TotalRecordCount = result.Item1,
             IndexerNftInfos = _objectMapper.Map<List<NFTInfoIndex>, List<IndexerNFTInfo>>(result.Item2)
         };
+         if (dto.Status == NFTSymbolBasicConstants.NFTInfoQueryStatusSelf)
+         {
+             indexerInfos.TotalRecordCount = (long)selfTotalCount;
+             return indexerInfos;
+         }
+         
          if (result?.Item1 != CommonConstant.EsLimitTotalNumber)
          {
              return indexerInfos;
