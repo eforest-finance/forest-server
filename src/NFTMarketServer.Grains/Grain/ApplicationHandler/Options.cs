@@ -26,3 +26,8 @@ public class ResetNFTSyncHeightExpireMinutesOptions
 {
     public int ResetNFTSyncHeightExpireMinutes { get; set; }
 }
+
+public class ChoiceNFTInfoNewFlagOptions
+{
+    public bool ChoiceNFTInfoNewFlagIsOn { get; set; }
+}

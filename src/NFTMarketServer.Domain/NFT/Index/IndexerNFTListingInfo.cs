@@ -1,7 +1,7 @@
 using System;
 using NFTMarketServer.NFT.Index;
 
-namespace NFTMarketServer.NFT;
+namespace NFTMarketServer.NFT.Index;
 
 public class IndexerNFTListingInfo
 {

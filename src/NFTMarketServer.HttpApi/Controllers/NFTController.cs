@@ -74,16 +74,8 @@ namespace NFTMarketServer.Controllers
         {
             return _nftAppService.GetNFTInfosForUserProfileAsync(input);
         }
-        
-        [HttpGet]
-        [Route("nft-infos")]
-        [Obsolete("This API is deprecated")]
-        public Task<PagedResultDto<NFTInfoIndexDto>> GetNFTInfosAsync(GetNFTInfosInput input)
-        {
-            return _nftAppService.GetNFTInfosAsync(input);
-        }
-        
-        [HttpGet]
+
+        [HttpPost]
         [Route("composite-nft-infos")]
         public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetCompositeNFTInfosAsync(GetCompositeNFTInfosInput input)
         {

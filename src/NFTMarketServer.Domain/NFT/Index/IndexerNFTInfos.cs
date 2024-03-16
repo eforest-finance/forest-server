@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Dtos;
 
 namespace NFTMarketServer.NFT.Index;
 
 public class IndexerNFTInfos : IndexerCommonResult<IndexerNFTInfos>
 {
-    public long TotalRecordCount { get; set; }
+    public long? TotalRecordCount { get; set; }
     public List<IndexerNFTInfo> IndexerNftInfos { get; set; }
 }
 
@@ -23,6 +24,7 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public long Issued { get; set; }
     public string TokenName { get; set; }
     public long TotalSupply { get; set; }
+    public int Decimals { get; set; }
     public string WhitelistId { get; set; }
 
     public string CreatorAddress { get; set; }
@@ -53,6 +55,10 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public string Description { get; set; }
     public bool IsOfficial { get; set; }
     public List<ExternalInfoDictionaryDto> ExternalInfoDictionary { get; set; }
+    
+    public int Generation { get; set; } = 0;
+    public List<ExternalInfoDictionary> TraitPairsDictionary { get; set; }
+
     
     // seed only
     public string SeedOwnedSymbol { get; set; }

@@ -52,6 +52,11 @@ public class NFTCollectionProviderAdapter : INFTCollectionProviderAdapter, ISing
         {
             _logger.LogInformation("NftCollectionExtensionGrain start create {id}.", dto.Id);
             var collection = await _nftCollectionProvider.GetNFTCollectionIndexAsync(dto.Id);
+            if (collection == null)
+            {
+                _logger.LogError("collection is not exist CollectionId:{CollectionId}",dto.Id);
+                return;
+            }
             AssertHelper.IsTrue(collection != null && !collection.Id.IsNullOrEmpty(), "Collection {id} is empty.", dto.Id);
             var collectionExtension = _objectMapper.Map<IndexerNFTCollection, NftCollectionExtensionGrainDto>(collection);
             collectionExtension.LogoImage ??= NFTHelper.GetNftImageUrl(collection.ExternalInfoDictionary, 

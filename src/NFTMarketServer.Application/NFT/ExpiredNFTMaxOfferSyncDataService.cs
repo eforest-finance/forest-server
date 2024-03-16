@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using AElf.Indexing.Elasticsearch;
 using MassTransit;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
@@ -36,14 +37,14 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
     private readonly IBus _bus;
     private const int HeightExpireMinutes = 10;
     private readonly IDistributedCache<List<string>> _distributedCache;
-    
+
     public ExpiredNftMaxOfferSyncDataService(ILogger<NftInfoSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
-        INFTInfoAppService nftInfoAppService, 
+        INFTInfoAppService nftInfoAppService,
         IChainAppService chainAppService,
         INFTOfferProvider nftOfferProvider,
         ISeedAppService seedAppService,
-        INESTRepository<NFTInfoIndex, string> nftInfoIndexRepository, 
+        INESTRepository<NFTInfoIndex, string> nftInfoIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
         IDistributedCache<List<string>> distributedCache,
         IOptionsMonitor<ExpiredNFTSyncOptions> optionsMonitor,
@@ -62,30 +63,51 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
         _bus = bus;
         _distributedCache = distributedCache;
     }
-    
+
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
     {
         var option = _optionsMonitor.CurrentValue;
-        var list = await _nftOfferProvider.GetNftMaxOfferAsync(chainId, option.Duration);
-        _logger.Debug("GetNftMaxOffer, duration: {duration}", option.Duration);
+        var originList = await _nftOfferProvider.GetNftMaxOfferAsync(chainId, option.Duration);
+
         long blockHeight = -1;
-        if (list.IsNullOrEmpty())
+        if (originList.IsNullOrEmpty())
         {
+            _logger.LogInformation("GetNftMaxOfferAsync no data, duration: {Duration}", option.Duration);
             return 0;
         }
+        
+        var list = originList
+            .Where(dto => dto.Value != null)
+            .GroupBy(dto => dto.Key)
+            .Select(group => group.MaxBy(dto => dto.Value?.Prices ?? 0))
+            .ToList();
+        _logger.LogInformation(
+            "GetNftMaxOfferAsync queryOriginList count: {count}, queryList count: {count}  from height: {lastEndHeight}, chain id: {chainId}",
+            originList.Count, list.Count, lastEndHeight, chainId);
+
         var cacheKey = GetBusinessType() + chainId + lastEndHeight;
-        List<string> nftInfoIdWithTimeList = await _distributedCache.GetAsync(cacheKey);
-        List<string> nftInfoIdWithTimeListNew = new List<string>();
+        var nftInfoIdWithTimeList = await _distributedCache.GetAsync(cacheKey);
+        var nftInfoIdWithTimeListNew = new List<string>();
+        var changeFlag = false;
         foreach (var data in list)
         {
-            var nftInfoIdWithTime = data.Key+ DateTimeHelper.ToUnixTimeMilliseconds(data.Value.ExpireTime);
+            if (data?.Value == null)
+            {
+                _logger.Debug("ExpiredNftMaxOfferSync null check");
+                continue;
+            }
+            
+            var nftInfoIdWithTime = data.Key + DateTimeHelper.ToUnixTimeMilliseconds(data.Value.ExpireTime);
             nftInfoIdWithTimeListNew.Add(nftInfoIdWithTime);
 
             if (nftInfoIdWithTimeList != null && nftInfoIdWithTimeList.Contains(nftInfoIdWithTime))
             {
-                _logger.Debug($"ExpiredNftMaxOfferSync duplicated nftInfoIdWithTime: {nftInfoIdWithTime}", nftInfoIdWithTime);
+                _logger.Debug($"ExpiredNftMaxOfferSync duplicated nftInfoIdWithTime: {nftInfoIdWithTime}",
+                    nftInfoIdWithTime);
                 continue;
             }
+
+            changeFlag = true;
             var nftInfoId = data.Key;
             var isSeed = nftInfoId.Match(NFTSymbolBasicConstants.SeedIdPattern);
             if (isSeed)
@@ -97,7 +119,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
                 seedSymbol.MaxOfferPrice = maxOfferInfo?.Prices ?? 0;
                 seedSymbol.MaxOfferExpireTime = maxOfferInfo?.ExpireTime;
                 seedSymbol.MaxOfferId = maxOfferInfo?.Id;
-                
+
                 await _seedAppService.AddOrUpdateSeedSymbolAsync(seedSymbol);
             }
             else
@@ -109,7 +131,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
                 nftInfo.MaxOfferPrice = maxOfferInfo?.Prices ?? 0;
                 nftInfo.MaxOfferExpireTime = maxOfferInfo?.ExpireTime;
                 nftInfo.MaxOfferId = maxOfferInfo?.Id;
-                
+
                 await _nftInfoAppService.AddOrUpdateNftInfoAsync(nftInfo);
             }
 
@@ -122,12 +144,15 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
                 }
             });
         }
-        
-        await _distributedCache.SetAsync(cacheKey, nftInfoIdWithTimeListNew,
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
-            });
+
+        if (changeFlag)
+        {
+            await _distributedCache.SetAsync(cacheKey, nftInfoIdWithTimeListNew,
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
+                });
+        }
 
         return blockHeight;
     }

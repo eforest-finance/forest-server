@@ -1,5 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Text;
 using AElf;
+using AElf.Client.Proto;
+using Hash = AElf.Types.Hash;
 
 namespace NFTMarketServer;
 
@@ -49,9 +53,34 @@ public class IdGenerateHelper
     {
         return GetId(chainId, symbol);
     }
-    
+
     public static string GetSeedPriceId(string tokenType, int symbolLength)
     {
         return GetId(tokenType, symbolLength);
+    }
+
+    public static string GetNFTCollectionTraitKeyId(string nftCollectionSymbol, string traitKey)
+    {
+        return GetId(nftCollectionSymbol, TransferToHashStr(traitKey));
+    }
+
+    public static string GetNFTCollectionTraitPairsId(string nftCollectionSymbol, string traitKey, string traitValue)
+    {
+        return GetId(nftCollectionSymbol, TransferToHashStr(traitKey), TransferToHashStr(traitValue));
+    }
+
+    public static string GetNFTCollectionTraitGenerationId(string collectionSymbol, int Generation)
+    {
+        return GetId(collectionSymbol, Generation);
+    }
+
+    private static string TransferToHashStr(string str)
+    {
+        if (string.IsNullOrEmpty(str) || string.IsNullOrWhiteSpace(str))
+        {
+            return "";
+        }
+
+        return HashHelper.ComputeFrom(str).ToHex();
     }
 }

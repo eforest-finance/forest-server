@@ -41,16 +41,25 @@ public class NFTOfferChangeScheduleService : ScheduleSyncDataService
     
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
     {
-        var queryList = await _nftOfferProvider.GetNFTOfferChangeAsync(chainId, lastEndHeight);
-        _logger.LogInformation("GetNFTOfferChangeAsync queryList count: {count}, from height: {lastEndHeight}, chain id: {chainId}", 
-            queryList.Count, lastEndHeight, chainId);
+        var queryOriginList = await _nftOfferProvider.GetNFTOfferChangeAsync(chainId, lastEndHeight);
         
-        long blockHeight = -1;
-
-        if (CollectionUtilities.IsNullOrEmpty(queryList))
+        if (CollectionUtilities.IsNullOrEmpty(queryOriginList))
         {
+            _logger.LogInformation(
+                "GetNFTOfferChangeAsync no data");
             return 0;
         }
+        
+        var queryList = queryOriginList
+            .GroupBy(dto => dto.NftId)
+            .Select(group => group.OrderByDescending(dto => dto.BlockHeight).First())
+            .ToList();
+
+        _logger.LogInformation(
+            "GetNFTOfferChangeAsync queryOriginList count: {count}, queryList count: {count}  from height: {lastEndHeight}, chain id: {chainId}",
+            queryOriginList.Count, queryList.Count, lastEndHeight, chainId);
+        
+        long blockHeight = -1;
 
         var cacheKey = OfferChangeCachePrefix + chainId + lastEndHeight;
         List<string> nftIdList = await _distributedCache.GetAsync(cacheKey);

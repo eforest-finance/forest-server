@@ -17,6 +17,8 @@ namespace NFTMarketServer.NFT;
 
 public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollectionChangeService
 {
+
+    private const string CachekeyPreifix = "NFTCollectionChange";
     private readonly ILogger<NFTCollectionChangeService> _logger;
     private readonly INFTCollectionProvider _nftCollectionProvider;
     private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
@@ -90,9 +92,9 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
 
         try
         {
-            var cacheKey = businessType + chainId + lastEndHeight;
-            List<string> symbolList = await _distributedCache.GetAsync(cacheKey);
-
+            var cacheKey = CachekeyPreifix + businessType + chainId + lastEndHeight;
+            var symbolList = await _distributedCache.GetAsync(cacheKey);
+            var changeFlag = false;
             foreach (var collectionChange in collectionChanges)
             {
                 var innerKey = collectionChange.Symbol + collectionChange.BlockHeight;
@@ -102,6 +104,7 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
                     continue;
                 }
 
+                changeFlag = true;
                 blockHeight = Math.Max(blockHeight, collectionChange.BlockHeight);
                 stopwatch.Start();
                 var collectionId =
@@ -118,27 +121,18 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
                     FloorPrice = collectionPrice.floorPrice
                 };
                 await _nftCollectionProviderAdapter.AddOrUpdateNftCollectionExtensionAsync(dto);
-                await _bus.Publish(new NewIndexEvent<NFTListingChangeEto>
-                {
-                    Data = new NFTListingChangeEto
+            }
+
+            if (changeFlag)
+            {
+                symbolList = collectionChanges.Where(obj => obj.BlockHeight == blockHeight)
+                    .Select(obj => obj.Symbol + obj.BlockHeight)
+                    .ToList();
+                await _distributedCache.SetAsync(cacheKey, symbolList,
+                    new DistributedCacheEntryOptions
                     {
-                        Symbol = collectionChange.Symbol
-                    }
-                });
-
-
-
-                if (blockHeight > 0)
-                {
-                    symbolList = collectionChanges.Where(obj => obj.BlockHeight == blockHeight)
-                        .Select(obj => obj.Symbol + collectionChange.BlockHeight)
-                        .ToList();
-                    await _distributedCache.SetAsync(cacheKey, symbolList,
-                        new DistributedCacheEntryOptions
-                        {
-                            AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
-                        });
-                }
+                        AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
+                    });
             }
         }
         catch (Exception e)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 using NFTMarketServer.Basic;
 using NFTMarketServer.NFT.Index;
 
@@ -8,6 +9,9 @@ namespace NFTMarketServer.NFT
 {
     public class GetCompositeNFTInfosInput : PagedAndSortedMaxCountResultRequestDto
     {
+        [CanBeNull] public List<int> Generation { get; set; }
+        [CanBeNull] public List<TraitDto> Traits { get; set; }
+
         [Required] public string CollectionType { get; set; }
         [Required] public string CollectionId { get; set; }
         [Required] public override string Sorting { get; set; }
