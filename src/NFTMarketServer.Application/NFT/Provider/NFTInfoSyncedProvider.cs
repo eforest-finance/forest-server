@@ -268,10 +268,12 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
         {
             Query = new BoolQuery
             {
-                Must = mustQuery
-                    .Select(func => func(new QueryContainerDescriptor<NFTInfoIndex>()))
-                    .ToList()
-                    .AsEnumerable()
+                Must = mustQuery != null && mustQuery.Any()
+                    ? mustQuery
+                        .Select(func => func(new QueryContainerDescriptor<NFTInfoIndex>()))
+                        .ToList()
+                        .AsEnumerable()
+                    : Enumerable.Empty<QueryContainer>()
             },
             Size = 0
         };

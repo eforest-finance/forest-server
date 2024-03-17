@@ -399,10 +399,11 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         {
             Query = new BoolQuery
             {
-                Must = mustQuery
-                    .Select(func => func(new QueryContainerDescriptor<NFTInfoNewIndex>()))
-                    .ToList()
-                    .AsEnumerable()
+                Must = mustQuery != null && mustQuery.Any()
+                    ? mustQuery.Select(func => func(new QueryContainerDescriptor<NFTInfoNewIndex>()))
+                        .ToList()
+                        .AsEnumerable()
+                    : Enumerable.Empty<QueryContainer>()
             },
             Size = 0
         };
