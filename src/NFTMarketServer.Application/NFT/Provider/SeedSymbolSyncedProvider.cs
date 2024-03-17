@@ -331,10 +331,12 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         {
             Query = new BoolQuery
             {
-                Must = mustQuery
-                    .Select(func => func(new QueryContainerDescriptor<SeedSymbolIndex>()))
-                    .ToList()
-                    .AsEnumerable()
+                Must = mustQuery != null && mustQuery.Any()
+                    ? mustQuery
+                        .Select(func => func(new QueryContainerDescriptor<SeedSymbolIndex>()))
+                        .ToList()
+                        .AsEnumerable()
+                    : Enumerable.Empty<QueryContainer>()
             },
             Size = 0
         };
