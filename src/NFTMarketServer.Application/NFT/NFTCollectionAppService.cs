@@ -197,6 +197,7 @@ namespace NFTMarketServer.NFT
             var imageUrl = GetNftImageUrl(index.Symbol, index.ExternalInfoDictionary);
             if (imageUrl.IsNullOrEmpty())
             {
+                collection.LogoImage = FTHelper.BuildIpfsUrl(collection.LogoImage);
                 return collection;
             }
             collection.LogoImage ??= imageUrl;
