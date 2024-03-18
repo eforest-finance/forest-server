@@ -615,6 +615,7 @@ namespace NFTMarketServer.NFT
             {
                 info.NFTCollection =
                     _objectMapper.Map<IndexerNFTCollection, NFTCollectionIndexDto>(nftCollections[index.CollectionId]);
+                info.NFTCollection.LogoImage = FTHelper.BuildIpfsUrl(info.NFTCollection.LogoImage);
                 if (accounts != null && accounts.ContainsKey(nftCollections[index.CollectionId].CreatorAddress))
                 {
                     info.NFTCollection.Creator = accounts[nftCollections[index.CollectionId].CreatorAddress]

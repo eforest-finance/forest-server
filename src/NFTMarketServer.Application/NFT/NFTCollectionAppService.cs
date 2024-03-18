@@ -197,6 +197,7 @@ namespace NFTMarketServer.NFT
             var imageUrl = GetNftImageUrl(index.Symbol, index.ExternalInfoDictionary);
             if (imageUrl.IsNullOrEmpty())
             {
+                collection.LogoImage = FTHelper.BuildIpfsUrl(collection.LogoImage);
                 return collection;
             }
             collection.LogoImage ??= imageUrl;
@@ -213,6 +214,7 @@ namespace NFTMarketServer.NFT
             if (collectionInfos != null && collectionInfos.TryGetValue(index.Id, out var info))
             { 
                 searchNftCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
+                searchNftCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(searchNftCollectionsDto.LogoImage);
             }
             
             return searchNftCollectionsDto;
@@ -227,6 +229,7 @@ namespace NFTMarketServer.NFT
                 recommendedNftCollectionsDto = _objectMapper.Map<IndexerNFTCollection, RecommendedNFTCollectionsDto>(info);
 
                 recommendedNftCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
+                recommendedNftCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(recommendedNftCollectionsDto.LogoImage);
             }
 
             return recommendedNftCollectionsDto;
