@@ -9,8 +9,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
+using NFTMarketServer.Entities;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.Helper;
@@ -19,6 +21,7 @@ using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
+using NFTMarketServer.Provider;
 using NFTMarketServer.Seed.Index;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
@@ -45,10 +48,12 @@ namespace NFTMarketServer.NFT
         private readonly IDistributedEventBus _distributedEventBus;
         private readonly IObjectMapper _objectMapper;
         private readonly INFTInfoExtensionProvider _nftInfoExtensionProvider;
-        private readonly INFTListingWhitelistPriceProvider _nftListingWhitelistPriceProvider;
+        
         private readonly INESTRepository<NFTInfoIndex, string> _nftInfoIndexRepository;
+        private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
         private readonly ISeedSymbolSyncedProvider _seedSymbolSyncedProvider;
         private readonly INFTInfoSyncedProvider _nftInfoSyncedProvider;
+        private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
         private readonly INFTOfferProvider _nftOfferProvider;
         private readonly INFTListingProvider _nftListingProvider;
         private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
@@ -56,10 +61,15 @@ namespace NFTMarketServer.NFT
         private readonly IInscriptionProvider _inscriptionProvider;
         private readonly NFTCollectionAppService _nftCollectionAppService;
         private readonly IDistributedCache<string> _distributedCacheForHeight;
+        private readonly IGraphQLProvider _graphQlProvider;
         private readonly IBus _bus;
+        private readonly INFTTraitProvider _inftTraitProvider;
         
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
+
+        private readonly IOptionsMonitor<ChoiceNFTInfoNewFlagOptions>
+            _choiceNFTInfoNewFlagOptionsMonitor;
 
         public NFTInfoAppService(
             ITokenAppService tokenAppService, IUserAppService userAppService,
@@ -69,17 +79,22 @@ namespace NFTMarketServer.NFT
             ILogger<NFTInfoAppService> logger, IDistributedEventBus distributedEventBus,
             IObjectMapper objectMapper, INFTInfoExtensionProvider nftInfoExtensionProvider,
             INESTRepository<NFTInfoIndex, string> nftInfoIndexRepository,
-            ISeedSymbolSyncedProvider seedSymbolSyncedProvider, INFTInfoSyncedProvider nftInfoSyncedProvider,
+            INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
+            ISeedSymbolSyncedProvider seedSymbolSyncedProvider, 
+            INFTInfoSyncedProvider nftInfoSyncedProvider,
+            INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
             IBus bus,
             INFTOfferProvider nftOfferProvider,
             INFTListingProvider nftListingProvider,
             INFTDealInfoProvider nftDealInfoProvider,
             IInscriptionProvider inscriptionProvider,
-            INFTListingWhitelistPriceProvider nftListingWhitelistPriceProvider,
             INFTCollectionExtensionProvider nftCollectionExtensionProvider,
             NFTCollectionAppService nftCollectionAppService,
             IDistributedCache<string> distributedCacheForHeight,
-            IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> resetNFTSyncHeightExpireMinutesOptionsMonitor)
+            IGraphQLProvider graphQlProvider,
+            IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> resetNFTSyncHeightExpireMinutesOptionsMonitor,
+            INFTTraitProvider inftTraitProvider,
+            IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
             _userAppService = userAppService;
@@ -90,10 +105,11 @@ namespace NFTMarketServer.NFT
             _distributedEventBus = distributedEventBus;
             _objectMapper = objectMapper;
             _nftInfoExtensionProvider = nftInfoExtensionProvider;
-            _nftListingWhitelistPriceProvider = nftListingWhitelistPriceProvider;
             _nftInfoIndexRepository = nftInfoIndexRepository;
             _seedSymbolSyncedProvider = seedSymbolSyncedProvider;
             _nftInfoSyncedProvider = nftInfoSyncedProvider;
+            _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
+            _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
             _nftOfferProvider = nftOfferProvider;
             _nftListingProvider = nftListingProvider;
             _nftDealInfoProvider = nftDealInfoProvider;
@@ -102,56 +118,28 @@ namespace NFTMarketServer.NFT
             _nftCollectionAppService = nftCollectionAppService;
             _distributedCacheForHeight = distributedCacheForHeight;
             _resetNFTSyncHeightExpireMinutesOptionsMonitor = resetNFTSyncHeightExpireMinutesOptionsMonitor;
+            _choiceNFTInfoNewFlagOptionsMonitor = choiceNFTInfoNewFlagOptionsMonitor;
+            _graphQlProvider = graphQlProvider;
+            _inftTraitProvider = inftTraitProvider;
             _bus = bus;
         }
-
-        public async Task<PagedResultDto<NFTInfoIndexDto>> GetNFTInfosAsync(GetNFTInfosInput input)
-        {
-            if (!PreCheckGetNFTInfosInput(input))
-            {
-                return PagedResultWrapper<NFTInfoIndexDto>.Initialize();
-            }
-
-            if (input.PriceHigh > 0)
-            {
-                input.PriceHigh = await GetPriceElfFromUSDAsync(input.PriceHigh, SymbolHelper.CoinGeckoELF());
-            }
-
-            if (input.PriceLow > 0)
-            {
-                input.PriceLow = await GetPriceElfFromUSDAsync(input.PriceLow, SymbolHelper.CoinGeckoELF());
-            }
-
-            var pageResult = await _nftInfoProvider.GetNFTInfoIndexsAsync(input.SkipCount,
-                input.MaxResultCount,
-                input.NFTCollectionId,
-                input.Sorting,
-                input.PriceLow,
-                input.PriceHigh,
-                input.Status,
-                input.Address,
-                input.IssueAddress,
-                input.NFTInfoIds
-            );
-
-            if (pageResult == null || pageResult.TotalRecordCount == 0)
-            {
-                return PagedResultWrapper<NFTInfoIndexDto>.Initialize();
-            }
-
-            var result = await BuildNFTInfoIndexListAsync(input.Address, pageResult.IndexerNftInfos);
-            return new PagedResultDto<NFTInfoIndexDto>
-            {
-                Items = result,
-                TotalCount = pageResult.TotalRecordCount
-            };
-        }
-
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
         {
             //query nft infos
-            var nftInfos = await _nftInfoSyncedProvider.GetNFTInfosUserProfileAsync(input);
+            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
+                .ChoiceNFTInfoNewFlagIsOn ?? false;
+            IndexerNFTInfos nftInfos;
+            
+            if (choiceNFTInfoNewFlag)
+            {
+                nftInfos = await _nftInfoNewSyncedProvider.GetNFTInfosUserProfileAsync(input);
+            }
+            else
+            {
+                nftInfos = await _nftInfoSyncedProvider.GetNFTInfosUserProfileAsync(input);
+            }
+            
             //query seed infos
             var seedInfos = await _seedSymbolSyncedProvider.GetSeedInfosUserProfileAsync(input);
             var totalRecordCount = nftInfos.TotalRecordCount + seedInfos.TotalRecordCount;
@@ -170,8 +158,14 @@ namespace NFTMarketServer.NFT
             var result = await BuildNFTInfoIndexListAsync(input.Address, resultNftInfos);
             return new PagedResultDto<UserProfileNFTInfoIndexDto>
             {
-                Items = _objectMapper.Map<List<NFTInfoIndexDto>, List<UserProfileNFTInfoIndexDto>>(result),
-                TotalCount = totalRecordCount
+                Items = result.Select(item =>
+                {
+                    var newItem = _objectMapper.Map<NFTInfoIndexDto, UserProfileNFTInfoIndexDto>(item);
+                    newItem.PreviewImage = FTHelper.BuildIpfsUrl(newItem.PreviewImage);
+                    return newItem;
+                }).ToList(),
+
+                TotalCount = (long)(totalRecordCount == null ? CommonConstant.IntZero : totalRecordCount)
             };
         }
 
@@ -179,7 +173,10 @@ namespace NFTMarketServer.NFT
             GetCompositeNFTInfosInput input)
         {
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
-
+            
+            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
+                .ChoiceNFTInfoNewFlagIsOn ?? false;
+            
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input);
@@ -195,8 +192,17 @@ namespace NFTMarketServer.NFT
 
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeNFT))
             {
-                var nftResult = await _nftInfoSyncedProvider.GetNFTBriefInfosAsync(input);
-
+                Tuple<long, List<NFTInfoIndex>> nftResult = null;
+                
+                if (choiceNFTInfoNewFlag)
+                {
+                    nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
+                }
+                else
+                {
+                    nftResult = await _nftInfoSyncedProvider.GetNFTBriefInfosAsync(input);
+                }
+                
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
 
                 result = new PagedResultDto<CompositeNFTInfoIndexDto>()
@@ -209,7 +215,7 @@ namespace NFTMarketServer.NFT
             try
             {
                 var collectionInfo = await _nftCollectionProvider.GetNFTCollectionIndexAsync(input.CollectionId);
-                
+
                 if (collectionInfo == null || collectionInfo.TokenName.IsNullOrEmpty())
                 {
                     return await MapForCompositeNftInfoIndexDtoPage(result);
@@ -228,9 +234,14 @@ namespace NFTMarketServer.NFT
                     return await MapForCompositeNftInfoIndexDtoPage(result);
                 }
 
+                var resetNFTSyncHeightFlagCacheKey = choiceNFTInfoNewFlag
+                    ? CommonConstant.ResetNFTNewSyncHeightFlagCacheKey
+                    : CommonConstant.ResetNFTSyncHeightFlagCacheKey;
+
                 var resetSyncHeightFlag =
-                    await _distributedCacheForHeight.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
-                _logger.Debug("GetCompositeNFTInfosAsync origin {ResetSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
+                    await _distributedCacheForHeight.GetAsync(resetNFTSyncHeightFlagCacheKey);
+                _logger.Debug(
+                    "GetCompositeNFTInfosAsync origin {ResetSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
                     resetSyncHeightFlag,
                     _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
                 if (resetSyncHeightFlag.IsNullOrEmpty())
@@ -239,28 +250,28 @@ namespace NFTMarketServer.NFT
                         .ResetNFTSyncHeightExpireMinutes ?? CommonConstant.IntZero;
                     var resetNftSyncHeightExpireMinutes =
                         temValue != CommonConstant.IntZero ? temValue : CommonConstant.CacheExpirationMinutes;
-                    
-                    await _distributedCacheForHeight.SetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey,
-                        CommonConstant.ResetNFTSyncHeightFlagCacheKey, new DistributedCacheEntryOptions
+
+                    await _distributedCacheForHeight.SetAsync(resetNFTSyncHeightFlagCacheKey,
+                        resetNFTSyncHeightFlagCacheKey, new DistributedCacheEntryOptions
                         {
                             AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(resetNftSyncHeightExpireMinutes)
                         });
-                    
+
                     await _distributedEventBus.PublishAsync(new NFTResetFlagEto
                     {
-                        FlagDesc = CommonConstant.ResetNFTSyncHeightFlagCacheKey,
+                        FlagDesc = resetNFTSyncHeightFlagCacheKey,
                         Minutes = resetNftSyncHeightExpireMinutes
                     });
                 }
-
             }
             catch (Exception e)
             {
-                _logger.LogError("Something is wrong {Message}", e.Message);
+                _logger.LogError(e, "Something is wrong {Message}", e.Message);
             }
 
             return await MapForCompositeNftInfoIndexDtoPage(result);
         }
+
 
         private async Task<PagedResultDto<CompositeNFTInfoIndexDto>> MapForCompositeNftInfoIndexDtoPage(
             PagedResultDto<CompositeNFTInfoIndexDto> pageInfo)
@@ -280,6 +291,8 @@ namespace NFTMarketServer.NFT
                     _objectMapper.Map(extension, item);
                     item.PreviewImage ??= extension.PreviewImage;
                 }
+
+                item.PreviewImage = FTHelper.BuildIpfsUrl(item.PreviewImage);
 
                 if (item.fileExtension.IsNullOrWhiteSpace())
                 {
@@ -349,7 +362,20 @@ namespace NFTMarketServer.NFT
                 return null;
             }
 
-            var nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
+                .ChoiceNFTInfoNewFlagIsOn ?? false;
+
+            IndexerNFTInfo nftInfoIndex;
+
+            if (choiceNFTInfoNewFlag)
+            {
+                nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            }
+            else
+            {
+                nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            }
+            
             if (nftInfoIndex == null)
             {
                 return null;
@@ -370,7 +396,6 @@ namespace NFTMarketServer.NFT
             if (!input.Address.IsNullOrWhiteSpace())
             {
                 canBuyFlag = await GetCanBuyFlagAsync(nftInfoIndex.ChainId, nftInfoIndex.Symbol, input.Address);
-                await FillWhitelistPriceAsync(new List<NFTInfoIndexDto> { nftInfoIndexDto }, input.Address);
             }
 
             nftInfoIndexDto.CanBuyFlag = canBuyFlag;
@@ -391,11 +416,62 @@ namespace NFTMarketServer.NFT
             nftInfoIndexDto = await BuildShowPriceTypeAsync(input.Address, nftInfoIndex.ChainId, nftInfoIndex.Symbol,
                 nftInfoIndexDto);
 
-            var tick = SymbolHelper.GainInscriptionInfoTick(nftInfoIndex.Symbol);
-            var inscriptionInfoDto =
-                await _inscriptionProvider.GetIndexerInscriptionInfoAsync(nftInfoIndex.ChainId, tick);
-            nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
+            var kv = nftInfoIndexDto?.Metadata?.Where(item =>
+                    item.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey) ||
+                    item.Key.Equals(CommonConstant.MetadataImageUriKey))
+                .ToList()
+                .FirstOrDefault();
+            if (kv == null || string.IsNullOrEmpty(kv.Key))
+            {
+                return nftInfoIndexDto;
+            }
 
+            if (kv.Key.Equals(CommonConstant.MetadataSpecialInscriptionImageKey))
+            {
+                var tick = SymbolHelper.GainInscriptionInfoTick(nftInfoIndex.Symbol);
+                try
+                {
+                    var inscriptionInfoDto =
+                        await _inscriptionProvider.GetIndexerInscriptionInfoAsync(nftInfoIndex.ChainId, tick);
+                    if (inscriptionInfoDto != null && inscriptionInfoDto.MintLimit == 0)
+                    {
+                        inscriptionInfoDto.MintLimit = CommonConstant.DefaultValueNone;
+                    }
+
+                    nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Query inscriptionInfo from graphQl error tick={Tick}", tick);
+                }
+            }else if (kv.Key.Equals(CommonConstant.MetadataImageUriKey))
+            {
+                var tickKv = nftInfoIndexDto?.Metadata?.Where(item =>
+                        item.Key.Equals(CommonConstant.NFT_ExternalInfo_InscriptionDeploy_Key) ||
+                        item.Key.Equals(CommonConstant.NFT_ExternalInfo_Inscription_Adopt_Key))
+                    .ToList()
+                    .FirstOrDefault();
+                var inscriptionInfoDto = new InscriptionInfoDto();
+                nftInfoIndexDto.InscriptionInfo = inscriptionInfoDto;
+                if (tickKv == null || string.IsNullOrEmpty(tickKv.Key))
+                {
+                    return nftInfoIndexDto;
+                }
+
+                var tickDto = JsonConvert.DeserializeObject<TickDto>(tickKv.Value);
+                if (tickDto == null)
+                {
+                    return nftInfoIndexDto;
+                }
+
+                inscriptionInfoDto.Tick = tickDto.Tick;
+                inscriptionInfoDto.MintLimit = string.IsNullOrEmpty(tickDto.Lim)
+                    ? CommonConstant.IntNegativeOne
+                    : FTHelper.GetIntegerDivision(long.Parse(tickDto.Lim),
+                        nftInfoIndex.Decimals);
+                
+            }
+            
             return nftInfoIndexDto;
         }
 
@@ -409,8 +485,7 @@ namespace NFTMarketServer.NFT
             nftInfoIndexDto.LatestListingTime = listingDto.StartTime;
             return nftInfoIndexDto;
         }
-
-
+        
         private async Task<NFTInfoIndexDto> BuildShowPriceTypeAsync(string address, string chainId, string symbol,
             NFTInfoIndexDto nftInfoIndexDto)
         {
@@ -504,11 +579,6 @@ namespace NFTMarketServer.NFT
             var result = nftInfos
                 .Select(o => MapForIndexerNFTInfos(o, accounts, nftExtensions, collectionInfos)).ToList();
 
-            if (!address.IsNullOrWhiteSpace())
-            {
-                result = await FillWhitelistPriceAsync(result, address);
-            }
-
             return result;
         }
 
@@ -545,6 +615,7 @@ namespace NFTMarketServer.NFT
             {
                 info.NFTCollection =
                     _objectMapper.Map<IndexerNFTCollection, NFTCollectionIndexDto>(nftCollections[index.CollectionId]);
+                info.NFTCollection.LogoImage = FTHelper.BuildIpfsUrl(info.NFTCollection.LogoImage);
                 if (accounts != null && accounts.ContainsKey(nftCollections[index.CollectionId].CreatorAddress))
                 {
                     info.NFTCollection.Creator = accounts[nftCollections[index.CollectionId].CreatorAddress]
@@ -570,12 +641,17 @@ namespace NFTMarketServer.NFT
                 info.Metadata = index.ExternalInfoDictionary
                     .Select(kv => new MetadataDto { Key = kv.Key, Value = kv.Value }).ToList();
             }
-
-            var nftImageUrl = info?.Metadata?.FirstOrDefault(o => o.Key == "__nft_image_url");
-
+            
             if (info.PreviewImage.IsNullOrEmpty())
             {
+                var nftImageUrl = info?.Metadata?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUrlKey);
                 info.PreviewImage = nftImageUrl?.Value;
+            }
+            
+            if (info.PreviewImage.IsNullOrEmpty())
+            {
+                var nftImageUri = info?.Metadata?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUriKey);
+                info.PreviewImage = nftImageUri?.Value;
             }
 
             if (info.PreviewImage.IsNullOrEmpty())
@@ -583,6 +659,8 @@ namespace NFTMarketServer.NFT
                 info.PreviewImage = index.ImageUrl;
             }
 
+            info.PreviewImage = FTHelper.BuildIpfsUrl(info?.PreviewImage);
+            
             return info;
         }
 
@@ -629,50 +707,6 @@ namespace NFTMarketServer.NFT
             return true;
         }
 
-        private async Task<List<NFTInfoIndexDto>> FillWhitelistPriceAsync(List<NFTInfoIndexDto> dtos, string address)
-        {
-            var nftInfoIds = dtos?.Select(dto => dto.Id).Where(id => !id.IsNullOrEmpty()).ToList() ??
-                             new List<string>();
-            try
-            {
-                if (nftInfoIds.IsNullOrEmpty())
-                {
-                    return new List<NFTInfoIndexDto>();
-                }
-
-                // async query graphQL by page
-                const int pageSize = 10;
-                var pages = nftInfoIds.Select((item, index) => new { Item = item, Index = index })
-                    .GroupBy(x => x.Index / pageSize)
-                    .Select(g => g.Select(x => x.Item).ToList())
-                    .ToList();
-                var queryTaskList = pages.Select(ids =>
-                    _nftListingWhitelistPriceProvider.GetNFTListingWhitelistPricesAsync(address, nftInfoIds)).ToList();
-
-                var whitelistPrices = new List<IndexerListingWhitelistPrice>();
-                foreach (var task in queryTaskList)
-                {
-                    whitelistPrices.AddRange(await task);
-                }
-
-                var whitelistPriceDic = whitelistPrices.ToDictionary(o => o.NftInfoId, o => o);
-                foreach (var dto in dtos!)
-                {
-                    if (whitelistPriceDic.TryGetValue(dto.Id, out var value))
-                    {
-                        ObjectMapper.Map(value, dto);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "FillWhitelistPriceAsync fail, Address={Address}, NftInfoIds={Join}", address,
-                    string.Join(",", nftInfoIds));
-            }
-
-            return dtos;
-        }
-
         [Authorize]
         public async Task CreateNFTInfoExtensionAsync(CreateNFTExtensionInput input)
         {
@@ -709,9 +743,172 @@ namespace NFTMarketServer.NFT
             await _nftInfoIndexRepository.AddOrUpdateAsync(nftInfo);
         }
 
+        public async Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId, string chainId)
+        {
+            if (string.IsNullOrEmpty(nftInfoId) || string.IsNullOrEmpty(chainId))
+            {
+                return;
+            }
+
+            if (!SymbolHelper.CheckSymbolIsCommonNFTInfoId(nftInfoId))
+            {
+                _logger.Debug("AddOrUpdateNftInfoNewByIdAsync nftInfoId is not common nft {NFTInfoId}", nftInfoId);
+                return;
+            }
+
+            await AddOrUpdateNftInfoNewAsync(null, nftInfoId, chainId);
+        }
+
+        public async Task AddOrUpdateNftInfoNewAsync(NFTInfoIndex fromNFTInfo, string nftInfoId,
+            string chainId)
+        {
+            if (fromNFTInfo == null)
+            {
+                fromNFTInfo = await _graphQlProvider.GetSyncNftInfoRecordAsync(nftInfoId, chainId);
+            }
+
+            if (fromNFTInfo == null)
+            {
+                _logger.LogError("AddOrUpdateNftInfoNewAsync fromNFTInfo and localNFTInfo are null!");
+                return;
+            }
+
+            var nftInfo = _objectMapper.Map<NFTInfoIndex, NFTInfoNewIndex>(fromNFTInfo);
+            nftInfo.CountedFlag = FTHelper.IsGreaterThanEqualToOne(nftInfo.Supply, nftInfo.Decimals);
+
+
+            nftInfo.Generation = CommonConstant.IntNegativeOne;
+            if (nftInfo?.ExternalInfoDictionary != null && !nftInfo.ExternalInfoDictionary.IsNullOrEmpty())
+            {
+                nftInfo.TraitPairsDictionary = new List<ExternalInfoDictionary>();
+
+                foreach (var item in nftInfo.ExternalInfoDictionary)
+                {
+                    if (item.Key == CommonConstant.NFT_ExternalInfo_InscriptionDeploy_Key)
+                    {
+                        var inscriptionDeploy = JsonConvert.DeserializeObject<InscriptionDeploy>(item.Value);
+                        if (inscriptionDeploy != null && !inscriptionDeploy.Gen.IsNullOrEmpty())
+                        {
+                            nftInfo.Generation = int.Parse(inscriptionDeploy.Gen);
+                            break;
+                        }
+                    }
+                    else if (item.Key == CommonConstant.NFT_ExternalInfo_Inscription_Adopt_Key)
+                    {
+                        var inscriptionAdopt = JsonConvert.DeserializeObject<InscriptionAdop>(item.Value);
+                        if (inscriptionAdopt != null && !inscriptionAdopt.Gen.IsNullOrEmpty())
+                        {
+                            nftInfo.Generation = int.Parse(inscriptionAdopt.Gen);
+                            break;
+                        }
+                    }
+                }
+
+                foreach (var item in nftInfo.ExternalInfoDictionary)
+                {
+                    if (item.Key == CommonConstant.NFT_ExternalInfo_Attributes_Key)
+                    {
+                        var attributes = JsonConvert.DeserializeObject<List<AttributeDictionary>>(item.Value);
+                        if (attributes.IsNullOrEmpty())
+                        {
+                            break;
+                        }
+
+                        nftInfo.TraitPairsDictionary.AddRange(
+                            _objectMapper.Map<List<AttributeDictionary>, List<ExternalInfoDictionary>>(attributes));
+                        break;
+                    }
+                }
+
+                foreach (var item in nftInfo.ExternalInfoDictionary)
+                {
+                    if (item.Key == CommonConstant.NFT_ExternalInfo_Metadata_Key)
+                    {
+                        var metadata = JsonConvert.DeserializeObject<List<ExternalInfoDictionary>>(item.Value);
+                        if (metadata.IsNullOrEmpty())
+                        {
+                            break;
+                        }
+
+                        nftInfo.TraitPairsDictionary.AddRange(metadata);
+                        break;
+                    }
+                }
+            }
+            
+            await UpdateNFTOtherInfoAsync(nftInfo);
+            await _inftTraitProvider.CheckAndUpdateTraitInfo(nftInfo);
+        }
+
+        private async Task UpdateNFTOtherInfoAsync(NFTInfoNewIndex nftInfoNewIndex)
+        {
+            var getNftListingsDto = new GetNFTListingsDto
+            {
+                ChainId = nftInfoNewIndex.ChainId,
+                Symbol = nftInfoNewIndex.Symbol,
+                SkipCount = CommonConstant.IntZero,
+                MaxResultCount = CommonConstant.IntOne
+            };
+            var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
+            if (listingDto != null && listingDto.TotalCount > CommonConstant.IntZero)
+            {
+                UpdateMinListingInfo(nftInfoNewIndex, listingDto.Items[CommonConstant.IntZero]);
+            }
+            
+            
+            var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoNewIndex.Id);
+            if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
+            {
+                UpdateMaxOfferInfo(nftInfoNewIndex, indexerNFTOffer);
+            }
+            
+            await _nftInfoNewIndexRepository.AddOrUpdateAsync(nftInfoNewIndex);
+        } 
+        
+        private bool UpdateMinListingInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTListingInfo listingDto)
+        {
+            var changeFlag = nftInfoIndex.ListingId != listingDto.Id;
+            nftInfoIndex.ListingId = listingDto.Id;
+            nftInfoIndex.ListingPrice = listingDto.Prices;
+            nftInfoIndex.ListingAddress = listingDto.Owner;
+            nftInfoIndex.ListingQuantity = listingDto.RealQuantity;
+            nftInfoIndex.ListingEndTime = listingDto.ExpireTime;
+            nftInfoIndex.LatestListingTime = listingDto.StartTime;
+            nftInfoIndex.ListingToken = _objectMapper.Map<IndexerTokenInfo, TokenInfoIndex>(listingDto.PurchaseToken);
+            nftInfoIndex.HasListingFlag = listingDto.Prices > CommonConstant.IntZero;
+            return changeFlag;
+        }
+        private bool UpdateMaxOfferInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTOffer indexerNFTOffer)
+        {
+            var changeFlag = nftInfoIndex.MaxOfferId != indexerNFTOffer.Id;
+            nftInfoIndex.MaxOfferId = indexerNFTOffer.Id;
+            nftInfoIndex.MaxOfferPrice = indexerNFTOffer.Price;
+            nftInfoIndex.MaxOfferExpireTime = indexerNFTOffer.ExpireTime;
+            nftInfoIndex.OfferToken = new TokenInfoIndex
+            {
+                ChainId = indexerNFTOffer.PurchaseToken.ChainId,
+                Symbol = indexerNFTOffer.PurchaseToken.Symbol,
+                Decimals = Convert.ToInt32(indexerNFTOffer.PurchaseToken.Decimals),
+                Prices = indexerNFTOffer.Price
+            };
+            nftInfoIndex.HasOfferFlag = nftInfoIndex.MaxOfferPrice > CommonConstant.IntZero;
+            return changeFlag;
+        }
+
         public async Task<NFTForSaleDto> GetNFTForSaleAsync(GetNFTForSaleInput input)
         {
-            var nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
+                .ChoiceNFTInfoNewFlagIsOn ?? false;
+            IndexerNFTInfo nftInfoIndex;
+            if (choiceNFTInfoNewFlag)
+            {
+                nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            }
+            else
+            {
+                nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            }
+            
             if (nftInfoIndex == null)
             {
                 _logger.LogInformation("The Nft Info with id {id} does not exist.", input.Id);
@@ -865,7 +1062,18 @@ namespace NFTMarketServer.NFT
                 return null;
             }
 
-            var nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
+                .ChoiceNFTInfoNewFlagIsOn ?? false;
+            IndexerNFTInfo nftInfoIndex;
+            if (choiceNFTInfoNewFlag)
+            {
+                nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            }
+            else
+            {
+                nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
+            }
+            
             if (nftInfoIndex == null)
             {
                 return null;
@@ -899,14 +1107,14 @@ namespace NFTMarketServer.NFT
                     new NFTOwnerInfo
                     {
                         Owner = userInfo,
-                        ItemsNumber = nftOwners.IndexerNftUserBalances[i].Amount
+                        ItemsNumber = FTHelper.GetIntegerDivision(nftOwners.IndexerNftUserBalances[i].Amount,nftInfoIndex.Decimals)
                     });
                 _logger.LogInformation("GetNFTOwnersAsync-Add owner, address: {id}, cnt: {cnd}",
                     userInfo.Address, nftOwners.IndexerNftUserBalances[i].Amount);
             }
 
             ret.TotalCount = nftOwners.TotalCount;
-            ret.Items = owners;
+            ret.Items = owners.Where(item => item.ItemsNumber > CommonConstant.IntZero).ToList();
 
             return ret;
         }

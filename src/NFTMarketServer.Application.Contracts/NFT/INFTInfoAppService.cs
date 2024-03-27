@@ -7,8 +7,6 @@ namespace NFTMarketServer.NFT
 {
     public interface INFTInfoAppService
     {
-        Task<PagedResultDto<NFTInfoIndexDto>> GetNFTInfosAsync(GetNFTInfosInput input);
-        
         Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(GetNFTInfosProfileInput input);
         
         Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetCompositeNFTInfosAsync(GetCompositeNFTInfosInput input);
@@ -20,9 +18,14 @@ namespace NFTMarketServer.NFT
         Task CreateNFTInfoExtensionAsync(CreateNFTExtensionInput input);
         
         Task AddOrUpdateNftInfoAsync(NFTInfoIndex nftInfo);
+
+        Task AddOrUpdateNftInfoNewAsync(NFTInfoIndex nftInfo, string nftInfoid, string chainId);
+
+        Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId, string chainId);
         
         Task<NFTForSaleDto> GetNFTForSaleAsync(GetNFTForSaleInput input);
 
         Task<NFTOwnerDto> GetNFTOwnersAsync(GetNFTOwnersInput input);
+        
     }
 }

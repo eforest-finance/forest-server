@@ -30,6 +30,8 @@ public interface IGraphQLProvider
     Task<List<UniqueSeedPriceDto>> GetUniqueSeedPriceDtoRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight);
 
     Task<List<NFTInfoIndex>> GetSyncNftInfoRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight);
+
+    Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string nftInfoId, string chainId);
     
     Task<List<SeedSymbolIndex>> GetSyncSeedSymbolRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight);
     Task<List<InscriptionDto>> GetIndexInscriptionAsync(string chainId, long beginBlockHeight,

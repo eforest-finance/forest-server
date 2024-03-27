@@ -129,14 +129,21 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         {
             return IndexerSeedInfos.Init();
         }
-        
+        var skipCount = dto.SkipCount;
+        long? selfTotalCount = 0;
         if (dto.Status == NFTSymbolBasicConstants.NFTInfoQueryStatusSelf)
         {
+            skipCount = 0;
             //query match seed
             var indexerUserMatchedNft = await _userBalanceProvider.GetUserMatchedNftIdsAsync(dto, true);
+            selfTotalCount = indexerUserMatchedNft?.Count;
             if (indexerUserMatchedNft == null || indexerUserMatchedNft.NftIds.IsNullOrEmpty())
             {
-                return IndexerSeedInfos.Init();
+                return new IndexerSeedInfos
+                {
+                    TotalRecordCount = selfTotalCount,
+                    IndexerSeedInfoList = new List<IndexerSeedInfo>()
+                };
             }
             mustQuery.Add(q => q.Ids(i => i.Values(indexerUserMatchedNft.NftIds)));
         }
@@ -182,12 +189,17 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
             return f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
         }
         var result = await _seedSymbolIndexRepository.GetListAsync(Filter, sortType: sorting.Item1, sortExp: sorting.Item2,
-            skip: dto.SkipCount, limit: dto.MaxResultCount);
+            skip: skipCount, limit: dto.MaxResultCount);
         var indexerInfos = new IndexerSeedInfos
         {
             TotalRecordCount = result.Item1,
             IndexerSeedInfoList = _objectMapper.Map<List<SeedSymbolIndex>, List<IndexerSeedInfo>>(result.Item2)
         };
+        if (dto.Status == NFTSymbolBasicConstants.NFTInfoQueryStatusSelf)
+        {
+            indexerInfos.TotalRecordCount = selfTotalCount;
+            return indexerInfos;
+        }
          
         if (result?.Item1 != CommonConstant.EsLimitTotalNumber)
         {
@@ -319,10 +331,12 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         {
             Query = new BoolQuery
             {
-                Must = mustQuery
-                    .Select(func => func(new QueryContainerDescriptor<SeedSymbolIndex>()))
-                    .ToList()
-                    .AsEnumerable()
+                Must = mustQuery != null && mustQuery.Any()
+                    ? mustQuery
+                        .Select(func => func(new QueryContainerDescriptor<SeedSymbolIndex>()))
+                        .ToList()
+                        .AsEnumerable()
+                    : Enumerable.Empty<QueryContainer>()
             },
             Size = 0
         };

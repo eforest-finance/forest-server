@@ -100,43 +100,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         res.Id.ShouldBe("tDVV-LIJIGUANGAAAABBB-1");
         res.OwnerCount.ShouldBe(1);
     }
-    
-    [Fact]
-    public async Task GetNFTInfosAsync()
-    {
-        var input = new GetNFTInfosInput
-        {
-            Sorting = "ListingTime ASC",
-            NFTCollectionId = "tDVW-JINMINGTRTT-0",
-            SkipCount = 0,
-            MaxResultCount = 2,
-            Address = "cxZuMcWFE7we6CNESgh9Y4M6n7eM5JgFAgVMPrTNEv9wFEvQp",
-            Status = 0,
-            IssueAddress = "",
-            PriceLow = 1
-        };
-        var res = _nftInfoAppService.GetNFTInfosAsync(input);
 
-        res.Result.TotalCount.ShouldBe(5);
-    }
-
-    [Fact]
-    public async Task GetNFTInfosAsync_ShouldBe_Null()
-    {
-        var input = new GetNFTInfosInput
-        {
-            Sorting = "ListingTime ASC",
-            NFTCollectionId = "tDVW-JINMINGTRTT-1",
-            SkipCount = 0,
-            MaxResultCount = 2,
-            Address = "",
-            Status = 0,
-            IssueAddress = ""
-        };
-        var res = _nftInfoAppService.GetNFTInfosAsync(input);
-        res.Result.TotalCount.ShouldBe(0);
-    }
-    
     [Fact]
     public async Task TestGetNFTInfosForUesrProfileAsync()
     {

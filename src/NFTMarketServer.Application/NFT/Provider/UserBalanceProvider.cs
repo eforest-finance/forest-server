@@ -64,7 +64,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
                     ,$nftInfoIds: [String]
                     ,$isSeed: Boolean!
                 ) {
-                data: queryUserNftIds(dto: {
+                data: queryUserNftIdsPage(dto: {
                 skipCount: $skipCount
                 ,maxResultCount: $maxResultCount
                 ,nftCollectionId: $nftCollectionId
@@ -76,7 +76,8 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
                 ,nFTInfoIds: $nftInfoIds
                 ,isSeed: $isSeed
                 }) {
-                        nftIds
+                        nftIds,
+                        count
                     }
                 }",
             Variables = new

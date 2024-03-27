@@ -15,6 +15,8 @@ public enum BusinessQueryChainType
     SeedMainChainCreateSync,
     SeedAutoClaim,
     NftInfoSync,
+    NftInfoNewSync,
+    NftInfoNewRecentSync,
     SeedSymbolSync,
     ExpiredNftMinPriceSync,
     ExpiredNftMaxOfferSync,

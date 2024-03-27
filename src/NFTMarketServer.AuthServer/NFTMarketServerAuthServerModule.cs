@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Grains;
 using NFTMarketServer.Localization;
+using NFTMarketServer.Middleware;
 using NFTMarketServer.MongoDB;
 using NFTMarketServer.MultiTenancy;
 using NFTMarketServer.Users.Provider;
@@ -270,6 +271,7 @@ public class NFTMarketServerAuthServerModule : AbpModule
         app.UseStaticFiles();
         app.UseRouting();
         app.UseCors();
+        app.UseMiddleware<TimeTrackingStatisticsAuthMiddleware>();
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
 
