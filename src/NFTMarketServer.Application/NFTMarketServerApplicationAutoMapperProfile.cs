@@ -136,7 +136,13 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                     : source.TraitPairsDictionary
                         .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList())
         );
-        CreateMap<NFTInfoIndexDto, UserProfileNFTInfoIndexDto>();
+        CreateMap<NFTInfoIndexDto, UserProfileNFTInfoIndexDto>().ForMember(
+            destination => destination.TraitPairsDictionary, opt => opt.MapFrom(
+                source => source.TraitPairsDictionary.IsNullOrEmpty()
+                    ? null
+                    : source.TraitPairsDictionary
+                        .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList())
+        );
         CreateMap<TokenDto, UserProfileTokenDto>();
         CreateMap<NFTCollectionIndexDto, UserProfileNFTCollectionIndexDto>();
         CreateMap<NftCollectionExtensionGrainDto, NFTCollectionExtraEto>();
