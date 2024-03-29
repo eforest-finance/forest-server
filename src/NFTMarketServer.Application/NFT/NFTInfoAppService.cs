@@ -1019,7 +1019,8 @@ namespace NFTMarketServer.NFT
                 //ChainId = ChainHelper.ConvertBase58ToChainId(nftInfoIndex.ChainId),
                 ChainIdStr = nftInfoIndex.ChainId,
                 TraitPairsDictionary = nftInfoIndex.TraitPairsDictionary
-                    .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList()
+                    .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList(),
+                Generation = nftInfoIndex.Generation
             };
         }
 
