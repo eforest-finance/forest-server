@@ -641,6 +641,11 @@ namespace NFTMarketServer.NFT
                 info.Metadata = index.ExternalInfoDictionary
                     .Select(kv => new MetadataDto { Key = kv.Key, Value = kv.Value }).ToList();
             }
+            if (!index.TraitPairsDictionary.IsNullOrEmpty())
+            {
+                info.Metadata = index.TraitPairsDictionary
+                    .Select(kv => new MetadataDto { Key = kv.Key, Value = kv.Value }).ToList();
+            }
             
             if (info.PreviewImage.IsNullOrEmpty())
             {
