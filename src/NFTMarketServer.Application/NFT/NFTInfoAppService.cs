@@ -643,7 +643,7 @@ namespace NFTMarketServer.NFT
             }
             if (!index.TraitPairsDictionary.IsNullOrEmpty())
             {
-                info.Metadata = index.TraitPairsDictionary
+                info.TraitPairsDictionary = index.TraitPairsDictionary
                     .Select(kv => new MetadataDto { Key = kv.Key, Value = kv.Value }).ToList();
             }
             
