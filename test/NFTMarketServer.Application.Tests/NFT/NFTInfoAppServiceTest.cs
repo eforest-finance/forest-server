@@ -454,8 +454,8 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
     private static INFTInfoSyncedProvider MockINFTInfoSyncedProvider()
     {
         var mockNftInfoSyncedProvider = new Mock<INFTInfoSyncedProvider>();
-        var nftList = new List<NFTInfoIndex>();
-        var nftInfoIndex = new NFTInfoIndex
+        var nftList = new List<IndexerNFTInfo>();
+        var nftInfoIndex = new IndexerNFTInfo()
         {
             Id = "tDVV-AAA-666666",
             CollectionId = "AAA-0",
@@ -485,7 +485,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         mockNftInfoSyncedProvider.Setup(calc =>
                 calc.GetNFTBriefInfosAsync(It.IsAny<GetCompositeNFTInfosInput>()))
             .ReturnsAsync(
-                new Tuple<long, List<NFTInfoIndex>>(nftList.Count, nftList));
+                new Tuple<long, List<IndexerNFTInfo>>(nftList.Count, nftList));
          
         mockNftInfoSyncedProvider.Setup(calc =>
                 calc.GetNFTInfosUserProfileAsync(It.IsAny<GetNFTInfosProfileInput>()))

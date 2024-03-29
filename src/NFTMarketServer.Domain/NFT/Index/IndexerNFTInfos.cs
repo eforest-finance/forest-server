@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Dtos;
 
@@ -73,5 +74,19 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     {
         ListingPrice = hasListingFlag ? minListingPrice : 0;
         ListingToken = ListingPrice == 0 ? null : listingToken;
+    }
+    
+    public (string Description, decimal Price) GetDescriptionAndPrice(decimal queryMaxOfferPrice)
+    {
+        if (HasListingFlag)
+        {
+            return (NFTSymbolBasicConstants.BrifeInfoDescriptionPrice, MinListingPrice);
+        }
+        // HasOfferFlag is not very timely
+        if (queryMaxOfferPrice > 0)
+        {
+            return (NFTSymbolBasicConstants.BrifeInfoDescriptionOffer, queryMaxOfferPrice);
+        }
+        return (string.Empty, -1);
     }
 }

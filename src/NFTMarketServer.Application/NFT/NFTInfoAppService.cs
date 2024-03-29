@@ -192,7 +192,7 @@ namespace NFTMarketServer.NFT
 
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeNFT))
             {
-                Tuple<long, List<NFTInfoIndex>> nftResult = null;
+                Tuple<long, List<IndexerNFTInfo>> nftResult = null;
                 
                 if (choiceNFTInfoNewFlag)
                 {
@@ -991,7 +991,7 @@ namespace NFTMarketServer.NFT
             };
         }
 
-        private static CompositeNFTInfoIndexDto MapForNftBriefInfoDto(NFTInfoIndex nftInfoIndex,
+        private static CompositeNFTInfoIndexDto MapForNftBriefInfoDto(IndexerNFTInfo nftInfoIndex,
             Dictionary<string, IndexerNFTOffer> maxOfferDict)
         {
             maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
@@ -1010,7 +1010,9 @@ namespace NFTMarketServer.NFT
                 //IssueChainId = nftInfoIndex.IssueChainId,
                 IssueChainIdStr = ChainHelper.ConvertChainIdToBase58(nftInfoIndex.IssueChainId),
                 //ChainId = ChainHelper.ConvertBase58ToChainId(nftInfoIndex.ChainId),
-                ChainIdStr = nftInfoIndex.ChainId
+                ChainIdStr = nftInfoIndex.ChainId,
+                TraitPairsDictionary = nftInfoIndex.TraitPairsDictionary
+                    .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList()
             };
         }
 

@@ -21,7 +21,7 @@ public interface INFTInfoSyncedProvider
 {
     public Task<IndexerNFTInfo> GetNFTInfoIndexAsync(string id);
     
-    public Task<Tuple<long, List<NFTInfoIndex>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto);
+    public Task<Tuple<long, List<IndexerNFTInfo>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto);
     
     public Task<IndexerNFTInfos> GetNFTInfosUserProfileAsync(GetNFTInfosProfileInput dto);
 }
@@ -69,7 +69,7 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
         return res;
     }
 
-    public async Task<Tuple<long, List<NFTInfoIndex>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto)
+    public async Task<Tuple<long, List<IndexerNFTInfo>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoIndex>, QueryContainer>>();
         var shouldQuery = new List<Func<QueryContainerDescriptor<NFTInfoIndex>, QueryContainer>>();
@@ -116,11 +116,11 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
         var result = await _nftInfoIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: dto.MaxResultCount);
         if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
         {
-            return result;
+            return  new Tuple<long, List<IndexerNFTInfo>>(result.Item1, _objectMapper.Map<List<NFTInfoIndex>, List<IndexerNFTInfo>>(result?.Item2));
         }
         
         var count = await QueryRealCountAsync(mustQuery);
-        var newResult = new Tuple<long, List<NFTInfoIndex>>(count, result?.Item2);
+        var newResult = new Tuple<long, List<IndexerNFTInfo>>(count, _objectMapper.Map<List<NFTInfoIndex>, List<IndexerNFTInfo>>(result?.Item2));
         return newResult;
     }
 
