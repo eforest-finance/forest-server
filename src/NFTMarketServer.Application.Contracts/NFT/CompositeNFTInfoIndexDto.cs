@@ -19,5 +19,7 @@ namespace NFTMarketServer.NFT
         public string IssueChainIdStr { get; set; }
         public string ChainIdStr { get; set; }
         public string fileExtension { get; set; }
+        
+        public List<MetadataDto> TraitPairsDictionary { get; set; }
     }
 }
