@@ -21,7 +21,7 @@ public interface INFTInfoNewSyncedProvider
 {
     public Task<IndexerNFTInfo> GetNFTInfoIndexAsync(string id);
     
-    public Task<Tuple<long, List<NFTInfoIndex>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto);
+    public Task<Tuple<long, List<IndexerNFTInfo>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto);
     
     public Task<IndexerNFTInfos> GetNFTInfosUserProfileAsync(GetNFTInfosProfileInput dto);
 }
@@ -70,7 +70,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         return res;
     }
 
-    public async Task<Tuple<long, List<NFTInfoIndex>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto)
+    public async Task<Tuple<long, List<IndexerNFTInfo>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
         var shouldQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
@@ -157,15 +157,15 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         var sort = GetSortForNFTBrife(dto.Sorting);
         var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: dto.MaxResultCount);
 
-        var nftInfoIndexList = _objectMapper.Map<List<NFTInfoNewIndex>, List<NFTInfoIndex>>(result?.Item2);
+        var nftInfoIndexList = _objectMapper.Map<List<NFTInfoNewIndex>, List<IndexerNFTInfo>>(result?.Item2);
 
         if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
         {
-            return new Tuple<long, List<NFTInfoIndex>>(result.Item1, nftInfoIndexList);
+            return new Tuple<long, List<IndexerNFTInfo>>(result.Item1, nftInfoIndexList);
         }
 
         var count = await QueryRealCountAsync(mustQuery,null);
-        var newResult = new Tuple<long, List<NFTInfoIndex>>(count, nftInfoIndexList);
+        var newResult = new Tuple<long, List<IndexerNFTInfo>>(count, nftInfoIndexList);
         return newResult;
     }
 
