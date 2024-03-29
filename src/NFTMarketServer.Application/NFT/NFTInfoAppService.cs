@@ -646,6 +646,8 @@ namespace NFTMarketServer.NFT
                 info.TraitPairsDictionary = index.TraitPairsDictionary
                     .Select(kv => new MetadataDto { Key = kv.Key, Value = kv.Value }).ToList();
             }
+
+            info.Generation = index.Generation;
             
             if (info.PreviewImage.IsNullOrEmpty())
             {

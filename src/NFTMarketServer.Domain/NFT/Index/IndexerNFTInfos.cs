@@ -57,7 +57,7 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public bool IsOfficial { get; set; }
     public List<ExternalInfoDictionaryDto> ExternalInfoDictionary { get; set; }
     
-    public int Generation { get; set; } = 0;
+    public int Generation { get; set; } = -1;
     public List<ExternalInfoDictionary> TraitPairsDictionary { get; set; }
 
     
