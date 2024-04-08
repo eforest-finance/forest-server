@@ -45,7 +45,7 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
 
     public decimal LatestDealPrice { get; set; }
     public DateTime LatestDealTime { get; set; }
-
+    public decimal OfferPrice { get; set; }
 
     public IndexerTokenInfo ListingToken { get; set; }
     public IndexerTokenInfo LatestDealToken { get; set; }
