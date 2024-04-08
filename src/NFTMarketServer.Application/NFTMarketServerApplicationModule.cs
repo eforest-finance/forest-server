@@ -96,6 +96,8 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, NFTOfferChangeScheduleService>();
 
             context.Services.AddTransient<IScheduleSyncDataService, InscriptionCrossChainScheduleService>();
+            
+            context.Services.AddTransient<IScheduleSyncDataService, UserBalanceSyncDataService>();
 
             Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
             Configure<AwsS3Option>(configuration.GetSection("AwsS3"));
