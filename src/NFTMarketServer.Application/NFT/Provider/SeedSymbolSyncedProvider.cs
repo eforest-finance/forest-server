@@ -288,10 +288,20 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         switch (sortingArray[0])
         {
             case "Low":
-                ApplyPriceSort(sortDescriptor, a => a.MinListingPrice, sortOrder);
+                sortDescriptor.Descending(a => a.HasListingFlag)
+                    .Descending(a => a.HasAuctionFlag)
+                    .Ascending(a=>a.MinListingPrice)
+                    .Ascending(a=>a.MaxAuctionPrice)
+                    .Ascending(a => a.MaxOfferPrice)
+                    .Descending(a => a.CreateTime);
                 break;
             case "High":
-                ApplyPriceSort(sortDescriptor, a => a.MaxAuctionPrice, sortOrder);
+                sortDescriptor.Descending(a => a.HasListingFlag)
+                    .Descending(a => a.HasAuctionFlag)
+                    .Descending(a=>a.MinListingPrice)
+                    .Descending(a=>a.MaxAuctionPrice)
+                    .Ascending(a => a.MaxOfferPrice)
+                    .Descending(a => a.CreateTime);
                 break;
             case "Recently":
                 sortDescriptor.Descending(a => a.CreateTime);
@@ -306,25 +316,6 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         return s => sortDescriptor;
     }
 
-    private static void ApplyPriceSort(SortDescriptor<SeedSymbolIndex> sortDescriptor,
-        Expression<Func<SeedSymbolIndex, object>> field,
-        string sortOrder)
-    {
-        sortDescriptor.Descending(a => a.HasListingFlag)
-            .Descending(a => a.HasAuctionFlag)
-            .Ascending(a => a.MaxOfferPrice)
-            .Descending(a => a.CreateTime);
-
-        if (sortOrder == "asc")
-        {
-            sortDescriptor.Ascending(field);
-        }
-        else
-        {
-            sortDescriptor.Descending(field);
-        }
-    }
-    
     private async Task<long> QueryRealCountAsync(List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>> mustQuery)
     {
         var countRequest = new SearchRequest<SeedSymbolIndex>

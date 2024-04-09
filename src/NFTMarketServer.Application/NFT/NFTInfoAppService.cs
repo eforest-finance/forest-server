@@ -413,7 +413,7 @@ namespace NFTMarketServer.NFT
             }
 
             //build priceType and price info
-            nftInfoIndexDto = await BuildShowPriceTypeAsync(input.Address, nftInfoIndex.ChainId, nftInfoIndex.Symbol,
+            nftInfoIndexDto = await BuildShowPriceTypeAsync(input.Address, nftInfoIndex, nftInfoIndex.Symbol,
                 nftInfoIndexDto);
 
             var kv = nftInfoIndexDto?.Metadata?.Where(item =>
@@ -486,9 +486,34 @@ namespace NFTMarketServer.NFT
             return nftInfoIndexDto;
         }
         
-        private async Task<NFTInfoIndexDto> BuildShowPriceTypeAsync(string address, string chainId, string symbol,
+        private async Task<NFTInfoIndexDto> BuildShowPriceTypeAsync(string address, IndexerNFTInfo indexerNFTInfo, string symbol,
             NFTInfoIndexDto nftInfoIndexDto)
         {
+            var chainId = indexerNFTInfo.ChainId;
+            var getMyNftListingsDto = new GetNFTListingsDto()
+            {
+                ChainId = chainId,
+                Symbol = symbol,
+                SkipCount = 0,
+                MaxResultCount = 1
+            };
+            var allMinListingPage = await _nftListingProvider.GetNFTListingsAsync(getMyNftListingsDto);
+            IndexerNFTListingInfo allMinListingDto = null;
+            if (allMinListingPage != null && allMinListingPage.TotalCount > 0)
+            {
+                allMinListingDto = allMinListingPage.Items[0];
+            }
+            
+            if (allMinListingDto?.Prices != indexerNFTInfo.MinListingPrice)
+            {
+                await _distributedEventBus.PublishAsync(new NFTInfoResetEto
+                {
+                    NFTInfoId = indexerNFTInfo.Id,
+                    ChainId = indexerNFTInfo.ChainId,
+                    NFTType = NFTType.NFT
+                });
+            }
+
             //otherMinListing
             if (!address.IsNullOrEmpty())
             {
@@ -510,24 +535,27 @@ namespace NFTMarketServer.NFT
 
             //allMinListing
             {
-                var getMyNftListingsDto = new GetNFTListingsDto()
-                {
-                    ChainId = chainId,
-                    Symbol = symbol,
-                    SkipCount = 0,
-                    MaxResultCount = 1
-                };
-                var listingDto = await _nftListingProvider.GetNFTListingsAsync(getMyNftListingsDto);
-                if (listingDto != null && listingDto.TotalCount > 0)
+                if (allMinListingPage != null && allMinListingPage.TotalCount > 0)
                 {
                     nftInfoIndexDto.ShowPriceType = ShowPriceType.MYMINLISTING.ToString();
-                    return MapMinListingInfo(nftInfoIndexDto, listingDto.Items[0]);
+                    return MapMinListingInfo(nftInfoIndexDto, allMinListingPage.Items[0]);
                 }
             }
 
             //maxOffer
             {
                 var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoIndexDto.Id);
+
+                if (indexerNFTInfo?.OfferPrice != indexerNFTOffer?.Price)
+                {
+                    await _distributedEventBus.PublishAsync(new NFTInfoResetEto
+                    {
+                        NFTInfoId = indexerNFTInfo.Id,
+                        ChainId = indexerNFTInfo.ChainId,
+                        NFTType = NFTType.NFT
+                    });
+                }
+                
                 if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
                 {
                     nftInfoIndexDto.ShowPriceType = ShowPriceType.MAXOFFER.ToString();
