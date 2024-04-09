@@ -440,4 +440,35 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
 
         return graphQLResponse.Data.Inscription;
     }
+
+    public async Task<List<UserBalanceIndex>> GetSyncUserBalanceRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight)
+    {
+        var graphQlResponse = await _graphQLClient.SendQueryAsync<IndexerUserBalanceSync>(new GraphQLRequest
+        {
+            Query =
+                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+            dataList:getSyncUserBalanceRecords(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
+            {
+                id
+                address
+                amount
+                decimals
+                nFTInfoId
+                symbol
+                changeTime
+                listingPrice
+                listingTime
+                balanceType
+                blockHash
+                blockHeight
+            }}",
+            Variables = new
+            {
+                chainId,
+                startBlockHeight,
+                endBlockHeight
+            }
+        });
+        return graphQlResponse.Data.DataList.IsNullOrEmpty() ? new List<UserBalanceIndex>() : graphQlResponse.Data.DataList;
+    }
 }

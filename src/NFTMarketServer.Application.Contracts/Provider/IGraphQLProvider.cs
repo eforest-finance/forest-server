@@ -36,5 +36,7 @@ public interface IGraphQLProvider
     Task<List<SeedSymbolIndex>> GetSyncSeedSymbolRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight);
     Task<List<InscriptionDto>> GetIndexInscriptionAsync(string chainId, long beginBlockHeight,
         long endBlockHeight, int skipCount, int maxResultCount);
+    
+    Task<List<UserBalanceIndex>> GetSyncUserBalanceRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight);
 
 }
