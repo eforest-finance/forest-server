@@ -12,5 +12,5 @@ public interface IScheduleSyncDataService
 
     BusinessQueryChainType GetBusinessType();
     
-    Task DealDataAsync();
+    Task DealDataAsync(bool resetBlockHeightFlag, long resetBlockHeight);
 }

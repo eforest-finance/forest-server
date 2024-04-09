@@ -22,6 +22,6 @@ public class ExpiredListingNftHandleWorker : NFTMarketServerWorkBase
     }
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _scheduleSyncDataContext.DealAsync(BusinessType);
+        await _scheduleSyncDataContext.DealAsync(BusinessType, GetResetBlockHeightFlag(), GetResetBlockHeight());
     }
 }

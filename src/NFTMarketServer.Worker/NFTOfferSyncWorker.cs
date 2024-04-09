@@ -23,6 +23,6 @@ public class NFTOfferSyncWorker : NFTMarketServerWorkBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.NftOfferSync);
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.NftOfferSync, GetResetBlockHeightFlag(), GetResetBlockHeight());
     }
 }

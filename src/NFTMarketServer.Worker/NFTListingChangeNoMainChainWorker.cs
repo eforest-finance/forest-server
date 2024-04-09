@@ -18,6 +18,6 @@ public class NFTListingChangeNoMainChainWorker : NFTMarketServerWorkBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.NftListingChangeNoMainChain);
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.NftListingChangeNoMainChain, GetResetBlockHeightFlag(), GetResetBlockHeight());
     }
 }

@@ -10,7 +10,7 @@ namespace NFTMarketServer;
 
 public interface IScheduleSyncDataContext
 {
-    Task DealAsync(BusinessQueryChainType businessQueryChainType);
+    Task DealAsync(BusinessQueryChainType businessQueryChainType, bool resetHeightFlag, long resetHeight);
 }
 
 public class ScheduleSyncDataContext : ITransientDependency, IScheduleSyncDataContext
@@ -25,10 +25,10 @@ public class ScheduleSyncDataContext : ITransientDependency, IScheduleSyncDataCo
         _logger = logger;
     }
 
-    public async Task DealAsync(BusinessQueryChainType businessType)
+    public async Task DealAsync(BusinessQueryChainType businessType, bool resetHeightFlag, long resetHeight)
     {
         var stopwatch = Stopwatch.StartNew();
-        await _syncDataServiceMap.GetOrDefault(businessType).DealDataAsync();
+        await _syncDataServiceMap.GetOrDefault(businessType).DealDataAsync(resetHeightFlag, resetHeight);
         stopwatch.Stop();
         _logger.LogInformation("It took {Elapsed} ms to execute synchronized data for businessType: {businessType}",
             stopwatch.ElapsedMilliseconds, businessType);
