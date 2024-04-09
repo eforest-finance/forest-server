@@ -49,8 +49,9 @@ public abstract class NFTMarketServerWorkBase : AsyncPeriodicBackgroundWorkerBas
             }
 
             _logger.LogInformation(
-                "The workerSetting of Worker {BusinessType} has changed to Period = {Period} ms, OpenSwitch = {OpenSwitch}.",
-                BusinessType, timer.Period, workerSetting.OpenSwitch);
+                "The workerSetting of Worker {BusinessType} has changed to Period = {Period} ms, OpenSwitch = {OpenSwitch}.ResetBlockHeightFlag = {ResetBlockHeightFlag} - {ResetBlockHeightFlag2}. ResetBlockHeight = {ResetBlockHeight} - {ResetBlockHeight}",
+                BusinessType, timer.Period, workerSetting.OpenSwitch, workerSetting.ResetBlockHeightFlag,
+                ResetBlockHeightFlag, workerSetting.ResetBlockHeight, ResetBlockHeight);
         });
     }
 
