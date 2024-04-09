@@ -14,8 +14,8 @@ public abstract class NFTMarketServerWorkBase : AsyncPeriodicBackgroundWorkerBas
     protected readonly ILogger<ScheduleSyncDataContext> _logger;
     protected readonly IScheduleSyncDataContext _scheduleSyncDataContext;
     private const int DefaultPeriod = 60000;
-    protected bool ResetBlockHeightFlag = false;
-    protected long ResetBlockHeight = 0;
+    private bool ResetBlockHeightFlag = false;
+    private long ResetBlockHeight = 0;
 
     protected NFTMarketServerWorkBase(ILogger<ScheduleSyncDataContext> logger,
         AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
@@ -39,6 +39,9 @@ public abstract class NFTMarketServerWorkBase : AsyncPeriodicBackgroundWorkerBas
         {
             var workerSetting = newOptions.GetWorkerSettings(BusinessType);
             timer.Period = workerSetting.TimePeriod;
+            ResetBlockHeightFlag = workerSetting.ResetBlockHeightFlag;
+            ResetBlockHeight = workerSetting.ResetBlockHeight;
+
             if (workerSetting.OpenSwitch)
             {
                 timer.Start();
