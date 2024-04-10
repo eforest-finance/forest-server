@@ -21,9 +21,22 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
             new Dictionary<string, Expression<Func<NFTCollectionExtensionIndex, object>>>(StringComparer
                 .OrdinalIgnoreCase)
             {
-                { "FloorPrice", p => p.FloorPrice },
-                { "ItemTotal", p => p.ItemTotal },
-                { "OwnerTotal", p => p.OwnerTotal }
+                { "FloorPricebyday", p => p.FloorPrice },
+                { "ItemTotalbyday", p => p.ItemTotal },
+                { "OwnerTotalbyday", p => p.OwnerTotal },
+                { "FloorPricebyweek", p => p.FloorPrice },
+                { "ItemTotalbyweek", p => p.ItemTotal },
+                { "OwnerTotalbyweek", p => p.OwnerTotal },
+                { "volumeTotalbyday", p => p.CurrentDayVolumeTotal },
+                { "volumeTotalbyweek", p => p.CurrentWeekVolumeTotal },
+                { "volumeTotalChangebyday", p => p.CurrentDayVolumeTotalChange },
+                { "volumeTotalChangebyweek", p => p.CurrentWeekVolumeTotalChange },
+                { "floorChangebyday", p => p.CurrentDayFloorChange },
+                { "floorChangebyweek", p => p.CurrentWeekFloorChange },
+                { "salesTotalbyday", p => p.CurrentDaySalesTotal },
+                { "salesTotalbyweek", p => p.CurrentWeekSalesTotal },
+                { "SupplyTotalbyday", p => p.SupplyTotal },
+                { "SupplyTotalbyweek", p => p.SupplyTotal },
             };
     private readonly INESTRepository<NFTCollectionExtensionIndex, string> _nftCollectionExtensionIndexRepository;
     public NFTCollectionExtensionProvider(
@@ -104,21 +117,23 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
         
         QueryContainer Filter(QueryContainerDescriptor<NFTCollectionExtensionIndex> f) =>
             f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
-
+        
         //sortExp base Sort , like "floorPrice", "itemTotal"
         var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter, skip: input.SkipCount,
             limit: input.MaxResultCount,
             sortType: input.SortType,
-            sortExp: GetSortingExpression(input.Sort));
+            sortExp: GetSortingExpression(input.Sort + input.DateRangeType));
 
         return tuple;
     }
+
     private Expression<Func<NFTCollectionExtensionIndex, object>> GetSortingExpression(string sortBy)
     {
         if (sortBy.IsNullOrEmpty())
         {
             return o => o.CreateTime;
         }
+
         if (SortingExpressions.TryGetValue(sortBy, out var expression))
         {
             return expression;

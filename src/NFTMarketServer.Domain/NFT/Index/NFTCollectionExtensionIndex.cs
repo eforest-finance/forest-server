@@ -35,4 +35,26 @@ public class NFTCollectionExtensionIndex : NFTMarketEntity<string>, IIndexBuild
     
     public DateTime CreateTime { get; set; }
     
+    public decimal CurrentDayVolumeTotal { get; set; } = -1;
+    public decimal PreviousDayVolumeTotal { get; set; } = -1;
+    public decimal CurrentDayVolumeTotalChange { get; set; } = 0;
+    
+    public decimal CurrentWeekVolumeTotal { get; set; } = -1;
+    public decimal PreviousWeekVolumeTotal { get; set; } = -1;
+    public decimal CurrentWeekVolumeTotalChange { get; set; } = 0;
+    
+    public long CurrentDaySalesTotal { get; set; } = -1;
+    public long PreviousDaySalesTotal { get; set; } = -1;
+    
+    public long CurrentWeekSalesTotal { get; set; } = -1;
+    public long PreviousWeekSalesTotal { get; set; } = -1;
+    
+    public decimal PreviousDayFloorPrice { get; set; } = -1;
+    public decimal CurrentDayFloorChange { get; set; } = 0;
+    
+    public decimal PreviousWeekFloorPrice { get; set; } = -1;
+    public decimal CurrentWeekFloorChange { get; set; } = 0;
+
+    public long SupplyTotal { get; set; } = -1;
+    
 }
