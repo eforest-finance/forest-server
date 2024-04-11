@@ -79,6 +79,18 @@ public class IdGenerateHelper
         return GetId(collectionSymbol, Generation);
     }
 
+    public static string GetCollectionIdSymbol(string collectionId)
+    {
+        int delimiterIndex = collectionId.IndexOf('-');
+
+        if (delimiterIndex != -1)
+        {
+            return collectionId.Substring(delimiterIndex + 1);
+        }
+
+        return "";
+    }
+    
     private static string TransferToHashStr(string str)
     {
         if (string.IsNullOrEmpty(str) || string.IsNullOrWhiteSpace(str))

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
+using NFTMarketServer;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.NFT.Index;
@@ -278,11 +279,12 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
     public async Task<IndexerNFTCollectionTrade> GetNFTCollectionTradeAsync(string chainId, string collectionId,
         long beginUtcStamp, long endUtcStamp)
     {
+        var collectionSymbol = IdGenerateHelper.GetCollectionIdSymbol(collectionId);
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerNFTCollectionTrade>>(new GraphQLRequest
         {
             Query = @"
-			    query($chainId:String!,$collectionId:String!,$beginUtcStamp:Long!,$endUtcStamp:Long!) {
-                    data:calcNFTCollectionTrade(dto:{chainId:$chainId,symbol:$symbol,floorPrice:$floorPrice}){
+			    query($chainId:String!,$collectionSymbol:String!,$collectionId:String!,$beginUtcStamp:Long!,$endUtcStamp:Long!) {
+                    data:calcNFTCollectionTrade(dto:{chainId:$chainId,collectionSymbol:$collectionSymbol,collectionId:$collectionId,beginUtcStamp:$beginUtcStamp,endUtcStamp:$endUtcStamp}){
                         volumeTotal
                         salesTotal
                         floorPrice
@@ -291,6 +293,7 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
             Variables = new
             {
                 chainId,
+                collectionSymbol,
                 collectionId,
                 beginUtcStamp,
                 endUtcStamp

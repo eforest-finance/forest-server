@@ -58,9 +58,6 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             var id = eventData.Id;
             var currentOrdinal = eventData.CurrentOrdinal;
 
-            await SaveCurrentHourRecordAsync(id, chainId, collectionId, currentOrdinal);
-            await SavePreHourRecordAsync(id, chainId, collectionId, currentOrdinal);
-
             var nftCollectionExtensionIndex = await _nftCollectionExtensionRepository.GetAsync(collectionId);
 
             if (nftCollectionExtensionIndex == null)
@@ -68,7 +65,9 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
                 _logger.LogError("collectionExtension is null . collectionId ={A}", collectionId);
                 return;
             }
-
+            
+            await SaveCurrentHourRecordAsync(id, chainId, collectionId, currentOrdinal,nftCollectionExtensionIndex);
+            await SavePreHourRecordAsync(id, chainId, collectionId, currentOrdinal);
             await BuildPreDayFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
             await BuildPreWeekFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
             await BuildDayTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
@@ -97,11 +96,12 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         }
     }
 
-    private async Task SaveCurrentHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal)
+    private async Task SaveCurrentHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal,NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var beginUtcStamp = currentOrdinal;
         var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
-        await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId, id);
+        var result = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId, id);
+        nftCollectionExtensionIndex.FloorPrice = result.FloorPrice;
     }
     
     private async Task SavePreHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal)
@@ -109,7 +109,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var preHourTimestamp = currentOrdinal;
         for (var i = 1; i <= 24 * 14; i++)
         {
-            preHourTimestamp -= TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, i);
+            preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
             var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
                 TimeHelper.GetUnixTimestampSecondsFormatted(preHourTimestamp));
             var preRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(temId);
