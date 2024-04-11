@@ -122,16 +122,24 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
         var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter, skip: input.SkipCount,
             limit: input.MaxResultCount,
             sortType: input.SortType,
-            sortExp: GetSortingExpression(input.Sort + input.DateRangeType));
+            sortExp: GetSortingExpression(input.Sort + input.DateRangeType, input.DateRangeType));
 
         return tuple;
     }
 
-    private Expression<Func<NFTCollectionExtensionIndex, object>> GetSortingExpression(string sortBy)
+    private Expression<Func<NFTCollectionExtensionIndex, object>> GetSortingExpression(string sortBy,DateRangeType dateRangeType)
     {
         if (sortBy.IsNullOrEmpty())
         {
-            return o => o.CreateTime;
+            if (dateRangeType == DateRangeType.byday)
+            {
+                return o => o.CurrentDayVolumeTotal;
+            }
+            else
+            {
+                return o => o.CurrentWeekVolumeTotal;
+            }
+            
         }
 
         if (SortingExpressions.TryGetValue(sortBy, out var expression))
