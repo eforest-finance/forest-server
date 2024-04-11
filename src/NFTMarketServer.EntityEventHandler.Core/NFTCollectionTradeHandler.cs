@@ -51,7 +51,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            _logger.LogInformation("NFTCollectionTradeEto ={A} begin", JsonConvert.SerializeObject(eventData));
+            _logger.LogInformation("NFTCollectionTradeEto begin, eventData={A} ", JsonConvert.SerializeObject(eventData));
             
             var collectionId = eventData.CollectionId;
             var chainId = eventData.ChainId;

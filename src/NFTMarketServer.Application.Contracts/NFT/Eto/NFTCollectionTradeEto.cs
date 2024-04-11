@@ -4,7 +4,7 @@ using Volo.Abp.EventBus;
 
 namespace NFTMarketServer.NFT.Eto;
 
-[EventName("NFTCollectionExtraEto")]
+[EventName("NFTCollectionTradeEto")]
 public class NFTCollectionTradeEto : MultiChainEntity<string>
 {
     public override string Id { get; set; }
