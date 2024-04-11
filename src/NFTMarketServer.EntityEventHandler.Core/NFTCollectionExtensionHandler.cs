@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Common;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using Volo.Abp.DependencyInjection;
@@ -16,13 +17,16 @@ public class NFTCollectionExtensionHandler : IDistributedEventHandler<NFTCollect
     private readonly INESTRepository<NFTCollectionExtensionIndex, string> _nftCollectionExtensionRepository;
     private readonly IObjectMapper _objectMapper;
     private readonly ILogger<NFTCollectionExtensionHandler> _logger;
+    private readonly IDistributedEventBus _distributedEventBus;
 
     public NFTCollectionExtensionHandler(
         INESTRepository<NFTCollectionExtensionIndex, string> nftCollectionExtensionRepository,
         IObjectMapper objectMapper,
+        IDistributedEventBus distributedEventBus, 
         ILogger<NFTCollectionExtensionHandler> logger)
     {
         _nftCollectionExtensionRepository = nftCollectionExtensionRepository;
+        _distributedEventBus = distributedEventBus;
         _objectMapper = objectMapper;
         _logger = logger;
     }
@@ -39,6 +43,18 @@ public class NFTCollectionExtensionHandler : IDistributedEventHandler<NFTCollect
 
             _logger.LogDebug("nftCollectionExtension information add or update success: {NftCollectionExtensionIndex}",
                 JsonConvert.SerializeObject(nftCollectionExtensionIndex));
+
+            var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
+            var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
+            var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
+            await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
+            {
+                Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(eventData.Id, utcHourStartStr),
+                CollectionId = eventData.Id,
+                ChainId = eventData.ChainId,
+                CurrentOrdinal = utcHourStartTimestamp,
+                CurrentOrdinalStr = utcHourStartStr
+            });
         }
         catch (Exception ex)
         {

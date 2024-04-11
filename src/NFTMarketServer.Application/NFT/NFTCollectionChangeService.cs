@@ -24,13 +24,11 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
     private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
     private readonly IDistributedCache<List<string>> _distributedCache;
     private const int HeightExpireMinutes = 5;
-    private readonly IBus _bus;
     private readonly INFTCollectionProviderAdapter _nftCollectionProviderAdapter;
 
     public NFTCollectionChangeService(ILogger<NFTCollectionChangeService> logger,
         INFTCollectionProvider nftCollectionProvider,
         IDistributedCache<List<string>> distributedCache,
-        IBus bus,
         INFTCollectionProviderAdapter nftCollectionProviderAdapter,
         INFTCollectionExtensionProvider nftCollectionExtensionProvider)
     {
@@ -38,7 +36,6 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
         _nftCollectionProvider = nftCollectionProvider;
         _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
         _distributedCache = distributedCache;
-        _bus = bus;
         
         _nftCollectionProvider = nftCollectionProvider;
         _nftCollectionProviderAdapter = nftCollectionProviderAdapter;

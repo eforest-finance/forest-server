@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
@@ -272,5 +273,60 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
             return new IndexerNFTCollectionPrice();
         }
         return result;
+    }
+    
+    public async Task<IndexerNFTCollectionTrade> GetNFTCollectionTradeAsync(string chainId, string collectionId,
+        long beginUtcStamp, long endUtcStamp)
+    {
+        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerNFTCollectionTrade>>(new GraphQLRequest
+        {
+            Query = @"
+			    query($chainId:String!,$collectionId:String!,$beginUtcStamp:Long!,$endUtcStamp:Long!) {
+                    data:calcNFTCollectionTrade(dto:{chainId:$chainId,symbol:$symbol,floorPrice:$floorPrice}){
+                        volumeTotal
+                        salesTotal
+                        floorPrice
+                    }
+                }",
+            Variables = new
+            {
+                chainId,
+                collectionId,
+                beginUtcStamp,
+                endUtcStamp
+            }
+        });
+       
+        var result = indexerCommonResult?.Data;
+        if (result == null)
+        {
+            return new IndexerNFTCollectionTrade();
+        }
+        return result;
+    }
+    
+    public async Task<long> GetCollectionItemSupplyTotalAsync(string chainId, string collectionId)
+    {
+        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerCollectionItemSupplyTotal>>(new GraphQLRequest
+        {
+            Query = @"
+			    query($chainId:String!,$collectionId:String!) {
+                    data:calCollectionItemSupplyTotal(dto:{chainId:$chainId,symbol:$symbol}){
+                        supplyTotal
+                    }
+                }",
+            Variables = new
+            {
+                chainId,
+                collectionId,
+            }
+        });
+       
+        var result = indexerCommonResult?.Data;
+        if (result == null)
+        {
+            return CommonConstant.IntNegativeOne;
+        }
+        return result.Data.SupplyTotal;
     }
 }

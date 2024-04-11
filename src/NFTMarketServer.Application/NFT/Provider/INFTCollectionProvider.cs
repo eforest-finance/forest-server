@@ -19,4 +19,9 @@ public interface INFTCollectionProvider
     
     Task<IndexerNFTCollectionPrice> GetNFTCollectionPriceAsync(string chainId, string symbol, decimal floorPrice);
 
+    Task<IndexerNFTCollectionTrade> GetNFTCollectionTradeAsync(string chainId, string collectionId,
+        long beginUtcStamp, long endUtcStamp);
+    
+    Task<long> GetCollectionItemSupplyTotalAsync(string chainId, string collectionSymbol);
+
 }
