@@ -26,6 +26,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
     private readonly ILogger<NFTCollectionTradeHandler> _logger;
     private readonly IGraphQLProvider _graphQlProvider;
     private readonly INFTCollectionProvider _collectionProvider;
+    private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
 
     public NFTCollectionTradeHandler(
         INESTRepository<NFTCollectionExtensionIndex, string> nftCollectionExtensionRepository,
@@ -33,6 +34,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         IObjectMapper objectMapper,
         IGraphQLProvider graphQlProvider,
         INFTCollectionProvider collectionProvider,
+        INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
         ILogger<NFTCollectionTradeHandler> logger)
     {
         _nftCollectionExtensionRepository = nftCollectionExtensionRepository;
@@ -40,6 +42,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         _objectMapper = objectMapper;
         _graphQlProvider = graphQlProvider;
         _collectionProvider = collectionProvider;
+        _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
         _logger = logger;
     }
 
@@ -76,7 +79,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
                 nftCollectionExtensionIndex.PreviousWeekVolumeTotal,
                 nftCollectionExtensionIndex.PreviousWeekVolumeTotal);
 
-            var collectionItemSupplyTotal = await _collectionProvider.GetCollectionItemSupplyTotalAsync(chainId,collectionId);
+            var collectionItemSupplyTotal = await _nftInfoNewSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId,collectionId);
             nftCollectionExtensionIndex.SupplyTotal = collectionItemSupplyTotal;
             await _nftCollectionExtensionRepository.UpdateAsync(nftCollectionExtensionIndex);
         }

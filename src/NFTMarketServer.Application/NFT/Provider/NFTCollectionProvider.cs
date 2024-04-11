@@ -304,29 +304,4 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
         }
         return result;
     }
-    
-    public async Task<long> GetCollectionItemSupplyTotalAsync(string chainId, string collectionId)
-    {
-        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerCollectionItemSupplyTotal>>(new GraphQLRequest
-        {
-            Query = @"
-			    query($chainId:String!,$collectionId:String!) {
-                    data:calCollectionItemSupplyTotal(dto:{chainId:$chainId,symbol:$symbol}){
-                        supplyTotal
-                    }
-                }",
-            Variables = new
-            {
-                chainId,
-                collectionId,
-            }
-        });
-       
-        var result = indexerCommonResult?.Data;
-        if (result == null)
-        {
-            return CommonConstant.IntNegativeOne;
-        }
-        return result.Data.SupplyTotal;
-    }
 }

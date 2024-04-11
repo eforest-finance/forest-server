@@ -21,7 +21,4 @@ public interface INFTCollectionProvider
 
     Task<IndexerNFTCollectionTrade> GetNFTCollectionTradeAsync(string chainId, string collectionId,
         long beginUtcStamp, long endUtcStamp);
-    
-    Task<long> GetCollectionItemSupplyTotalAsync(string chainId, string collectionSymbol);
-
 }
