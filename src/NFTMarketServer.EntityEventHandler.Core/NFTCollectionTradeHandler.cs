@@ -99,13 +99,9 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
 
     private async Task SaveCurrentHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal)
     {
-        var nowRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(id);
-        if (nowRecord == null)
-        {
-            var beginUtcStamp = currentOrdinal;
-            var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
-            await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId, id);
-        }
+        var beginUtcStamp = currentOrdinal;
+        var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
+        await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId, id);
     }
     
     private async Task SavePreHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal)
