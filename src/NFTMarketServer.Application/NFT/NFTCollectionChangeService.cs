@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using MassTransit;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Basic;
+using NFTMarketServer.Common;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using Orleans.Runtime;
 using Volo.Abp.Caching;
+using Volo.Abp.EventBus.Distributed;
 
 namespace NFTMarketServer.NFT;
 
@@ -21,24 +23,24 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
     private const string CachekeyPreifix = "NFTCollectionChange";
     private readonly ILogger<NFTCollectionChangeService> _logger;
     private readonly INFTCollectionProvider _nftCollectionProvider;
-    private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
     private readonly IDistributedCache<List<string>> _distributedCache;
     private const int HeightExpireMinutes = 5;
     private readonly INFTCollectionProviderAdapter _nftCollectionProviderAdapter;
+    private readonly IDistributedEventBus _distributedEventBus;
 
     public NFTCollectionChangeService(ILogger<NFTCollectionChangeService> logger,
         INFTCollectionProvider nftCollectionProvider,
         IDistributedCache<List<string>> distributedCache,
         INFTCollectionProviderAdapter nftCollectionProviderAdapter,
-        INFTCollectionExtensionProvider nftCollectionExtensionProvider)
+        IDistributedEventBus distributedEventBus)
     {
         _logger = logger;
         _nftCollectionProvider = nftCollectionProvider;
-        _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
         _distributedCache = distributedCache;
         
         _nftCollectionProvider = nftCollectionProvider;
         _nftCollectionProviderAdapter = nftCollectionProviderAdapter;
+        _distributedEventBus = distributedEventBus;
     }
 
     public async Task<long> HandleItemsChangesAsync(string chainId, List<IndexerNFTCollectionChange> collectionChanges)
@@ -139,5 +141,28 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
         }
 
         return blockHeight;
+    }
+
+    public async Task HandleCurrentInfoInitAsync(List<NFTCollectionExtensionIndex> collectionList)
+    {
+        foreach (var collection in collectionList)
+        {
+            if (collection.ChainId.Equals(CommonConstant.MainChainId))
+            {
+                continue;
+            }
+            var collectionId = collection.Id;
+            var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
+            var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
+            var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
+            await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
+            {
+                Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId, utcHourStartStr),
+                CollectionId = collectionId,
+                ChainId = collection.ChainId,
+                CurrentOrdinal = utcHourStartTimestamp,
+                CurrentOrdinalStr = utcHourStartStr
+            });
+        }
     }
 }

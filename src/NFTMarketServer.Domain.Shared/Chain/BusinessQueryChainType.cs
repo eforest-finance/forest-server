@@ -6,6 +6,7 @@ public enum BusinessQueryChainType
     SymbolBid,
     TsmSeedIcon,
     CollectionExtenstion,
+    CollectionExtenstionCurrentInit,
     CollectionPrice,
     TsmSeedSymbolMainChain,
     TsmSeedSymbolSideChain,
@@ -23,5 +24,5 @@ public enum BusinessQueryChainType
     ExpiredListingNftHandle,
     NftListingChangeNoMainChain,
     NftOfferSync,
-    InscriptionCrossChain
+    InscriptionCrossChain,
 }

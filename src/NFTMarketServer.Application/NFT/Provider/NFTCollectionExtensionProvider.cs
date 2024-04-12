@@ -127,6 +127,15 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
         return tuple;
     }
 
+    public async Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionPageAsync(int skipCount, int limit)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTCollectionExtensionIndex>, QueryContainer>>();
+        QueryContainer Filter(QueryContainerDescriptor<NFTCollectionExtensionIndex> f) =>
+            f.Bool(b => b.Must(mustQuery));
+        var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter, skip: skipCount, limit: limit);
+        return tuple;
+    }
+
     private Expression<Func<NFTCollectionExtensionIndex, object>> GetSortingExpression(string sortBy,DateRangeType dateRangeType)
     {
         if (sortBy.IsNullOrEmpty())
