@@ -107,7 +107,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
     private async Task SavePreHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal)
     {
         var preHourTimestamp = currentOrdinal;
-        for (var i = 1; i <= 24 * 14; i++)
+        for (var i = 1; i <= 1; i++)
         {
             preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
             var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
