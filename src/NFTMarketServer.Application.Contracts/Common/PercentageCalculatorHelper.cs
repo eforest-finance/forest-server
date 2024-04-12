@@ -15,10 +15,13 @@ public static class PercentageCalculatorHelper
         {
             denominator = 0;
         }
-        if (denominator == 0 || denominator == -1)
-            return 101m;
 
-        var percentage = numerator / denominator;
+        if (denominator == 0)
+        {
+            return 101m;
+        }
+
+        var percentage = (numerator - denominator) / denominator;
         return Math.Round(percentage, 4);
     }
 

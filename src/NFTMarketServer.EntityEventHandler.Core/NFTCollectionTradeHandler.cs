@@ -74,8 +74,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             await BuildCurrentWeekTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
             await BuildPreWeekTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
             nftCollectionExtensionIndex.CurrentWeekVolumeTotalChange = PercentageCalculatorHelper.CalculatePercentage(
-                nftCollectionExtensionIndex.CurrentWeekVolumeTotal -
-                nftCollectionExtensionIndex.PreviousWeekVolumeTotal,
+                nftCollectionExtensionIndex.CurrentWeekVolumeTotal,
                 nftCollectionExtensionIndex.PreviousWeekVolumeTotal);
 
             var collectionItemSupplyTotal = await _nftInfoNewSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId,collectionId);
@@ -130,7 +129,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
     {
         await BuildCurrentDayTradeInfoAsync(currentOrdinal, collectionId, nftCollectionExtensionIndex);
         await BuildPreDayTradeInfoAsync(currentOrdinal, collectionId, nftCollectionExtensionIndex);
-        nftCollectionExtensionIndex.CurrentDayVolumeTotalChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.CurrentDayVolumeTotal - nftCollectionExtensionIndex.PreviousDayVolumeTotal,nftCollectionExtensionIndex.PreviousDayVolumeTotal);
+        nftCollectionExtensionIndex.CurrentDayVolumeTotalChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.CurrentDayVolumeTotal,nftCollectionExtensionIndex.PreviousDayVolumeTotal);
     }
     private async Task BuildCurrentDayTradeInfoAsync(long currentOrdinal, string collectionId,
         NFTCollectionExtensionIndex nftCollectionExtensionIndex)
@@ -197,7 +196,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         {
             nftCollectionExtensionIndex.PreviousDayFloorPrice = preDayRecord.FloorPrice;
         }
-        nftCollectionExtensionIndex.CurrentDayFloorChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice - nftCollectionExtensionIndex.PreviousDayFloorPrice,nftCollectionExtensionIndex.PreviousDayFloorPrice);
+        nftCollectionExtensionIndex.CurrentDayFloorChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice,nftCollectionExtensionIndex.PreviousDayFloorPrice);
 
     }
     
@@ -210,7 +209,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         {
             nftCollectionExtensionIndex.PreviousWeekFloorPrice = preWeekRecord.FloorPrice;
         }
-        nftCollectionExtensionIndex.CurrentWeekFloorChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice - nftCollectionExtensionIndex.PreviousWeekFloorPrice,nftCollectionExtensionIndex.PreviousWeekFloorPrice);
+        nftCollectionExtensionIndex.CurrentWeekFloorChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice,nftCollectionExtensionIndex.PreviousWeekFloorPrice);
     }
 
     private async Task<HourlyCollectionTradeRecordIndex> SaveHourlyCollectionTradeRecordIndexAsync(long beginUtcStamp,long endUtcStamp,string chainId,string collectionId,string id)
