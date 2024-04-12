@@ -44,14 +44,16 @@ public class NFTCollectionExtensionHandler : IDistributedEventHandler<NFTCollect
             _logger.LogDebug("nftCollectionExtension information add or update success: {NftCollectionExtensionIndex}",
                 JsonConvert.SerializeObject(nftCollectionExtensionIndex));
 
+            var collectionId = eventData.Id;
+            var chainId = eventData.ChainId;
             var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
             var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
             var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
             await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
             {
-                Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(eventData.Id, utcHourStartStr),
-                CollectionId = eventData.Id,
-                ChainId = eventData.ChainId,
+                Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId, utcHourStartStr),
+                CollectionId = collectionId,
+                ChainId = chainId,
                 CurrentOrdinal = utcHourStartTimestamp,
                 CurrentOrdinalStr = utcHourStartStr
             });

@@ -7,10 +7,13 @@ using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
+using NFTMarketServer.Common;
+using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
 using Orleans.Runtime;
 using Volo.Abp.Caching;
+using Volo.Abp.EventBus.Distributed;
 
 namespace NFTMarketServer.NFT;
 
@@ -22,13 +25,13 @@ public class NftInfoNewRecentSyncDataService : ScheduleSyncDataService
     private readonly IChainAppService _chainAppService;
     private const int HeightExpireMinutes = 5;
     private readonly IDistributedCache<List<string>> _distributedCache;
-    private readonly INFTTraitProvider _inftTraitProvider;
+    private readonly IDistributedEventBus _distributedEventBus;
 
     public NftInfoNewRecentSyncDataService(ILogger<NftInfoNewRecentSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         INFTInfoAppService nftInfoAppService,
         IDistributedCache<List<string>> distributedCache,
-        INFTTraitProvider inftTraitProvider,
+        IDistributedEventBus distributedEventBus, 
         IChainAppService chainAppService)
         : base(logger, graphQlProvider, chainAppService)
     {
@@ -37,7 +40,7 @@ public class NftInfoNewRecentSyncDataService : ScheduleSyncDataService
         _nftInfoAppService = nftInfoAppService;
         _chainAppService = chainAppService;
         _distributedCache = distributedCache;
-        _inftTraitProvider = inftTraitProvider;
+        _distributedEventBus = distributedEventBus;
     }
 
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
@@ -73,6 +76,23 @@ public class NftInfoNewRecentSyncDataService : ScheduleSyncDataService
 
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);
             await _nftInfoAppService.AddOrUpdateNftInfoNewAsync(nftInfo, nftInfo.Id, chainId);
+
+            if (chainId.Equals(CommonConstant.MainChainId))
+            {
+                continue;
+            }
+            var collectionId = nftInfo.CollectionId;
+            var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
+            var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
+            var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
+            await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
+            {
+                Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId, utcHourStartStr),
+                CollectionId = collectionId,
+                ChainId = chainId,
+                CurrentOrdinal = utcHourStartTimestamp,
+                CurrentOrdinalStr = utcHourStartStr
+            });
         }
 
         if (blockHeight > 0)
