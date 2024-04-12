@@ -120,6 +120,23 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
                     FloorPrice = collectionPrice.floorPrice
                 };
                 await _nftCollectionProviderAdapter.AddOrUpdateNftCollectionExtensionAsync(dto);
+
+                if (chainId.Equals(CommonConstant.MainChainId))
+                {
+                    continue;
+                }
+
+                var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
+                var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
+                var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
+                await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
+                {
+                    Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId, utcHourStartStr),
+                    CollectionId = collectionId,
+                    ChainId = chainId,
+                    CurrentOrdinal = utcHourStartTimestamp,
+                    CurrentOrdinalStr = utcHourStartStr
+                });
             }
 
             if (changeFlag)
