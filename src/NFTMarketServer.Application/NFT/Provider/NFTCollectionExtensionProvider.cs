@@ -140,15 +140,7 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
     {
         if (sortBy.IsNullOrEmpty())
         {
-            if (dateRangeType == DateRangeType.byday)
-            {
-                return o => o.CurrentDayVolumeTotal;
-            }
-            else
-            {
-                return o => o.CurrentWeekVolumeTotal;
-            }
-            
+            return o => o.CreateTime;
         }
 
         if (SortingExpressions.TryGetValue(sortBy, out var expression))
