@@ -7,11 +7,14 @@ using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Nest;
 using Newtonsoft.Json;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
+using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
+using NFTMarketServer.Seed;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
@@ -22,27 +25,24 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
 {
     private readonly INESTRepository<NFTCollectionExtensionIndex, string> _nftCollectionExtensionRepository;
     private readonly INESTRepository<HourlyCollectionTradeRecordIndex, string> _hourlyCollectionTradeRecordRepository;
-    private readonly IObjectMapper _objectMapper;
     private readonly ILogger<NFTCollectionTradeHandler> _logger;
-    private readonly IGraphQLProvider _graphQlProvider;
     private readonly INFTCollectionProvider _collectionProvider;
     private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
+    private readonly ISeedAppService _seedAppService;
 
     public NFTCollectionTradeHandler(
         INESTRepository<NFTCollectionExtensionIndex, string> nftCollectionExtensionRepository,
         INESTRepository<HourlyCollectionTradeRecordIndex, string> hourlyCollectionTradeRecordRepository,
-        IObjectMapper objectMapper,
-        IGraphQLProvider graphQlProvider,
         INFTCollectionProvider collectionProvider,
         INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
+        ISeedAppService seedAppService,
         ILogger<NFTCollectionTradeHandler> logger)
     {
         _nftCollectionExtensionRepository = nftCollectionExtensionRepository;
         _hourlyCollectionTradeRecordRepository = hourlyCollectionTradeRecordRepository;
-        _objectMapper = objectMapper;
-        _graphQlProvider = graphQlProvider;
         _collectionProvider = collectionProvider;
         _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
+        _seedAppService = seedAppService;
         _logger = logger;
     }
 
@@ -76,9 +76,17 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentWeekVolumeTotalChange = PercentageCalculatorHelper.CalculatePercentage(
                 nftCollectionExtensionIndex.CurrentWeekVolumeTotal,
                 nftCollectionExtensionIndex.PreviousWeekVolumeTotal);
-
-            var collectionItemSupplyTotal = await _nftInfoNewSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId,collectionId);
-            nftCollectionExtensionIndex.SupplyTotal = collectionItemSupplyTotal;
+            if (nftCollectionExtensionIndex.NFTSymbol.Equals(SymbolHelper.SEED_COLLECTION))
+            {
+                nftCollectionExtensionIndex.SupplyTotal =
+                    await _seedAppService.CalCollectionItemSupplyTotalAsync(chainId);
+            }
+            else
+            {
+                nftCollectionExtensionIndex.SupplyTotal =
+                    await _nftInfoNewSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId, collectionId);
+            }
+            
             await _nftCollectionExtensionRepository.UpdateAsync(nftCollectionExtensionIndex);
         }
         catch (Exception ex)

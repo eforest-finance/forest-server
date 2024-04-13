@@ -441,6 +441,37 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
     }
 
+    public async Task<long> CalCollectionItemSupplyTotalAsync(string chainId)
+    {
+        var skipCount = 0;
+        var total = 0l;
+        while (true)
+        {
+            var result = await CalCollectionItemSupplyTotalAsync(chainId, skipCount);
+            if (result == null || result.Item2.IsNullOrEmpty() || result.Item2.Count == 0)
+            {
+                break;
+            }
+
+            total += result.Item2.Sum(item => FTHelper.GetIntegerDivision(item.Supply, item.Decimals));
+            skipCount += result.Item2.Count;
+        }
+
+        return total;
+    }
+    
+    private async Task<Tuple<long,List<SeedSymbolIndex>>> CalCollectionItemSupplyTotalAsync(string chainId, int skipCount)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.ChainId).Value(chainId)));
+        QueryContainer Filter(QueryContainerDescriptor<SeedSymbolIndex> f)
+        {
+            return f.Bool(b => b.Must(mustQuery));
+        }
+        var result = await _seedSymbolIndexRepository.GetListAsync(Filter, sortType :SortOrder.Ascending, sortExp: o => o.Id,skip: skipCount);
+        return result;
+    }
+
     private async Task<SeedDto> ConvertSeedDtoAsync(SeedInfoDto seedInfoDto)
     {
         var seedDto = _objectMapper.Map<SeedInfoDto, SeedDto>(seedInfoDto);

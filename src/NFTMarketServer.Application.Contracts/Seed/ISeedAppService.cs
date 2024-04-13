@@ -32,4 +32,6 @@ public interface ISeedAppService
     Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol);
     Task UpdateSeedRankingWeightAsync(List<SeedRankingWeightDto> input);
     Task<PagedResultDto<SeedRankingWeightDto>> GetSeedRankingWeightInfosAsync();
+
+    Task<long> CalCollectionItemSupplyTotalAsync(string chainId);
 }
