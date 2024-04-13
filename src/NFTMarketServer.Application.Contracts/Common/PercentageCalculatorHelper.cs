@@ -16,6 +16,11 @@ public static class PercentageCalculatorHelper
             denominator = 0;
         }
 
+        if (numerator == 0)
+        {
+            return 0;
+        }
+
         if (denominator == 0)
         {
             return 101m;
