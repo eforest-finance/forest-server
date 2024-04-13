@@ -21,8 +21,8 @@ public static class PercentageCalculatorHelper
             return 101m;
         }
         
-        var percentage = (numerator - denominator / denominator) * 10000m;
-        var truncatedPercentage = decimal.Round(percentage, 0);
-        return decimal.Parse(truncatedPercentage.ToString("0.0000"));
+        var result = (numerator - denominator) / denominator;
+        return Math.Truncate(result * 10000) / 10000;
     }
+    
 }
