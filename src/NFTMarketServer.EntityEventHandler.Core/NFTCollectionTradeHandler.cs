@@ -28,21 +28,21 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
     private readonly ILogger<NFTCollectionTradeHandler> _logger;
     private readonly INFTCollectionProvider _collectionProvider;
     private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
-    private readonly ISeedAppService _seedAppService;
+    private readonly ISeedSymbolSyncedProvider _seedSymbolSyncedProvider;
 
     public NFTCollectionTradeHandler(
         INESTRepository<NFTCollectionExtensionIndex, string> nftCollectionExtensionRepository,
         INESTRepository<HourlyCollectionTradeRecordIndex, string> hourlyCollectionTradeRecordRepository,
         INFTCollectionProvider collectionProvider,
         INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
-        ISeedAppService seedAppService,
+        ISeedSymbolSyncedProvider seedSymbolSyncedProvider,
         ILogger<NFTCollectionTradeHandler> logger)
     {
         _nftCollectionExtensionRepository = nftCollectionExtensionRepository;
         _hourlyCollectionTradeRecordRepository = hourlyCollectionTradeRecordRepository;
         _collectionProvider = collectionProvider;
         _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
-        _seedAppService = seedAppService;
+        _seedSymbolSyncedProvider = seedSymbolSyncedProvider;
         _logger = logger;
     }
 
@@ -79,7 +79,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             if (nftCollectionExtensionIndex.NFTSymbol.Equals(SymbolHelper.SEED_COLLECTION))
             {
                 nftCollectionExtensionIndex.SupplyTotal =
-                    await _seedAppService.CalCollectionItemSupplyTotalAsync(chainId);
+                    await _seedSymbolSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId);
             }
             else
             {
