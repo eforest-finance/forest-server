@@ -16,7 +16,7 @@ public static class PercentageCalculatorHelper
             denominator = 0;
         }
 
-        if (numerator == 0)
+        if (numerator == 0 && denominator == 0)
         {
             return 0;
         }

@@ -155,7 +155,6 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
     private async Task SavePreHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal)
     {
         var preHourTimestamp = currentOrdinal;
-        var tradeRecordList = new List<HourlyCollectionTradeRecordIndex>();
         for (var i = 1; i <= 24 * 14; i++)
         {
             preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
@@ -171,19 +170,9 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
             var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId,
                 temId);
-            tradeRecordList.Add(record);
-            if (i % 24 == 0)
-            {
-                await _hourlyCollectionTradeRecordRepository.BulkAddOrUpdateAsync(tradeRecordList);
-                tradeRecordList = new List<HourlyCollectionTradeRecordIndex>();
-            }
+            await _hourlyCollectionTradeRecordRepository.AddAsync(record);
         }
 
-        if (!tradeRecordList.IsNullOrEmpty())
-        {
-            await _hourlyCollectionTradeRecordRepository.BulkAddOrUpdateAsync(tradeRecordList);
-        }
-        
     }
 
     private async Task<bool> BuildDayTradeInfoAsync(long currentOrdinal, string collectionId,
