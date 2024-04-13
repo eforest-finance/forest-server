@@ -20,13 +20,9 @@ public static class PercentageCalculatorHelper
         {
             return 101m;
         }
-
-        var percentage = (numerator - denominator) / denominator;
-        return Math.Round(percentage, 4);
-    }
-
-    public static decimal CalculatePercentage(long numerator, long denominator)
-    {
-        return CalculatePercentage(numerator, denominator);
+        
+        var percentage = (numerator - denominator / denominator) * 10000m;
+        var truncatedPercentage = decimal.Round(percentage, 0);
+        return decimal.Parse(truncatedPercentage.ToString("0.0000"));
     }
 }
