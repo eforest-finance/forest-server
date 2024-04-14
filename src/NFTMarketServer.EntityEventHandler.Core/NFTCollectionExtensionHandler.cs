@@ -36,9 +36,18 @@ public class NFTCollectionExtensionHandler : IDistributedEventHandler<NFTCollect
     {
         try
         {
-            var nftCollectionExtensionIndex =
-                _objectMapper.Map<NFTCollectionExtraEto, NFTCollectionExtensionIndex>(eventData);
-
+            var nftCollectionExtensionIndex = new NFTCollectionExtensionIndex();
+            var originInfo = await _nftCollectionExtensionRepository.GetAsync(eventData.Id);
+            if (originInfo != null)
+            {
+                nftCollectionExtensionIndex = _objectMapper.Map(eventData,originInfo);
+            }
+            else
+            {
+                nftCollectionExtensionIndex =
+                    _objectMapper.Map<NFTCollectionExtraEto, NFTCollectionExtensionIndex>(eventData);
+            }
+            
             await _nftCollectionExtensionRepository.AddOrUpdateAsync(nftCollectionExtensionIndex);
 
             _logger.LogDebug("nftCollectionExtension information add or update success: {NftCollectionExtensionIndex}",
