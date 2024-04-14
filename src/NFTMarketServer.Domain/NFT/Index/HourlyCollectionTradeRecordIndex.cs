@@ -10,6 +10,10 @@ public class HourlyCollectionTradeRecordIndex : NFTMarketEntity<string>, IIndexB
     [Keyword] public override string Id { get; set; }
     [Keyword] public string CollectionId { get; set; }
     public long Ordinal { get; set; }
+
+    public long BeginUtcStamp { get; set; }
+    
+    public long EndUtcStamp { get; set; }
     public string OrdinalStr { get; set; }
     public DateTime AttributionTime { get; set; }
     

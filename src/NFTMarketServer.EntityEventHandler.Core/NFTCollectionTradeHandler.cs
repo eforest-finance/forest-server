@@ -161,9 +161,16 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
         var result = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId, id);
         
-        if (nftCollectionExtensionIndex.FloorPrice != result.FloorPrice)
+        await _hourlyCollectionTradeRecordRepository.AddOrUpdateAsync(result);
+        
+        if (nftCollectionExtensionIndex.FloorPrice != result.FloorPrice || 
+            nftCollectionExtensionIndex.CurrentDaySalesTotal != result.SalesTotal ||
+            nftCollectionExtensionIndex.CurrentDayVolumeTotal != result.VolumeTotal
+            )
         {
             nftCollectionExtensionIndex.FloorPrice = result.FloorPrice;
+            nftCollectionExtensionIndex.CurrentDaySalesTotal = result.SalesTotal;
+            nftCollectionExtensionIndex.CurrentDayVolumeTotal = result.VolumeTotal;
             return true;
         }
 
@@ -372,26 +379,33 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var attributionTime = TimeHelper.FromUnixTimestampSeconds(beginUtcStamp);
         var result = await _collectionProvider.GetNFTCollectionTradeAsync(
             chainId, collectionId, beginUtcStamp, endUtcStamp);
-        var hourlyCollectionTradeRecordIndex = new HourlyCollectionTradeRecordIndex
-        {
-            Id = id,
-            AttributionTime = attributionTime,
-            CollectionId = collectionId,
-            CreateTime = TimeHelper.GetUtcNow(),
-            Ordinal = beginUtcStamp,
-            OrdinalStr = TimeHelper.GetDateTimeFormatted(attributionTime),
-            UpdateTime = TimeHelper.GetUtcNow(),
+        
+        var hourlyCollectionTradeRecordIndex = await _hourlyCollectionTradeRecordRepository.GetAsync(id);
 
-            FloorPrice = -1,
-            VolumeTotal = 0,
-            SalesTotal = 0
-        };
-        if (result != null)
+        if (hourlyCollectionTradeRecordIndex == null)
         {
-            hourlyCollectionTradeRecordIndex.FloorPrice = result.FloorPrice;
-            hourlyCollectionTradeRecordIndex.VolumeTotal = result.VolumeTotal;
-            hourlyCollectionTradeRecordIndex.SalesTotal = result.SalesTotal;
+            hourlyCollectionTradeRecordIndex = new HourlyCollectionTradeRecordIndex
+            {
+                Id = id,
+                AttributionTime = attributionTime,
+                CollectionId = collectionId,
+                CreateTime = TimeHelper.GetUtcNow(),
+                Ordinal = beginUtcStamp,
+                BeginUtcStamp = beginUtcStamp,
+                EndUtcStamp = endUtcStamp,
+                OrdinalStr = TimeHelper.GetDateTimeFormatted(attributionTime),
+                UpdateTime = TimeHelper.GetUtcNow(),
+
+                FloorPrice = -1,
+                VolumeTotal = 0,
+                SalesTotal = 0
+            };
         }
+        
+        hourlyCollectionTradeRecordIndex.FloorPrice = result.FloorPrice;
+        hourlyCollectionTradeRecordIndex.VolumeTotal = result.VolumeTotal;
+        hourlyCollectionTradeRecordIndex.SalesTotal = result.SalesTotal;
+
         return hourlyCollectionTradeRecordIndex;
 
     }

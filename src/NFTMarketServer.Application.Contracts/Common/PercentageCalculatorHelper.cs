@@ -4,6 +4,9 @@ namespace NFTMarketServer.Common;
 
 public static class PercentageCalculatorHelper
 {
+
+    private const int DecimalPlaces = 10000;
+    
     public static decimal CalculatePercentage(decimal numerator, decimal denominator)
     {
         if (numerator == -1)
@@ -27,7 +30,7 @@ public static class PercentageCalculatorHelper
         }
         
         var result = (numerator - denominator) / denominator;
-        return Math.Truncate(result * 10000) / 10000;
+        return Math.Truncate(result * DecimalPlaces) / DecimalPlaces;
     }
     
 }
