@@ -1,24 +1,22 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nest;
 using Newtonsoft.Json;
-using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
-using NFTMarketServer.Provider;
-using NFTMarketServer.Seed;
+using Orleans.Runtime;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
-using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.EntityEventHandler.Core;
 
@@ -30,6 +28,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
     private readonly INFTCollectionProvider _collectionProvider;
     private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
     private readonly ISeedSymbolSyncedProvider _seedSymbolSyncedProvider;
+    private readonly IOptionsMonitor<CollectionTradeInfoOptions> _collectionTradeInfoOptions;
 
     public NFTCollectionTradeHandler(
         INESTRepository<NFTCollectionExtensionIndex, string> nftCollectionExtensionRepository,
@@ -37,6 +36,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         INFTCollectionProvider collectionProvider,
         INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
         ISeedSymbolSyncedProvider seedSymbolSyncedProvider,
+        IOptionsMonitor<CollectionTradeInfoOptions> collectionTradeInfoOptions,
         ILogger<NFTCollectionTradeHandler> logger)
     {
         _nftCollectionExtensionRepository = nftCollectionExtensionRepository;
@@ -44,6 +44,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         _collectionProvider = collectionProvider;
         _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
         _seedSymbolSyncedProvider = seedSymbolSyncedProvider;
+        _collectionTradeInfoOptions = collectionTradeInfoOptions;
         _logger = logger;
     }
 
@@ -52,13 +53,30 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            _logger.LogInformation("NFTCollectionTradeEto begin, eventData={A} ", JsonConvert.SerializeObject(eventData));
+            _logger.LogInformation("NFTCollectionTradeEto begin, eventData={A} ",
+                JsonConvert.SerializeObject(eventData));
+            var collectionId = eventData?.CollectionId;
+            if (collectionId.IsNullOrEmpty())
+            {
+                _logger.LogError("NFTCollectionTradeEto param is null. collectionId ={A} eventData={B}", collectionId,
+                    JsonConvert.SerializeObject(eventData));
+                return;
+            }
+
+            var collectionTradeInfoOptions = _collectionTradeInfoOptions?.CurrentValue;
+            if (collectionTradeInfoOptions != null && collectionTradeInfoOptions.IsGrayOn)
+            {
+                if (!collectionTradeInfoOptions.CollectionIdList.Contains(collectionId))
+                {
+                    _logger.Debug("NFTCollectionTradeEto Gray mode. not contain this   collectionId={A}",
+                        collectionId);
+                    return;
+                }
+            }
             
-            var collectionId = eventData.CollectionId;
             var chainId = eventData.ChainId;
             var id = eventData.Id;
             var currentOrdinal = eventData.CurrentOrdinal;
-
             var nftCollectionExtensionIndex = await _nftCollectionExtensionRepository.GetAsync(collectionId);
 
             if (nftCollectionExtensionIndex == null)
