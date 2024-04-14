@@ -24,7 +24,7 @@ public class HideCollectionInfoOptions
 
 public class CollectionTradeInfoOptions
 {
-    public bool GrayIsOn = false;
+    public bool GrayIsOn { get; set; } = false;
     public List<string> CollectionIdList { get; set; } = new List<string>();
 }
 
