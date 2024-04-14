@@ -64,7 +64,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             }
 
             var collectionTradeInfoOptions = _collectionTradeInfoOptions?.CurrentValue;
-            if (collectionTradeInfoOptions != null && collectionTradeInfoOptions.IsGrayOn)
+            if (collectionTradeInfoOptions != null && collectionTradeInfoOptions.GrayIsOn)
             {
                 if (!collectionTradeInfoOptions.CollectionIdList.Contains(collectionId))
                 {
