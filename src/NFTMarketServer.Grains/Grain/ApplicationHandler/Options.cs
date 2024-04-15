@@ -22,6 +22,12 @@ public class HideCollectionInfoOptions
     public List<string> HideCollectionInfoList { get; set; }
 }
 
+public class CollectionTradeInfoOptions
+{
+    public bool GrayIsOn { get; set; } = false;
+    public List<string> CollectionIdList { get; set; } = new List<string>();
+}
+
 public class ResetNFTSyncHeightExpireMinutesOptions
 {
     public int ResetNFTSyncHeightExpireMinutes { get; set; }

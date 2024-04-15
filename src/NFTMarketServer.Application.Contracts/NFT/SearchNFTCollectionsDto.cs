@@ -20,4 +20,11 @@ public class SearchNFTCollectionsDto : EntityDto<string>
     public decimal FloorPrice { get; set; } = -1;
     
     public string FloorPriceSymbol { get; set; }
+
+    public decimal VolumeTotal { get; set; } = 0;
+    public decimal VolumeTotalChange { get; set; } = 0;
+    public decimal FloorChange { get; set; } = 0;
+    public long SalesTotal { get; set; } = 0;
+    public long SupplyTotal { get; set; } = 0;
+
 }

@@ -18,6 +18,6 @@ public class SeedMainChainCreateSyncWorker : NFTMarketServerWorkBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.SeedMainChainCreateSync);
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.SeedMainChainCreateSync, GetResetBlockHeightFlag(), GetResetBlockHeight());
     }
 }

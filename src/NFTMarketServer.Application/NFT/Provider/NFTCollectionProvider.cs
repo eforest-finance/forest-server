@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
+using NFTMarketServer;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
@@ -270,6 +272,38 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
         if (result == null)
         {
             return new IndexerNFTCollectionPrice();
+        }
+        return result;
+    }
+    
+    public async Task<IndexerNFTCollectionTrade> GetNFTCollectionTradeAsync(string chainId, string collectionId,
+        long beginUtcStamp, long endUtcStamp)
+    {
+        var collectionSymbol = IdGenerateHelper.GetCollectionIdSymbol(collectionId);
+        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerNFTCollectionTrade>>(new GraphQLRequest
+        {
+            Query = @"
+			    query($chainId:String!,$collectionSymbol:String!,$collectionId:String!,$beginUtcStamp:Long!,$endUtcStamp:Long!) {
+                    data:calcNFTCollectionTrade(dto:{chainId:$chainId,collectionSymbol:$collectionSymbol,collectionId:$collectionId,beginUtcStamp:$beginUtcStamp,endUtcStamp:$endUtcStamp}){
+                        volumeTotal
+                        salesTotal
+                        floorPrice
+                    }
+                }",
+            Variables = new
+            {
+                chainId,
+                collectionSymbol,
+                collectionId,
+                beginUtcStamp,
+                endUtcStamp
+            }
+        });
+       
+        var result = indexerCommonResult?.Data;
+        if (result == null)
+        {
+            return new IndexerNFTCollectionTrade();
         }
         return result;
     }

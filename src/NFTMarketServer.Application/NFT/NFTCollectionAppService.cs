@@ -113,7 +113,7 @@ namespace NFTMarketServer.NFT
             var collectionDictionary = await _nftCollectionProvider.GetNFTCollectionIndexByIdsAsync(ids);
 
             var resultList = extensionList
-                .Select(index => MapForSearchNftCollectionsDto(index, collectionDictionary))
+                .Select(index => MapForSearchNftCollectionsDto(index, collectionDictionary, input.DateRangeType))
                 .ToList();
             return new PagedResultDto<SearchNFTCollectionsDto>
             {
@@ -206,10 +206,26 @@ namespace NFTMarketServer.NFT
         }
 
         private SearchNFTCollectionsDto MapForSearchNftCollectionsDto(NFTCollectionExtensionIndex index, 
-            Dictionary<string, IndexerNFTCollection> collectionInfos)
+            Dictionary<string, IndexerNFTCollection> collectionInfos, DateRangeType dateRangeType)
         {
             var searchNftCollectionsDto =
                 _objectMapper.Map<NFTCollectionExtensionIndex, SearchNFTCollectionsDto>(index);
+
+            if (DateRangeType.byday == dateRangeType)
+            {
+                searchNftCollectionsDto.FloorChange = index.CurrentDayFloorChange;
+                searchNftCollectionsDto.VolumeTotal = index.CurrentDayVolumeTotal;
+                searchNftCollectionsDto.VolumeTotalChange = index.CurrentDayVolumeTotalChange;
+                searchNftCollectionsDto.SalesTotal = index.CurrentDaySalesTotal;
+            }
+            else
+            {
+                searchNftCollectionsDto.FloorChange = index.CurrentWeekFloorChange;
+                searchNftCollectionsDto.VolumeTotal = index.CurrentWeekVolumeTotal;
+                searchNftCollectionsDto.VolumeTotalChange = index.CurrentWeekVolumeTotalChange;
+                searchNftCollectionsDto.SalesTotal = index.CurrentWeekSalesTotal;
+            }
+            
             
             if (collectionInfos != null && collectionInfos.TryGetValue(index.Id, out var info))
             { 

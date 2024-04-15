@@ -1,8 +1,11 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using Moq;
 using Newtonsoft.Json;
 using NFTMarketServer.Chains;
+using NFTMarketServer.Common;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,6 +25,15 @@ public class IChainAppServiceTest : NFTMarketServerApplicationTestBase
         services.AddSingleton(BuildMockIChainAppService());
     }
 
+    [Fact]
+    public async Task TestCalculatePercentage()
+    {
+        var a = new Decimal(0.01);
+        var b = new Decimal(101);
+        var result = PercentageCalculatorHelper.CalculatePercentage(a,b);
+        result.Equals(0.9999);
+    }
+    
     [Fact]
     public async Task GetListAsyncTest()
     {

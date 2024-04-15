@@ -12,4 +12,6 @@ public interface INFTCollectionChangeService
      Task<long> HandlePriceChangesAsync(string chainId, List<IndexerNFTCollectionPriceChange> collectionChanges,
          long lastEndHeight,
          string businessType);
+     
+     Task HandleCurrentInfoInitAsync(List<NFTCollectionExtensionIndex> collectionList);
 }

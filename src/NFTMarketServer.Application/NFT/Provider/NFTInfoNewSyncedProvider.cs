@@ -24,6 +24,8 @@ public interface INFTInfoNewSyncedProvider
     public Task<Tuple<long, List<IndexerNFTInfo>>> GetNFTBriefInfosAsync(GetCompositeNFTInfosInput dto);
     
     public Task<IndexerNFTInfos> GetNFTInfosUserProfileAsync(GetNFTInfosProfileInput dto);
+
+    public Task<long> CalCollectionItemSupplyTotalAsync(string chainId, string collectionId);
 }
 
 public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDependency
@@ -254,6 +256,40 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
          var count = await QueryRealCountAsync(mustQuery, mustNotQuery);
          indexerInfos.TotalRecordCount = count;
          return indexerInfos;
+    }
+
+    public async Task<long> CalCollectionItemSupplyTotalAsync(string chainId, string collectionId)
+    {
+        var skipCount = 0;
+        var total = 0l;
+        while (true)
+        {
+            var result = await CalCollectionItemSupplyTotalAsync(chainId, collectionId, skipCount);
+            if (result == null || result.Item2.IsNullOrEmpty() || result.Item2.Count == 0)
+            {
+                break;
+            }
+
+            total += result.Item2.Sum(item => FTHelper.GetIntegerDivision(item.Supply, item.Decimals));
+            skipCount += result.Item2.Count;
+        }
+
+        return total;
+    }
+    
+    private async Task<Tuple<long,List<NFTInfoNewIndex>>> CalCollectionItemSupplyTotalAsync(string chainId, string collectionId, int skipCount)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(collectionId)));
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.ChainId).Value(chainId)));
+        mustQuery.Add(q =>
+            q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
+        QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
+        {
+            return f.Bool(b => b.Must(mustQuery));
+        }
+        var result = await _nftInfoNewIndexRepository.GetListAsync(Filter, sortType :SortOrder.Ascending, sortExp: o => o.Id,skip: skipCount);
+        return result;
     }
 
     private static void AddQueryForMinListingPrice(
