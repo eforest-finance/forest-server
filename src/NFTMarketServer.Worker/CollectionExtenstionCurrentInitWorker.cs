@@ -8,11 +8,11 @@ using Volo.Abp.Threading;
 
 namespace NFTMarketServer.Worker;
 
-public class ExpiredListingNftHandleWorker : NFTMarketServerWorkBase
+public class CollectionExtenstionCurrentInitWorker : NFTMarketServerWorkBase
 {
-    protected override BusinessQueryChainType BusinessType => BusinessQueryChainType.ExpiredListingNftHandle;
+    protected override BusinessQueryChainType BusinessType => BusinessQueryChainType.CollectionExtenstionCurrentInit;
 
-    public ExpiredListingNftHandleWorker(ILogger<ScheduleSyncDataContext> logger,
+    public CollectionExtenstionCurrentInitWorker(ILogger<ScheduleSyncDataContext> logger,
         AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
         IScheduleSyncDataContext scheduleSyncDataContext,
         IOptionsMonitor<WorkerOptions> optionsMonitor) :
@@ -20,6 +20,7 @@ public class ExpiredListingNftHandleWorker : NFTMarketServerWorkBase
     {
         // add others.
     }
+
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
         await _scheduleSyncDataContext.DealAsync(BusinessType, GetResetBlockHeightFlag(), GetResetBlockHeight());

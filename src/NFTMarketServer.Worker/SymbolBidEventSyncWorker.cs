@@ -23,7 +23,7 @@ public class SymbolBidEventSyncWorker : NFTMarketServerWorkBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.SymbolBid);
-        _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.SymbolAuction);
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.SymbolBid, GetResetBlockHeightFlag(), GetResetBlockHeight());
+        _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.SymbolAuction, GetResetBlockHeightFlag(), GetResetBlockHeight());
     }
 }

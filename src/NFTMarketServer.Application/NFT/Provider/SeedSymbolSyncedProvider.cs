@@ -20,6 +20,8 @@ public interface ISeedSymbolSyncedProvider
     public Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCompositeNFTInfosInput dto);
 
     public Task<IndexerSeedInfos> GetSeedInfosUserProfileAsync(GetNFTInfosProfileInput dto);
+    
+    public Task<long> CalCollectionItemSupplyTotalAsync(string chainId);
 }
 
 public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDependency
@@ -219,6 +221,13 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         AddPriceQuery(shouldQuery, dto.PriceLow, dto.PriceHigh, f => f.MinListingPrice, f => f.HasListingFlag);
         //add MaxAuctionPrice
         AddPriceQuery(shouldQuery, dto.PriceLow, dto.PriceHigh, f => f.MaxAuctionPrice, f => f.HasAuctionFlag);
+    }
+
+    public async Task<long> CalCollectionItemSupplyTotalAsync(string chainId)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.ChainId).Value(chainId)));
+        return await QueryRealCountAsync(mustQuery);
     }
 
     private static void AddPriceQuery(

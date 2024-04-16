@@ -44,6 +44,7 @@ public class NFTMarketServerEntityEventHandlerModule : AbpModule
         
         Configure<WorkerOptions>(configuration);
         Configure<SynchronizeSeedJobOptions>(configuration.GetSection("SynchronizeSeed"));
+        Configure<CollectionTradeInfoOptions>(configuration.GetSection("CollectionTradeInfo"));
 
         context.Services.AddHostedService<NFTMarketServerHostedService>();
         context.Services.AddSingleton<IClusterClient>(o =>

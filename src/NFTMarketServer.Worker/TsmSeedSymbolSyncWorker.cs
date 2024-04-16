@@ -23,7 +23,7 @@ public class TsmSeedSymbolSyncWorker: NFTMarketServerWorkBase
     
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.TsmSeedSymbolMainChain);
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.TsmSeedSymbolSideChain);
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.TsmSeedSymbolMainChain, GetResetBlockHeightFlag(), GetResetBlockHeight());
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.TsmSeedSymbolSideChain, GetResetBlockHeightFlag(), GetResetBlockHeight());
     }
 }
