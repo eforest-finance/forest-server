@@ -21,5 +21,6 @@ public class WorkerSetting
     public int TimePeriod { get; set; } = 3000;
 
     public bool OpenSwitch { get; set; } = true;
-
+    public bool ResetBlockHeightFlag { get; set; } = false;
+    public long ResetBlockHeight { get; set; } = 0;
 }

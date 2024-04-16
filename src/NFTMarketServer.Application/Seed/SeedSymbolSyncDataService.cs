@@ -7,9 +7,12 @@ using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
+using NFTMarketServer.Common;
+using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.Provider;
 using Orleans.Runtime;
 using Volo.Abp.Caching;
+using Volo.Abp.EventBus.Distributed;
 
 namespace NFTMarketServer.Seed;
 
@@ -22,12 +25,14 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
     private const int HeightExpireMinutes = 5;
     private readonly IDistributedCache<List<string>> _distributedCache;
     private readonly IDistributedCache<string> _distributedCacheForHeight;
+    private readonly IDistributedEventBus _distributedEventBus;
     
     public SeedSymbolSyncDataService(ILogger<SeedSymbolSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         ISeedAppService seedAppService,
         IDistributedCache<List<string>> distributedCache,
         IDistributedCache<string> distributedCacheForHeight,
+        IDistributedEventBus distributedEventBus,
         IChainAppService chainAppService)
         : base(logger, graphQlProvider, chainAppService)
     {
@@ -37,6 +42,7 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
         _chainAppService = chainAppService;
         _distributedCache = distributedCache;
         _distributedCacheForHeight = distributedCacheForHeight;
+        _distributedEventBus = distributedEventBus;
     }
 
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
@@ -92,6 +98,23 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
             }
             blockHeight = Math.Max(blockHeight, seedSymbol.BlockHeight);
             await _seedAppService.AddOrUpdateSeedSymbolAsync(seedSymbol);
+            if (chainId.Equals(CommonConstant.MainChainId))
+            {
+                continue;
+            }
+            var collectionId = NFTSymbolBasicConstants.SeedCollectionSymbol;
+            var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
+            var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
+            var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
+            await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
+            {
+                Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId, utcHourStartStr),
+                CollectionId = collectionId,
+                ChainId = chainId,
+                CurrentOrdinal = utcHourStartTimestamp,
+                CurrentOrdinalStr = utcHourStartStr
+            });
+            
         }
         if (blockHeight > 0)
         {

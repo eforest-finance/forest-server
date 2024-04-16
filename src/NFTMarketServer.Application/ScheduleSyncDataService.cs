@@ -23,7 +23,7 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
     }
 
 
-    public async Task DealDataAsync()
+    public async Task DealDataAsync(bool resetHeightFlag, long resetHeight)
     {
         var businessQueryChainType = GetBusinessType();
         var chainIds = await GetChainIdsAsync();
@@ -32,6 +32,15 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
         {
             try
             {
+                if (resetHeightFlag)
+                {
+                    await _graphQlProvider.SetLastEndHeightAsync(chainId, businessQueryChainType, resetHeight);
+                    _logger.LogInformation(
+                        "Reset blockHeight for businessType: {businessQueryChainType} chainId: {chainId} lastEndHeight: {BlockHeight}",
+                        businessQueryChainType, chainId, resetHeight);
+                    return;
+                }
+                
                 var lastEndHeight = await _graphQlProvider.GetLastEndHeightAsync(chainId, businessQueryChainType);
                 var newIndexHeight = await _graphQlProvider.GetIndexBlockHeightAsync(chainId);
                 _logger.LogInformation(

@@ -6,6 +6,7 @@ public enum BusinessQueryChainType
     SymbolBid,
     TsmSeedIcon,
     CollectionExtenstion,
+    CollectionExtenstionCurrentInit,
     CollectionPrice,
     TsmSeedSymbolMainChain,
     TsmSeedSymbolSideChain,

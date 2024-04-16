@@ -14,6 +14,8 @@ public abstract class NFTMarketServerWorkBase : AsyncPeriodicBackgroundWorkerBas
     protected readonly ILogger<ScheduleSyncDataContext> _logger;
     protected readonly IScheduleSyncDataContext _scheduleSyncDataContext;
     private const int DefaultPeriod = 60000;
+    private bool ResetBlockHeightFlag = false;
+    private long ResetBlockHeight = 0;
 
     protected NFTMarketServerWorkBase(ILogger<ScheduleSyncDataContext> logger,
         AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
@@ -26,11 +28,20 @@ public abstract class NFTMarketServerWorkBase : AsyncPeriodicBackgroundWorkerBas
         timer.Period = optionsMonitor.CurrentValue.GetWorkerSettings(BusinessType) != null ?
             optionsMonitor.CurrentValue.GetWorkerSettings(BusinessType).TimePeriod : DefaultPeriod;
         
+        ResetBlockHeightFlag = optionsMonitor.CurrentValue.GetWorkerSettings(BusinessType) != null ?
+            optionsMonitor.CurrentValue.GetWorkerSettings(BusinessType).ResetBlockHeightFlag : false;
+        
+        ResetBlockHeight = optionsMonitor.CurrentValue.GetWorkerSettings(BusinessType) != null ?
+            optionsMonitor.CurrentValue.GetWorkerSettings(BusinessType).ResetBlockHeight : 0;
+        
         //to change timer Period if the WorkerOptions has changed.
         optionsMonitor.OnChange((newOptions, _) =>
         {
             var workerSetting = newOptions.GetWorkerSettings(BusinessType);
             timer.Period = workerSetting.TimePeriod;
+            ResetBlockHeightFlag = workerSetting.ResetBlockHeightFlag;
+            ResetBlockHeight = workerSetting.ResetBlockHeight;
+
             if (workerSetting.OpenSwitch)
             {
                 timer.Start();
@@ -41,9 +52,19 @@ public abstract class NFTMarketServerWorkBase : AsyncPeriodicBackgroundWorkerBas
             }
 
             _logger.LogInformation(
-                "The workerSetting of Worker {BusinessType} has changed to Period = {Period} ms, OpenSwitch = {OpenSwitch}.",
-                BusinessType, timer.Period, workerSetting.OpenSwitch);
+                "The workerSetting of Worker {BusinessType} has changed to Period = {Period} ms, OpenSwitch = {OpenSwitch}.ResetBlockHeightFlag = {ResetBlockHeightFlag} - {ResetBlockHeightFlag2}. ResetBlockHeight = {ResetBlockHeight} - {ResetBlockHeight}",
+                BusinessType, timer.Period, workerSetting.OpenSwitch, workerSetting.ResetBlockHeightFlag,
+                ResetBlockHeightFlag, workerSetting.ResetBlockHeight, ResetBlockHeight);
         });
     }
+
+    protected bool GetResetBlockHeightFlag()
+    {
+        return ResetBlockHeightFlag;
+    }
     
+    protected long GetResetBlockHeight()
+    {
+        return ResetBlockHeight;
+    }
 }

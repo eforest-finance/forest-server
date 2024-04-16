@@ -12,4 +12,6 @@ public interface INFTCollectionExtensionProvider
     Task<NFTCollectionExtensionIndex> GetNFTCollectionExtensionAsync(string nftCollectionExtensionIndexId);
     
     Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionAsync(SearchNFTCollectionsInput input);
+    
+    Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionPageAsync(int skipCount,int limit);
 }

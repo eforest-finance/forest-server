@@ -23,8 +23,8 @@ public class SeedPriceRuleSyncWorker : NFTMarketServerWorkBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.RegularPriceRule);
-        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.UniquePriceRule);
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.RegularPriceRule, GetResetBlockHeightFlag(), GetResetBlockHeight());
+        await _scheduleSyncDataContext.DealAsync(BusinessQueryChainType.UniquePriceRule, GetResetBlockHeightFlag(), GetResetBlockHeight());
         await _seedPriceAppService.UpdateUniqueAllNoBurnSeedPriceAsync();
     }
 
