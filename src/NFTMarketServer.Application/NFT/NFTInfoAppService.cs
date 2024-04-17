@@ -1125,7 +1125,7 @@ namespace NFTMarketServer.NFT
                 ListingPriceCreateTime = nftInfoIndex.LatestListingTime,
                 OfferPrice = nftInfoIndex.OfferPrice,
                 LatestDealPrice = nftInfoIndex.LatestDealPrice,
-                OwnerCount = nftInfoIndex.OwnerCount,
+                OwnerCount = nftInfoIndex.AllOwnerCount,
                 Owner = nftInfoIndex.Owner
             };
         }
