@@ -253,7 +253,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
             var result = await _nftInfoNewIndexRepository.GetListAsync(Filter
                 ,skip: CommonConstant.IntZero,
                 limit: CommonConstant.IntOne,
-                sortType: SortOrder.Ascending, sortExp: o => o.ListingPrice);
+                sortType: SortOrder.Ascending, sortExp: o => o.LatestDealPrice);
             return result?.Item2?.FirstOrDefault();
         }
 
