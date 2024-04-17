@@ -889,6 +889,10 @@ namespace NFTMarketServer.NFT
             {
                 UpdateMinListingInfo(nftInfoNewIndex, listingDto.Items[CommonConstant.IntZero]);
             }
+            else
+            {
+                UpdateMinListingInfo(nftInfoNewIndex, null);
+            }
             
             
             var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoNewIndex.Id);
@@ -896,38 +900,89 @@ namespace NFTMarketServer.NFT
             {
                 UpdateMaxOfferInfo(nftInfoNewIndex, indexerNFTOffer);
             }
-            
+            else
+            {
+                UpdateMaxOfferInfo(nftInfoNewIndex, null);
+            }
+
             await _nftInfoNewIndexRepository.AddOrUpdateAsync(nftInfoNewIndex);
         } 
         
         private bool UpdateMinListingInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTListingInfo listingDto)
         {
-            var changeFlag = nftInfoIndex.ListingId != listingDto.Id;
-            nftInfoIndex.ListingId = listingDto.Id;
-            nftInfoIndex.ListingPrice = listingDto.Prices;
-            nftInfoIndex.ListingAddress = listingDto.Owner;
-            nftInfoIndex.ListingQuantity = listingDto.RealQuantity;
-            nftInfoIndex.ListingEndTime = listingDto.ExpireTime;
-            nftInfoIndex.LatestListingTime = listingDto.StartTime;
-            nftInfoIndex.ListingToken = _objectMapper.Map<IndexerTokenInfo, TokenInfoIndex>(listingDto.PurchaseToken);
-            nftInfoIndex.HasListingFlag = listingDto.Prices > CommonConstant.IntZero;
-            return changeFlag;
+
+            if (listingDto == null && nftInfoIndex.ListingId.IsNullOrEmpty())
+            { 
+                return false;
+            }
+
+            if (listingDto != null && listingDto.Id.Equals(nftInfoIndex.ListingId))
+            {
+                return false;
+            }
+            
+            if (listingDto != null)
+            {
+                nftInfoIndex.ListingId = listingDto.Id;
+                nftInfoIndex.ListingPrice = listingDto.Prices;
+                nftInfoIndex.ListingAddress = listingDto?.Owner;
+                nftInfoIndex.ListingQuantity = listingDto.RealQuantity;
+                nftInfoIndex.ListingEndTime = listingDto.ExpireTime;
+                nftInfoIndex.LatestListingTime = listingDto.StartTime;
+                nftInfoIndex.ListingToken =
+                    _objectMapper.Map<IndexerTokenInfo, TokenInfoIndex>(listingDto.PurchaseToken);
+                nftInfoIndex.HasListingFlag = listingDto.Prices > CommonConstant.IntZero;
+            }
+            else
+            {
+                nftInfoIndex.ListingId = null;
+                nftInfoIndex.ListingPrice = -1;
+                nftInfoIndex.ListingAddress = null;
+                nftInfoIndex.ListingQuantity = 0;
+                nftInfoIndex.ListingEndTime = DateTime.UtcNow;
+                nftInfoIndex.LatestListingTime = DateTime.UtcNow;
+                nftInfoIndex.ListingToken = null;
+                nftInfoIndex.HasListingFlag = false;
+            }
+
+            return true;
         }
         private bool UpdateMaxOfferInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTOffer indexerNFTOffer)
         {
-            var changeFlag = nftInfoIndex.MaxOfferId != indexerNFTOffer.Id;
-            nftInfoIndex.MaxOfferId = indexerNFTOffer.Id;
-            nftInfoIndex.MaxOfferPrice = indexerNFTOffer.Price;
-            nftInfoIndex.MaxOfferExpireTime = indexerNFTOffer.ExpireTime;
-            nftInfoIndex.OfferToken = new TokenInfoIndex
+            if (indexerNFTOffer == null && nftInfoIndex.MaxOfferId.IsNullOrEmpty())
             {
-                ChainId = indexerNFTOffer.PurchaseToken.ChainId,
-                Symbol = indexerNFTOffer.PurchaseToken.Symbol,
-                Decimals = Convert.ToInt32(indexerNFTOffer.PurchaseToken.Decimals),
-                Prices = indexerNFTOffer.Price
-            };
-            nftInfoIndex.HasOfferFlag = nftInfoIndex.MaxOfferPrice > CommonConstant.IntZero;
-            return changeFlag;
+                return false;
+            }
+
+            if (indexerNFTOffer != null && indexerNFTOffer.Id.Equals(nftInfoIndex.MaxOfferId))
+            {
+                return false;
+            }
+
+            if (indexerNFTOffer != null)
+            {
+                nftInfoIndex.MaxOfferId = indexerNFTOffer.Id;
+                nftInfoIndex.MaxOfferPrice = indexerNFTOffer.Price;
+                nftInfoIndex.MaxOfferExpireTime = indexerNFTOffer.ExpireTime;
+                nftInfoIndex.OfferToken = new TokenInfoIndex
+                {
+                    ChainId = indexerNFTOffer.PurchaseToken.ChainId,
+                    Symbol = indexerNFTOffer.PurchaseToken.Symbol,
+                    Decimals = Convert.ToInt32(indexerNFTOffer.PurchaseToken.Decimals),
+                    Prices = indexerNFTOffer.Price
+                };
+                nftInfoIndex.HasOfferFlag = nftInfoIndex.MaxOfferPrice > CommonConstant.IntZero;
+            }
+            else
+            {
+                nftInfoIndex.MaxOfferId = null;
+                nftInfoIndex.MaxOfferPrice = -1;
+                nftInfoIndex.MaxOfferExpireTime = DateTime.UtcNow;
+                nftInfoIndex.OfferToken = null;
+                nftInfoIndex.HasOfferFlag = false;
+            }
+            
+            return true;
         }
 
         public async Task<NFTForSaleDto> GetNFTForSaleAsync(GetNFTForSaleInput input)
