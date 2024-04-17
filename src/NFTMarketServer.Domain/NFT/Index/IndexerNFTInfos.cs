@@ -21,6 +21,8 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public string Issuer { get; set; }
     public string ProxyIssuerAddress { get; set; }
     public string Owner { get; set; }
+    
+    public string RealOwner { get; set; }
     public long AllOwnerCount { get; set; }
     public long Issued { get; set; }
     public string TokenName { get; set; }

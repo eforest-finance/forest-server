@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
 using Volo.Abp.Application.Dtos;
 
@@ -32,8 +31,8 @@ namespace NFTMarketServer.NFT
 
         public decimal LatestDealPrice  { get; set; }
 
-        public long OwnerCount  { get; set; }
+        public long AllOwnerCount  { get; set; }
 
-        public string Owner { get; set; }
+        public AccountDto RealOwner { get; set; }
     }
 }

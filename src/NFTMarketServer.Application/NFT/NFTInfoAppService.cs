@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
+using AElf.Client.Proto;
 using AElf.Indexing.Elasticsearch;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -70,6 +71,8 @@ namespace NFTMarketServer.NFT
 
         private readonly IOptionsMonitor<ChoiceNFTInfoNewFlagOptions>
             _choiceNFTInfoNewFlagOptionsMonitor;
+        
+        private readonly IUserBalanceProvider _userBalanceProvider;
 
         public NFTInfoAppService(
             ITokenAppService tokenAppService, IUserAppService userAppService,
@@ -94,6 +97,7 @@ namespace NFTMarketServer.NFT
             IGraphQLProvider graphQlProvider,
             IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> resetNFTSyncHeightExpireMinutesOptionsMonitor,
             INFTTraitProvider inftTraitProvider,
+            IUserBalanceProvider userBalanceProvider,
             IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
@@ -121,6 +125,7 @@ namespace NFTMarketServer.NFT
             _choiceNFTInfoNewFlagOptionsMonitor = choiceNFTInfoNewFlagOptionsMonitor;
             _graphQlProvider = graphQlProvider;
             _inftTraitProvider = inftTraitProvider;
+            _userBalanceProvider = userBalanceProvider;
             _bus = bus;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
@@ -894,7 +899,6 @@ namespace NFTMarketServer.NFT
                 UpdateMinListingInfo(nftInfoNewIndex, null);
             }
             
-            
             var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoNewIndex.Id);
             if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
             {
@@ -904,7 +908,14 @@ namespace NFTMarketServer.NFT
             {
                 UpdateMaxOfferInfo(nftInfoNewIndex, null);
             }
-
+            
+            var balanceInfo = await _userBalanceProvider.GetNFTBalanceInfoAsync(nftInfoNewIndex.Id);
+            if (balanceInfo != null)
+            {
+                nftInfoNewIndex.RealOwner = balanceInfo.Owner;
+                nftInfoNewIndex.AllOwnerCount = balanceInfo.OwnerCount;
+            }
+            
             await _nftInfoNewIndexRepository.AddOrUpdateAsync(nftInfoNewIndex);
         } 
         
@@ -1125,8 +1136,8 @@ namespace NFTMarketServer.NFT
                 ListingPriceCreateTime = nftInfoIndex.LatestListingTime,
                 OfferPrice = nftInfoIndex.OfferPrice,
                 LatestDealPrice = nftInfoIndex.LatestDealPrice,
-                OwnerCount = nftInfoIndex.AllOwnerCount,
-                Owner = nftInfoIndex.Owner
+                AllOwnerCount = nftInfoIndex.AllOwnerCount,
+                RealOwner = new AccountDto()
             };
         }
 
