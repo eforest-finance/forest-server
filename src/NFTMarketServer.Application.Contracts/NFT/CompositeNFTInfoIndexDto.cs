@@ -23,5 +23,17 @@ namespace NFTMarketServer.NFT
         public int Generation { get; set; } = -1;
         
         public List<MetadataDto> TraitPairsDictionary { get; set; }
+        
+        public decimal ListingPrice  { get; set; }
+
+        public DateTime? ListingPriceCreateTime { get; set; }
+
+        public decimal OfferPrice  { get; set; }
+
+        public decimal LatestDealPrice  { get; set; }
+
+        public long OwnerCount  { get; set; }
+
+        public string Owner { get; set; }
     }
 }

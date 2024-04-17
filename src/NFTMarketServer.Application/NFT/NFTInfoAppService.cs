@@ -1094,7 +1094,7 @@ namespace NFTMarketServer.NFT
                 //IssueChainId = seedSymbolIndex.IssueChainId,
                 IssueChainIdStr = ChainHelper.ConvertChainIdToBase58(seedSymbolIndex.IssueChainId),
                 //ChainId = ChainHelper.ConvertBase58ToChainId(seedSymbolIndex.ChainId),
-                ChainIdStr = seedSymbolIndex.ChainId
+                ChainIdStr = seedSymbolIndex.ChainId,
             };
         }
 
@@ -1120,7 +1120,13 @@ namespace NFTMarketServer.NFT
                 ChainIdStr = nftInfoIndex.ChainId,
                 TraitPairsDictionary = nftInfoIndex.TraitPairsDictionary
                     .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList(),
-                Generation = nftInfoIndex.Generation
+                Generation = nftInfoIndex.Generation,
+                ListingPrice = nftInfoIndex.ListingPrice,
+                ListingPriceCreateTime = nftInfoIndex.LatestListingTime,
+                OfferPrice = nftInfoIndex.OfferPrice,
+                LatestDealPrice = nftInfoIndex.LatestDealPrice,
+                OwnerCount = nftInfoIndex.OwnerCount,
+                Owner = nftInfoIndex.Owner
             };
         }
 
