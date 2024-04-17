@@ -80,7 +80,7 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     {
         if (HasListingFlag)
         {
-            return (NFTSymbolBasicConstants.BrifeInfoDescriptionPrice, MinListingPrice);
+            return (NFTSymbolBasicConstants.BrifeInfoDescriptionPrice, ListingPrice);
         }
         // HasOfferFlag is not very timely
         if (queryMaxOfferPrice > 0)

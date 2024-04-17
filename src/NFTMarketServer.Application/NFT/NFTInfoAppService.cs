@@ -925,6 +925,11 @@ namespace NFTMarketServer.NFT
             {
                 nftInfoIndex.ListingId = listingDto.Id;
                 nftInfoIndex.ListingPrice = listingDto.Prices;
+                
+                nftInfoIndex.MinListingId = listingDto.Id;
+                nftInfoIndex.MinListingPrice = listingDto.Prices;
+                nftInfoIndex.MinListingExpireTime = listingDto.ExpireTime;
+                
                 nftInfoIndex.ListingAddress = listingDto?.Owner;
                 nftInfoIndex.ListingQuantity = listingDto.RealQuantity;
                 nftInfoIndex.ListingEndTime = listingDto.ExpireTime;
@@ -937,6 +942,11 @@ namespace NFTMarketServer.NFT
             {
                 nftInfoIndex.ListingId = null;
                 nftInfoIndex.ListingPrice = -1;
+                
+                nftInfoIndex.MinListingId = null;
+                nftInfoIndex.MinListingPrice = -1;
+                nftInfoIndex.MinListingExpireTime = DateTime.UtcNow;
+                
                 nftInfoIndex.ListingAddress = null;
                 nftInfoIndex.ListingQuantity = 0;
                 nftInfoIndex.ListingEndTime = DateTime.UtcNow;
