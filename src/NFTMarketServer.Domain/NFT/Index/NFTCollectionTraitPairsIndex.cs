@@ -14,4 +14,6 @@ public class NFTCollectionTraitPairsIndex : NFTMarketEntity<string>, IIndexBuild
     [Keyword] public string FloorPriceNFTSymbol { get; set; }
     public decimal ItemFloorPrice { get; set; }
     public TokenInfoIndex FloorPriceToken { get; set; }
+    
+    public decimal ItemLatestDealPrice { get; set; }
 }

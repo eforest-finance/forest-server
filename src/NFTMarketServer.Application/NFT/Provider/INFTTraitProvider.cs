@@ -212,6 +212,50 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                 sortType: SortOrder.Ascending, sortExp: o => o.ListingPrice);
             return result?.Item2?.FirstOrDefault();
         }
+        
+        
+    public async Task<NFTInfoNewIndex> QueryLatestDealPriceNFTForNFTWithTraitPair(string key, string value,
+            string nftCollectionId)
+        {
+            var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(nftCollectionId)));
+            mustQuery.Add(q =>
+                q.Range(i => i.Field(f => f.Supply).GreaterThan(CommonConstant.IntZero)));
+            mustQuery.Add(q =>
+                q.Range(i => i.Field(f => f.LatestDealPrice).GreaterThan(CommonConstant.IntZero)));
+
+            var nestedQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
+            nestedQuery.Add(q => q
+                .Nested(n => n
+                    .Path(CommonConstant.ES_NFT_TraitPairsDictionary_Path)
+                    .Query(nq => nq
+                        .Bool(nb => nb
+                            .Must(nm => nm
+                                    .Match(m => m
+                                        .Field(f => f.TraitPairsDictionary.First().Key)
+                                        .Query(key)
+                                    ),
+                                nm => nm
+                                    .Match(m => m
+                                        .Field(f => f.TraitPairsDictionary.First().Value)
+                                        .Query(value)
+                                    )
+                            ))
+                    )
+                )
+            );
+
+            mustQuery.AddRange(nestedQuery);
+
+            QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
+                => f.Bool(b => b.Must(mustQuery));
+
+            var result = await _nftInfoNewIndexRepository.GetListAsync(Filter
+                ,skip: CommonConstant.IntZero,
+                limit: CommonConstant.IntOne,
+                sortType: SortOrder.Ascending, sortExp: o => o.ListingPrice);
+            return result?.Item2?.FirstOrDefault();
+        }
 
 
     public async Task CheckAndUpdateTraitInfo(NFTInfoNewIndex nftInfoNewIndex)
@@ -310,7 +354,8 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                     Decimals = CommonConstant.Coin_ELF_Decimals,
                     Symbol = CommonConstant.Coin_ELF
                 },
-                FloorPriceNFTSymbol = ""
+                FloorPriceNFTSymbol = "",
+                ItemLatestDealPrice = CommonConstant.DefaultValueNone
             };
         }
 
@@ -348,6 +393,16 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
             nftCollectionTraitPairsIndex.FloorPriceNFTSymbol = floorPriceNFT.Symbol;
             nftCollectionTraitPairsIndex.FloorPriceToken = floorPriceNFT.ListingToken;
             nftCollectionTraitPairsIndex.ItemFloorPrice = floorPriceNFT.ListingPrice;
+        }
+        
+        var latestDealPriceNFT = await QueryLatestDealPriceNFTForNFTWithTraitPair(trait.Key,
+            trait.Value,
+            nftInfoNewIndex.CollectionId);
+        
+        if (latestDealPriceNFT != null && nftCollectionTraitPairsIndex.ItemLatestDealPrice != latestDealPriceNFT.LatestDealPrice) 
+        {
+            changeFlag = true;
+            nftCollectionTraitPairsIndex.ItemLatestDealPrice = latestDealPriceNFT.LatestDealPrice;
         }
         
         if (changeFlag)
