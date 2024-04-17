@@ -910,9 +910,15 @@ namespace NFTMarketServer.NFT
         
         private bool UpdateMinListingInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTListingInfo listingDto)
         {
-
+            _logger.Debug("UpdateMinListingInfo nftInfoIndexId={A} listingDto={B}", nftInfoIndex.Id,
+                JsonConvert.SerializeObject(listingDto));
             if (listingDto == null && nftInfoIndex.ListingId.IsNullOrEmpty())
-            { 
+            {
+                if (nftInfoIndex.HasListingFlag)
+                {
+                    nftInfoIndex.HasListingFlag = false;
+                    return true;
+                }
                 return false;
             }
 
@@ -961,6 +967,7 @@ namespace NFTMarketServer.NFT
         {
             if (indexerNFTOffer == null && nftInfoIndex.MaxOfferId.IsNullOrEmpty())
             {
+                
                 return false;
             }
 
