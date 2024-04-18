@@ -25,6 +25,7 @@ public static class CommonConstant
     public const string ImageIpfsUrlPre = "https://ipfs.io/ipfs/";
     public const string ES_NFT_TraitPairsDictionary_Path = "traitPairsDictionary";
     public const string Graphql_Method = "getSyncNFTInfoRecord";
+    public const string GraphqlMethodGetSyncSeedSymbolRecord = "getSyncSeedSymbolRecord";
     
     public const char SymbolSeparator = '-';
     public const string CollectionSymbolSuffix = "0";

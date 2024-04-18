@@ -33,6 +33,11 @@ public class MockGraphQLProvider : IGraphQLProvider, ISingletonDependency
         throw new System.NotImplementedException();
     }
 
+    public Task<SeedSymbolIndex> GetSyncSeedSymbolRecordAsync(string nftInfoId, string chainId)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public Task<List<BidInfoDto>> GetSyncSymbolBidRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight)
     {
         throw new System.NotImplementedException();

@@ -8,13 +8,19 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Nest;
+using Newtonsoft.Json;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Common;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.Synchronize;
+using NFTMarketServer.Market;
 using NFTMarketServer.NFT;
+using NFTMarketServer.NFT.Index;
+using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Options;
+using NFTMarketServer.Provider;
 using NFTMarketServer.Seed.Dto;
 using NFTMarketServer.Seed.Index;
 using NFTMarketServer.Seed.Provider;
@@ -22,11 +28,13 @@ using NFTMarketServer.Synchronize.Eto;
 using NFTMarketServer.Synchronize.Provider;
 using NFTMarketServer.Tokens;
 using Orleans;
+using Orleans.Runtime;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Caching;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
+using TokenType = NFTMarketServer.Seed.Dto.TokenType;
 
 namespace NFTMarketServer.Seed;
 
@@ -49,8 +57,12 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private readonly INESTRepository<SeedPriceIndex, string> _seedPriceIndexRepository;
     private readonly INESTRepository<UniqueSeedPriceIndex, string> _uniqueSeedPriceIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
-
+    private readonly IGraphQLProvider _graphQlProvider;
     private readonly ITsmSeedProvider _tsmSeedProvider;
+    private readonly INFTListingProvider _nftListingProvider;
+    private readonly INFTOfferProvider _nftOfferProvider;
+    private readonly IUserBalanceProvider _userBalanceProvider;
+    private readonly INFTDealInfoProvider _dealInfoProvider;
     private const decimal MinMarkupDenominator = 10000;
     private const double ExpirationDays = 2;
 
@@ -63,6 +75,11 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         INESTRepository<UniqueSeedPriceIndex, string> uniqueSeedPriceIndexRepository,
         IOptionsMonitor<TransactionFeeOption> optionsMonitor,
         ITsmSeedProvider tsmSeedProvider, 
+        IGraphQLProvider graphQlProvider,
+        INFTListingProvider nftListingProvider,
+        INFTOfferProvider nftOfferProvider,
+        IUserBalanceProvider userBalanceProvider,
+        INFTDealInfoProvider dealInfoProvider,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
         IDistributedCache<PriceInfo> distributedCache)
     {
@@ -82,6 +99,11 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         _tsmSeedProvider = tsmSeedProvider;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
         _distributedCache = distributedCache;
+        _graphQlProvider = graphQlProvider;
+        _nftListingProvider = nftListingProvider;
+        _nftOfferProvider = nftOfferProvider;
+        _userBalanceProvider = userBalanceProvider;
+        _dealInfoProvider = dealInfoProvider;
     }
     
     public async Task<CreateSeedResultDto> CreateSeedAsync(CreateSeedDto input)
@@ -610,8 +632,206 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
     {
-        await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbol);
+        if (seedSymbol != null)
+        {
+            seedSymbol = await _graphQlProvider.GetSyncSeedSymbolRecordAsync(seedSymbol.Id, seedSymbol.ChainId);
+        }
+
+        if (seedSymbol == null)
+        {
+            _logger.LogError("AddOrUpdateSeedSymbolAsync fromNFTInfo and localNFTInfo are null!");
+            return;
+        }
+
+        await UpdateSeedSymbolOtherInfoAsync(seedSymbol);
     }
+    
+    private async Task UpdateSeedSymbolOtherInfoAsync(SeedSymbolIndex seedSymbolIndex)
+    {
+        var getNftListingsDto = new GetNFTListingsDto
+        {
+            ChainId = seedSymbolIndex.ChainId,
+            Symbol = seedSymbolIndex.Symbol,
+            SkipCount = CommonConstant.IntZero,
+            MaxResultCount = CommonConstant.IntOne
+        };
+        var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
+        if (listingDto != null && listingDto.TotalCount > CommonConstant.IntZero)
+        {
+            UpdateMinListingInfo(seedSymbolIndex, listingDto.Items[CommonConstant.IntZero]);
+        }
+        else
+        {
+            UpdateMinListingInfo(seedSymbolIndex, null);
+        }
+        
+        var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(seedSymbolIndex.Id);
+        if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
+        {
+            UpdateMaxOfferInfo(seedSymbolIndex, indexerNFTOffer);
+        }
+        else
+        {
+            UpdateMaxOfferInfo(seedSymbolIndex, null);
+        }
+
+        var getLatestDeal = new GetNftDealInfoDto()
+        {
+            Symbol = seedSymbolIndex.Symbol,
+            ChainId = seedSymbolIndex.ChainId,
+            SkipCount = CommonConstant.IntZero,
+            MaxResultCount = CommonConstant.IntOne
+        };
+        var indexerNFTDealInfos = await _dealInfoProvider.GetDealInfosAsync(getLatestDeal);
+        if (indexerNFTDealInfos != null && indexerNFTDealInfos.TotalRecordCount > CommonConstant.IntZero)
+        {
+            UpdatelatestDealInfo(seedSymbolIndex, indexerNFTDealInfos.IndexerNftDealList[CommonConstant.IntZero]);
+        }
+        else
+        {
+            UpdatelatestDealInfo(seedSymbolIndex, null);
+        }
+        
+        var balanceInfo = await _userBalanceProvider.GetNFTBalanceInfoAsync(seedSymbolIndex.Id);
+        if (balanceInfo != null)
+        {
+            seedSymbolIndex.RealOwner = balanceInfo.Owner;
+            seedSymbolIndex.AllOwnerCount = balanceInfo.OwnerCount;
+        }
+            
+        await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbolIndex);
+    } 
+    
+    private bool UpdateMinListingInfo(SeedSymbolIndex seedSymbolIndex, IndexerNFTListingInfo listingDto)
+        {
+            _logger.Debug("Seed UpdateMinListingInfo nftInfoIndexId={A} listingDto={B}", seedSymbolIndex.Id,
+                JsonConvert.SerializeObject(listingDto));
+            if (listingDto == null && seedSymbolIndex.ListingId.IsNullOrEmpty())
+            {
+                if (seedSymbolIndex.HasListingFlag)
+                {
+                    seedSymbolIndex.HasListingFlag = false;
+                    return true;
+                }
+                return false;
+            }
+
+            if (listingDto != null && listingDto.Id.Equals(seedSymbolIndex.ListingId))
+            {
+                return false;
+            }
+            
+            if (listingDto != null)
+            {
+                seedSymbolIndex.ListingId = listingDto.Id;
+                seedSymbolIndex.ListingPrice = listingDto.Prices;
+                
+                seedSymbolIndex.MinListingId = listingDto.Id;
+                seedSymbolIndex.MinListingPrice = listingDto.Prices;
+                seedSymbolIndex.MinListingExpireTime = listingDto.ExpireTime;
+                
+                seedSymbolIndex.ListingAddress = listingDto?.Owner;
+                seedSymbolIndex.ListingQuantity = listingDto.RealQuantity;
+                seedSymbolIndex.ListingEndTime = listingDto.ExpireTime;
+                seedSymbolIndex.LatestListingTime = listingDto.StartTime;
+                seedSymbolIndex.ListingToken =
+                    _objectMapper.Map<IndexerTokenInfo, TokenInfoIndex>(listingDto.PurchaseToken);
+                seedSymbolIndex.HasListingFlag = listingDto.Prices > CommonConstant.IntZero;
+            }
+            else
+            {
+                seedSymbolIndex.ListingId = null;
+                seedSymbolIndex.ListingPrice = -1;
+                
+                seedSymbolIndex.MinListingId = null;
+                seedSymbolIndex.MinListingPrice = -1;
+                seedSymbolIndex.MinListingExpireTime = DateTime.UtcNow;
+                
+                seedSymbolIndex.ListingAddress = null;
+                seedSymbolIndex.ListingQuantity = 0;
+                seedSymbolIndex.ListingEndTime = DateTime.UtcNow;
+                seedSymbolIndex.LatestListingTime = DateTime.UtcNow;
+                seedSymbolIndex.ListingToken = null;
+                seedSymbolIndex.HasListingFlag = false;
+            }
+
+            return true;
+        }
+        private bool UpdateMaxOfferInfo(SeedSymbolIndex seedSymbolIndex, IndexerNFTOffer indexerNFTOffer)
+        {
+            if (indexerNFTOffer == null && seedSymbolIndex.MaxOfferId.IsNullOrEmpty())
+            {
+                return false;
+            }
+
+            if (indexerNFTOffer != null && indexerNFTOffer.Id.Equals(seedSymbolIndex.MaxOfferId))
+            {
+                return false;
+            }
+
+            if (indexerNFTOffer != null)
+            {
+                seedSymbolIndex.MaxOfferId = indexerNFTOffer.Id;
+                seedSymbolIndex.MaxOfferPrice = indexerNFTOffer.Price;
+                seedSymbolIndex.MaxOfferExpireTime = indexerNFTOffer.ExpireTime;
+                seedSymbolIndex.OfferToken = new TokenInfoIndex
+                {
+                    ChainId = indexerNFTOffer.PurchaseToken.ChainId,
+                    Symbol = indexerNFTOffer.PurchaseToken.Symbol,
+                    Decimals = Convert.ToInt32(indexerNFTOffer.PurchaseToken.Decimals),
+                    Prices = indexerNFTOffer.Price
+                };
+                seedSymbolIndex.HasOfferFlag = seedSymbolIndex.MaxOfferPrice > CommonConstant.IntZero;
+            }
+            else
+            {
+                seedSymbolIndex.MaxOfferId = null;
+                seedSymbolIndex.MaxOfferPrice = -1;
+                seedSymbolIndex.MaxOfferExpireTime = DateTime.UtcNow;
+                seedSymbolIndex.OfferToken = null;
+                seedSymbolIndex.HasOfferFlag = false;
+            }
+            
+            return true;
+        }
+        
+        private bool UpdatelatestDealInfo(SeedSymbolIndex seedSymbolIndex, IndexerNFTDealInfo indexerNFTDeal)
+        {
+            if (indexerNFTDeal == null && seedSymbolIndex.LatestDealId.IsNullOrEmpty())
+            {
+                return false;
+            }
+
+            if (indexerNFTDeal != null && indexerNFTDeal.Id.Equals(seedSymbolIndex.LatestDealId))
+            {
+                return false;
+            }
+
+            if (indexerNFTDeal != null)
+            {
+                seedSymbolIndex.LatestDealId = indexerNFTDeal.Id;
+                seedSymbolIndex.LatestDealPrice = FTHelper.GetRealELFAmount(indexerNFTDeal.PurchaseAmount);
+                seedSymbolIndex.LatestListingTime = indexerNFTDeal.DealTime;
+                seedSymbolIndex.LatestDealToken =  new TokenInfoIndex
+                {
+                    ChainId = indexerNFTDeal.ChainId,
+                    Symbol = indexerNFTDeal.PurchaseSymbol,
+                    Decimals = CommonConstant.Coin_ELF_Decimals,
+                    Prices = indexerNFTDeal.PurchaseAmount
+                };
+                seedSymbolIndex.HasOfferFlag = seedSymbolIndex.MaxOfferPrice > CommonConstant.IntZero;
+            }
+            else
+            {
+                seedSymbolIndex.LatestDealId = null;
+                seedSymbolIndex.LatestDealPrice = -1;
+                seedSymbolIndex.LatestListingTime = DateTime.UtcNow;
+                seedSymbolIndex.LatestDealToken = null;
+            }
+            
+            return true;
+        }
+    
     public async Task UpdateSeedRankingWeightAsync(List<SeedRankingWeightDto> inputList)
     {
         if (inputList.IsNullOrEmpty())

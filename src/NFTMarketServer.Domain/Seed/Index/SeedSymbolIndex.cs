@@ -81,6 +81,14 @@ public class SeedSymbolIndex: TokenInfoBase, IIndexBuild
     
     [Keyword] public string SeedImage { get; set; }
     
+    [Text(Index = false)] public string RealOwner { get; set; }
+    public long AllOwnerCount { get; set; }
+
+    public decimal LatestDealPrice { get; set; } = -1;
+    [Keyword] public string LatestDealId { get; set; }
+    
+    public DateTime? LatestDealTime { get; set; }
+    
     public (string Description, decimal Price) GetDescriptionAndPrice(decimal queryMaxOfferPrice)
     {
         if (HasAuctionFlag)
