@@ -209,11 +209,14 @@ namespace NFTMarketServer.NFT
                 }
                 
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+                
+                var accountDtoDict = await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
 
                 result = new PagedResultDto<CompositeNFTInfoIndexDto>()
                 {
                     TotalCount = nftResult.Item1,
-                    Items = nftResult.Item2.Select(item => MapForNftBriefInfoDto(item, maxOfferDict)).ToList()
+                    Items = nftResult.Item2.Select(item => MapForNftBriefInfoDto(item, maxOfferDict, accountDtoDict))
+                        .ToList()
                 };
             }
 
@@ -1106,14 +1109,17 @@ namespace NFTMarketServer.NFT
                 IssueChainIdStr = ChainHelper.ConvertChainIdToBase58(seedSymbolIndex.IssueChainId),
                 //ChainId = ChainHelper.ConvertBase58ToChainId(seedSymbolIndex.ChainId),
                 ChainIdStr = seedSymbolIndex.ChainId,
+                ListingPrice = seedSymbolIndex.ListingPrice,
+                ListingPriceCreateTime = seedSymbolIndex.LatestListingTime,
+                OfferPrice = seedSymbolIndex.OfferPrice,
             };
         }
 
         private static CompositeNFTInfoIndexDto MapForNftBriefInfoDto(IndexerNFTInfo nftInfoIndex,
-            Dictionary<string, IndexerNFTOffer> maxOfferDict)
+            Dictionary<string, IndexerNFTOffer> maxOfferDict,Dictionary<string,AccountDto> accountDtoDict)
         {
             maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
-
+            accountDtoDict.TryGetValue(nftInfoIndex.RealOwner, out var accountDto);
             var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
 
             return new CompositeNFTInfoIndexDto
@@ -1137,7 +1143,7 @@ namespace NFTMarketServer.NFT
                 OfferPrice = nftInfoIndex.OfferPrice,
                 LatestDealPrice = nftInfoIndex.LatestDealPrice,
                 AllOwnerCount = nftInfoIndex.AllOwnerCount,
-                RealOwner = new AccountDto()
+                RealOwner = accountDto
             };
         }
 

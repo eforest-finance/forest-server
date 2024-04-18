@@ -135,7 +135,9 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                     ? null
                     : source.TraitPairsDictionary
                         .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList())
-        );
+        ).ForMember(destination => destination.OwnerCount,
+            opt => opt.MapFrom(source
+                => source.AllOwnerCount));
         CreateMap<NFTInfoIndexDto, UserProfileNFTInfoIndexDto>().ForMember(
             destination => destination.TraitPairsDictionary, opt => opt.MapFrom(
                 source => source.TraitPairsDictionary.IsNullOrEmpty()
