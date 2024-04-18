@@ -188,10 +188,14 @@ namespace NFTMarketServer.NFT
                 //to get max offers
                 var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
 
+                var accountDtoDict =
+                    await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
+
                 result = new PagedResultDto<CompositeNFTInfoIndexDto>()
                 {
                     TotalCount = seedResult.Item1,
-                    Items = seedResult.Item2.Select(item => MapForSeedBriefInfoDto(item, maxOfferDict)).ToList()
+                    Items = seedResult.Item2.Select(item => MapForSeedBriefInfoDto(item, maxOfferDict, accountDtoDict))
+                        .ToList()
                 };
             }
 
@@ -1090,10 +1094,10 @@ namespace NFTMarketServer.NFT
         }
 
         private static CompositeNFTInfoIndexDto MapForSeedBriefInfoDto(SeedSymbolIndex seedSymbolIndex,
-            Dictionary<string, IndexerNFTOffer> maxOfferDict)
+            Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict)
         {
             maxOfferDict.TryGetValue(seedSymbolIndex.Id, out var maxOffer);
-
+            accountDtoDict.TryGetValue(seedSymbolIndex.RealOwner, out var accountDto);
             var (temDescription, temPrice) = seedSymbolIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
 
             return new CompositeNFTInfoIndexDto
@@ -1112,11 +1116,14 @@ namespace NFTMarketServer.NFT
                 ListingPrice = seedSymbolIndex.ListingPrice,
                 ListingPriceCreateTime = seedSymbolIndex.LatestListingTime,
                 OfferPrice = seedSymbolIndex.OfferPrice,
+                LatestDealPrice = seedSymbolIndex.LatestDealPrice,
+                AllOwnerCount = seedSymbolIndex.AllOwnerCount,
+                RealOwner = accountDto
             };
         }
 
         private static CompositeNFTInfoIndexDto MapForNftBriefInfoDto(IndexerNFTInfo nftInfoIndex,
-            Dictionary<string, IndexerNFTOffer> maxOfferDict,Dictionary<string,AccountDto> accountDtoDict)
+            Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict)
         {
             maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
             accountDtoDict.TryGetValue(nftInfoIndex.RealOwner, out var accountDto);
