@@ -67,12 +67,15 @@ namespace NFTMarketServer.NFT
         private readonly IBus _bus;
         private readonly INFTTraitProvider _inftTraitProvider;
         private readonly INFTActivityAppService _nftActivityAppService;
-        
+
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
 
         private readonly IOptionsMonitor<ChoiceNFTInfoNewFlagOptions>
             _choiceNFTInfoNewFlagOptionsMonitor;
+        
+        private readonly IOptionsMonitor<CollectionActivityNFTLimitOptions>
+            _collectionActivityNFTLimitOptionsMonitor;
         
         private readonly IUserBalanceProvider _userBalanceProvider;
 
@@ -98,6 +101,7 @@ namespace NFTMarketServer.NFT
             IDistributedCache<string> distributedCacheForHeight,
             IGraphQLProvider graphQlProvider,
             IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> resetNFTSyncHeightExpireMinutesOptionsMonitor,
+            IOptionsMonitor<CollectionActivityNFTLimitOptions> collectionActivityNFTLimitOptionsMonitor,
             INFTTraitProvider inftTraitProvider,
             IUserBalanceProvider userBalanceProvider,
             INFTActivityAppService nftActivityAppService,
@@ -126,6 +130,7 @@ namespace NFTMarketServer.NFT
             _distributedCacheForHeight = distributedCacheForHeight;
             _resetNFTSyncHeightExpireMinutesOptionsMonitor = resetNFTSyncHeightExpireMinutesOptionsMonitor;
             _choiceNFTInfoNewFlagOptionsMonitor = choiceNFTInfoNewFlagOptionsMonitor;
+            _collectionActivityNFTLimitOptionsMonitor = collectionActivityNFTLimitOptionsMonitor;
             _graphQlProvider = graphQlProvider;
             _inftTraitProvider = inftTraitProvider;
             _userBalanceProvider = userBalanceProvider;
@@ -291,14 +296,22 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<CollectionActivitiesDto>> GetCollectionActivitiesAsync(GetCollectionActivitiesInput input)
         {
             var result = PagedResultWrapper<CollectionActivitiesDto>.Initialize();
+
+            var collectionActivityNFTLimit = _collectionActivityNFTLimitOptionsMonitor?.CurrentValue?.CollectionActivityNFTLimit ?? CommonConstant.CollectionActivityNFTLimit;
             
             var basicInfoDic = new Dictionary<string, CollectionActivityBasicDto>();
 
             var collectionInfo = await _nftCollectionProvider.GetNFTCollectionIndexAsync(input.CollectionId);
 
+            if (collectionInfo == null)
+            {
+                return result;
+            }
+
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
             {
-                var nftResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input);
+                var nftResult =
+                    await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input, collectionActivityNFTLimit);
 
                 if (nftResult == null || nftResult.Item2.IsNullOrEmpty())
                 {
@@ -314,7 +327,8 @@ namespace NFTMarketServer.NFT
 
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeNFT))
             {
-                var nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
+                var nftResult =
+                    await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input, collectionActivityNFTLimit);
 
                 if (nftResult == null || nftResult.Item2.IsNullOrEmpty())
                 {

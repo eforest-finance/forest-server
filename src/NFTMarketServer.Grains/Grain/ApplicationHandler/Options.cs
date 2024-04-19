@@ -37,3 +37,8 @@ public class ChoiceNFTInfoNewFlagOptions
 {
     public bool ChoiceNFTInfoNewFlagIsOn { get; set; }
 }
+
+public class CollectionActivityNFTLimitOptions
+{
+    public int CollectionActivityNFTLimit { get; set; } = 1000;
+}

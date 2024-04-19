@@ -18,8 +18,9 @@ namespace NFTMarketServer.NFT.Provider;
 public interface ISeedSymbolSyncedProvider
 {
     public Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCompositeNFTInfosInput dto);
-    
-    public Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCollectionActivitiesInput dto);
+
+    public Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCollectionActivitiesInput dto,
+        int maxLimit);
 
     public Task<IndexerSeedInfos> GetSeedInfosUserProfileAsync(GetNFTInfosProfileInput dto);
     
@@ -32,7 +33,6 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
     private readonly IObjectMapper _objectMapper;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
     private readonly IUserBalanceProvider _userBalanceProvider;
-    private const int MaxLimit = 1000;
 
     public SeedSymbolSyncedProvider(ILogger<SeedSymbolSyncedProvider> logger, 
         IObjectMapper objectMapper, 
@@ -123,8 +123,9 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         var newResult = new Tuple<long, List<SeedSymbolIndex>>(count, result?.Item2);
         return newResult;
     }
-    
-    public async Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCollectionActivitiesInput dto)
+
+    public async Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCollectionActivitiesInput dto,
+        int maxLimit)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
 
@@ -142,7 +143,7 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
 
         var result = await _seedSymbolIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
             sortExp: item => item.BlockHeight,
-            limit: MaxLimit);
+            limit: maxLimit);
         if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
         {
             return result;
