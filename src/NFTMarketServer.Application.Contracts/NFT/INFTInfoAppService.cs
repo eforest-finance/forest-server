@@ -11,6 +11,8 @@ namespace NFTMarketServer.NFT
         
         Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetCompositeNFTInfosAsync(GetCompositeNFTInfosInput input);
         
+        Task<PagedResultDto<CollectionActivitiesDto>> GetCollectionActivitiesAsync(GetCollectionActivitiesInput input);
+        
         Task<NFTInfoIndexDto> GetNFTInfoAsync(GetNFTInfoInput input);
 
         Task<SymbolInfoDto> GetSymbolInfoAsync(GetSymbolInfoInput input);

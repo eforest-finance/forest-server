@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
@@ -65,6 +66,7 @@ namespace NFTMarketServer.NFT
         private readonly IGraphQLProvider _graphQlProvider;
         private readonly IBus _bus;
         private readonly INFTTraitProvider _inftTraitProvider;
+        private readonly INFTActivityAppService _nftActivityAppService;
         
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
@@ -98,6 +100,7 @@ namespace NFTMarketServer.NFT
             IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions> resetNFTSyncHeightExpireMinutesOptionsMonitor,
             INFTTraitProvider inftTraitProvider,
             IUserBalanceProvider userBalanceProvider,
+            INFTActivityAppService nftActivityAppService,
             IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
@@ -127,6 +130,7 @@ namespace NFTMarketServer.NFT
             _inftTraitProvider = inftTraitProvider;
             _userBalanceProvider = userBalanceProvider;
             _bus = bus;
+            _nftActivityAppService = nftActivityAppService;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -282,6 +286,85 @@ namespace NFTMarketServer.NFT
             }
 
             return await MapForCompositeNftInfoIndexDtoPage(result);
+        }
+        
+        public async Task<PagedResultDto<CollectionActivitiesDto>> GetCollectionActivitiesAsync(GetCollectionActivitiesInput input)
+        {
+            var result = PagedResultWrapper<CollectionActivitiesDto>.Initialize();
+            
+            var basicInfoDic = new Dictionary<string, CollectionActivityBasicDto>();
+
+            var collectionInfo = await _nftCollectionProvider.GetNFTCollectionIndexAsync(input.CollectionId);
+
+            if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
+            {
+                var nftResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input);
+
+                if (nftResult == null || nftResult.Item2.IsNullOrEmpty())
+                {
+                    return result;
+                }
+                basicInfoDic = nftResult.Item2.Select(item => new CollectionActivityBasicDto
+                {
+                   NFTInfoId = item.Id,
+                   NFTTokenName = item.TokenName,
+                   Image = item.SeedImage
+                }).ToList().ToDictionary(e => e.NFTInfoId, e => e);;
+            }
+
+            if (input.CollectionType.Equals(CommonConstant.CollectionTypeNFT))
+            {
+                var nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
+
+                if (nftResult == null || nftResult.Item2.IsNullOrEmpty())
+                {
+                    return result;
+                }
+
+                basicInfoDic = nftResult.Item2.Select(item => new CollectionActivityBasicDto
+                {
+                    NFTInfoId = item.Id,
+                    NFTTokenName = item.TokenName,
+                    Image = FTHelper.BuildIpfsUrl(item.ImageUrl)
+                }).ToList().ToDictionary(e => e.NFTInfoId, e => e);
+            }
+            
+            var getCollectionActivityListInput = new GetCollectionActivityListInput
+            {
+                CollectionId = input.CollectionId,
+                BizIdList = basicInfoDic.Keys.ToList(),
+                Types = input.Type,
+                SkipCount = input.SkipCount,
+                MaxResultCount = input.MaxResultCount
+            };
+            var nftActivityDtoPage =await _nftActivityAppService.GetCollectionActivityListAsync(getCollectionActivityListInput);
+
+            if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
+            {
+               return result;
+            }
+
+            var collectionActivitiesDtoList = nftActivityDtoPage.Items.ToList().Select(item =>
+            {
+                var itemNew = _objectMapper.Map<NFTActivityDto, CollectionActivitiesDto>(item);
+                itemNew.NFTCollectionName = collectionInfo.TokenName;
+                basicInfoDic.TryGetValue(item.NFTInfoId, out var collectionActivityBasicDto);
+                if (collectionActivityBasicDto != null)
+                {
+                    itemNew.NFTName = collectionActivityBasicDto.NFTTokenName;
+                    itemNew.PreviewImage = collectionActivityBasicDto.Image;
+                }
+                return itemNew;
+            }).ToList();
+            
+            result = new PagedResultDto<CollectionActivitiesDto>()
+            {
+                TotalCount = nftActivityDtoPage.TotalCount,
+                Items = collectionActivitiesDtoList
+            };
+
+            return result;
+
         }
 
 
