@@ -918,6 +918,7 @@ namespace NFTMarketServer.NFT
             }
 
             var nftInfo = _objectMapper.Map<NFTInfoIndex, NFTInfoNewIndex>(fromNFTInfo);
+
             nftInfo.CountedFlag = FTHelper.IsGreaterThanEqualToOne(nftInfo.Supply, nftInfo.Decimals);
 
 
@@ -1018,6 +1019,20 @@ namespace NFTMarketServer.NFT
             {
                 nftInfoNewIndex.RealOwner = balanceInfo.Owner;
                 nftInfoNewIndex.AllOwnerCount = balanceInfo.OwnerCount;
+            }
+            
+            if (!nftInfoNewIndex.HasListingFlag)
+            {
+                nftInfoNewIndex.ListingPrice = CommonConstant.DefaultValueNone;
+            }
+            if (!nftInfoNewIndex.HasOfferFlag)
+            {
+                nftInfoNewIndex.MaxOfferPrice = CommonConstant.DefaultValueNone;
+            }
+
+            if (nftInfoNewIndex.LatestDealPrice == CommonConstant.IntZero)
+            {
+                nftInfoNewIndex.LatestDealPrice = CommonConstant.DefaultValueNone;
             }
             
             await _nftInfoNewIndexRepository.AddOrUpdateAsync(nftInfoNewIndex);

@@ -655,6 +655,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             SkipCount = CommonConstant.IntZero,
             MaxResultCount = CommonConstant.IntOne
         };
+
         var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
         if (listingDto != null && listingDto.TotalCount > CommonConstant.IntZero)
         {
@@ -697,6 +698,20 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             seedSymbolIndex.RealOwner = balanceInfo.Owner;
             seedSymbolIndex.AllOwnerCount = balanceInfo.OwnerCount;
+        }
+        
+        if (!seedSymbolIndex.HasListingFlag)
+        {
+            seedSymbolIndex.ListingPrice = CommonConstant.DefaultValueNone;
+        }
+        if (!seedSymbolIndex.HasOfferFlag)
+        {
+            seedSymbolIndex.MaxOfferPrice = CommonConstant.DefaultValueNone;
+        }
+
+        if (seedSymbolIndex.LatestDealPrice == CommonConstant.IntZero)
+        {
+            seedSymbolIndex.LatestDealPrice = CommonConstant.DefaultValueNone;
         }
             
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbolIndex);
