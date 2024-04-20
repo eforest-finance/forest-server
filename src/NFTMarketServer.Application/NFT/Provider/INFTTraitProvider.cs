@@ -253,7 +253,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
             var result = await _nftInfoNewIndexRepository.GetListAsync(Filter
                 ,skip: CommonConstant.IntZero,
                 limit: CommonConstant.IntOne,
-                sortType: SortOrder.Ascending, sortExp: o => o.LatestDealPrice);
+                sortType: SortOrder.Ascending, sortExp: o => o.LatestDealTime);
             return result?.Item2?.FirstOrDefault();
         }
 
@@ -399,7 +399,10 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
             trait.Value,
             nftInfoNewIndex.CollectionId);
         
-        if (latestDealPriceNFT != null && nftCollectionTraitPairsIndex.ItemLatestDealPrice != latestDealPriceNFT.LatestDealPrice) 
+        if (latestDealPriceNFT != null && 
+            latestDealPriceNFT.LatestDealPrice != CommonConstant.IntZero
+            &&
+            nftCollectionTraitPairsIndex.ItemLatestDealPrice != latestDealPriceNFT.LatestDealPrice) 
         {
             changeFlag = true;
             nftCollectionTraitPairsIndex.ItemLatestDealPrice = latestDealPriceNFT.LatestDealPrice;
