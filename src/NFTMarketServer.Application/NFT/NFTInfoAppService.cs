@@ -1209,7 +1209,13 @@ namespace NFTMarketServer.NFT
             Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict)
         {
             maxOfferDict.TryGetValue(seedSymbolIndex.Id, out var maxOffer);
-            accountDtoDict.TryGetValue(seedSymbolIndex.RealOwner, out var accountDto);
+            var accountDto = new AccountDto();
+            if (!seedSymbolIndex.RealOwner.IsNullOrEmpty())
+            {
+                accountDtoDict.TryGetValue(seedSymbolIndex.RealOwner, out var temAccountDto);
+                accountDto = temAccountDto;
+            }
+            
             var (temDescription, temPrice) = seedSymbolIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
 
             return new CompositeNFTInfoIndexDto
@@ -1237,8 +1243,14 @@ namespace NFTMarketServer.NFT
         private static CompositeNFTInfoIndexDto MapForNftBriefInfoDto(IndexerNFTInfo nftInfoIndex,
             Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict)
         {
+            var accountDto = new AccountDto();
             maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
-            accountDtoDict.TryGetValue(nftInfoIndex.RealOwner, out var accountDto);
+            if (!nftInfoIndex.RealOwner.IsNullOrEmpty())
+            {
+                accountDtoDict.TryGetValue(nftInfoIndex.RealOwner, out var temAccountDto);
+                accountDto = temAccountDto;
+            }
+
             var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
 
             return new CompositeNFTInfoIndexDto
