@@ -1227,7 +1227,7 @@ namespace NFTMarketServer.NFT
                 ChainIdStr = seedSymbolIndex.ChainId,
                 ListingPrice = seedSymbolIndex.ListingPrice,
                 ListingPriceCreateTime = seedSymbolIndex.LatestListingTime,
-                OfferPrice = seedSymbolIndex.OfferPrice,
+                OfferPrice = seedSymbolIndex.MaxOfferPrice,
                 LatestDealPrice = seedSymbolIndex.LatestDealPrice,
                 AllOwnerCount = seedSymbolIndex.AllOwnerCount,
                 RealOwner = accountDto
@@ -1259,7 +1259,7 @@ namespace NFTMarketServer.NFT
                 Generation = nftInfoIndex.Generation,
                 ListingPrice = nftInfoIndex.ListingPrice,
                 ListingPriceCreateTime = nftInfoIndex.LatestListingTime,
-                OfferPrice = nftInfoIndex.OfferPrice,
+                OfferPrice = nftInfoIndex.MaxOfferPrice,
                 LatestDealPrice = nftInfoIndex.LatestDealPrice,
                 AllOwnerCount = nftInfoIndex.AllOwnerCount,
                 RealOwner = accountDto
