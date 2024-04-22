@@ -1224,6 +1224,14 @@ namespace NFTMarketServer.NFT
             
             var (temDescription, temPrice) = seedSymbolIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
 
+            var temLatestDealPrice = seedSymbolIndex.LatestDealPrice <= 0 && !seedSymbolIndex.HasAuctionFlag
+                ? seedSymbolIndex.MaxAuctionPrice
+                : seedSymbolIndex.LatestDealPrice;
+            if (temLatestDealPrice == 0)
+            {
+                temLatestDealPrice = CommonConstant.DefaultValueNone;
+            }
+            
             return new CompositeNFTInfoIndexDto
             {
                 CollectionSymbol = NFTSymbolBasicConstants.SeedCollectionSymbol,
@@ -1242,9 +1250,7 @@ namespace NFTMarketServer.NFT
                     ? seedSymbolIndex.AuctionDateTime
                     : seedSymbolIndex.LatestListingTime,
                 OfferPrice = seedSymbolIndex.MaxOfferPrice,
-                LatestDealPrice = seedSymbolIndex.LatestDealPrice < 0 && !seedSymbolIndex.HasAuctionFlag
-                    ? seedSymbolIndex.MaxAuctionPrice
-                    : seedSymbolIndex.LatestDealPrice,
+                LatestDealPrice = temLatestDealPrice,
                 AllOwnerCount = CommonConstant.IntOne,
                 RealOwner = accountDto
             };
