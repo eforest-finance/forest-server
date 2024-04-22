@@ -1236,8 +1236,10 @@ namespace NFTMarketServer.NFT
                 IssueChainIdStr = ChainHelper.ConvertChainIdToBase58(seedSymbolIndex.IssueChainId),
                 //ChainId = ChainHelper.ConvertBase58ToChainId(seedSymbolIndex.ChainId),
                 ChainIdStr = seedSymbolIndex.ChainId,
-                ListingPrice = seedSymbolIndex.ListingPrice,
-                ListingPriceCreateTime = seedSymbolIndex.LatestListingTime,
+                ListingPrice = seedSymbolIndex.HasAuctionFlag?seedSymbolIndex.MaxAuctionPrice:seedSymbolIndex.ListingPrice,
+                ListingPriceCreateTime = seedSymbolIndex.HasAuctionFlag
+                    ? seedSymbolIndex.AuctionDateTime
+                    : seedSymbolIndex.LatestListingTime,
                 OfferPrice = seedSymbolIndex.MaxOfferPrice,
                 LatestDealPrice = seedSymbolIndex.LatestDealPrice,
                 AllOwnerCount = seedSymbolIndex.AllOwnerCount,
