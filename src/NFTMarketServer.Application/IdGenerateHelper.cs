@@ -78,6 +78,11 @@ public class IdGenerateHelper
     {
         return GetId(collectionSymbol, Generation);
     }
+    
+    public static string GetSeedMainChainChangeId(string chainId, string symbol)
+    {
+        return GetId(chainId, symbol);
+    }
 
     public static string GetCollectionIdSymbol(string collectionId)
     {

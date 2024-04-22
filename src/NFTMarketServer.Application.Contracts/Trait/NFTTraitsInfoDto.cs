@@ -20,4 +20,7 @@ public class NFTTraitInfoDto
     public long AllItemsCount { get; set; } = -1;
     public decimal? ItemFloorPrice { get; set; } = -1;
     public TokenDto? ItemFloorPriceToken { get; set; }
+    
+    public decimal? LatestDealPrice { get; set; } = -1;
+    
 }

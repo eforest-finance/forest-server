@@ -34,6 +34,9 @@ public interface IGraphQLProvider
     Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string nftInfoId, string chainId);
     
     Task<List<SeedSymbolIndex>> GetSyncSeedSymbolRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight);
+
+    Task<SeedSymbolIndex> GetSyncSeedSymbolRecordAsync(string nftInfoId, string chainId);
+    
     Task<List<InscriptionDto>> GetIndexInscriptionAsync(string chainId, long beginBlockHeight,
         long endBlockHeight, int skipCount, int maxResultCount);
 

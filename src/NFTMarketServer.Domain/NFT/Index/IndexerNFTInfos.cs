@@ -21,7 +21,9 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public string Issuer { get; set; }
     public string ProxyIssuerAddress { get; set; }
     public string Owner { get; set; }
-    public long OwnerCount { get; set; }
+    
+    public string RealOwner { get; set; }
+    public long AllOwnerCount { get; set; }
     public long Issued { get; set; }
     public string TokenName { get; set; }
     public long TotalSupply { get; set; }
@@ -46,6 +48,8 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public decimal LatestDealPrice { get; set; }
     public DateTime LatestDealTime { get; set; }
     public decimal OfferPrice { get; set; }
+    
+    public decimal MaxOfferPrice { get; set; }
 
     public IndexerTokenInfo ListingToken { get; set; }
     public IndexerTokenInfo LatestDealToken { get; set; }
@@ -80,7 +84,7 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     {
         if (HasListingFlag)
         {
-            return (NFTSymbolBasicConstants.BrifeInfoDescriptionPrice, MinListingPrice);
+            return (NFTSymbolBasicConstants.BrifeInfoDescriptionPrice, ListingPrice);
         }
         // HasOfferFlag is not very timely
         if (queryMaxOfferPrice > 0)

@@ -81,6 +81,13 @@ namespace NFTMarketServer.Controllers
         {
             return _nftAppService.GetCompositeNFTInfosAsync(input);
         }
+        
+        [HttpPost]
+        [Route("collection-activities")]
+        public Task<PagedResultDto<CollectionActivitiesDto>> GetCollectionActivitiesAsync(GetCollectionActivitiesInput input)
+        {
+            return _nftAppService.GetCollectionActivitiesAsync(input);
+        }
 
         [HttpGet]
         [Route("seed-owned-symbols")]

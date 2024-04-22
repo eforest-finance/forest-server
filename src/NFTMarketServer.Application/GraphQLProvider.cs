@@ -327,6 +327,41 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         });
         return graphQlResponse.Data.DataList.IsNullOrEmpty() ? new List<SeedSymbolIndex>() : graphQlResponse.Data.DataList;
     }
+    
+    public async Task<SeedSymbolIndex> GetSyncSeedSymbolRecordAsync(string id, string chainId)
+    {
+        var graphQlResponse = await _graphQLClient.SendQueryAsync<JObject>(new GraphQLRequest
+        {
+            Query =
+                @"query($id:String!,$chainId:String!){
+            getSyncSeedSymbolRecord(dto: {id:$id,chainId:$chainId})
+            {
+                id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},
+                seedOwnedSymbol,seedExpTimeSecond,seedExpTime,registerTimeSecond,registerTime,issuerTo,isDeleteFlag,tokenType,seedType,price,priceSymbol,
+                beginAuctionPrice,auctionPrice,auctionPrice,auctionPriceSymbol,auctionDateTime,otherOwnerListingFlag,listingId,listingAddress,listingPrice,listingQuantity,listingEndTime,latestListingTime,
+                offerPrice,offerQuantity,offerExpireTime,latestOfferTime,
+                offerToken{id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},prices},
+                listingToken{id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},prices},
+                latestDealToken{id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},prices},
+                seedStatus,hasOfferFlag,hasListingFlag,minListingPrice,minListingExpireTime,minListingId,hasAuctionFlag,maxAuctionPrice,maxOfferPrice,seedImage                
+            }}",
+            Variables = new
+            {
+                id,
+                chainId
+            }
+            
+        });
+        var responseData = graphQlResponse.Data;
+        if (responseData != null)
+        {
+            var nftInfoRecord = responseData[CommonConstant.GraphqlMethodGetSyncSeedSymbolRecord].ToObject<SeedSymbolIndex>();
+            return nftInfoRecord;
+        }
+
+        return null;
+    }
+    
 
     public async Task<List<BidInfoDto>> GetSyncSymbolBidRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight)
     {

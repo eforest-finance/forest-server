@@ -65,7 +65,7 @@ public class NFTInfoSyncedProvider : INFTInfoSyncedProvider, ISingletonDependenc
         }
         var balanceInfo = await _userBalanceProvider.GetNFTBalanceInfoAsync(nftInfoId);
         res.Owner = balanceInfo.Owner;
-        res.OwnerCount = balanceInfo.OwnerCount;
+        res.AllOwnerCount = balanceInfo.OwnerCount;
         return res;
     }
 
