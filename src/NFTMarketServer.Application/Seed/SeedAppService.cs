@@ -633,7 +633,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         await _tsmSeedSymbolIndexRepository.AddOrUpdateAsync(tsmSeedSymbolIndex);
     }
 
-    private async Task UpdateSeedSymbolAsync(string seedSymbolIndexId, string chainId)
+    public async Task UpdateSeedSymbolAsync(string seedSymbolIndexId, string chainId)
     {
         var seedSymbol = await _graphQlProvider.GetSyncSeedSymbolRecordAsync(seedSymbolIndexId, chainId);
 

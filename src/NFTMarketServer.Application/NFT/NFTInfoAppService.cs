@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
-using AElf.Client.Proto;
 using AElf.Indexing.Elasticsearch;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -24,6 +23,7 @@ using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
+using NFTMarketServer.Seed;
 using NFTMarketServer.Seed.Index;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
@@ -67,6 +67,7 @@ namespace NFTMarketServer.NFT
         private readonly IBus _bus;
         private readonly INFTTraitProvider _inftTraitProvider;
         private readonly INFTActivityAppService _nftActivityAppService;
+        private readonly ISeedAppService _seedAppService;
 
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
@@ -105,6 +106,7 @@ namespace NFTMarketServer.NFT
             INFTTraitProvider inftTraitProvider,
             IUserBalanceProvider userBalanceProvider,
             INFTActivityAppService nftActivityAppService,
+            ISeedAppService seedAppService,
             IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
@@ -136,6 +138,7 @@ namespace NFTMarketServer.NFT
             _userBalanceProvider = userBalanceProvider;
             _bus = bus;
             _nftActivityAppService = nftActivityAppService;
+            _seedAppService = seedAppService;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -894,13 +897,15 @@ namespace NFTMarketServer.NFT
                 return;
             }
 
-            if (!SymbolHelper.CheckSymbolIsCommonNFTInfoId(nftInfoId))
+            if (SymbolHelper.CheckSymbolIsCommonNFTInfoId(nftInfoId))
             {
-                _logger.Debug("AddOrUpdateNftInfoNewByIdAsync nftInfoId is not common nft {NFTInfoId}", nftInfoId);
-                return;
+                await AddOrUpdateNftInfoNewAsync(null, nftInfoId, chainId);
             }
-
-            await AddOrUpdateNftInfoNewAsync(null, nftInfoId, chainId);
+            else
+            {
+                await _seedAppService.UpdateSeedSymbolAsync(nftInfoId, chainId);
+            }
+            
         }
 
         public async Task AddOrUpdateNftInfoNewAsync(NFTInfoIndex fromNFTInfo, string nftInfoId,
