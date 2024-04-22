@@ -1242,7 +1242,9 @@ namespace NFTMarketServer.NFT
                     ? seedSymbolIndex.AuctionDateTime
                     : seedSymbolIndex.LatestListingTime,
                 OfferPrice = seedSymbolIndex.MaxOfferPrice,
-                LatestDealPrice = seedSymbolIndex.LatestDealPrice,
+                LatestDealPrice = seedSymbolIndex.LatestDealPrice < 0 && !seedSymbolIndex.HasAuctionFlag
+                    ? seedSymbolIndex.MaxAuctionPrice
+                    : seedSymbolIndex.LatestDealPrice,
                 AllOwnerCount = CommonConstant.IntOne,
                 RealOwner = accountDto
             };
