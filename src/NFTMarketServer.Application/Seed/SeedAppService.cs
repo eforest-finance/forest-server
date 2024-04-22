@@ -642,6 +642,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             _logger.LogError("AddOrUpdateSeedSymbolAsync fromNFTInfo and localNFTInfo are null!");
             return;
         }
+        _logger.Debug("AddOrUpdateSeedSymbolAsync seedSymbolId={A} chainId={B}",seedSymbol.Id,seedSymbol.ChainId);
 
         await UpdateSeedSymbolOtherInfoAsync(seedSymbol);
     }
