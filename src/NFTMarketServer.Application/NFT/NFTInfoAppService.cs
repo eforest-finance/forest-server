@@ -1225,7 +1225,7 @@ namespace NFTMarketServer.NFT
             var (temDescription, temPrice) = seedSymbolIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
 
             var temLatestDealPrice = seedSymbolIndex.LatestDealPrice <= 0 && !seedSymbolIndex.HasAuctionFlag
-                ? seedSymbolIndex.MaxAuctionPrice
+                ? seedSymbolIndex.AuctionPrice
                 : seedSymbolIndex.LatestDealPrice;
             if (temLatestDealPrice == 0)
             {
