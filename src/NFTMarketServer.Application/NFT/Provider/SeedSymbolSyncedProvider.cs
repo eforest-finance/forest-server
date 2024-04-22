@@ -138,7 +138,11 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         mustQuery.Add(q =>
             q.Range(i => i.Field(f => f.Supply).GreaterThan(0)));
         mustQuery.Add(q => q.Bool(b => b.Must(m => m.Term(i => i.Field(f => f.IsDeleteFlag).Value(false)))));
-
+        if (!dto.SymbolTypeList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.TokenType).Terms(dto.SymbolTypeList)));
+        }
+        
         QueryContainer Filter(QueryContainerDescriptor<SeedSymbolIndex> f) => f.Bool(b => b.Must(mustQuery));
 
         var result = await _seedSymbolIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
