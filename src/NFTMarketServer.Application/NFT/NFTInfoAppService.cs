@@ -892,6 +892,7 @@ namespace NFTMarketServer.NFT
 
         public async Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId, string chainId)
         {
+            _logger.Debug("AddOrUpdateNftInfoNewByIdAsync nftInfoId={A} chainId={B}", nftInfoId, chainId);
             if (string.IsNullOrEmpty(nftInfoId) || string.IsNullOrEmpty(chainId))
             {
                 return;
