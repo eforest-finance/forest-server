@@ -585,6 +585,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     public async Task AddOrUpdateTsmSeedInfoAsync(SeedDto seedDto)
     {
+        await UpdateSeedSymbolAsync(IdGenerateHelper.GetSeedMainChainChangeId(seedDto.ChainId, seedDto.SeedSymbol),
+            seedDto.ChainId);
+        
         var tsmSeedSymbolIndex = ObjectMapper.Map<SeedDto, TsmSeedSymbolIndex>(seedDto);
         
         //in case the price information is overwritten by indexer seed info
@@ -630,21 +633,24 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         await _tsmSeedSymbolIndexRepository.AddOrUpdateAsync(tsmSeedSymbolIndex);
     }
 
-    public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
+    private async Task UpdateSeedSymbolAsync(string seedSymbolIndexId, string chainId)
     {
-        if (seedSymbol != null)
-        {
-            seedSymbol = await _graphQlProvider.GetSyncSeedSymbolRecordAsync(seedSymbol.Id, seedSymbol.ChainId);
-        }
+        var seedSymbol = await _graphQlProvider.GetSyncSeedSymbolRecordAsync(seedSymbolIndexId, chainId);
 
         if (seedSymbol == null)
         {
             _logger.LogError("AddOrUpdateSeedSymbolAsync fromNFTInfo and localNFTInfo are null!");
             return;
         }
-        _logger.Debug("AddOrUpdateSeedSymbolAsync seedSymbolId={A} chainId={B}",seedSymbol.Id,seedSymbol.ChainId);
+
+        _logger.Debug("AddOrUpdateSeedSymbolAsync seedSymbolIndexId={A} chainId={B}", seedSymbolIndexId, chainId);
 
         await UpdateSeedSymbolOtherInfoAsync(seedSymbol);
+    }
+
+    public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
+    {
+        await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbol);
     }
     
     private async Task UpdateSeedSymbolOtherInfoAsync(SeedSymbolIndex seedSymbolIndex)
