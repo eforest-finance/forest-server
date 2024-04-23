@@ -9,6 +9,8 @@ using NFTMarketServer.Dealer.Handler;
 using NFTMarketServer.Dealer.Provider;
 using NFTMarketServer.Dealer.Worker;
 using NFTMarketServer.EntityEventHandler.Core;
+using NFTMarketServer.NFT;
+using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Options;
 using NFTMarketServer.Order;
 using NFTMarketServer.Worker;
@@ -61,6 +63,8 @@ namespace NFTMarketServer
             context.Services.AddSingleton<IContractInvokerWorker, ContractInvokerWorker>();
             
             context.Services.AddSingleton<IPortkeyClientProvider, MockPortkeyClientProvider>();
+            context.Services.AddSingleton<INFTActivityAppService, NFTActivityAppService>();
+            context.Services.AddSingleton<INFTActivityProvider, NFTActivityProvider>();
 
             context.Services.Configure<PortkeyOption>(o =>
             {

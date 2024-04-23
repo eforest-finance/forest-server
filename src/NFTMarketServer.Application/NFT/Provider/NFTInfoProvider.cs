@@ -127,6 +127,7 @@ public class NFTInfoProvider : INFTInfoProvider, ISingletonDependency
                     ,$priceHigh: Float
                     ,$status: Int!
                     ,$address: String
+                    ,$isSeed:Boolean!
                     ,$issueAddress: String
                     ,$nftInfoIds: [String]
                 ) {
@@ -140,6 +141,7 @@ public class NFTInfoProvider : INFTInfoProvider, ISingletonDependency
                 ,address: $address
                 ,issueAddress: $issueAddress
                 ,nFTInfoIds: $nftInfoIds
+                ,isSeed:$isSeed
                 }) {
                         totalRecordCount
                         indexerNftInfos:data {
@@ -155,6 +157,7 @@ public class NFTInfoProvider : INFTInfoProvider, ISingletonDependency
                           imageUrl,
                           tokenName,
                           totalSupply,
+                          supply,
                           otherOwnerListingFlag,
                           listingId,
                           listingAddress,
@@ -200,7 +203,8 @@ public class NFTInfoProvider : INFTInfoProvider, ISingletonDependency
                 address = input.Address,
                 issueAddress = input.IssueAddress,
                 status = input.Status,
-                nftInfoIds = input.NFTInfoIds
+                nftInfoIds = input.NFTInfoIds,
+                input.IsSeed
             }
         });
         return indexerCommonResult?.Data;

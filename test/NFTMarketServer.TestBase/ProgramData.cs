@@ -12,6 +12,10 @@ namespace DefaultNamespace;
 
 public class ProgramData
 {
+    public static void Main(string[] args)
+    {
+    }
+
     static readonly HttpClient client = new HttpClient();
 
 

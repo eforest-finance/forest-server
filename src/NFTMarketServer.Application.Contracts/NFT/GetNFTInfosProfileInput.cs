@@ -16,6 +16,8 @@ namespace NFTMarketServer.NFT
         public decimal? PriceLow { get; set; }
         public decimal? PriceHigh { get; set; }
         
+        public bool IsSeed{ get; set; }
+        
         public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             base.Validate(validationContext);
