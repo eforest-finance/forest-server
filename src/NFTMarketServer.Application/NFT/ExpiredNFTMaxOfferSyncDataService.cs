@@ -35,7 +35,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
     private readonly IOptionsMonitor<ExpiredNFTSyncOptions> _optionsMonitor;
     private readonly IBus _bus;
-    private const int HeightExpireMinutes = 10;
+    private const int HeightExpireSeconds = 2;
     private readonly IDistributedCache<List<string>> _distributedCache;
 
     public ExpiredNftMaxOfferSyncDataService(ILogger<NftInfoSyncDataService> logger,
@@ -128,7 +128,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
             await _distributedCache.SetAsync(cacheKey, nftInfoIdWithTimeListNew,
                 new DistributedCacheEntryOptions
                 {
-                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(HeightExpireMinutes)
+                    AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(HeightExpireSeconds)
                 });
         }
 
