@@ -1291,7 +1291,7 @@ namespace NFTMarketServer.NFT
                 Generation = nftInfoIndex.Generation,
                 ListingPrice = nftInfoIndex.ListingPrice,
                 ListingPriceCreateTime = nftInfoIndex.LatestListingTime,
-                OfferPrice = nftInfoIndex.MaxOfferPrice,
+                OfferPrice = maxOffer?.Price ?? CommonConstant.DefaultValueNone,
                 LatestDealPrice = nftInfoIndex.LatestDealPrice,
                 AllOwnerCount = nftInfoIndex.AllOwnerCount,
                 RealOwner = accountDto
