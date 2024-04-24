@@ -912,6 +912,10 @@ namespace NFTMarketServer.NFT
         public async Task AddOrUpdateNftInfoNewAsync(NFTInfoIndex fromNFTInfo, string nftInfoId,
             string chainId)
         {
+            if (chainId.Equals(CommonConstant.MainChainId))
+            {
+                return;
+            }
             if (fromNFTInfo == null)
             {
                 fromNFTInfo = await _graphQlProvider.GetSyncNftInfoRecordAsync(nftInfoId, chainId);

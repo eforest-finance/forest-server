@@ -655,6 +655,10 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     
     private async Task UpdateSeedSymbolOtherInfoAsync(SeedSymbolIndex seedSymbolIndex)
     {
+        if (seedSymbolIndex.ChainId.Equals(CommonConstant.MainChainId))
+        {
+            return;
+        }
         var getNftListingsDto = new GetNFTListingsDto
         {
             ChainId = seedSymbolIndex.ChainId,
