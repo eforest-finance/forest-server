@@ -678,7 +678,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         
         var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(seedSymbolIndex.Id);
-        _logger.Debug("UpdateNFTOtherInfoAsync nftInfoNewIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull{C}", seedSymbolIndex.Id,
+        _logger.Debug("UpdateSeedSymbolOtherInfoAsync seedSymbolIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull={C}", seedSymbolIndex.Id,
             indexerNFTOffer?.Id, indexerNFTOffer == null);
         if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
         {
@@ -787,18 +787,26 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         private bool UpdateMaxOfferInfo(SeedSymbolIndex seedSymbolIndex, IndexerNFTOffer indexerNFTOffer)
         {
+            _logger.Debug("UpdateSeedSymbolOtherInfoAsync-1 seedSymbolIndex.Id={A} indexerNFTOffer.Id={B}", seedSymbolIndex.Id,
+                indexerNFTOffer?.Id);
             if (indexerNFTOffer == null && seedSymbolIndex.MaxOfferId.IsNullOrEmpty())
             {
                 return false;
             }
 
+            _logger.Debug("UpdateSeedSymbolOtherInfoAsync-2 seedSymbolIndex.Id={A} indexerNFTOffer.Id={B}", seedSymbolIndex.Id,
+                indexerNFTOffer?.Id);
             if (indexerNFTOffer != null && indexerNFTOffer.Id.Equals(seedSymbolIndex.MaxOfferId))
             {
                 return false;
             }
 
+            _logger.Debug("UpdateSeedSymbolOtherInfoAsync-3 seedSymbolIndex.Id={A} indexerNFTOffer.Id={B}", seedSymbolIndex.Id,
+                indexerNFTOffer?.Id);
             if (indexerNFTOffer != null)
             {
+                _logger.Debug("UpdateSeedSymbolOtherInfoAsync-4 seedSymbolIndex.Id={A} indexerNFTOffer.Id={B}", seedSymbolIndex.Id,
+                    indexerNFTOffer?.Id);
                 seedSymbolIndex.MaxOfferId = indexerNFTOffer.Id;
                 seedSymbolIndex.MaxOfferPrice = indexerNFTOffer.Price;
                 seedSymbolIndex.MaxOfferExpireTime = indexerNFTOffer.ExpireTime;
@@ -813,6 +821,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             }
             else
             {
+                _logger.Debug("UpdateSeedSymbolOtherInfoAsync-5 seedSymbolIndex.Id={A} indexerNFTOffer.Id={B}", seedSymbolIndex.Id,
+                    indexerNFTOffer?.Id);
                 seedSymbolIndex.MaxOfferId = null;
                 seedSymbolIndex.MaxOfferPrice = -1;
                 seedSymbolIndex.MaxOfferExpireTime = DateTime.UtcNow;
