@@ -1113,11 +1113,6 @@ namespace NFTMarketServer.NFT
                 return false;
             }
 
-            if (indexerNFTOffer != null && indexerNFTOffer.Id.Equals(nftInfoIndex.MaxOfferId))
-            {
-                return false;
-            }
-
             if (indexerNFTOffer != null)
             {
                 nftInfoIndex.MaxOfferId = indexerNFTOffer.Id;
