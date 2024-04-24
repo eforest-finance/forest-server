@@ -109,12 +109,14 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
 
             changeFlag = true;
             var nftInfoId = data.Key;
+            var maxOfferInfo = data.Value;
+            _logger.Debug("ExpiredNftMaxOfferSync maxOfferInfo.id={A}",maxOfferInfo?.Id);
             var isSeed = nftInfoId.Match(NFTSymbolBasicConstants.SeedIdPattern);
             if (isSeed)
             {
                 var seedSymbol = await _seedSymbolIndexRepository.GetAsync(nftInfoId);
                 if (seedSymbol == null) continue;
-                var maxOfferInfo = data.Value;
+                
                 if (maxOfferInfo != null && seedSymbol.MaxOfferId == maxOfferInfo.Id)
                 {
                     seedSymbol.HasOfferFlag = false;
@@ -128,7 +130,6 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
             {
                 var nftInfo = await _nftInfoIndexRepository.GetAsync(nftInfoId);
                 if (nftInfo == null) continue;
-                var maxOfferInfo = data.Value;
                 if (maxOfferInfo != null && nftInfo.MaxOfferId == maxOfferInfo.Id)
                 {
                     nftInfo.HasOfferFlag = false;
