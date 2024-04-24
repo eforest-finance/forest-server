@@ -115,24 +115,30 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
                 var seedSymbol = await _seedSymbolIndexRepository.GetAsync(nftInfoId);
                 if (seedSymbol == null) continue;
                 var maxOfferInfo = data.Value;
-                seedSymbol.HasOfferFlag = maxOfferInfo != null;
-                seedSymbol.MaxOfferPrice = maxOfferInfo?.Prices ?? 0;
-                seedSymbol.MaxOfferExpireTime = maxOfferInfo?.ExpireTime;
-                seedSymbol.MaxOfferId = maxOfferInfo?.Id;
-
-                await _seedAppService.AddOrUpdateSeedSymbolAsync(seedSymbol);
+                if (maxOfferInfo != null && seedSymbol.MaxOfferId == maxOfferInfo.Id)
+                {
+                    seedSymbol.HasOfferFlag = false;
+                    seedSymbol.MaxOfferPrice = CommonConstant.DefaultValueNone;
+                    seedSymbol.MaxOfferExpireTime = DateTime.UtcNow;
+                    seedSymbol.MaxOfferId = "";
+                    await _seedAppService.AddOrUpdateSeedSymbolAsync(seedSymbol);
+                }
             }
             else
             {
                 var nftInfo = await _nftInfoIndexRepository.GetAsync(nftInfoId);
                 if (nftInfo == null) continue;
                 var maxOfferInfo = data.Value;
-                nftInfo.HasOfferFlag = maxOfferInfo != null;
-                nftInfo.MaxOfferPrice = maxOfferInfo?.Prices ?? 0;
-                nftInfo.MaxOfferExpireTime = maxOfferInfo?.ExpireTime;
-                nftInfo.MaxOfferId = maxOfferInfo?.Id;
+                if (maxOfferInfo != null && nftInfo.MaxOfferId == maxOfferInfo.Id)
+                {
+                    nftInfo.HasOfferFlag = false;
+                    nftInfo.MaxOfferPrice = CommonConstant.DefaultValueNone;
+                    nftInfo.MaxOfferExpireTime = DateTime.UtcNow;
+                    nftInfo.MaxOfferId = "";
 
-                await _nftInfoAppService.AddOrUpdateNftInfoAsync(nftInfo);
+                    await _nftInfoAppService.AddOrUpdateNftInfoAsync(nftInfo);
+                }
+                
             }
 
             await _bus.Publish<NewIndexEvent<NFTOfferChangeDto>>(new NewIndexEvent<NFTOfferChangeDto>
