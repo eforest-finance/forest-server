@@ -63,8 +63,11 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
                         {
                             AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(resetNftSyncHeightExpireMinutes)
                         });
-
-                    return CommonConstant.BeginHeight;
+                    if (newIndexHeight > CommonConstant.OneDayBlockHeight)
+                    {
+                        return newIndexHeight - CommonConstant.OneDayBlockHeight;
+                    }
+                    return newIndexHeight;
                 }
             }
         }
