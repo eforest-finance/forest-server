@@ -789,7 +789,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             _logger.Debug("UpdateSeedSymbolOtherInfoAsync-1 seedSymbolIndex.Id={A} indexerNFTOffer.Id={B}", seedSymbolIndex.Id,
                 indexerNFTOffer?.Id);
-            if (indexerNFTOffer == null && seedSymbolIndex.MaxOfferId.IsNullOrEmpty())
+            if (indexerNFTOffer == null)
             {
                 return false;
             }
