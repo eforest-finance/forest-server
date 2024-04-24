@@ -1107,11 +1107,6 @@ namespace NFTMarketServer.NFT
         }
         private bool UpdateMaxOfferInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTOffer indexerNFTOffer)
         {
-            if (indexerNFTOffer == null && nftInfoIndex.MaxOfferId.IsNullOrEmpty())
-            {
-                
-                return false;
-            }
 
             if (indexerNFTOffer != null)
             {
