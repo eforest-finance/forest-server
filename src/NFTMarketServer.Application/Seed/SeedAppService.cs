@@ -674,6 +674,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         
         var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(seedSymbolIndex.Id);
+        _logger.Debug("UpdateNFTOtherInfoAsync nftInfoNewIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull{C}", seedSymbolIndex.Id,
+            indexerNFTOffer?.Id, indexerNFTOffer == null);
         if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
         {
             UpdateMaxOfferInfo(seedSymbolIndex, indexerNFTOffer);
