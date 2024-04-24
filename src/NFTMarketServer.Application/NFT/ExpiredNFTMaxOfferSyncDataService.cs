@@ -72,7 +72,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
         long blockHeight = -1;
         if (originList.IsNullOrEmpty())
         {
-            _logger.LogInformation("GetNftMaxOfferAsync no data, duration: {Duration}", option.Duration);
+            _logger.LogInformation("ExpiredNftMaxOfferSync no data, duration: {Duration}", option.Duration);
             return 0;
         }
         
@@ -82,7 +82,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
             .Select(group => group.MaxBy(dto => dto.Value?.Prices ?? 0))
             .ToList();
         _logger.LogInformation(
-            "GetNftMaxOfferAsync queryOriginList count: {count}, queryList count: {count}  from height: {lastEndHeight}, chain id: {chainId}",
+            "ExpiredNftMaxOfferSync queryOriginList count: {count}, queryList count: {count}  from height: {lastEndHeight}, chain id: {chainId}",
             originList.Count, list.Count, lastEndHeight, chainId);
 
         var cacheKey = GetBusinessType() + chainId + lastEndHeight;
@@ -110,37 +110,8 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
             changeFlag = true;
             var nftInfoId = data.Key;
             var maxOfferInfo = data.Value;
-            _logger.Debug("ExpiredNftMaxOfferSync maxOfferInfo.id={A}",maxOfferInfo?.Id);
-            var isSeed = nftInfoId.Match(NFTSymbolBasicConstants.SeedIdPattern);
-            if (isSeed)
-            {
-                var seedSymbol = await _seedSymbolIndexRepository.GetAsync(nftInfoId);
-                if (seedSymbol == null) continue;
-                
-                if (maxOfferInfo != null && seedSymbol.MaxOfferId == maxOfferInfo.Id)
-                {
-                    seedSymbol.HasOfferFlag = false;
-                    seedSymbol.MaxOfferPrice = CommonConstant.DefaultValueNone;
-                    seedSymbol.MaxOfferExpireTime = DateTime.UtcNow;
-                    seedSymbol.MaxOfferId = "";
-                    await _seedAppService.AddOrUpdateSeedSymbolAsync(seedSymbol);
-                }
-            }
-            else
-            {
-                var nftInfo = await _nftInfoIndexRepository.GetAsync(nftInfoId);
-                if (nftInfo == null) continue;
-                if (maxOfferInfo != null && nftInfo.MaxOfferId == maxOfferInfo.Id)
-                {
-                    nftInfo.HasOfferFlag = false;
-                    nftInfo.MaxOfferPrice = CommonConstant.DefaultValueNone;
-                    nftInfo.MaxOfferExpireTime = DateTime.UtcNow;
-                    nftInfo.MaxOfferId = "";
-
-                    await _nftInfoAppService.AddOrUpdateNftInfoAsync(nftInfo);
-                }
-                
-            }
+            _logger.Debug("ExpiredNftMaxOfferSync nftInfoId ={A} offer.symbol={B} maxOfferInfo.id={C}", nftInfoId,
+                maxOfferInfo.Symbol, maxOfferInfo?.Id);
 
             await _bus.Publish<NewIndexEvent<NFTOfferChangeDto>>(new NewIndexEvent<NFTOfferChangeDto>
             {
