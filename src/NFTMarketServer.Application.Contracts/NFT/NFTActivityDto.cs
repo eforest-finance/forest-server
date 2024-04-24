@@ -20,4 +20,7 @@ public class NFTActivityDto: EntityDto<Guid>
     public string Symbol{ get; set; }
     public string CollectionSymbol{ get; set; }
     public string CollectionName{ get; set; }
+    
+    public decimal TotalPrice{ get; set; }
+
 }
