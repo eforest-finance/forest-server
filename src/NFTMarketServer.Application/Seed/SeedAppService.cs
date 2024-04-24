@@ -678,7 +678,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         
         var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(seedSymbolIndex.Id);
-        _logger.Debug("UpdateNFTOtherInfoAsync nftInfoNewIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull{C}", seedSymbolIndex.Id,
+        _logger.Debug("UpdateSeedSymbolOtherInfoAsync seedSymbolIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull={C} - {C}", seedSymbolIndex.Id,
             indexerNFTOffer?.Id, indexerNFTOffer == null);
         if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
         {
@@ -787,18 +787,23 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         private bool UpdateMaxOfferInfo(SeedSymbolIndex seedSymbolIndex, IndexerNFTOffer indexerNFTOffer)
         {
+            _logger.Debug("UpdateMaxOfferInfo-1");
             if (indexerNFTOffer == null && seedSymbolIndex.MaxOfferId.IsNullOrEmpty())
             {
+                _logger.Debug("UpdateMaxOfferInfo-2");
                 return false;
             }
 
+            _logger.Debug("UpdateMaxOfferInfo-3");
             if (indexerNFTOffer != null && indexerNFTOffer.Id.Equals(seedSymbolIndex.MaxOfferId))
             {
+                _logger.Debug("UpdateMaxOfferInfo-4");
                 return false;
             }
 
             if (indexerNFTOffer != null)
             {
+                _logger.Debug("UpdateMaxOfferInfo-5");
                 seedSymbolIndex.MaxOfferId = indexerNFTOffer.Id;
                 seedSymbolIndex.MaxOfferPrice = indexerNFTOffer.Price;
                 seedSymbolIndex.MaxOfferExpireTime = indexerNFTOffer.ExpireTime;
@@ -813,8 +818,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             }
             else
             {
+                _logger.Debug("UpdateMaxOfferInfo-6");
                 seedSymbolIndex.MaxOfferId = null;
-                seedSymbolIndex.MaxOfferPrice = -1;
+                seedSymbolIndex.MaxOfferPrice = CommonConstant.DefaultValueNone;
                 seedSymbolIndex.MaxOfferExpireTime = DateTime.UtcNow;
                 seedSymbolIndex.OfferToken = null;
                 seedSymbolIndex.HasOfferFlag = false;
