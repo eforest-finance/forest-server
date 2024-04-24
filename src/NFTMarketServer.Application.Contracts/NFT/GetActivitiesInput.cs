@@ -11,4 +11,7 @@ public class GetActivitiesInput : PagedAndSortedResultRequestDto
     public List<int> Types { get; set; }
     public long TimestampMin { get; set; }
     public long TimestampMax { get; set; }
+    
+    public string FilterSymbol { get; set; }
+
 }

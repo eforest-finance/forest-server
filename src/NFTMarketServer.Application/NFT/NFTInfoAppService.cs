@@ -1402,6 +1402,8 @@ namespace NFTMarketServer.NFT
         {
             var activities = await _nftActivityAppService.GetListAsync(input);
             if (activities == null || activities.TotalCount == 0 || activities.Items.Count == 0) return null;
+
+            var returnItems = new List<NFTActivityDto>();
             foreach (var activity in activities.Items)
             {
             
@@ -1416,11 +1418,13 @@ namespace NFTMarketServer.NFT
                 activity.CollectionName = nftInfoIndexDto.NFTCollection.TokenName;
                 activity.TotalPrice=(decimal)activity.Price * activity.Amount;
                 activity.NFTUrl = nftInfoIndexDto.PreviewImage;
+                if(!activity.Symbol.Contains(input.FilterSymbol)) continue;
+                returnItems.Add(activity);
             }
             return new PagedResultDto<NFTActivityDto>
             {
-                Items = activities.Items,
-                TotalCount = activities.TotalCount
+                Items = returnItems,
+                TotalCount = returnItems.Count
             };
         }
     }
