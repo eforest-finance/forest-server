@@ -201,7 +201,7 @@ namespace NFTMarketServer.NFT
                 var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
 
                 var accountDtoDict =
-                    await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.IssuerTo).ToList());
+                    await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
 
                 result = new PagedResultDto<CompositeNFTInfoIndexDto>()
                 {
@@ -1218,7 +1218,7 @@ namespace NFTMarketServer.NFT
             var accountDto = new AccountDto();
             if (!seedSymbolIndex.RealOwner.IsNullOrEmpty())
             {
-                accountDtoDict.TryGetValue(seedSymbolIndex.IssuerTo, out var temAccountDto);
+                accountDtoDict.TryGetValue(seedSymbolIndex.RealOwner, out var temAccountDto);
                 accountDto = temAccountDto;
             }
             
@@ -1253,9 +1253,7 @@ namespace NFTMarketServer.NFT
                 ListingPriceCreateTime = seedSymbolIndex.HasAuctionFlag
                     ? seedSymbolIndex.AuctionDateTime
                     : seedSymbolIndex.LatestListingTime,
-                OfferPrice = seedSymbolIndex.HasOfferFlag
-                    ? seedSymbolIndex.MaxOfferPrice
-                    : CommonConstant.DefaultValueNone,
+                OfferPrice = maxOffer?.Price ?? CommonConstant.DefaultValueNone,
                 LatestDealPrice = temLatestDealPrice,
                 AllOwnerCount = CommonConstant.IntOne,
                 RealOwner = accountDto
