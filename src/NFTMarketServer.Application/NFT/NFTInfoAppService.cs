@@ -1414,8 +1414,8 @@ namespace NFTMarketServer.NFT
                 activity.Symbol = nftInfoIndexDto.NFTSymbol;
                 activity.CollectionSymbol = nftInfoIndexDto.NFTCollection.Symbol;
                 activity.CollectionName = nftInfoIndexDto.NFTCollection.TokenName;
-                activity.TotalPrice=(decimal)activity.Price * activity.Amount; 
-
+                activity.TotalPrice=(decimal)activity.Price * activity.Amount;
+                activity.NFTUrl = nftInfoIndexDto.CoverImageUrl;
             }
             return new PagedResultDto<NFTActivityDto>
             {
