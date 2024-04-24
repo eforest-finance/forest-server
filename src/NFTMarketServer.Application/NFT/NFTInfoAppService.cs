@@ -1404,5 +1404,28 @@ namespace NFTMarketServer.NFT
 
             return ret;
         }
+        public async Task<PagedResultDto<NFTActivityDto>> GetActivityListAsync(GetActivitiesInput input)
+        {
+            var activities = await _nftActivityAppService.GetListAsync(input);
+            if (activities == null || activities.TotalCount == 0 || activities.Items.Count == 0) return null;
+            foreach (var activity in activities.Items)
+            {
+            
+                var nftInfoIndexDto =  await GetNFTInfoAsync(new GetNFTInfoInput()
+                {
+                    Id = activity.NFTInfoId
+                });
+                if (nftInfoIndexDto == null) continue;
+
+                activity.Symbol = nftInfoIndexDto.NFTSymbol;
+                activity.CollectionSymbol = nftInfoIndexDto.NFTCollection.Symbol;
+                activity.CollectionName = nftInfoIndexDto.NFTCollection.TokenName;
+            }
+            return new PagedResultDto<NFTActivityDto>
+            {
+                Items = activities.Items,
+                TotalCount = activities.TotalCount
+            };
+        }
     }
 }

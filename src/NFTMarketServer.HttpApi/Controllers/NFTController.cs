@@ -159,5 +159,12 @@ namespace NFTMarketServer.Controllers
         {
             return _nftAppService.GetNFTOwnersAsync(input);
         }
+        
+        [HttpGet]
+        [Route("activities-time")]
+        public Task<PagedResultDto<NFTActivityDto>> GetActivityListAsync(GetActivitiesInput input)
+        {
+            return _nftAppService.GetActivityListAsync(input);
+        }
     }
 }

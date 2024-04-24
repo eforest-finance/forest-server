@@ -16,4 +16,8 @@ public class NFTActivityDto: EntityDto<Guid>
     public decimal Price { get; set; }
     public string TransactionHash { get; set; }
     public long Timestamp { get; set; }
+    
+    public string Symbol{ get; set; }
+    public string CollectionSymbol{ get; set; }
+    public string CollectionName{ get; set; }
 }
