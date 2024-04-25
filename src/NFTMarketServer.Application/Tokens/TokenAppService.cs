@@ -41,8 +41,21 @@ namespace NFTMarketServer.Tokens
             {
                 return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(cache);
             }
-            
-            var price = await _tokenMarketDataProvider.GetHistoryPriceAsync(symbol, priceTime);
+
+            var price = new decimal(0);
+            try
+            {
+                price = await _tokenMarketDataProvider.GetHistoryPriceAsync(symbol, priceTime);
+            }
+            catch (Exception e)
+            {
+                _logger.LogInformation(e, "GetHistoryPriceAsync e ,then defaultCache");
+                var defaultCacheKey = GetDefaultTokenMarketDataCacheKey(symbol);
+                var defaultMarketData = await _distributedCache.GetAsync(defaultCacheKey);
+                _logger.LogInformation(e, "GetHistoryPriceAsync e ,then defaultCache, price={A} symbol={B}",
+                    defaultMarketData?.Price, defaultMarketData?.Symbol);
+                return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(defaultMarketData);
+            }
             var marketData = new TokenMarketData
             {
                 Price = price,
@@ -64,7 +77,21 @@ namespace NFTMarketServer.Tokens
                 return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(cache);
             }
 
-            var price = await _tokenMarketDataProvider.GetPriceAsync(symbol);
+            var defaultCacheKey = GetDefaultTokenMarketDataCacheKey(symbol);
+            
+            var price = new decimal(0);
+            try
+            {
+                price = await _tokenMarketDataProvider.GetPriceAsync(symbol);
+            }
+            catch (Exception e)
+            {
+                _logger.LogInformation(e, "GetCurrentPriceAsync e ,then defaultCache");
+                var defaultMarketData = await _distributedCache.GetAsync(defaultCacheKey);
+                _logger.LogInformation(e, "GetCurrentPriceAsync e ,then defaultCache, price={A} symbol={B}",
+                    defaultMarketData?.Price, defaultMarketData?.Symbol);
+                return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(defaultMarketData);
+            }
             var marketData = new TokenMarketData
             {
                 Price = price,
@@ -75,6 +102,11 @@ namespace NFTMarketServer.Tokens
             {
                 AbsoluteExpiration = marketData.Timestamp.AddMinutes(_tokenPriceCacheOptionsMonitor.CurrentValue.Minutes)
             });
+            
+            await _distributedCache.SetAsync(defaultCacheKey, marketData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpiration = marketData.Timestamp.AddDays(36500)
+            });
 
             return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(marketData);
         }
@@ -82,6 +114,11 @@ namespace NFTMarketServer.Tokens
         private string GetCurrentTokenMarketDataCacheKey(string symbol)
         {
             return $"current-{symbol}";
+        }
+        
+        private string GetDefaultTokenMarketDataCacheKey(string symbol)
+        {
+            return $"default-{symbol}";
         }
 
         private string GetHistoryTokenMarketDataCacheKey(string symbol, DateTime time)

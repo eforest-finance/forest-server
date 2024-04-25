@@ -19,7 +19,7 @@ public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
     [Keyword] public string RandomIssueManager { get; set; }
     
     [Keyword] public string CreatorAddress { get; set; }
-    [Keyword] public string ImageUrl { get; set; }
+    [Text(Index = false)] public string ImageUrl { get; set; }
     
     [Keyword] public string CollectionSymbol { get; set; }
     [Keyword] public string CollectionName { get; set; }
@@ -43,10 +43,10 @@ public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
     public TokenInfoIndex LatestDealToken { get; set; }
     public TokenInfoIndex WhitelistPriceToken { get; set; }
 
-    [Keyword] public string PreviewImage { get; set; }
-    [Keyword] public string File { get; set; }
-    [Keyword] public string FileExtension { get; set; }
-    [Keyword] public string Description { get; set; }
+    [Text(Index = false)] public string PreviewImage { get; set; }
+    [Text(Index = false)] public string File { get; set; }
+    [Text(Index = false)] public string FileExtension { get; set; }
+    [Text(Index = false)] public string Description { get; set; }
     public bool IsOfficial { get; set; }
 
     public bool HasListingFlag { get; set; }
@@ -64,6 +64,8 @@ public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
     
     [Keyword] public string MaxOfferId { get; set; }
     
+    [Text(Index = false)] public string RealOwner { get; set; }
+    public long AllOwnerCount { get; set; }
     
     public (string Description, decimal Price) GetDescriptionAndPrice(decimal queryMaxOfferPrice)
     {

@@ -181,6 +181,10 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
                         _objectMapper.Map<IndexerTokenInfo, TokenDto>(
                             _objectMapper.Map<TokenInfoIndex, IndexerTokenInfo>(dic.FloorPriceToken));
                 }
+                if (dic.ItemLatestDealPrice > CommonConstant.IntZero)
+                {
+                    nftTraitInfoDto.LatestDealPrice = dic.ItemLatestDealPrice;
+                }
             }
 
             result.TraitInfos.Add(nftTraitInfoDto);

@@ -19,6 +19,9 @@ public interface ISeedSymbolSyncedProvider
 {
     public Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCompositeNFTInfosInput dto);
 
+    public Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCollectionActivitiesInput dto,
+        int maxLimit);
+
     public Task<IndexerSeedInfos> GetSeedInfosUserProfileAsync(GetNFTInfosProfileInput dto);
     
     public Task<long> CalCollectionItemSupplyTotalAsync(string chainId);
@@ -111,6 +114,40 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         var sort = GetSortForSeedBrife(dto.Sorting);
         var result = await _seedSymbolIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount,
             limit: dto.MaxResultCount);
+        if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
+        {
+            return result;
+        }
+
+        var count = await QueryRealCountAsync(mustQuery);
+        var newResult = new Tuple<long, List<SeedSymbolIndex>>(count, result?.Item2);
+        return newResult;
+    }
+
+    public async Task<Tuple<long, List<SeedSymbolIndex>>> GetSeedBriefInfosAsync(GetCollectionActivitiesInput dto,
+        int maxLimit)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+
+
+        if (!dto.ChainList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.ChainId).Terms(dto.ChainList)));
+        }
+        
+        mustQuery.Add(q =>
+            q.Range(i => i.Field(f => f.Supply).GreaterThan(0)));
+        mustQuery.Add(q => q.Bool(b => b.Must(m => m.Term(i => i.Field(f => f.IsDeleteFlag).Value(false)))));
+        if (!dto.SymbolTypeList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.TokenType).Terms(dto.SymbolTypeList)));
+        }
+        
+        QueryContainer Filter(QueryContainerDescriptor<SeedSymbolIndex> f) => f.Bool(b => b.Must(mustQuery));
+
+        var result = await _seedSymbolIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
+            sortExp: item => item.BlockHeight,
+            limit: maxLimit);
         if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
         {
             return result;
