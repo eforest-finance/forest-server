@@ -655,6 +655,10 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     
     private async Task UpdateSeedSymbolOtherInfoAsync(SeedSymbolIndex seedSymbolIndex)
     {
+        if (seedSymbolIndex.ChainId.Equals(CommonConstant.MainChainId))
+        {
+            return;
+        }
         var getNftListingsDto = new GetNFTListingsDto
         {
             ChainId = seedSymbolIndex.ChainId,
@@ -674,6 +678,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         
         var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(seedSymbolIndex.Id);
+        _logger.Debug("UpdateSeedSymbolOtherInfoAsync seedSymbolIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull={C}", seedSymbolIndex.Id,
+            indexerNFTOffer?.Id, indexerNFTOffer == null);
         if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
         {
             UpdateMaxOfferInfo(seedSymbolIndex, indexerNFTOffer);
@@ -781,15 +787,6 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         private bool UpdateMaxOfferInfo(SeedSymbolIndex seedSymbolIndex, IndexerNFTOffer indexerNFTOffer)
         {
-            if (indexerNFTOffer == null && seedSymbolIndex.MaxOfferId.IsNullOrEmpty())
-            {
-                return false;
-            }
-
-            if (indexerNFTOffer != null && indexerNFTOffer.Id.Equals(seedSymbolIndex.MaxOfferId))
-            {
-                return false;
-            }
 
             if (indexerNFTOffer != null)
             {

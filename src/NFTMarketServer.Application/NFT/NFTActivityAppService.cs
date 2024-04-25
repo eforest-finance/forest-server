@@ -18,11 +18,9 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
     private readonly IUserAppService _userAppService;
     private readonly INFTActivityProvider _nftActivityProvider;
 
-
     public NFTActivityAppService(
         IUserAppService userAppService,
-        INFTActivityProvider nftActivityProvider
-        )
+        INFTActivityProvider nftActivityProvider)
     {
         _userAppService = userAppService;
         _nftActivityProvider = nftActivityProvider;

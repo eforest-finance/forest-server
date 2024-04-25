@@ -29,5 +29,8 @@ namespace NFTMarketServer.NFT
 
         Task<NFTOwnerDto> GetNFTOwnersAsync(GetNFTOwnersInput input);
         
+        Task<PagedResultDto<NFTActivityDto>> GetActivityListAsync(GetActivitiesInput input);
+
+        
     }
 }

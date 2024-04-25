@@ -15,6 +15,9 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
 {
     
     private readonly IOptionsMonitor<HideCollectionInfoOptions> _hideCollectionInfoOptionsMonitor;
+
+    private const string OwnerTotalbyday = "OwnerTotalbyday";
+    private const string OwnerTotalbyweek = "OwnerTotalbyweek";
     
     private static readonly Dictionary<string, Expression<Func<NFTCollectionExtensionIndex, object>>>
         SortingExpressions =
@@ -23,10 +26,10 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
             {
                 { "FloorPricebyday", p => p.FloorPrice },
                 { "ItemTotalbyday", p => p.ItemTotal },
-                { "OwnerTotalbyday", p => p.OwnerTotal },
+                { OwnerTotalbyday, p => p.OwnerTotal },
                 { "FloorPricebyweek", p => p.FloorPrice },
                 { "ItemTotalbyweek", p => p.ItemTotal },
-                { "OwnerTotalbyweek", p => p.OwnerTotal },
+                { OwnerTotalbyweek, p => p.OwnerTotal },
                 { "volumeTotalbyday", p => p.CurrentDayVolumeTotal },
                 { "volumeTotalbyweek", p => p.CurrentWeekVolumeTotal },
                 { "volumeTotalChangebyday", p => p.CurrentDayVolumeTotalChange },
@@ -119,10 +122,9 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
             f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
         
         //sortExp base Sort , like "floorPrice", "itemTotal"
-        var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter, skip: input.SkipCount,
+        var tuple = await _nftCollectionExtensionIndexRepository.GetSortListAsync(Filter, skip: input.SkipCount,
             limit: input.MaxResultCount,
-            sortType: input.SortType,
-            sortExp: GetSortingExpression(input.Sort + input.DateRangeType, input.DateRangeType));
+            sortFunc: GetSortingExpression(input.Sort + input.DateRangeType, input.SortType));
 
         return tuple;
     }
@@ -144,17 +146,38 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
         return tuple;
     }
 
-    private Expression<Func<NFTCollectionExtensionIndex, object>> GetSortingExpression(string sortBy,DateRangeType dateRangeType)
+    private Func<SortDescriptor<NFTCollectionExtensionIndex>, IPromise<IList<ISort>>> GetSortingExpression(string sortBy,SortOrder sortOrder)
     {
+        var sortDescriptor = new SortDescriptor<NFTCollectionExtensionIndex>();
         if (sortBy.IsNullOrEmpty())
         {
-            return o => o.CreateTime;
+            sortDescriptor.Descending(a => a.CreateTime);
+            sortDescriptor.Descending(a => a.OwnerTotal);
+            return s => sortDescriptor;;
         }
 
         if (SortingExpressions.TryGetValue(sortBy, out var expression))
         {
-            return expression;
+            if (sortOrder == SortOrder.Descending)
+            {
+                sortDescriptor.Descending(expression);
+            }
+            else
+            {
+                sortDescriptor.Ascending(expression);
+            }
+
         }
-        return p => p.CreateTime;
+        else
+        {
+            sortDescriptor.Descending(a => a.CreateTime);
+        }
+        
+        if (!sortBy.Equals(OwnerTotalbyday) && !sortBy.Equals(OwnerTotalbyweek))
+        {
+            sortDescriptor.Descending(a => a.OwnerTotal);
+        }
+        
+        return s => sortDescriptor;
     }
 }
