@@ -194,6 +194,8 @@ namespace NFTMarketServer.NFT
             collection.Metadata = index.ExternalInfoDictionary
                 .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList();
 
+            collection.IsMainChainCreateNFT = NFTHelper.GetIsMainChainCreateNFT(index.ExternalInfoDictionary);
+            
             var imageUrl = GetNftImageUrl(index.Symbol, index.ExternalInfoDictionary);
             if (imageUrl.IsNullOrEmpty())
             {
