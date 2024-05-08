@@ -26,13 +26,13 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
     }
 
     public async Task<IndexerNFTCollections> GetNFTCollectionsIndexAsync(long inputSkipCount,
-        long inputMaxResultCount, string inputAddress)
+        long inputMaxResultCount, List<string> addressList)
     {
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTCollections>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$creatorAddress:String) {
-                    data:nftCollections(dto:{skipCount: $skipCount,maxResultCount:$maxResultCount,creatorAddress:$creatorAddress}){
+			    query($skipCount:Int!,$maxResultCount:Int!,$addressList:[String]) {
+                    data:nftCollectionsByAddressList(dto:{skipCount: $skipCount,maxResultCount:$maxResultCount,addressList:$addressList}){
                         totalRecordCount,
                         indexerNftCollections:data{
                                             id,
@@ -60,7 +60,7 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
             {
                 skipCount = inputSkipCount,
                 maxResultCount = inputMaxResultCount,
-                creatorAddress = inputAddress
+                addressList = addressList
             }
         });
         return indexerCommonResult?.Data;
