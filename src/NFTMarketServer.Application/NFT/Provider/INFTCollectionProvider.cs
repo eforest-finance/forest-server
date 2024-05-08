@@ -6,7 +6,8 @@ namespace NFTMarketServer.NFT.Provider;
 
 public interface INFTCollectionProvider
 {
-    public Task<IndexerNFTCollections> GetNFTCollectionsIndexAsync(long skipCount, long maxResultCount, string inputAddress);
+    public Task<IndexerNFTCollections> GetNFTCollectionsIndexAsync(long skipCount, long maxResultCount,
+        List<string> addressList);
 
     public Task<IndexerNFTCollection> GetNFTCollectionIndexAsync(string inputId);
     public Task<Dictionary<string, IndexerNFTCollection>> GetNFTCollectionIndexByIdsAsync(List<string> inputIds);
