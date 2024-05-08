@@ -64,7 +64,7 @@ namespace NFTMarketServer.NFT
             if (input.SkipCount < 0) return buildInitNFTCollectionIndexDto();
             var nftCollectionIndexs =
                 await _nftCollectionProvider.GetNFTCollectionsIndexAsync(input.SkipCount,
-                    input.MaxResultCount, input.Address);
+                    input.MaxResultCount, input.AddressList.IsNullOrEmpty()?new List<string>{input.Address}:input.AddressList);
             if (nftCollectionIndexs == null) return buildInitNFTCollectionIndexDto();
 
             var totalCount = nftCollectionIndexs.TotalRecordCount;
@@ -194,6 +194,8 @@ namespace NFTMarketServer.NFT
             collection.Metadata = index.ExternalInfoDictionary
                 .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList();
 
+            collection.IsMainChainCreateNFT = NFTHelper.GetIsMainChainCreateNFT(index.ExternalInfoDictionary);
+            
             var imageUrl = GetNftImageUrl(index.Symbol, index.ExternalInfoDictionary);
             if (imageUrl.IsNullOrEmpty())
             {

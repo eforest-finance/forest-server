@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AElf;
 using NFTMarketServer.Basic;
 using NFTMarketServer.NFT.Index;
 
@@ -51,5 +52,14 @@ public static class NFTHelper
     {
         var nftImageUrl = externalInfo.FirstOrDefault(o => o.Key == "__nft_image_url")?.Value;
         return nftImageUrl.IsNullOrEmpty() ? getImageUrlFunc() : nftImageUrl;
+    }
+
+    public static bool GetIsMainChainCreateNFT(IEnumerable<IndexerExternalInfoDictionary> externalInfo)
+    {
+        var nftCreateChainId = externalInfo.FirstOrDefault(o => o.Key == CommonConstant.MetadataNFTCreateChainIdKey)
+            ?.Value;
+
+        return nftCreateChainId.IsNullOrEmpty() || ChainHelper.ConvertBase58ToChainId(CommonConstant.MainChainId)
+            .ToString().Equals(nftCreateChainId);
     }
 }
