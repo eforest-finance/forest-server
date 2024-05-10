@@ -147,8 +147,7 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
         QueryContainer Filter(QueryContainerDescriptor<NFTCollectionExtensionIndex> f) =>
             f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
         
-        var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter, skip: input.SkipCount,
-            limit: input.MaxResultCount);
+        var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter);
 
         return tuple;
     }

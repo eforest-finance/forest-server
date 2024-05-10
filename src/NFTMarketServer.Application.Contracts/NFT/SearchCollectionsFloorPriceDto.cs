@@ -1,6 +1,6 @@
 namespace NFTMarketServer.NFT;
 
-public class SearchCollectionsFloorPriceDto : PagedAndMaxCountResultRequestDto
+public class SearchCollectionsFloorPriceDto
 {
     public string ChainId { get; set; }
     public string Symbol { get; set; }

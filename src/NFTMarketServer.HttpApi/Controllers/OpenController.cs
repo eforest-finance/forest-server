@@ -14,10 +14,18 @@ public class OpenController : NFTMarketServerController
 {
     private readonly INFTCollectionAppService _nftCollectionAppService;
     
+    public OpenController(INFTCollectionAppService nftCollectionAppService)
+    {
+       
+        _nftCollectionAppService = nftCollectionAppService;
+    }
+    
     [HttpPost]
     [Route("search-collections-floor-price")]
     public Task<PagedResultDto<SearchCollectionsFloorPriceDto>> SearchCollectionsFloorPriceAsync(SearchCollectionsFloorPriceInput input)
     {
         return _nftCollectionAppService.SearchCollectionsFloorPriceAsync(input);
     }
+    
+    
 }

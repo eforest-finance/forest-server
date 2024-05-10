@@ -97,7 +97,7 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<SearchCollectionsFloorPriceDto>> SearchCollectionsFloorPriceAsync(
             SearchCollectionsFloorPriceInput input)
         {
-            if (input.SkipCount < 0)
+            if (input.ChainId.IsNullOrEmpty() || input.CollectionSymbolList.IsNullOrEmpty())
             {
                 return BuildInitSearchCollectionsFloorPriceDto();
             }
