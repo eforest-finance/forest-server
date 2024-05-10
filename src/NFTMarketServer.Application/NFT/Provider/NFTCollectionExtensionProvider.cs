@@ -128,6 +128,30 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
 
         return tuple;
     }
+    
+    public async Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionAsync(
+        SearchCollectionsFloorPriceInput input)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTCollectionExtensionIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Terms(t => t.Field(f => f.NFTSymbol).Terms(input.CollectionSymbolList)));
+        mustQuery.Add(q => q.Term(t => t.Field(f => f.ChainId).Value(input.ChainId)));
+        
+        var mustNotQuery = new List<Func<QueryContainerDescriptor<NFTCollectionExtensionIndex>, QueryContainer>>();
+        
+        var hideCollectionInfo = _hideCollectionInfoOptionsMonitor?.CurrentValue;
+        if (hideCollectionInfo != null && !hideCollectionInfo.HideCollectionInfoList.IsNullOrEmpty())
+        {
+            mustNotQuery.Add(q => q.Terms(t => t.Field(f => f.NFTSymbol).Terms(hideCollectionInfo.HideCollectionInfoList)));
+        }
+        
+        QueryContainer Filter(QueryContainerDescriptor<NFTCollectionExtensionIndex> f) =>
+            f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
+        
+        var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter, skip: input.SkipCount,
+            limit: input.MaxResultCount);
+
+        return tuple;
+    }
 
     public async Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionPageAsync(int skipCount,
         int limit)

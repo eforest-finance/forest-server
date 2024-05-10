@@ -61,16 +61,16 @@ namespace NFTMarketServer.NFT
 
         public async Task<PagedResultDto<NFTCollectionIndexDto>> GetNFTCollectionsAsync(GetNFTCollectionsInput input)
         {
-            if (input.SkipCount < 0) return buildInitNFTCollectionIndexDto();
+            if (input.SkipCount < 0) return BuildInitNFTCollectionIndexDto();
             var nftCollectionIndexs =
                 await _nftCollectionProvider.GetNFTCollectionsIndexAsync(input.SkipCount,
                     input.MaxResultCount, input.AddressList.IsNullOrEmpty()?new List<string>{input.Address}:input.AddressList);
-            if (nftCollectionIndexs == null) return buildInitNFTCollectionIndexDto();
+            if (nftCollectionIndexs == null) return BuildInitNFTCollectionIndexDto();
 
             var totalCount = nftCollectionIndexs.TotalRecordCount;
             if (nftCollectionIndexs.IndexerNftCollections == null)
             {
-                return buildInitNFTCollectionIndexDto();
+                return BuildInitNFTCollectionIndexDto();
             }
 
             var addresses = nftCollectionIndexs.IndexerNftCollections.Select(o => o.CreatorAddress).Distinct().ToList();
@@ -91,6 +91,31 @@ namespace NFTMarketServer.NFT
             {
                 Items = nftCollectionIndexDtos,
                 TotalCount = totalCount
+            };
+        }
+
+        public async Task<PagedResultDto<SearchCollectionsFloorPriceDto>> SearchCollectionsFloorPriceAsync(
+            SearchCollectionsFloorPriceInput input)
+        {
+            if (input.SkipCount < 0)
+            {
+                return BuildInitSearchCollectionsFloorPriceDto();
+            }
+
+            var tuple = await _collectionExtensionProvider.GetNFTCollectionExtensionAsync(input);
+
+            var extensionList = tuple.Item2;
+            if (extensionList.IsNullOrEmpty())
+            {
+                return BuildInitSearchCollectionsFloorPriceDto();
+            }
+            var resultList = extensionList
+                .Select(index => MapForSearchNftCollectionsFloorPriceDto(index))
+                .ToList();
+            return new PagedResultDto<SearchCollectionsFloorPriceDto>
+            {
+                Items = resultList,
+                TotalCount = tuple.Item1
             };
         }
 
@@ -141,11 +166,20 @@ namespace NFTMarketServer.NFT
                 .ToList();
         }
 
-        private PagedResultDto<NFTCollectionIndexDto> buildInitNFTCollectionIndexDto()
+        private PagedResultDto<NFTCollectionIndexDto> BuildInitNFTCollectionIndexDto()
         {
             return new PagedResultDto<NFTCollectionIndexDto>
             {
                 Items = new List<NFTCollectionIndexDto>(),
+                TotalCount = 0
+            };
+        }
+        
+        private PagedResultDto<SearchCollectionsFloorPriceDto> BuildInitSearchCollectionsFloorPriceDto()
+        {
+            return new PagedResultDto<SearchCollectionsFloorPriceDto>
+            {
+                Items = new List<SearchCollectionsFloorPriceDto>(),
                 TotalCount = 0
             };
         }
@@ -236,6 +270,11 @@ namespace NFTMarketServer.NFT
             }
             
             return searchNftCollectionsDto;
+        }
+        
+        private SearchCollectionsFloorPriceDto MapForSearchNftCollectionsFloorPriceDto(NFTCollectionExtensionIndex index)
+        {
+            return _objectMapper.Map<NFTCollectionExtensionIndex, SearchCollectionsFloorPriceDto>(index);
         }
 
         private RecommendedNFTCollectionsDto MapForRecommendedNftCollectionsDto(string id,
