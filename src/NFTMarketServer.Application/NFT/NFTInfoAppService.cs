@@ -64,7 +64,6 @@ namespace NFTMarketServer.NFT
         private readonly NFTCollectionAppService _nftCollectionAppService;
         private readonly IDistributedCache<string> _distributedCacheForHeight;
         private readonly IGraphQLProvider _graphQlProvider;
-        private readonly IBus _bus;
         private readonly INFTTraitProvider _inftTraitProvider;
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly ISeedAppService _seedAppService;
@@ -92,7 +91,6 @@ namespace NFTMarketServer.NFT
             ISeedSymbolSyncedProvider seedSymbolSyncedProvider, 
             INFTInfoSyncedProvider nftInfoSyncedProvider,
             INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
-            IBus bus,
             INFTOfferProvider nftOfferProvider,
             INFTListingProvider nftListingProvider,
             INFTDealInfoProvider nftDealInfoProvider,
@@ -136,7 +134,6 @@ namespace NFTMarketServer.NFT
             _graphQlProvider = graphQlProvider;
             _inftTraitProvider = inftTraitProvider;
             _userBalanceProvider = userBalanceProvider;
-            _bus = bus;
             _nftActivityAppService = nftActivityAppService;
             _seedAppService = seedAppService;
         }
