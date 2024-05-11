@@ -141,18 +141,8 @@ namespace NFTMarketServer.NFT
             GetNFTInfosProfileInput input)
         {
             //query nft infos
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-            IndexerNFTInfos nftInfos;
             
-            if (choiceNFTInfoNewFlag)
-            {
-                nftInfos = await _nftInfoNewSyncedProvider.GetNFTInfosUserProfileAsync(input);
-            }
-            else
-            {
-                nftInfos = await _nftInfoSyncedProvider.GetNFTInfosUserProfileAsync(input);
-            }
+            var nftInfos = await _nftInfoNewSyncedProvider.GetNFTInfosUserProfileAsync(input);
             
             //query seed infos
             var seedInfos = await _seedSymbolSyncedProvider.GetSeedInfosUserProfileAsync(input);
@@ -471,19 +461,7 @@ namespace NFTMarketServer.NFT
                 return null;
             }
 
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-
-            IndexerNFTInfo nftInfoIndex;
-
-            if (choiceNFTInfoNewFlag)
-            {
-                nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
-            else
-            {
-                nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
+            IndexerNFTInfo nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
             
             if (nftInfoIndex == null)
             {
@@ -1133,17 +1111,7 @@ namespace NFTMarketServer.NFT
 
         public async Task<NFTForSaleDto> GetNFTForSaleAsync(GetNFTForSaleInput input)
         {
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-            IndexerNFTInfo nftInfoIndex;
-            if (choiceNFTInfoNewFlag)
-            {
-                nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
-            else
-            {
-                nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
+            var nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
             
             if (nftInfoIndex == null)
             {
