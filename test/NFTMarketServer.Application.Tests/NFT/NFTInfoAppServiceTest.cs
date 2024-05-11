@@ -96,7 +96,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         var input = new GetNFTInfoInput
         {
             Id = "tDVV-LIJIGUANGAAAABBB-1",
-            Address = "T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z"
+            Address = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv"
         };
         var res = await _nftInfoAppService.GetNFTInfoAsync(input);
 
@@ -117,7 +117,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
             IssueAddress = ""
         };
         var res = await _nftInfoAppService.GetNFTInfosForUserProfileAsync(input);
-        res.TotalCount.ShouldBe(1);
+        res.TotalCount.ShouldBe(2);
 
     }
     
@@ -421,6 +421,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
     {
         var listing1 = new IndexerNFTListingInfo()
         {
+            Id = "111",
             Symbol = "LIJIGUANGAAAABBB-1",
             Quantity = 1,
             RealQuantity = 1,
@@ -434,6 +435,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         
         var listing2 = new IndexerNFTListingInfo()
         {
+            Id = "222",
             Symbol = "LIJIGUANGAAAABBB-1",
             Quantity = 2,
             RealQuantity = 2,
@@ -447,6 +449,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         
         var listing3 = new IndexerNFTListingInfo()
         {
+            Id = "333",
             Symbol = "LIJIGUANGAAAABBB-1",
             Quantity = 3,
             RealQuantity = 3,
