@@ -89,7 +89,7 @@ public sealed class NFTCollectionAppServiceTest : NFTMarketServerApplicationTest
             {
                 SkipCount = 0,
                 MaxResultCount = 2,
-                Address = ""
+                AddressList = new List<string>(){"T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z"}
             });
         var settings = new JsonSerializerSettings
         {
@@ -181,7 +181,7 @@ public sealed class NFTCollectionAppServiceTest : NFTMarketServerApplicationTest
         var result2 =
             "{\"TotalRecordCount\":26,\"IndexerNftCollections\":[{\"Id\":\"tDVW-XXPFQPSFZF-0\",\"ChainId\":\"tDVW\",\"Symbol\":\"XXPFQPSFZF-0\",\"TokenName\":\"XXPFQPSFZF-0token\",\"TotalSupply\":10000,\"IsBurnable\":true,\"IssueChainId\":1931928,\"Creator\":null,\"CreatorAddress\":\"2L4XSrSrFBMap1phcXNG1Eg8YZjMwAzqWDgJoSTcLDjcdmRJW5\",\"LogoImage\":null,\"FeaturedImage\":null,\"Description\":null,\"IsOfficial\":false,\"BaseUrl\":null,\"ExternalInfoDictionary\":[{\"Key\":\"__nft_image_url\",\"Value\":\"https://portkey-did.s3.ap-northeast-1.amazonaws.com/img/XXPFQPSFZF-0.jpg\",\"Data\":null}],\"Data\":null},{\"Id\":\"tDVW-TESTH-0\",\"ChainId\":\"tDVW\",\"Symbol\":\"TESTH-0\",\"TokenName\":\"LSTEST\",\"TotalSupply\":1,\"IsBurnable\":true,\"IssueChainId\":1931928,\"Creator\":null,\"CreatorAddress\":\"2vrQb6mt1ToURDZcrEDd3EaX2mKKhgeAr4MZpcLeGXR2MZSyBX\",\"LogoImage\":null,\"FeaturedImage\":null,\"Description\":null,\"IsOfficial\":false,\"BaseUrl\":null,\"ExternalInfoDictionary\":[{\"Key\":\"__nft_file_hash\",\"Value\":\"\\\"0e0a3ed9d56bd196764de35b966d425a\\\"\",\"Data\":null},{\"Key\":\"__nft_feature_hash\",\"Value\":\"\",\"Data\":null},{\"Key\":\"__nft_payment_tokens\",\"Value\":\"ELF\",\"Data\":null},{\"Key\":\"__nft_metadata\",\"Value\":\"[]\",\"Data\":null}],\"Data\":null}],\"Data\":null}";
         mockINFTCollectionProvider.Setup(calc =>
-            calc.GetNFTCollectionsIndexAsync(0, 2, null)).ReturnsAsync(
+            calc.GetNFTCollectionsIndexAsync(0, 2, It.IsAny<List<string>>())).ReturnsAsync(
             JsonConvert.DeserializeObject<IndexerNFTCollections>(result2));
         
         var result3 = "{\"tDVV-LIUGEKKKKKK-0\":{\"Id\":\"tDVV-LIUGEKKKKKK-0\",\"ChainId\":\"tDVV\",\"Symbol\":\"LIUGEKKKKKK-0\",\"TokenName\":\"LIUGEKKKKKK\",\"TotalSupply\":1,\"IsBurnable\":true,\"IssueChainId\":1866392,\"ProxyOwnerAddress\":\"Ke8opsEQxSB9JMCZHoQe4r531rUoRvyW3PVBtaSPMXaAbibZR\",\"ProxyIssuerAddress\":\"22EPS2zn8Nj5hYj4yVWSyiPMpDqy9wAp36nhc6TMXZ25pvxKqw\",\"CreatorAddress\":\"jTN2xssginjkyTP3BEFdJVrP64piDDiH4EqXGx53hFJTw6QnK\",\"LogoImage\":\"https://forest-dev.s3.ap-northeast-1.amazonaws.com/1700570966368-230901_003.jpg\",\"FeaturedImage\":\"https://forest-dev.s3.ap-northeast-1.amazonaws.com/1700570982244-20231019006.jpeg\",\"Description\":\"wulalala\",\"IsOfficial\":false,\"BaseUrl\":\"http://www.baidu.com\",\"ExternalInfoDictionary\":[{\"Key\":\"__nft_file_hash\",\"Value\":\"5ba9ce6cde03143d65bf187b787fe6cb\"},{\"Key\":\"__nft_feature_hash\",\"Value\":\"d8663f33b58d12829759cf7bcddcef44\"},{\"Key\":\"__nft_payment_tokens\",\"Value\":\"ELF\"},{\"Key\":\"__nft_metadata\",\"Value\":\"[{\\\\\\\"key\\\\\\\":\\\\\\\"description1\\\\\\\",\\\\\\\"value\\\\\\\":\\\\\\\"aaaa\\\\\\\"}]\"},{\"Key\":\"__nft_image_url\",\"Value\":\"https://forest-dev.s3.ap-northeast-1.amazonaws.com/1700570966368-230901_003.jpg\"}],\"BlockHeight\":0,\"CreateTime\":\"2023-11-21T12:50:14Z\"}}";
