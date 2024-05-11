@@ -29,7 +29,7 @@ public class INFTCollectionProviderTests : NFTMarketServerApplicationTestBase
         long skipCount = 0;
         long maxResultCount = 1;
         string inputAddress = "aa";
-        var result= await _nftCollectionProvider.GetNFTCollectionsIndexAsync(skipCount, maxResultCount, inputAddress);
+        var result= await _nftCollectionProvider.GetNFTCollectionsIndexAsync(skipCount, maxResultCount, new List<string>{inputAddress});
         result.ShouldNotBeNull();
         result.TotalRecordCount.ShouldBe(153);
         result.IndexerNftCollections.ShouldNotBeNull();
