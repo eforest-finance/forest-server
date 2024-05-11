@@ -58,6 +58,7 @@ public class SeedAppServiceTest: NFTMarketServerApplicationTestBase
         {
             Id = "tDVV-SYB",
             Symbol = "SYB",
+            ChainId = "tDVV",
             SeedSymbol = "SEED-007",
             SeedName = "SEED-SYB",
             Status = SeedStatus.AVALIABLE,

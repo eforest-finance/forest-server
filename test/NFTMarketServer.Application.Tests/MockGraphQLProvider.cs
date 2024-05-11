@@ -8,6 +8,7 @@ using NFTMarketServer.Provider;
 using NFTMarketServer.Seed.Dto;
 using NFTMarketServer.Seed.Index;
 using Volo.Abp.DependencyInjection;
+using TokenType = NFTMarketServer.Seed.Dto.TokenType;
 
 namespace NFTMarketServer;
 
@@ -33,9 +34,16 @@ public class MockGraphQLProvider : IGraphQLProvider, ISingletonDependency
         throw new System.NotImplementedException();
     }
 
-    public Task<SeedSymbolIndex> GetSyncSeedSymbolRecordAsync(string nftInfoId, string chainId)
+    public async Task<SeedSymbolIndex> GetSyncSeedSymbolRecordAsync(string nftInfoId, string chainId)
     {
-        throw new System.NotImplementedException();
+        return new SeedSymbolIndex()
+        {
+            Id = "tDVV-SEED-007",
+            ChainId = "tDVV",
+            Symbol = "SYB",
+            TokenType = TokenType.FT,
+            SeedType = SeedType.UNIQUE
+        };
     }
 
     public Task<List<BidInfoDto>> GetSyncSymbolBidRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight)
