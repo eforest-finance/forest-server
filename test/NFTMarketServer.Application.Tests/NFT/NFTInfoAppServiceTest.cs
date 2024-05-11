@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AElf;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Newtonsoft.Json;
+using NFTMarketServer.Common;
+using NFTMarketServer.Entities;
 using NFTMarketServer.Grains;
 using NFTMarketServer.Market;
 using NFTMarketServer.NFT.Index;
@@ -50,6 +53,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         services.AddSingleton(MockListingWhiteListPriceProvider());
         services.AddSingleton(MockISeedInfoProvider());
         services.AddSingleton(MockNFTInfoSyncedProviderProvider());
+        services.AddSingleton(MockINFTInfoNewSyncedProviderProvider());
         services.AddSingleton(MockNFTCollectionExtensionProvider());
         services.AddSingleton(MockNFTDealInfoProvider());
         _currentUser = Substitute.For<ICurrentUser>();
@@ -58,7 +62,6 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         services.AddSingleton(MockNFTOfferProvider());
         services.AddSingleton(MockISeedSymbolSyncedProvider());
         services.AddSingleton(MockINFTInfoSyncedProvider());
-        services.AddSingleton(MockINFTListingProvider());
         services.AddSingleton(MockIInscriptionProvider());
     }
 
@@ -159,7 +162,8 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         Login();
         var input = new GetNFTForSaleInput
         {
-            Id = "tDVV-LIJIGUANGAAAABBB-1"
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            ExcludedAddress = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv"
         };
         var res = await _nftInfoAppService.GetNFTForSaleAsync(input);
         res.ShouldNotBeNull();
@@ -173,7 +177,6 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         var input = new GetNFTForSaleInput
         {
             Id = "tDVV-LIJIGUANGAAAABBB-1",
-            
         };
         var res = await _nftInfoAppService.GetNFTForSaleAsync(input);
         res.ShouldNotBeNull();
@@ -198,7 +201,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
     private static INFTInfoProvider BuildMockINFTInfoProvider()
     {
         var result =
-            "{\"Id\":\"tDVW-JINMINGTRT-1\",\"ChainId\":\"tDVW\",\"IssueChainId\":1931928,\"Symbol\":\"JINMINGTRT-1\",\"Issuer\":\"2KQWh5v6Y24VcGgsx2KHpQvRyyU5DnCZ4eAUPqGQbnuZgExKaV\",\"Owner\":null,\"OwnerCount\":1,\"Issued\":0,\"TokenName\":\"amberN1\",\"TotalSupply\":1,\"WhitelistId\":\"26163e47d4ec49b4b41ece0ada05955522340cf9dcc38a6723fe4dcf8209c069\",\"CreatorAddress\":null,\"ImageUrl\":null,\"CollectionSymbol\":null,\"CollectionName\":null,\"CollectionId\":\"tDVW-JINMINGTRT-0\",\"ListingId\":null,\"ListingAddress\":null,\"ListingPrice\":0.0,\"ListingQuantity\":0,\"ListingEndTime\":null,\"LatestListingTime\":null,\"LatestDealPrice\":0.0,\"LatestDealTime\":\"0001-01-01T00:00:00\",\"ListingToken\":null,\"LatestDealToken\":null,\"PreviewImage\":null,\"File\":null,\"FileExtension\":null,\"Description\":null,\"IsOfficial\":false,\"Category\":0,\"ExternalInfoDictionary\":null,\"Data\":null}";
+            "{\"Id\":\"tDVW-JINMINGTRT-1\",\"ChainId\":\"tDVW\",\"IssueChainId\":1931928,\"Symbol\":\"JINMINGTRT-1\",\"Issuer\":\"2KQWh5v6Y24VcGgsx2KHpQvRyyU5DnCZ4eAUPqGQbnuZgExKaV\",\"Owner\":null,\"AllOwnerCount\":1,\"OwnerCount\":1,\"Issued\":0,\"TokenName\":\"amberN1\",\"TotalSupply\":1,\"WhitelistId\":\"26163e47d4ec49b4b41ece0ada05955522340cf9dcc38a6723fe4dcf8209c069\",\"CreatorAddress\":null,\"ImageUrl\":null,\"CollectionSymbol\":null,\"CollectionName\":null,\"CollectionId\":\"tDVW-JINMINGTRT-0\",\"ListingId\":null,\"ListingAddress\":null,\"ListingPrice\":0.0,\"ListingQuantity\":0,\"ListingEndTime\":null,\"LatestListingTime\":null,\"LatestDealPrice\":0.0,\"LatestDealTime\":\"0001-01-01T00:00:00\",\"ListingToken\":null,\"LatestDealToken\":null,\"PreviewImage\":null,\"File\":null,\"FileExtension\":null,\"Description\":null,\"IsOfficial\":false,\"Category\":0,\"ExternalInfoDictionary\":null,\"Data\":null}";
 
         var mockINFTInfoProvider = new Mock<INFTInfoProvider>();
         mockINFTInfoProvider.Setup(calc =>
@@ -246,6 +249,58 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         
         return mockINFTInfoProvider.Object;
     }
+    
+    private static INFTInfoNewSyncedProvider MockINFTInfoNewSyncedProviderProvider()
+    {
+        var mockNftInfoSyncedProvider = new Mock<INFTInfoNewSyncedProvider>();
+        var nftList = new List<IndexerNFTInfo>();
+        var nftInfoIndex = new IndexerNFTInfo()
+        {
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            CollectionId = "LIJIGUANGAAAABBB-0",
+            Symbol = "LIJIGUANGAAAABBB-1",
+            ChainId = "tDVV",
+            AllOwnerCount = 1,
+            Issuer = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            Owner = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            IssueChainId = ChainHelper.ConvertBase58ToChainId("tDVV"),
+            TraitPairsDictionary = new List<ExternalInfoDictionary>()
+        };
+        nftList.Add(nftInfoIndex);
+        var indexNftList = new List<IndexerNFTInfo>();
+        var indexerNftInfo = new IndexerNFTInfo
+        {
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            CollectionId = "LIJIGUANGAAAABBB-0",
+            Symbol = "LIJIGUANGAAAABBB-1",
+            ChainId = "tDVV",
+            AllOwnerCount = 1,
+            Issuer = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            Owner = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            IssueChainId = ChainHelper.ConvertBase58ToChainId("tDVV"),
+            TraitPairsDictionary = new List<ExternalInfoDictionary>()
+        };
+        indexNftList.Add(indexerNftInfo);
+        var indexerNftInfos = new IndexerNFTInfos()
+        {
+            TotalRecordCount = indexNftList.Count,
+            IndexerNftInfos = indexNftList
+        };
+        
+        mockNftInfoSyncedProvider.Setup(calc =>
+                calc.GetNFTInfoIndexAsync(It.IsAny<string>()))
+            .ReturnsAsync(indexerNftInfo);
+        
+        mockNftInfoSyncedProvider.Setup(calc =>
+                calc.GetNFTBriefInfosAsync(It.IsAny<GetCompositeNFTInfosInput>()))
+            .ReturnsAsync(
+                new Tuple<long, List<IndexerNFTInfo>>(nftList.Count, nftList));
+         
+        mockNftInfoSyncedProvider.Setup(calc =>
+                calc.GetNFTInfosUserProfileAsync(It.IsAny<GetNFTInfosProfileInput>()))
+            .ReturnsAsync(indexerNftInfos);
+        return mockNftInfoSyncedProvider.Object;
+    }
 
     private static ISeedInfoProvider MockISeedInfoProvider()
     {
@@ -279,12 +334,12 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         return priceProvider.Object;
     }
 
-    private static INFTInfoSyncedProvider MockNFTInfoSyncedProviderProvider()
+    private static INFTInfoNewSyncedProvider MockNFTInfoSyncedProviderProvider()
     {
         var result =
-            "{\"id\":\"tDVV-LIJIGUANGAAAABBB-1\",\"symbol\":\"LIJIGUANGAAAABBB-1\",\"tokenName\":\"721\", \"collectionSymbol\":\"LIJIGUANGAAAABBB-0\", \"chainId\":\"tDVV\", \"totalSupply\": 1, \"collectionId\": \"tDVV-LIJIGUANGAAAABBB-0\", \"OwnerCount\": 1, \"issuer\": \"aaaaa\", \"owner\": \"bbbbb\"}";
+            "{\"id\":\"tDVV-LIJIGUANGAAAABBB-1\",\"symbol\":\"LIJIGUANGAAAABBB-1\",\"tokenName\":\"721\", \"collectionSymbol\":\"LIJIGUANGAAAABBB-0\", \"chainId\":\"tDVV\", \"totalSupply\": 1, \"collectionId\": \"tDVV-LIJIGUANGAAAABBB-0\", \"AllOwnerCount\": 1,\"OwnerCount\": 1, \"issuer\": \"T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z\", \"owner\": \"T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z\"}";
 
-        var syncProvider = new Mock<INFTInfoSyncedProvider>();
+        var syncProvider = new Mock<INFTInfoNewSyncedProvider>();
         syncProvider.Setup(calc => 
                 calc.GetNFTInfoIndexAsync(
                     It.IsAny<string>()))
@@ -368,6 +423,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         {
             Symbol = "LIJIGUANGAAAABBB-1",
             Quantity = 1,
+            RealQuantity = 1,
             Prices = 10,
             Owner = "T7ApxUrF6vYfBizHBLSrfiEgEEZH2yURp3stye5AJLyc2F96z",
             NftInfo = new IndexerNFTInfo
@@ -380,6 +436,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         {
             Symbol = "LIJIGUANGAAAABBB-1",
             Quantity = 2,
+            RealQuantity = 2,
             Prices = 20,
             Owner = "2KQWh5v6Y24VcGgsx2KHpQvRyyU5DnCZ4eAUPqGQbnuZgExKaV",
             NftInfo = new IndexerNFTInfo
@@ -392,6 +449,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         {
             Symbol = "LIJIGUANGAAAABBB-1",
             Quantity = 3,
+            RealQuantity = 3,
             Prices = 20,
             Owner = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
             NftInfo = new IndexerNFTInfo
@@ -408,7 +466,7 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
             .ReturnsAsync(new PagedResultDto<IndexerNFTListingInfo>()
             {
 
-                TotalCount = 0,
+                TotalCount = 3,
                 Items = new List<IndexerNFTListingInfo> { listing1, listing2, listing3 }
             });
         
@@ -457,19 +515,29 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         var nftList = new List<IndexerNFTInfo>();
         var nftInfoIndex = new IndexerNFTInfo()
         {
-            Id = "tDVV-AAA-666666",
-            CollectionId = "AAA-0",
-            Symbol = "AAA-666666",
-            ChainId = "tDVV"
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            CollectionId = "LIJIGUANGAAAABBB-0",
+            Symbol = "LIJIGUANGAAAABBB-1",
+            ChainId = "tDVV",
+            AllOwnerCount = 1,
+            Issuer = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            Owner = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            IssueChainId = ChainHelper.ConvertBase58ToChainId("tDVV"),
+            TraitPairsDictionary = new List<ExternalInfoDictionary>()
         };
         nftList.Add(nftInfoIndex);
         var indexNftList = new List<IndexerNFTInfo>();
         var indexerNftInfo = new IndexerNFTInfo
         {
-            Id = "tDVV-AAA-666666",
-            CollectionId = "AAA-0",
-            Symbol = "AAA-666666",
-            ChainId = "tDVV"
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            CollectionId = "LIJIGUANGAAAABBB-0",
+            Symbol = "LIJIGUANGAAAABBB-1",
+            ChainId = "tDVV",
+            AllOwnerCount = 1,
+            Issuer = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            Owner = "4FHi2nS1MkmJL7N9WHPsNEjnSVqGgwghszfC6JMXy2KL7LNcv",
+            IssueChainId = ChainHelper.ConvertBase58ToChainId("tDVV"),
+            TraitPairsDictionary = new List<ExternalInfoDictionary>()
         };
         indexNftList.Add(indexerNftInfo);
         var indexerNftInfos = new IndexerNFTInfos()
@@ -529,15 +597,6 @@ public sealed partial class NftInfoAppServiceTest : NFTMarketServerApplicationTe
         return mockSeedSymbolSyncedProvider.Object;
     }
 
-    private static INFTListingProvider MockINFTListingProvider()
-    {
-        var mockListingProvider = new Mock<INFTListingProvider>();
-        mockListingProvider.Setup(calc =>
-                calc.GetNFTListingsAsync(It.IsAny<GetNFTListingsDto>()))
-            .ReturnsAsync(new PagedResultDto<IndexerNFTListingInfo>());
-        return mockListingProvider.Object;
-    }
-    
     private static IInscriptionProvider MockIInscriptionProvider()
     {
         var mockIInscriptionProvider = new Mock<IInscriptionProvider>();

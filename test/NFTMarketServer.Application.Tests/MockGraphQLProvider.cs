@@ -106,8 +106,12 @@ public class MockGraphQLProvider : IGraphQLProvider, ISingletonDependency
         throw new System.NotImplementedException();
     }
 
-    public Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string nftInfoId, string chainId)
+    public async Task<NFTInfoIndex> GetSyncNftInfoRecordAsync(string nftInfoId, string chainId)
     {
-        throw new System.NotImplementedException();
+        return new NFTInfoIndex()
+        {
+            Id = "tDVV-LIJIGUANGAAAABBB-1",
+            ChainId = "tDVV",
+        };
     }
 }
