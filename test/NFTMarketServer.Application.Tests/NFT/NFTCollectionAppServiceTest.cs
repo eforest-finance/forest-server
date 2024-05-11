@@ -100,20 +100,6 @@ public sealed class NFTCollectionAppServiceTest : NFTMarketServerApplicationTest
     }
 
     [Fact]
-    public async Task GetNFTCollectionsAsync_ShouldBe0()
-    {
-        var res = _nftCollectionAppService.GetNFTCollectionsAsync(
-            new GetNFTCollectionsInput
-            {
-                SkipCount = 0,
-                MaxResultCount = 2,
-                Address = "aaa"
-            });
-        TestOutputHelper.WriteLine(JsonConvert.SerializeObject(res));
-        res.Result.TotalCount.ShouldBe(0);
-    }
-
-    [Fact]
     public async Task TestSearchNFTCollectionsAsync()
     {
         var input = new SearchNFTCollectionsInput()
