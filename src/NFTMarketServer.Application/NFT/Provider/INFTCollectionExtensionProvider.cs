@@ -13,5 +13,7 @@ public interface INFTCollectionExtensionProvider
     
     Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionAsync(SearchNFTCollectionsInput input);
     
+    Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionAsync(SearchCollectionsFloorPriceInput input);
+    
     Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionPageAsync(int skipCount,int limit);
 }

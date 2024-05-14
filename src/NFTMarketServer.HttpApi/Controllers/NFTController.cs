@@ -126,6 +126,26 @@ namespace NFTMarketServer.Controllers
                 CoverImageUrl = input.CoverImageUrl,
             });
         }
+        
+        [HttpPost]
+        [Route("batch-nft-infos")]
+        public async Task BatchCreateNFTAsync(BatchCreateNFTInput batchCreateNFTInput)
+        {
+            foreach (var input in batchCreateNFTInput.NFTList)
+            {
+                _nftAppService.CreateNFTInfoExtensionAsync(new CreateNFTExtensionInput
+                {
+                    ChainId = input.ChainId,
+                    TransactionId = input.TransactionId,
+                    Symbol = input.Symbol,
+                    Description = input.Description,
+                    ExternalLink = input.ExternalLink,
+                    PreviewImage = input.PreviewImage,
+                    File = input.File,
+                    CoverImageUrl = input.CoverImageUrl,
+                });
+            }
+        }
 
 
         [HttpPost]
