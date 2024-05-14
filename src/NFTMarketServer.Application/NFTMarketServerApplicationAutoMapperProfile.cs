@@ -128,6 +128,9 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTCollectionExtensionIndex, SearchNFTCollectionsDto>()
             .ForMember(des => des.Symbol, opt
                 => opt.MapFrom(source => source.NFTSymbol));
+        CreateMap<NFTCollectionExtensionIndex, SearchCollectionsFloorPriceDto>()
+            .ForMember(des => des.Symbol, opt
+                => opt.MapFrom(source => source.NFTSymbol));
         CreateMap<IndexerNFTCollection, RecommendedNFTCollectionsDto>();
         CreateMap<IndexerSeedInfo, IndexerNFTInfo>();
         CreateMap<IndexerNFTInfo, NFTInfoIndexDto>().ForMember(

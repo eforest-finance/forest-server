@@ -26,4 +26,9 @@ namespace NFTMarketServer.Models
             }
         }
     }
+
+    public class BatchCreateNFTInput
+    {
+        public List<CreateNFTInput> NFTList { get; set; }
+    }
 }
