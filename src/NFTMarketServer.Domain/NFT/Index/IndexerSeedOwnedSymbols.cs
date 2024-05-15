@@ -12,7 +12,7 @@ public class IndexerSeedOwnedSymbols : IndexerCommonResult<IndexerSeedOwnedSymbo
 public class IndexerSeedOwnedSymbol : IndexerCommonResult<IndexerSeedOwnedSymbol>
 {
     public string Id { get; set; }
-    
+
     public string Symbol { get; set; }
     public string SeedSymbol { get; set; }
     
@@ -25,4 +25,6 @@ public class IndexerSeedOwnedSymbol : IndexerCommonResult<IndexerSeedOwnedSymbol
     public long SeedExpTimeSecond { get; set; }
 
     public DateTime SeedExpTime { get; set; }
+    
+    public string ChainId { get; set; }
 }

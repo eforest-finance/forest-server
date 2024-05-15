@@ -95,6 +95,13 @@ namespace NFTMarketServer.Controllers
         {
             return _seedOwnedSymbolAppService.GetSeedOwnedSymbolsAsync(input);
         }
+        
+        [HttpGet]
+        [Route("all-seed-owned-symbols")]
+        public Task<PagedResultDto<SeedSymbolIndexDto>> GetAllSeedNFTSymbolsAsync(GetAllSeedOwnedSymbols input)
+        {
+            return _seedOwnedSymbolAppService.GetAllSeedOwnedSymbolsAsync(input);
+        }
 
         [HttpGet]
         [Route("nft-info")]
