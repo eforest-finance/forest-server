@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NFTMarketServer.NFT.Index;
 
@@ -7,4 +8,7 @@ public interface ISeedOwnedSymboProvider
 {
     public Task<IndexerSeedOwnedSymbols> GetSeedOwnedSymbolsIndexAsync(long inputSkipCount,
         long inputMaxResultCount, string address, string seedOwnedSymbol);
+    
+    public Task<IndexerSeedOwnedSymbols> GetAllSeedOwnedSymbolsIndexAsync(long inputSkipCount,
+        long inputMaxResultCount, List<string> addressList, string seedOwnedSymbol);
 }

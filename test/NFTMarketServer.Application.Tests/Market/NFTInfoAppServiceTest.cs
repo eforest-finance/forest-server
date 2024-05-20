@@ -1,11 +1,14 @@
 using System;
 using System.Threading.Tasks;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Newtonsoft.Json;
+using NFTMarketServer.Bid;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
+using NFTMarketServer.Seed;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
 using Xunit;
@@ -27,6 +30,7 @@ public class NFTInfoAppServiceTest : NFTMarketServerApplicationTestBase
         services.AddSingleton(buildNftInfoProvider());
         services.AddSingleton(MockIUserAppService());
         services.AddSingleton(MockITokenAppService());
+        services.AddSingleton(MockISeedAppService());
     }
 
     [Fact]
@@ -45,16 +49,16 @@ public class NFTInfoAppServiceTest : NFTMarketServerApplicationTestBase
     {
         var result = "{\"Exist\":true}";
 
-        String Symbol = "AXZ-0";
+        var symbol = "AXZ-0";
 
         var provider = new Mock<INFTInfoProvider>();
 
         provider.Setup(calc =>
-            calc.GetNFTCollectionSymbolAsync(Symbol)).ReturnsAsync(
+            calc.GetNFTCollectionSymbolAsync(symbol)).ReturnsAsync(
             JsonConvert.DeserializeObject<IndexerSymbol>(result));
 
         provider.Setup(calc =>
-            calc.GetNFTSymbolAsync(Symbol)).ReturnsAsync(
+            calc.GetNFTSymbolAsync(symbol)).ReturnsAsync(
             JsonConvert.DeserializeObject<IndexerSymbol>(result));
 
         return provider.Object;
@@ -75,6 +79,13 @@ public class NFTInfoAppServiceTest : NFTMarketServerApplicationTestBase
     private IUserAppService MockIUserAppService()
     {
         var mockService = new Mock<IUserAppService>();
+
+        return mockService.Object;
+    }
+    
+    private ISeedAppService MockISeedAppService()
+    {
+        var mockService = new Mock<ISeedAppService>();
 
         return mockService.Object;
     }
