@@ -64,7 +64,6 @@ namespace NFTMarketServer.NFT
         private readonly NFTCollectionAppService _nftCollectionAppService;
         private readonly IDistributedCache<string> _distributedCacheForHeight;
         private readonly IGraphQLProvider _graphQlProvider;
-        private readonly IBus _bus;
         private readonly INFTTraitProvider _inftTraitProvider;
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly ISeedAppService _seedAppService;
@@ -92,7 +91,6 @@ namespace NFTMarketServer.NFT
             ISeedSymbolSyncedProvider seedSymbolSyncedProvider, 
             INFTInfoSyncedProvider nftInfoSyncedProvider,
             INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
-            IBus bus,
             INFTOfferProvider nftOfferProvider,
             INFTListingProvider nftListingProvider,
             INFTDealInfoProvider nftDealInfoProvider,
@@ -136,7 +134,6 @@ namespace NFTMarketServer.NFT
             _graphQlProvider = graphQlProvider;
             _inftTraitProvider = inftTraitProvider;
             _userBalanceProvider = userBalanceProvider;
-            _bus = bus;
             _nftActivityAppService = nftActivityAppService;
             _seedAppService = seedAppService;
         }
@@ -144,18 +141,8 @@ namespace NFTMarketServer.NFT
             GetNFTInfosProfileInput input)
         {
             //query nft infos
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-            IndexerNFTInfos nftInfos;
             
-            if (choiceNFTInfoNewFlag)
-            {
-                nftInfos = await _nftInfoNewSyncedProvider.GetNFTInfosUserProfileAsync(input);
-            }
-            else
-            {
-                nftInfos = await _nftInfoSyncedProvider.GetNFTInfosUserProfileAsync(input);
-            }
+            var nftInfos = await _nftInfoNewSyncedProvider.GetNFTInfosUserProfileAsync(input);
             
             //query seed infos
             var seedInfos = await _seedSymbolSyncedProvider.GetSeedInfosUserProfileAsync(input);
@@ -190,10 +177,7 @@ namespace NFTMarketServer.NFT
             GetCompositeNFTInfosInput input)
         {
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
-            
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-            
+
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input);
@@ -213,16 +197,7 @@ namespace NFTMarketServer.NFT
 
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeNFT))
             {
-                Tuple<long, List<IndexerNFTInfo>> nftResult = null;
-                
-                if (choiceNFTInfoNewFlag)
-                {
-                    nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
-                }
-                else
-                {
-                    nftResult = await _nftInfoSyncedProvider.GetNFTBriefInfosAsync(input);
-                }
+                var nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
                 
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
                 
@@ -258,9 +233,7 @@ namespace NFTMarketServer.NFT
                     return await MapForCompositeNftInfoIndexDtoPage(result);
                 }
 
-                var resetNFTSyncHeightFlagCacheKey = choiceNFTInfoNewFlag
-                    ? CommonConstant.ResetNFTNewSyncHeightFlagCacheKey
-                    : CommonConstant.ResetNFTSyncHeightFlagCacheKey;
+                var resetNFTSyncHeightFlagCacheKey = CommonConstant.ResetNFTNewSyncHeightFlagCacheKey;
 
                 var resetSyncHeightFlag =
                     await _distributedCacheForHeight.GetAsync(resetNFTSyncHeightFlagCacheKey);
@@ -474,19 +447,7 @@ namespace NFTMarketServer.NFT
                 return null;
             }
 
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-
-            IndexerNFTInfo nftInfoIndex;
-
-            if (choiceNFTInfoNewFlag)
-            {
-                nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
-            else
-            {
-                nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
+            var nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
             
             if (nftInfoIndex == null)
             {
@@ -1136,17 +1097,7 @@ namespace NFTMarketServer.NFT
 
         public async Task<NFTForSaleDto> GetNFTForSaleAsync(GetNFTForSaleInput input)
         {
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-            IndexerNFTInfo nftInfoIndex;
-            if (choiceNFTInfoNewFlag)
-            {
-                nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
-            else
-            {
-                nftInfoIndex = await _nftInfoSyncedProvider.GetNFTInfoIndexAsync(input.Id);
-            }
+            var nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(input.Id);
             
             if (nftInfoIndex == null)
             {

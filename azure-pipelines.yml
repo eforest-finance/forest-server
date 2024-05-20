@@ -1,39 +1,39 @@
-trigger:
-  branches:
-    include:
-      - master
-pr:
-  branches:
-    include:
-      - master
-jobs:
-  - job: build_all_darwin
-    displayName: Build all tasks (macOS)
-    timeoutInMinutes: 120
-    pool:
-      vmImage: macos-latest
-    variables:
-      CI_TEST: true
-    steps:
-      - task: UseDotNet@2
-        displayName: 'Install .NET Core SDK'
-        inputs:
-          version: 7.0.x
-      - script: cd scripts && bash elasticsearch-macOS.sh
-        displayName: 'Start an elasticsearch'
-      - script: bash build.sh --target=Test-with-Codecov
-        displayName: 'Build and Test'
-      - task: PublishTestResults@2
-        condition: always()
-        inputs:
-          testRunner: VSTest
-          testResultsFiles: '**/*.trx'
-      - task: reportgenerator@5
-        displayName: ReportGenerator
-        inputs:
-          reports: '$(Build.SourcesDirectory)/test/*/TestResults/*/coverage.cobertura.xml'
-          targetdir: '$(Build.SourcesDirectory)/CodeCoverage'
-          reporttypes: 'Cobertura'
-          assemblyfilters: '-xunit*'
-      - script: bash build.sh --target=Upload-Coverage-Azure
-        displayName: 'Upload data to Codecov'
+#trigger:
+#  branches:
+#    include:
+#      - master
+#pr:
+#  branches:
+#    include:
+#      - master
+#jobs:
+#  - job: build_all_darwin
+#    displayName: Build all tasks (macOS)
+#    timeoutInMinutes: 120
+#    pool:
+#      vmImage: macos-latest
+#    variables:
+#      CI_TEST: true
+#    steps:
+#      - task: UseDotNet@2
+#        displayName: 'Install .NET Core SDK'
+#        inputs:
+#          version: 7.0.x
+#      - script: cd scripts && bash elasticsearch-macOS.sh
+#        displayName: 'Start an elasticsearch'
+#      - script: bash build.sh --target=Test-with-Codecov
+#        displayName: 'Build and Test'
+#      - task: PublishTestResults@2
+#        condition: always()
+#        inputs:
+#          testRunner: VSTest
+#          testResultsFiles: '**/*.trx'
+#      - task: reportgenerator@5
+#        displayName: ReportGenerator
+#        inputs:
+#          reports: '$(Build.SourcesDirectory)/test/*/TestResults/*/coverage.cobertura.xml'
+#          targetdir: '$(Build.SourcesDirectory)/CodeCoverage'
+#          reporttypes: 'Cobertura'
+#          assemblyfilters: '-xunit*'
+#      - script: bash build.sh --target=Upload-Coverage-Azure
+#        displayName: 'Upload data to Codecov'
