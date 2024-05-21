@@ -89,12 +89,12 @@ namespace NFTMarketServer.Controllers
         {
             return _nftAppService.GetCollectionActivitiesAsync(input);
         }
-
+        
         [HttpGet]
-        [Route("seed-owned-symbols")]
-        public Task<PagedResultDto<SeedSymbolIndexDto>> GetSeedNFTSymbolsAsync(GetSeedOwnedSymbols input)
+        [Route("hot-nft-infos")]
+        public Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync()
         {
-            return _seedOwnedSymbolAppService.GetSeedOwnedSymbolsAsync(input);
+            return _nftAppService.GetHotNFTInfosAsync();
         }
         
         [HttpGet]
@@ -179,7 +179,7 @@ namespace NFTMarketServer.Controllers
         {
             return _nftActivityAppService.GetListAsync(input);
         }
-        
+
         [HttpGet]
         [Route("nft-info-owners")]
         public Task<NFTOwnerDto> GetNFTOwners(GetNFTOwnersInput input)
