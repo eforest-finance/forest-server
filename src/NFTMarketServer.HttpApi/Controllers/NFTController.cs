@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -138,9 +139,7 @@ namespace NFTMarketServer.Controllers
         [Route("batch-nft-infos")]
         public async Task BatchCreateNFTAsync(BatchCreateNFTInput batchCreateNFTInput)
         {
-            foreach (var input in batchCreateNFTInput.NFTList)
-            {
-                _nftAppService.CreateNFTInfoExtensionAsync(new CreateNFTExtensionInput
+            var tasks = batchCreateNFTInput.NFTList.Select(input => _nftAppService.CreateNFTInfoExtensionAsync(new CreateNFTExtensionInput
                 {
                     ChainId = input.ChainId,
                     TransactionId = input.TransactionId,
@@ -150,8 +149,9 @@ namespace NFTMarketServer.Controllers
                     PreviewImage = input.PreviewImage,
                     File = input.File,
                     CoverImageUrl = input.CoverImageUrl,
-                });
-            }
+                }))
+                .ToList();
+            await Task.WhenAll(tasks);
         }
 
 
