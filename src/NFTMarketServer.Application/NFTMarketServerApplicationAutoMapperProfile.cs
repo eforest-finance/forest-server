@@ -57,6 +57,25 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         /* You can configure your AutoMapper mapping configuration here.
          * Alternatively, you can split your mapping configurations
          * into multiple profile classes for a better organization. */
+        CreateMap<IndexerNFTInfo, HotNFTInfoDto>()
+            .ForMember(des => des.CollectionImage, opt =>
+                opt.MapFrom(source => source.ImageUrl
+                ))
+            .ForMember(des => des.OfferPrice, opt =>
+                opt.MapFrom(source => source.MaxOfferPrice
+                ))
+            .ForMember(des => des.PreviewImage, opt =>
+                opt.MapFrom(source => source.PreviewImage
+                ))
+            .ForMember(des => des.NFTId, opt =>
+                opt.MapFrom(source => source.Id
+                ))
+            .ForMember(des => des.NFTName, opt =>
+                opt.MapFrom(source => source.TokenName
+                ))
+            .ForMember(des => des.NFTSymbol, opt =>
+                opt.MapFrom(source => source.Symbol
+                ));
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
         CreateMap<NFTInfoIndex, NFTInfoNewIndex>();

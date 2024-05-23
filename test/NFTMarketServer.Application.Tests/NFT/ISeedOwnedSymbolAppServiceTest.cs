@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -28,10 +29,10 @@ public class ISeedOwnedSymbolAppServiceTest : NFTMarketServerApplicationTestBase
     public async Task GetSeedOwnedSymbolsAsync_ShouldBe3()
     {
         var res = await
-            _seedOwnedSymbolAppService.GetSeedOwnedSymbolsAsync(new GetSeedOwnedSymbols
+            _seedOwnedSymbolAppService.GetAllSeedOwnedSymbolsAsync(new GetAllSeedOwnedSymbols
             {
-                Address = "2CpKfnoWTk69u6VySHMeuJvrX2hGrMw9pTyxcD4VM6Q28dJrhk",
-                Symbol = "bbb",
+                AddressList = new List<string>(){"2CpKfnoWTk69u6VySHMeuJvrX2hGrMw9pTyxcD4VM6Q28dJrhk"},
+                SeedOwnedSymbol = "bbb",
                 MaxResultCount = 10,
                 SkipCount = 0
             });
@@ -43,10 +44,10 @@ public class ISeedOwnedSymbolAppServiceTest : NFTMarketServerApplicationTestBase
     public async Task GetSeedOwnedSymbolsAsync_ShouldBe0()
     {
         var res = await
-            _seedOwnedSymbolAppService.GetSeedOwnedSymbolsAsync(new GetSeedOwnedSymbols
+            _seedOwnedSymbolAppService.GetAllSeedOwnedSymbolsAsync(new GetAllSeedOwnedSymbols
             {
-                Address = "2CpKfnoWTk69u6VySHMeuJvrX2hGrMw9pTyxcD4VM6Q28dJrhk",
-                Symbol = "aaa",
+                AddressList = new List<string>(){"2CpKfnoWTk69u6VySHMeuJvrX2hGrMw9pTyxcD4VM6Q28dJrhk"},
+                SeedOwnedSymbol = "aaa",
                 MaxResultCount = 10,
                 SkipCount = 0
             });
@@ -62,9 +63,9 @@ public class ISeedOwnedSymbolAppServiceTest : NFTMarketServerApplicationTestBase
         var mockISeedOwnedSymboProvider =
             new Mock<ISeedOwnedSymboProvider>();
         mockISeedOwnedSymboProvider.Setup(calc =>
-            calc.GetSeedOwnedSymbolsIndexAsync(0,
+            calc.GetAllSeedOwnedSymbolsIndexAsync(0,
                 10,
-                "2CpKfnoWTk69u6VySHMeuJvrX2hGrMw9pTyxcD4VM6Q28dJrhk"
+                new List<string>(){"2CpKfnoWTk69u6VySHMeuJvrX2hGrMw9pTyxcD4VM6Q28dJrhk"}
                 , "bbb")).ReturnsAsync(
             JsonConvert
                 .DeserializeObject<
