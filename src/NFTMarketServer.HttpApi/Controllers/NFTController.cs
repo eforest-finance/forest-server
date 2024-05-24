@@ -179,7 +179,7 @@ namespace NFTMarketServer.Controllers
         {
             return _nftActivityAppService.GetListAsync(input);
         }
-
+        
         [HttpGet]
         [Route("nft-info-owners")]
         public Task<NFTOwnerDto> GetNFTOwners(GetNFTOwnersInput input)
