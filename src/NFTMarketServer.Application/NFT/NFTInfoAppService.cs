@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Indexing.Elasticsearch;
-using MassTransit;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -22,6 +22,7 @@ using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
+using NFTMarketServer.Options;
 using NFTMarketServer.Provider;
 using NFTMarketServer.Seed;
 using NFTMarketServer.Seed.Index;
@@ -77,6 +78,8 @@ namespace NFTMarketServer.NFT
         private readonly IOptionsMonitor<CollectionActivityNFTLimitOptions>
             _collectionActivityNFTLimitOptionsMonitor;
         
+        private readonly IOptionsMonitor<RecommendHotNFTOptions> _recommendHotNFTOptionsMonitor;
+        
         private readonly IUserBalanceProvider _userBalanceProvider;
 
         public NFTInfoAppService(
@@ -105,6 +108,7 @@ namespace NFTMarketServer.NFT
             IUserBalanceProvider userBalanceProvider,
             INFTActivityAppService nftActivityAppService,
             ISeedAppService seedAppService,
+            IOptionsMonitor<RecommendHotNFTOptions> recommendHotNFTOptionsMonitor,
             IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
@@ -136,6 +140,7 @@ namespace NFTMarketServer.NFT
             _userBalanceProvider = userBalanceProvider;
             _nftActivityAppService = nftActivityAppService;
             _seedAppService = seedAppService;
+            _recommendHotNFTOptionsMonitor = recommendHotNFTOptionsMonitor;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -357,6 +362,133 @@ namespace NFTMarketServer.NFT
 
         }
 
+        public async Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync()
+        {
+            var resultList = new List<IndexerNFTInfo>();
+            if (_recommendHotNFTOptionsMonitor.CurrentValue.HotNFTCacheIsOn)
+            {
+                try
+                {
+                    var cacheResult = await _distributedCacheForHeight.GetAsync(CommonConstant.HotNFTInfosCacheKey);
+                    if (!cacheResult.IsNullOrEmpty())
+                    {
+                        return JsonConvert.DeserializeObject<PagedResultDto<HotNFTInfoDto>>(cacheResult);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e,"GetHotNFTInfosAsync query from cache error");
+                }
+            }
+
+            var recommendHotNFTList = _recommendHotNFTOptionsMonitor.CurrentValue.RecommendHotNFTList;
+
+            var recommendHotNFTIds = recommendHotNFTList?.Select(item => item.NFTInfoId).ToList();
+            var recommendNFTPage = await _nftInfoNewSyncedProvider.GetRecommendHotNFTInfosAsync(recommendHotNFTIds);
+            
+            if (!recommendHotNFTList.IsNullOrEmpty()
+                && recommendNFTPage != null
+                && !recommendNFTPage.Item2.IsNullOrEmpty())
+            {
+                var recommendNFTDic = recommendNFTPage.Item2.ToDictionary(item => item.Id, item => item);
+
+                foreach (var recommendHotNFT in recommendHotNFTList)
+                {
+                    if (recommendNFTDic.TryGetValue(recommendHotNFT.NFTInfoId, out var value))
+                    {
+                        resultList.Add(value);
+                    }
+                }
+            }
+            
+            var realHotNFTSize = Math.Max(CommonConstant.IntTen - resultList.Count, 0);
+            var realHotNFTPageInfo =
+                await _nftInfoNewSyncedProvider.GetHotNFTInfosAsync(recommendHotNFTIds, realHotNFTSize);
+
+            if (realHotNFTPageInfo != null && !realHotNFTPageInfo.Item2.IsNullOrEmpty())
+            {
+                resultList.AddRange(realHotNFTPageInfo.Item2);
+            }
+
+            var result = MapForHotNFTInfoDtoPage(resultList, recommendHotNFTList);
+            var pageResult = new PagedResultDto<HotNFTInfoDto>()
+            {
+                TotalCount = result.Count,
+                Items = result
+            };
+            if (!_recommendHotNFTOptionsMonitor.CurrentValue.HotNFTCacheIsOn)
+            {
+                return pageResult;
+            }
+
+            try
+            {
+                await _distributedCacheForHeight.SetAsync(CommonConstant.HotNFTInfosCacheKey,
+                    JsonConvert.SerializeObject(pageResult), new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpiration =
+                            DateTimeOffset.Now.AddMinutes(_recommendHotNFTOptionsMonitor.CurrentValue.HotNFTCacheMinutes)
+                    });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "pageResult set cache error");
+            }
+
+            return pageResult;
+        }
+
+        private List<HotNFTInfoDto> MapForHotNFTInfoDtoPage(
+            List<IndexerNFTInfo> nftInfoList, IEnumerable<RecommendHotNFT> recommendHotNFTList)
+        {
+            if (nftInfoList.IsNullOrEmpty())
+            {
+                new Empty();
+            }
+
+            foreach (var info in nftInfoList)
+            {
+                if (info.PreviewImage.IsNullOrEmpty())
+                {
+                    var nftImageUrl =
+                        info?.ExternalInfoDictionary?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUrlKey);
+                    info.PreviewImage = nftImageUrl?.Value;
+                }
+
+                if (info.PreviewImage.IsNullOrEmpty())
+                {
+                    var nftImageUri =
+                        info?.ExternalInfoDictionary?.FirstOrDefault(o => o.Key == CommonConstant.MetadataImageUriKey);
+                    info.PreviewImage = nftImageUri?.Value;
+                }
+
+                if (info.PreviewImage.IsNullOrEmpty())
+                {
+                    info.PreviewImage = info.ImageUrl;
+                }
+
+                info.PreviewImage = FTHelper.BuildIpfsUrl(info?.PreviewImage);
+            }
+
+            var result = _objectMapper.Map<List<IndexerNFTInfo>, List<HotNFTInfoDto>>(nftInfoList);
+
+            var recommendHotNFTDic = recommendHotNFTList?.ToDictionary(item => item.NFTInfoId, item => item);
+
+            if (recommendHotNFTDic == null || result.IsNullOrEmpty())
+            {
+                return result;
+            }
+
+            foreach(var item in result)
+            {
+                if (recommendHotNFTDic.TryGetValue(item.Id, out var value))
+                {
+                    item.Link = value.Link;
+                }
+            }
+            
+            return result;
+        }
 
         private async Task<PagedResultDto<CompositeNFTInfoIndexDto>> MapForCompositeNftInfoIndexDtoPage(
             PagedResultDto<CompositeNFTInfoIndexDto> pageInfo)

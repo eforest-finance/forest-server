@@ -43,6 +43,7 @@ public static class CommonConstant
     public const string ResetNFTSyncHeightFlagCacheKey = "ResetNFTSyncHeightFlagCacheKey";
     public const string NFTResetHeightFlagCacheKey = "NFTResetHeightFlagCacheKey";
     public const string SeedResetHeightFlagCacheKey = "SeedResetHeightFlagCacheKey";
+    public const string HotNFTInfosCacheKey = "HotNFTInfosCacheKey";
     
     public const string ResetNFTNewSyncHeightFlagCacheKey = "ResetNFTNewSyncHeightFlagCacheKey";
     public const string NFTNewResetHeightFlagCacheKey = "NFTNewResetHeightFlagCacheKey";
