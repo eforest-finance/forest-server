@@ -245,14 +245,23 @@ namespace NFTMarketServer.NFT
             collection.LogoImage ??= imageUrl;
             collection.FeaturedImage ??= imageUrl;
             
-            var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
-            if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(index.Symbol))
+            if (checkOfficialMarkConfig(index.Symbol))
             {
                 collection.IsOfficialMark = true;
             }
+            
             return collection;
         }
+        private bool checkOfficialMarkConfig(string symbol)
+        {
+            var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
+            if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(symbol))
+            {
+                return true;
+            }
 
+            return false;
+        }
         private SearchNFTCollectionsDto MapForSearchNftCollectionsDto(NFTCollectionExtensionIndex index, 
             Dictionary<string, IndexerNFTCollection> collectionInfos, DateRangeType dateRangeType)
         {
@@ -281,12 +290,10 @@ namespace NFTMarketServer.NFT
                 searchNftCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(searchNftCollectionsDto.LogoImage);
             }
             
-            var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
-            if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(index.NFTSymbol))
+            if (checkOfficialMarkConfig(index.NFTSymbol))
             {
                 searchNftCollectionsDto.IsOfficialMark = true;
             }
-            
             return searchNftCollectionsDto;
         }
         
@@ -305,8 +312,7 @@ namespace NFTMarketServer.NFT
 
                 recommendedNftCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
                 recommendedNftCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(recommendedNftCollectionsDto.LogoImage);
-                var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
-                if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(info.Symbol))
+                if (checkOfficialMarkConfig(info.Symbol))
                 {
                     recommendedNftCollectionsDto.IsOfficialMark = true;
                 }

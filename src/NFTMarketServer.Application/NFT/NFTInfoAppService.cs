@@ -481,6 +481,11 @@ namespace NFTMarketServer.NFT
 
             if (recommendHotNFTDic == null || result.IsNullOrEmpty())
             {
+                foreach (var item in result.Where(item => checkOfficialMarkConfig(item.NFTSymbol)))
+                {
+                    item.IsOfficialMark = true;
+                }
+
                 return result;
             }
 
@@ -490,15 +495,24 @@ namespace NFTMarketServer.NFT
                 {
                     item.Link = value.Link;
                 }
-                
-                var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
-                if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(item.NFTSymbol))
+                if (checkOfficialMarkConfig(item.NFTSymbol))
                 {
                     item.IsOfficialMark = true;
                 }
             }
             
             return result;
+        }
+
+        private bool checkOfficialMarkConfig(string symbol)
+        {
+            var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
+            if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(symbol))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private async Task<PagedResultDto<CompositeNFTInfoIndexDto>> MapForCompositeNftInfoIndexDtoPage(
