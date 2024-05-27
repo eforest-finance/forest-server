@@ -245,7 +245,7 @@ namespace NFTMarketServer.NFT
             collection.LogoImage ??= imageUrl;
             collection.FeaturedImage ??= imageUrl;
             
-            if (checkOfficialMarkConfig(index.Symbol))
+            if (checkOfficialMarkConfig(collection.Symbol))
             {
                 collection.IsOfficialMark = true;
             }
