@@ -42,3 +42,8 @@ public class CollectionActivityNFTLimitOptions
 {
     public int CollectionActivityNFTLimit { get; set; } = 1000;
 }
+
+public class OfficialMarkCollectionInfoOptions
+{
+    public List<string> OfficialMarkCollectionList { get; set; }
+}

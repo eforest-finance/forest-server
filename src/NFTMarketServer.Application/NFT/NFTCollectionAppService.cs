@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Common;
 using NFTMarketServer.Grains;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
@@ -34,6 +35,8 @@ namespace NFTMarketServer.NFT
         private readonly IOptionsMonitor<RecommendedCollectionsOptions> _optionsMonitor;
         private readonly IOptionsMonitor<NFTImageUrlOptions> _nftImageUrlOptionsMonitor;
         private const string BiztypeCreateCollectionExtensionAsync = "CreateCollectionExtensionAsync";
+        private readonly IOptionsMonitor<OfficialMarkCollectionInfoOptions> _officialMarkCollectionInfoOptions;
+
         
         public NFTCollectionAppService(
             IClusterClient clusterClient,
@@ -45,7 +48,8 @@ namespace NFTMarketServer.NFT
             IDistributedEventBus distributedEventBus,
             INFTCollectionChangeService nftCollectionChangeService,
             IOptionsMonitor<RecommendedCollectionsOptions> optionsMonitor, 
-            IOptionsMonitor<NFTImageUrlOptions> nftImageUrlOptionsMonitor)
+            IOptionsMonitor<NFTImageUrlOptions> nftImageUrlOptionsMonitor,
+            IOptionsMonitor<OfficialMarkCollectionInfoOptions> officialMarkCollectionInfoOptions)
         {
             _userAppService = userAppService;
             _nftCollectionProvider = nftCollectionProvider;
@@ -57,6 +61,8 @@ namespace NFTMarketServer.NFT
             _nftCollectionChangeService = nftCollectionChangeService;
             _optionsMonitor = optionsMonitor;
             _nftImageUrlOptionsMonitor = nftImageUrlOptionsMonitor;
+            _officialMarkCollectionInfoOptions = officialMarkCollectionInfoOptions;
+
         }
 
         public async Task<PagedResultDto<NFTCollectionIndexDto>> GetNFTCollectionsAsync(GetNFTCollectionsInput input)
@@ -238,6 +244,12 @@ namespace NFTMarketServer.NFT
             }
             collection.LogoImage ??= imageUrl;
             collection.FeaturedImage ??= imageUrl;
+            
+            var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
+            if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(index.Symbol))
+            {
+                collection.IsOfficialMark = true;
+            }
             return collection;
         }
 
@@ -269,6 +281,12 @@ namespace NFTMarketServer.NFT
                 searchNftCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(searchNftCollectionsDto.LogoImage);
             }
             
+            var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
+            if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(index.NFTSymbol))
+            {
+                searchNftCollectionsDto.IsOfficialMark = true;
+            }
+            
             return searchNftCollectionsDto;
         }
         
@@ -287,6 +305,11 @@ namespace NFTMarketServer.NFT
 
                 recommendedNftCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
                 recommendedNftCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(recommendedNftCollectionsDto.LogoImage);
+                var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
+                if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(info.Symbol))
+                {
+                    recommendedNftCollectionsDto.IsOfficialMark = true;
+                }
             }
 
             return recommendedNftCollectionsDto;

@@ -81,6 +81,8 @@ namespace NFTMarketServer.NFT
         private readonly IOptionsMonitor<RecommendHotNFTOptions> _recommendHotNFTOptionsMonitor;
         
         private readonly IUserBalanceProvider _userBalanceProvider;
+        private readonly IOptionsMonitor<OfficialMarkCollectionInfoOptions> _officialMarkCollectionInfoOptions;
+
 
         public NFTInfoAppService(
             ITokenAppService tokenAppService, IUserAppService userAppService,
@@ -109,7 +111,8 @@ namespace NFTMarketServer.NFT
             INFTActivityAppService nftActivityAppService,
             ISeedAppService seedAppService,
             IOptionsMonitor<RecommendHotNFTOptions> recommendHotNFTOptionsMonitor,
-            IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor)
+            IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor,
+            IOptionsMonitor<OfficialMarkCollectionInfoOptions> officialMarkCollectionInfoOptions)
         {
             _tokenAppService = tokenAppService;
             _userAppService = userAppService;
@@ -141,6 +144,8 @@ namespace NFTMarketServer.NFT
             _nftActivityAppService = nftActivityAppService;
             _seedAppService = seedAppService;
             _recommendHotNFTOptionsMonitor = recommendHotNFTOptionsMonitor;
+            _officialMarkCollectionInfoOptions = officialMarkCollectionInfoOptions;
+
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -484,6 +489,12 @@ namespace NFTMarketServer.NFT
                 if (recommendHotNFTDic.TryGetValue(item.Id, out var value))
                 {
                     item.Link = value.Link;
+                }
+                
+                var officialMarkConfig = _officialMarkCollectionInfoOptions?.CurrentValue;
+                if (officialMarkConfig != null && !officialMarkConfig.OfficialMarkCollectionList.IsNullOrEmpty() && officialMarkConfig.OfficialMarkCollectionList.Contains(item.NFTSymbol))
+                {
+                    item.IsOfficialMark = true;
                 }
             }
             

@@ -21,4 +21,5 @@ public class HotNFTInfoDto: EntityDto<string>
     public string Link { get; set; }
     
     public string ChainId { get; set; }
+    public bool IsOfficialMark  { get; set; } = false;
 }

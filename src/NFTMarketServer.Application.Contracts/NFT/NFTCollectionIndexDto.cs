@@ -27,5 +27,6 @@ namespace NFTMarketServer.NFT
         public long ItemTotal { get; set; }
         public long OwnerTotal { get; set; }
         public bool IsMainChainCreateNFT { get; set; } = true;
+        public bool IsOfficialMark  { get; set; } = false;
     }
 }

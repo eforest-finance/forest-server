@@ -9,4 +9,6 @@ public class RecommendedNFTCollectionsDto : EntityDto<string>
     public string TokenName { get; set; }
     
     public string LogoImage { get; set; }
+    
+    public bool IsOfficialMark  { get; set; } = false;
 }

@@ -26,5 +26,7 @@ public class SearchNFTCollectionsDto : EntityDto<string>
     public decimal FloorChange { get; set; } = 0;
     public long SalesTotal { get; set; } = 0;
     public long SupplyTotal { get; set; } = 0;
+    
+    public bool IsOfficialMark{ get; set; } = false;
 
 }
