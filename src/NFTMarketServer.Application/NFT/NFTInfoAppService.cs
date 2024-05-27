@@ -481,7 +481,7 @@ namespace NFTMarketServer.NFT
 
             if (recommendHotNFTDic == null || result.IsNullOrEmpty())
             {
-                foreach (var item in result.Where(item => checkOfficialMarkConfig(item.NFTSymbol)))
+                foreach (var item in result.Where(item => checkOfficialMarkConfig(item.CollectionSymbol)))
                 {
                     item.IsOfficialMark = true;
                 }
@@ -495,7 +495,7 @@ namespace NFTMarketServer.NFT
                 {
                     item.Link = value.Link;
                 }
-                if (checkOfficialMarkConfig(item.NFTSymbol))
+                if (checkOfficialMarkConfig(item.CollectionSymbol))
                 {
                     item.IsOfficialMark = true;
                 }
