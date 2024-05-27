@@ -65,6 +65,7 @@ namespace NFTMarketServer.NFT
         public TokenDto? MaxOfferToken { get; set; }
         
         public InscriptionInfoDto InscriptionInfo { get; set; }
+        public bool IsOfficialMark  { get; set; } = false;
     }
 
     public class CreateTokenInformation

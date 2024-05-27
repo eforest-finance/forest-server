@@ -823,6 +823,7 @@ namespace NFTMarketServer.NFT
                 {
                     addresses.Add(info.Issuer);
                 }
+                
             }
 
             var accounts = await _userAppService.GetAccountsAsync(addresses);
@@ -878,6 +879,11 @@ namespace NFTMarketServer.NFT
                 {
                     info.NFTCollection.Creator = accounts[nftCollections[index.CollectionId].CreatorAddress]
                         ?.WithChainIdAddress(info.ChainId);
+                }
+
+                if (checkOfficialMarkConfig(nftCollections[index.CollectionId].Symbol))
+                {
+                    info.IsOfficialMark = true;
                 }
             }
 
@@ -1263,6 +1269,7 @@ namespace NFTMarketServer.NFT
             }
 
             var collectionId = IdGenerateHelper.GetNFTCollectionId(nftInfoIndex.ChainId, nftInfoIndex.CollectionSymbol);
+
             var collectionExtension =
                 await _nftCollectionExtensionProvider.GetNFTCollectionExtensionAsync(collectionId);
             if (collectionExtension == null)
@@ -1275,7 +1282,10 @@ namespace NFTMarketServer.NFT
             var result = _objectMapper.Map<NFTCollectionExtensionIndex, NFTForSaleDto>(collectionExtension);
             result.CollectionName = collectionExtension.TokenName;
             result.OfDtoInfo(nftInfoIndex, lastDealInfo);
-
+            if (checkOfficialMarkConfig(nftInfoIndex.CollectionSymbol))
+            {
+                result.IsOfficialMark = true;
+            }
             const int maxResultCount = 20;
             var getNftListingsDto = new GetNFTListingsDto
             {
@@ -1311,7 +1321,7 @@ namespace NFTMarketServer.NFT
 
             result.MaxOfferPrice = indexerNFTOffer.Price;
             result.MaxOfferPriceSymbol = indexerNFTOffer.PurchaseToken.Symbol;
-
+            
             return result;
         }
 

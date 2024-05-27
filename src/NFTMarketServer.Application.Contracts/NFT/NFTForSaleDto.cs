@@ -37,6 +37,8 @@ public class NFTForSaleDto
     public string MaxOfferPriceSymbol { get; set; }
     
     public long AvailableQuantity { get; set; }
+    public bool IsOfficialMark  { get; set; } = false;
+
 
     public void OfDtoInfo(IndexerNFTInfo nftInfoIndex, IndexerNFTDealInfo lastDealInfo)
     {
