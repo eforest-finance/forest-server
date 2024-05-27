@@ -237,6 +237,10 @@ namespace NFTMarketServer.NFT
             collection.IsMainChainCreateNFT = NFTHelper.GetIsMainChainCreateNFT(index.ExternalInfoDictionary);
             
             var imageUrl = GetNftImageUrl(index.Symbol, index.ExternalInfoDictionary);
+            if (checkOfficialMarkConfig(collection.Symbol))
+            {
+                collection.IsOfficialMark = true;
+            }
             if (imageUrl.IsNullOrEmpty())
             {
                 collection.LogoImage = FTHelper.BuildIpfsUrl(collection.LogoImage);
@@ -244,12 +248,6 @@ namespace NFTMarketServer.NFT
             }
             collection.LogoImage ??= imageUrl;
             collection.FeaturedImage ??= imageUrl;
-            
-            if (checkOfficialMarkConfig(collection.Symbol))
-            {
-                collection.IsOfficialMark = true;
-            }
-            
             return collection;
         }
         private bool checkOfficialMarkConfig(string symbol)
