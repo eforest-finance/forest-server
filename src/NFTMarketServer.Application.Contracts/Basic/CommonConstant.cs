@@ -47,6 +47,10 @@ public static class CommonConstant
     
     public const string ResetNFTNewSyncHeightFlagCacheKey = "ResetNFTNewSyncHeightFlagCacheKey";
     public const string NFTNewResetHeightFlagCacheKey = "NFTNewResetHeightFlagCacheKey";
+    public const string BearerToken = "Bearer ";
+    public const string Authorization = "Authorization";
+    public const string Underscore = "_";
+    public const string ImagePNG = ".png";
     
     public const int CacheExpirationMinutes = 60*24;
     public const int BeginHeight = 1;

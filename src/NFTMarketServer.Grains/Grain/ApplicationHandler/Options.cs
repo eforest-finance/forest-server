@@ -1,4 +1,12 @@
+using JetBrains.Annotations;
+
 namespace NFTMarketServer.Grains.Grain.ApplicationHandler;
+
+public class OpenAiOptions
+{
+    public string ImagesUrlV1 { get; set; }
+    public List<string> ApiKeyList { get; set; }
+}
 
 public class ChainOptions
 {

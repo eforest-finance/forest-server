@@ -103,6 +103,7 @@ namespace NFTMarketServer
             Configure<ExpiredNFTSyncOptions>(configuration.GetSection("ExpiredNftSync"));
             Configure<ChainOptions>(configuration.GetSection("Chains"));
             Configure<SynchronizeTransactionJobOptions>(configuration.GetSection("Synchronize"));
+            Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
         }
     }
 }

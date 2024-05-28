@@ -38,22 +38,29 @@
 
     </ItemGroup>
 
-
     <ItemGroup>
-
-        <!--    <ContractReference Include="..\..\protobuf\acs12.proto">-->
-        <!--      <Link>Protobuf\Proto\acs12.proto</Link>-->
-        <!--    </ContractReference>-->
-        <!--        <ContractReference Include="..\..\protobuf\auction_contract.proto">-->
-        <!--            <Link>Protobuf\Proto\auction_contract.proto</Link>-->
-        <!--        </ContractReference>-->
-        <!--        <ContractReference Include="..\..\protobuf\symbol_registrar_contract.proto">-->
-        <!--            <Link>Protobuf\Proto\symbol_registrar_contract.proto</Link>-->
-        <!--        </ContractReference>-->
-        <!--        <ContractReference Include="..\..\protobuf\proxy_account_contract.proto">-->
-        <!--            <Link>Protobuf\Proto\proxy_account_contract.proto</Link>-->
-        <!--        </ContractReference>-->
+        <ContractReference Include="..\..\protobuf\forest_contract.proto">
+            <Link>Protobuf\Proto\forest_contract.proto</Link>
+        </ContractReference>
+        <ContractReference Include="..\..\protobuf\authority_info.proto">
+            <Link>Protobuf\Proto\authority_info.proto</Link>
+        </ContractReference>
+<!--        <ContractReference Include="..\..\protobuf\acs12.proto">-->
+<!--            <Link>Protobuf\Proto\acs12.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\auction_contract.proto">-->
+<!--            <Link>Protobuf\Proto\auction_contract.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\symbol_registrar_contract.proto">-->
+<!--            <Link>Protobuf\Proto\symbol_registrar_contract.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\proxy_account_contract.proto">-->
+<!--            <Link>Protobuf\Proto\proxy_account_contract.proto</Link>-->
+<!--        </ContractReference>-->
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Protobuf\Generated\" />
+    </ItemGroup>
 
 </Project>
