@@ -274,6 +274,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         try
         {
             currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
+            _logger.LogInformation("GetCurrentUserAddress address:{}",currentUserAddress);
+
             if (currentUserAddress.IsNullOrEmpty())
             {
                 _logger.LogError("GetCurrentUserAddress error");
@@ -300,8 +302,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
         catch (Exception e)
         {
-            _logger.LogError(e,"GetAiArtsAsync Exception: user:{}",currentUserAddress);
-            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{} e:{}",currentUserAddress, e.Message);
+            _logger.LogError(e,"GetAiArtsAsync Exception: user:{address}",currentUserAddress);
+            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{address} e:{error}",currentUserAddress, e.Message);
         }
     }
 }
