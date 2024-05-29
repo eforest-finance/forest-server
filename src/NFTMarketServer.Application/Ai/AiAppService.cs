@@ -14,6 +14,7 @@ using NFTMarketServer.Common;
 using NFTMarketServer.Common.AElfSdk;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using Orleans.Runtime;
 using Portkey.Contracts.CA;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -106,7 +107,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         if (transaction.MethodName == CommonConstant.MethodManagerForwardCall)
         {
             var managerForwardCallInput = ManagerForwardCallInput.Parser.ParseFrom(transaction.Params);
-            if (managerForwardCallInput.MethodName == CommonConstant.MethodManagerCreateArt)
+            if (managerForwardCallInput.MethodName == CommonConstant.MethodCreateArt)
             {
                 createArtInput = CreateArtInput.Parser.ParseFrom(managerForwardCallInput.Args);
             }
@@ -115,7 +116,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 throw new UserFriendlyException("Invalid transaction");
             }
         }
-        else if (transaction.MethodName == CommonConstant.MethodManagerCreateArt)
+        else if (transaction.MethodName == CommonConstant.MethodCreateArt)
         {
             createArtInput = CreateArtInput.Parser.ParseFrom(transaction.Params);
         }
@@ -221,9 +222,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     {
         var chainInfo = _chainOptionsMonitor.CurrentValue.ChainInfos[chainId];
         var forestContractAddress = chainInfo?.ForestContractAddress;
+        _logger.Debug("forestContractAddress = {A}, transaction.To={B}, transaction.MethodName = {C}",
+            chainInfo?.ForestContractAddress, transaction.To, transaction.MethodName);
         CreateArtInput createArtInput;
         if (!transaction.To.ToBase58().Equals(forestContractAddress) ||
-            !transaction.MethodName.Equals("CreateArt"))
+            !transaction.MethodName.Equals(CommonConstant.MethodCreateArt))
         {
             throw new UserFriendlyException("Invalid transaction");
         }
