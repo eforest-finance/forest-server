@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Types;
-using Forest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -12,6 +11,7 @@ using NFTMarketServer.Common;
 using NFTMarketServer.Common.AElfSdk;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.Users;
 using Portkey.Contracts.CA;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -26,12 +26,15 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly ILogger<AiAppService> _logger;
     private readonly IContractProvider _contractProvider;
     private readonly ISymbolIconAppService _symbolIconAppService;
+    private readonly IUserAppService _userAppService;
+
 
     public AiAppService(IOptionsMonitor<ChainOptions> chainOptionsMonitor,
         IOptionsMonitor<OpenAiOptions> openAiOptionsMonitor,
         ILogger<AiAppService> logger,
         IContractProvider contractProvider,
-        ISymbolIconAppService symbolIconAppService
+        ISymbolIconAppService symbolIconAppService,
+        IUserAppService userAppService
     )
     {
         _chainOptionsMonitor = chainOptionsMonitor;
@@ -39,6 +42,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _logger = logger;
         _contractProvider = contractProvider;
         _symbolIconAppService = symbolIconAppService;
+        _userAppService = userAppService;
+
     }
 
     public async Task<PagedResultDto<string>> CreateAiArtAsync(CreateAiArtInput input)
@@ -88,6 +93,32 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             TotalCount = s3UrlList.Count,
             Items = s3UrlList
         };
+    }
+
+    public async Task<PagedResultDto<List<string>>> GetAiArtsAsync()
+    {
+        var currentUserAddress = "";
+        try
+        {
+            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
+            if (currentUserAddress.IsNullOrEmpty())
+            {
+                _logger.LogError("GetCurrentUserAddress error");
+                throw new UserFriendlyException("GetCurrentUserAddress error,Please log in again.");
+            }
+            //query AIImageIndex
+            var artUrlList = new List<string>();
+            return new PagedResultDto<List<string>>()
+            {
+                TotalCount = artUrlList.Count,
+                Items = new[] { artUrlList }
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,"GetAiArtsAsync Exception: user:{}",currentUserAddress);
+            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{} e:{}",currentUserAddress, e.Message);
+        }
     }
 
     private async Task<List<string>> GenerateImageAsync(CreateArtInput createArtInput, Transaction transaction,
