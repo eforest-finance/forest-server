@@ -106,7 +106,6 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             Number = createArtInput.Number,
             PaintingStyle = createArtInput.PaintingStyle.ToEnum<AiPaintingStyleType>(),
             Promt = createArtInput.Promt,
-            Quality = createArtInput.Quality.ToEnum<AiQualityType>(),
             Status = AiCreateStatus.PAYSUCCESS,
             RetryCount = 0
         };
@@ -256,7 +255,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             _logger.LogError("QueryTransactionResult is fail, transactionId={A} result={B}", transactionId,
                 JsonConvert.SerializeObject(transactionResultDto));
-            throw new SystemException("QueryTransactionResult is fail");
+            throw new SystemException("QueryTransactionResult is fail transactionId=" + transactionId);
         }
 
         return transactionId;

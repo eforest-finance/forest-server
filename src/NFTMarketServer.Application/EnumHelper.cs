@@ -22,6 +22,6 @@ public static class EnumHelper
             }
         }
 
-        throw new ArgumentException($"No matching enum value found for '{value}'", nameof(value));
+        throw new ArgumentException($"No matching enum value found for "+nameof(value)+" . EnumType:"+typeof(TEnum).Name);
     }
 }
