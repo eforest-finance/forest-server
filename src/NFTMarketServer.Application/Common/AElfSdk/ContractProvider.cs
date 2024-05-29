@@ -69,7 +69,8 @@ public class ContractProvider : IContractProvider, ISingletonDependency
 
     private AElfClient Client(string chainId)
     {
-        AssertHelper.IsTrue(_clients.ContainsKey(chainId), "AElfClient of {chainId} not found.", chainId);
+        AssertHelper.IsTrue(_clients.ContainsKey(chainId), "AElfClient of {chainId} not found.config={B}", chainId,
+            JsonConvert.SerializeObject(_chainOption.CurrentValue));
         return _clients[chainId];
     }
 
