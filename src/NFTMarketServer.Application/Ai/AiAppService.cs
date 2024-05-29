@@ -248,7 +248,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             _logger.LogError("QueryTransactionResult is fail, transactionId={A} result={B}", transactionId,
                 JsonConvert.SerializeObject(transactionResultDto));
-            throw new SystemException("QueryTransactionResult is fail");
+            throw new SystemException("QueryTransactionResult is fail transactionId=" + transactionId);
         }
 
         return transactionId;
