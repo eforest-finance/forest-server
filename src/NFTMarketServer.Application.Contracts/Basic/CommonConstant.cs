@@ -51,6 +51,8 @@ public static class CommonConstant
     public const string Authorization = "Authorization";
     public const string Underscore = "_";
     public const string ImagePNG = ".png";
+    public const string MethodManagerForwardCall = "ManagerForwardCall";
+    public const string MethodManagerCreateArt = "CreateArt";
     
     public const int CacheExpirationMinutes = 60*24;
     public const int BeginHeight = 1;
