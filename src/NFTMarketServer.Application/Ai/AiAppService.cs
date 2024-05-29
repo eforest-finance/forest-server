@@ -64,7 +64,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         try
         {
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
-            createArtInput = TransferToCreateArtInput(transaction);
+            createArtInput = TransferToCreateArtInput(transaction, chainId);
             transactionId = await SendTransactionAsync(chainId, transaction);
             aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
@@ -104,10 +104,17 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         };
     }
     
-    private static CreateArtInput TransferToCreateArtInput(Transaction transaction)
+    private CreateArtInput TransferToCreateArtInput(Transaction transaction,string chainId)
     {
+        var chainInfo = _chainOptionsMonitor.CurrentValue.ChainInfos[chainId];
+        var forestContractAddress = chainInfo?.ForestContractAddress;
+        var caContractAddress = chainInfo?.CaContractAddress;
+        _logger.Debug("forestContractAddress = {A}, transaction.To = {B}, transaction.MethodName = {C}",
+            chainInfo?.ForestContractAddress, transaction.To, transaction.MethodName);
+
         CreateArtInput createArtInput;
-        if (transaction.MethodName == CommonConstant.MethodManagerForwardCall)
+        if (transaction.To.ToBase58().Equals(caContractAddress) &&
+            transaction.MethodName == CommonConstant.MethodManagerForwardCall)
         {
             var managerForwardCallInput = ManagerForwardCallInput.Parser.ParseFrom(transaction.Params);
             if (managerForwardCallInput.MethodName == CommonConstant.MethodCreateArt)
@@ -119,7 +126,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 throw new UserFriendlyException("Invalid transaction");
             }
         }
-        else if (transaction.MethodName == CommonConstant.MethodCreateArt)
+        else if (transaction.To.ToBase58().Equals(forestContractAddress) && transaction.MethodName == CommonConstant.MethodCreateArt)
         {
             createArtInput = CreateArtInput.Parser.ParseFrom(transaction.Params);
         }
@@ -221,17 +228,6 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
     private async Task<string> SendTransactionAsync(string chainId, Transaction transaction)
     {
-        var chainInfo = _chainOptionsMonitor.CurrentValue.ChainInfos[chainId];
-        var forestContractAddress = chainInfo?.ForestContractAddress;
-        _logger.Debug("forestContractAddress = {A}, transaction.To={B}, transaction.MethodName = {C}",
-            chainInfo?.ForestContractAddress, transaction.To, transaction.MethodName);
-        CreateArtInput createArtInput;
-        if (!transaction.To.ToBase58().Equals(forestContractAddress) ||
-            !transaction.MethodName.Equals(CommonConstant.MethodCreateArt))
-        {
-            throw new UserFriendlyException("Invalid transaction");
-        }
-
         var transactionOutput = await _contractProvider.SendTransactionAsync(chainId, transaction);
 
         var transactionId = transactionOutput.TransactionId;

@@ -16,4 +16,6 @@ public class ChainInfo
     public string TokenAdapterContractAddress{ get; set; }
     
     public string ForestContractAddress { get; set; }
+    
+    public string CaContractAddress { get; set; }
 } 
