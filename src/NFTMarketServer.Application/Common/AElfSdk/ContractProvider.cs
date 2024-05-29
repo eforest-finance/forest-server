@@ -43,25 +43,24 @@ public class ContractProvider : IContractProvider, ISingletonDependency
     private readonly Dictionary<string, string> _emptyDict = new();
     private readonly Dictionary<string, Dictionary<string, string>> _contractAddress = new();
 
-    private readonly ChainOption _chainOption;
     private readonly ILogger<ContractProvider> _logger;
-
-    public ContractProvider(IOptions<ChainOption> chainOption, ILogger<ContractProvider> logger)
+    private readonly IOptionsMonitor<ChainOption> _chainOption;
+    public ContractProvider(IOptionsMonitor<ChainOption> chainOption, ILogger<ContractProvider> logger)
     {
         _logger = logger;
-        _chainOption = chainOption.Value;
+        _chainOption = chainOption;
         InitAElfClient();
     }
 
 
     private void InitAElfClient()
     {
-        if (_chainOption.NodeApis.IsNullOrEmpty())
+        if (_chainOption.CurrentValue.NodeApis.IsNullOrEmpty())
         {
             return;
         }
 
-        foreach (var node in _chainOption.NodeApis)
+        foreach (var node in _chainOption.CurrentValue.NodeApis)
         {
             _clients[node.Key] = new AElfClient(node.Value);
             _logger.LogInformation("init AElfClient: {ChainId}, {Node}", node.Key, node.Value);
@@ -78,7 +77,7 @@ public class ContractProvider : IContractProvider, ISingletonDependency
     {
         return _accounts.GetOrAdd(accountName, name =>
         {
-            var accountExists = _chainOption.AccountPrivateKey.TryGetValue(name, out var accountOption);
+            var accountExists = _chainOption.CurrentValue.AccountPrivateKey.TryGetValue(name, out var accountOption);
             AssertHelper.IsTrue(accountExists, "Account {Name} not exists", name);
             AssertHelper.NotEmpty(accountOption, "Account {Name} not found", name);
             var account = new SenderAccount(accountOption);
@@ -92,7 +91,7 @@ public class ContractProvider : IContractProvider, ISingletonDependency
         var contractAddress = _contractAddress.GetOrAdd(chainId, _ => new Dictionary<string, string>());
         return contractAddress.GetOrAdd(contractName, name =>
         {
-            var address = _chainOption.ContractAddress
+            var address = _chainOption.CurrentValue.ContractAddress
                 .GetValueOrDefault(chainId, _emptyDict)
                 .GetValueOrDefault(name, null);
             if (CollectionUtilities.IsNullOrEmpty(address) && SystemContractName.All.Contains(name))
