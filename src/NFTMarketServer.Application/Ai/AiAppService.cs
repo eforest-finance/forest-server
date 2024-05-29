@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AElf;
+using AElf.Indexing.Elasticsearch;
 using AElf.Types;
+using Forest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Common.AElfSdk;
@@ -27,14 +29,17 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly IContractProvider _contractProvider;
     private readonly ISymbolIconAppService _symbolIconAppService;
     private readonly IUserAppService _userAppService;
-
+    private readonly INESTRepository<AiCreateIndex, string> _aiCreateIndexRepository;
+    private readonly INESTRepository<AIImageIndex, string> _aIImageIndexRepository;
 
     public AiAppService(IOptionsMonitor<ChainOptions> chainOptionsMonitor,
         IOptionsMonitor<OpenAiOptions> openAiOptionsMonitor,
         ILogger<AiAppService> logger,
         IContractProvider contractProvider,
         ISymbolIconAppService symbolIconAppService,
-        IUserAppService userAppService
+        IUserAppService userAppService,
+        INESTRepository<AiCreateIndex, string> aiCreateIndexRepository,
+        INESTRepository<AIImageIndex, string> aIImageIndexRepository
     )
     {
         _chainOptionsMonitor = chainOptionsMonitor;
@@ -43,7 +48,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _contractProvider = contractProvider;
         _symbolIconAppService = symbolIconAppService;
         _userAppService = userAppService;
-
+        _aiCreateIndexRepository = aiCreateIndexRepository;
+        _aIImageIndexRepository = aIImageIndexRepository;
     }
 
     public async Task<PagedResultDto<string>> CreateAiArtAsync(CreateAiArtInput input)
@@ -53,40 +59,22 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         
         CreateArtInput createArtInput;
         Transaction transaction;
-         try
-         {
-             transaction =
-                 Transaction.Parser.ParseFrom(ByteArrayHelper.HexStringToByteArray(input.RawTransaction));
-             if (transaction.MethodName == "ManagerForwardCall")
-             {
-                 var managerForwardCallInput = ManagerForwardCallInput.Parser.ParseFrom(transaction.Params);
-                 if (managerForwardCallInput.MethodName == "CreateArt")
-                 {
-                     createArtInput = CreateArtInput.Parser.ParseFrom(managerForwardCallInput.Args);
-                 }
-                 else
-                 {
-                     throw new UserFriendlyException("Invalid transaction");
-                 }
-             }
-             else if (transaction.MethodName == "CreateArt")
-             {
-                 createArtInput = CreateArtInput.Parser.ParseFrom(transaction.Params);
-             }
-             else
-             {
-                 throw new UserFriendlyException("Invalid transaction");
-             }
-             transactionId = await SendTransactionAsync(chainId, transaction);
+        AiCreateIndex aiCreateIndex;
+        try
+        {
+            transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
+            createArtInput = TransferToCreateArtInput(transaction);
+            transactionId = await SendTransactionAsync(chainId, transaction);
+            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput);
+            await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "SendTransactionAsync error");
+            throw new SystemException(e.Message);
+        }
 
-         }
-         catch (Exception e)
-         {
-             _logger.LogError(e, "SendTransactionAsync error");
-             throw new SystemException(e.Message);
-         }
-
-         var s3UrlList = await GenerateImageAsync(createArtInput, transaction, transactionId);
+        var s3UrlList = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex);
         
         return new PagedResultDto<string>()
         {
@@ -94,42 +82,63 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             Items = s3UrlList
         };
     }
-
-    public async Task<PagedResultDto<List<string>>> GetAiArtsAsync()
+    
+    private static AiCreateIndex BuildAiCreateIndex(string transactionId,Transaction transaction,CreateArtInput createArtInput)
     {
-        var currentUserAddress = "";
-        try
+        return new AiCreateIndex
         {
-            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
-            if (currentUserAddress.IsNullOrEmpty())
-            {
-                _logger.LogError("GetCurrentUserAddress error");
-                throw new UserFriendlyException("GetCurrentUserAddress error,Please log in again.");
-            }
-            //query AIImageIndex
-            var artUrlList = new List<string>();
-            return new PagedResultDto<List<string>>()
-            {
-                TotalCount = artUrlList.Count,
-                Items = new[] { artUrlList }
-            };
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e,"GetAiArtsAsync Exception: user:{}",currentUserAddress);
-            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{} e:{}",currentUserAddress, e.Message);
-        }
+            Id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58()),
+            TransactionId = transactionId,
+            Address = transaction.From.ToBase58(),
+            Ctime = DateTime.UtcNow,
+            Utime = DateTime.UtcNow,
+            Model = createArtInput.Model.ToEnum<AiModelType>(),
+            NegativePrompt = createArtInput.NegativePrompt,
+            Number = createArtInput.Number,
+            PaintingStyle = createArtInput.PaintingStyle.ToEnum<AiPaintingStyleType>(),
+            Promt = createArtInput.Promt,
+            Quality = createArtInput.Quality.ToEnum<AiQualityType>(),
+            Status = AiCreateStatus.PAYSUCCESS,
+            RetryCount = 0
+        };
     }
+    
+    private static CreateArtInput TransferToCreateArtInput(Transaction transaction)
+    {
+        CreateArtInput createArtInput;
+        if (transaction.MethodName == CommonConstant.MethodManagerForwardCall)
+        {
+            var managerForwardCallInput = ManagerForwardCallInput.Parser.ParseFrom(transaction.Params);
+            if (managerForwardCallInput.MethodName == CommonConstant.MethodManagerCreateArt)
+            {
+                createArtInput = CreateArtInput.Parser.ParseFrom(managerForwardCallInput.Args);
+            }
+            else
+            {
+                throw new UserFriendlyException("Invalid transaction");
+            }
+        }
+        else if (transaction.MethodName == CommonConstant.MethodManagerCreateArt)
+        {
+            createArtInput = CreateArtInput.Parser.ParseFrom(transaction.Params);
+        }
+        else
+        {
+            throw new UserFriendlyException("Invalid transaction");
+        }
 
+        return createArtInput;
+    }
     private async Task<List<string>> GenerateImageAsync(CreateArtInput createArtInput, Transaction transaction,
-        string transactionId)
+        string transactionId, AiCreateIndex aiCreateIndex)
     {
         var openAiUrl = _openAiOptionsMonitor.CurrentValue.ImagesUrlV1;
         var openAiRequestBody = JsonConvert.SerializeObject(new OpenAiImageGenerationDto
         {
             Model = createArtInput.Model,
             N = createArtInput.Number,
-            Prompt = createArtInput.Promt,
+            Prompt = createArtInput.Promt + ".Image style:" + createArtInput.PaintingStyle + ". without:" +
+                     createArtInput.NegativePrompt,
             Size = createArtInput.Size
         });
         var openAiHeader = new Dictionary<string, string>
@@ -138,7 +147,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         };
 
         var result = new OpenAiImageGenerationResponse();
-        for (var i = 0; i < 3; i++)
+        var retryCount = 1;
+        var openAiMsg = "";
+        for (;retryCount <= 3; retryCount++)
         {
             var openAiResult =
                 await HttpUtil.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
@@ -148,6 +159,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }
             catch (Exception e)
             {
+               openAiMsg = "OpenAiImageGeneration Error Url=" + openAiUrl + " openAiRequestBody=" + openAiRequestBody
+                           + " result=" + openAiResult + " createArtInput=" +
+                           JsonConvert.SerializeObject(createArtInput);
                 _logger.LogError(e,
                     "OpenAiImageGeneration Error Url={A} openAiRequestBody={B} result={C} createArtInput={D}",
                     openAiUrl,
@@ -157,22 +171,50 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             if (result != null && result.Data?.Count > 0) break;
         }
 
+        aiCreateIndex.RetryCount = retryCount;
         if (result == null || result.Data.IsNullOrEmpty())
         {
+            aiCreateIndex.Result = openAiMsg;
+            await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
             throw new SystemException("Ai Image Generation Error");
         }
-
-        var s3UrlList = new List<string>();
-        foreach (var openAiImageGeneration in result.Data)
+        else
         {
+            aiCreateIndex.Status = AiCreateStatus.IMAGECREATED;
+            await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
+        }
+        
+        
+        var s3UrlList = new List<string>();
+        var addList = new List<AIImageIndex>();
+        for (var j = 0; j < result.Data.Count; j++)
+        {
+            var openAiImageGeneration = result.Data[j];
             var imageBytes = await HttpUtil.DownloadImageAsUtf8BytesAsync(openAiImageGeneration.Url);
 
-            var s3Url = await _symbolIconAppService.UpdateNFTIconAsync(imageBytes,
-                transactionId + CommonConstant.Underscore + transaction.From.ToBase58() + CommonConstant.Underscore +
-                DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + CommonConstant.ImagePNG);
-            s3UrlList.Add(s3Url);
+            try
+            {
+                var s3Url = await _symbolIconAppService.UpdateNFTIconAsync(imageBytes,
+                    transactionId + CommonConstant.Underscore + transaction.From.ToBase58() + CommonConstant.Underscore +
+                    DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + CommonConstant.ImagePNG);
+                s3UrlList.Add(s3Url);
+                addList.Add(new AIImageIndex
+                {
+                    Id = IdGenerateHelper.GetAIImageId(transactionId,transaction.To.ToBase58(),j),
+                    Address = transaction.From.ToBase58(),
+                    Ctime = DateTime.UtcNow,
+                    Utime = DateTime.UtcNow,
+                    S3Url = s3Url,
+                    TransactionId = transactionId
+                });
+                
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("s3 upload error openAiImageGeneration={A}", openAiImageGeneration.Url);
+            }
         }
-
+        await _aIImageIndexRepository.BulkAddOrUpdateAsync(addList);
         return s3UrlList;
     }
 
@@ -211,5 +253,30 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
 
         return transactionId;
+    }
+    public async Task<PagedResultDto<List<string>>> GetAiArtsAsync()
+    {
+        var currentUserAddress = "";
+        try
+        {
+            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
+            if (currentUserAddress.IsNullOrEmpty())
+            {
+                _logger.LogError("GetCurrentUserAddress error");
+                throw new UserFriendlyException("GetCurrentUserAddress error,Please log in again.");
+            }
+            //query AIImageIndex
+            var artUrlList = new List<string>();
+            return new PagedResultDto<List<string>>()
+            {
+                TotalCount = artUrlList.Count,
+                Items = new[] { artUrlList }
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,"GetAiArtsAsync Exception: user:{}",currentUserAddress);
+            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{} e:{}",currentUserAddress, e.Message);
+        }
     }
 }
