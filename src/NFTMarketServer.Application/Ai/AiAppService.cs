@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
@@ -13,6 +14,8 @@ using NFTMarketServer.Common;
 using NFTMarketServer.Common.AElfSdk;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.NFT;
+using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Users;
 using Orleans.Runtime;
 using Portkey.Contracts.CA;
@@ -32,6 +35,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly IUserAppService _userAppService;
     private readonly INESTRepository<AiCreateIndex, string> _aiCreateIndexRepository;
     private readonly INESTRepository<AIImageIndex, string> _aIImageIndexRepository;
+    private readonly IAIArtProvider _aiArtProvider;
+
 
     public AiAppService(IOptionsMonitor<ChainOptions> chainOptionsMonitor,
         IOptionsMonitor<OpenAiOptions> openAiOptionsMonitor,
@@ -40,7 +45,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         ISymbolIconAppService symbolIconAppService,
         IUserAppService userAppService,
         INESTRepository<AiCreateIndex, string> aiCreateIndexRepository,
-        INESTRepository<AIImageIndex, string> aIImageIndexRepository
+        INESTRepository<AIImageIndex, string> aIImageIndexRepository,
+        IAIArtProvider aiArtProvider
     )
     {
         _chainOptionsMonitor = chainOptionsMonitor;
@@ -51,6 +57,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _userAppService = userAppService;
         _aiCreateIndexRepository = aiCreateIndexRepository;
         _aIImageIndexRepository = aIImageIndexRepository;
+        _aiArtProvider = aiArtProvider;
+
     }
 
     public async Task<PagedResultDto<string>> CreateAiArtAsync(CreateAiArtInput input)
@@ -253,7 +261,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return transactionId;
     }
-    public async Task<PagedResultDto<List<string>>> GetAiArtsAsync()
+    public async Task<PagedResultDto<List<string>>> GetAiArtsAsync(GetAIArtsInput input)
     {
         var currentUserAddress = "";
         try
@@ -264,12 +272,23 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 _logger.LogError("GetCurrentUserAddress error");
                 throw new UserFriendlyException("GetCurrentUserAddress error,Please log in again.");
             }
-            //query AIImageIndex
-            var artUrlList = new List<string>();
+            var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
+            {
+                Address = currentUserAddress,
+                SkipCount = input.SkipCount,
+                MaxResultCount = input.MaxResultCount
+            });
+
+            if (tuple == null || tuple.Item1 == 0)
+            {
+                return new PagedResultDto<List<string>>();
+            }
+
+            var artList = tuple.Item2;
             return new PagedResultDto<List<string>>()
             {
-                TotalCount = artUrlList.Count,
-                Items = new[] { artUrlList }
+                TotalCount = tuple.Item1,
+                Items = new[] {artList.Select(r=>r.S3Url).ToList()}
             };
         }
         catch (Exception e)
