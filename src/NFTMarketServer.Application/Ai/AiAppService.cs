@@ -74,13 +74,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
             transactionId = await SendTransactionAsync(chainId, transaction);
-            var id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58());
-            var existRecord = await _aiCreateIndexRepository.GetAsync(id);
-            if (existRecord != null)
-            {
-                throw new ArgumentException("Please do not initiate duplicate requests.");
-            }
-            
+
             aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
         }
@@ -250,6 +244,13 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var transactionOutput = await _contractProvider.SendTransactionAsync(chainId, transaction);
 
         var transactionId = transactionOutput.TransactionId;
+        
+        var id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58());
+        var existRecord = await _aiCreateIndexRepository.GetAsync(id);
+        if (existRecord != null)
+        {
+            throw new ArgumentException("Please do not initiate duplicate requests.");
+        }
 
         var transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
         if (transactionResultDto == null)
