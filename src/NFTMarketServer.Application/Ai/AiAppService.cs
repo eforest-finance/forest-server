@@ -78,7 +78,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             var existRecord = await _aiCreateIndexRepository.GetAsync(id);
             if (existRecord != null)
             {
-                throw new SystemException("Please do not initiate duplicate requests.");
+                throw new ArgumentException("Please do not initiate duplicate requests.");
             }
             
             aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput);
@@ -101,6 +101,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     
     private static AiCreateIndex BuildAiCreateIndex(string transactionId,Transaction transaction,CreateArtInput createArtInput)
     {
+        if (createArtInput.Number < CommonConstant.IntOne || createArtInput.Number > CommonConstant.IntTen)
+        {
+            throw new ArgumentException("The number per transaction needs to be between 1 and 10.");
+        }
         return new AiCreateIndex
         {
             Id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58()),
