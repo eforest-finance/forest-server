@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Nest;
+using Newtonsoft.Json;
 using NFTMarketServer.Chains;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Helper;
@@ -256,6 +257,8 @@ namespace NFTMarketServer.Users
             {
                 throw new Exception("Please log in again");
             }
+            
+            _logger.LogInformation("GetCurrentUserAddressAsync grain:{}", JsonConvert.SerializeObject(user));
 
             var address = "";
             if (!user.Data.AelfAddress.IsNullOrEmpty())
