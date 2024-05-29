@@ -1,4 +1,7 @@
-﻿using AElf.Whitelist;
+﻿using System.Linq;
+using AElf.Whitelist;
+using Castle.Core.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Dealer.ContractInvoker;
@@ -11,7 +14,9 @@ using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Options;
 using NFTMarketServer.OwnerShip.Verify;
 using NFTMarketServer.Provider;
+using NFTMarketServer.Redis;
 using NFTMarketServer.Seed;
+using StackExchange.Redis;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
@@ -20,6 +25,7 @@ using Volo.Abp.Modularity;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.TenantManagement;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace NFTMarketServer
 {
@@ -82,7 +88,8 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, NFTListingChangeScheduleService>();
 
             context.Services.AddTransient<IScheduleSyncDataService, BidScheduleService>();
-            context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionStatisticalDataScheduleService>();context.Services.AddTransient<IScheduleSyncDataService, CollectionExtenstionCurrentInitScheduleService>(); 
+            context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionStatisticalDataScheduleService>();
+            context.Services.AddTransient<IScheduleSyncDataService, CollectionExtenstionCurrentInitScheduleService>(); 
             context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionPriceScheduleService>();   
             context.Services.AddTransient<IScheduleSyncDataService, TsmSeedMainChainScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, TsmSeedSideChainScheduleService>();
@@ -105,6 +112,21 @@ namespace NFTMarketServer
             Configure<ChainOption>(configuration.GetSection("ChainOption"));
             Configure<SynchronizeTransactionJobOptions>(configuration.GetSection("Synchronize"));
             Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
+            
+            ConfigureTokenBucketService(context, configuration);
+        }
+        
+        private static void ConfigureTokenBucketService(
+            ServiceConfigurationContext context,
+            IConfiguration configuration)
+        {
+            context.Services.AddSingleton<IOpenAiRedisTokenBucket>(sp =>
+            {
+                var connection = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]);
+                var database = connection.GetDatabase();
+                return new OpenAiRedisTokenBucket(database, "openAiTokenBucket",
+                    configuration.GetSection("OpenAi").GetSection("ApiKeyList").Get<string[]>().Length-1);
+            });
         }
     }
 }

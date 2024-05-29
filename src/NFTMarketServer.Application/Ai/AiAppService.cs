@@ -16,6 +16,7 @@ using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Provider;
+using NFTMarketServer.Redis;
 using NFTMarketServer.Users;
 using Orleans.Runtime;
 using Portkey.Contracts.CA;
@@ -36,6 +37,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly INESTRepository<AiCreateIndex, string> _aiCreateIndexRepository;
     private readonly INESTRepository<AIImageIndex, string> _aIImageIndexRepository;
     private readonly IAIArtProvider _aiArtProvider;
+    private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
 
 
     public AiAppService(IOptionsMonitor<ChainOptions> chainOptionsMonitor,
@@ -46,7 +48,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         IUserAppService userAppService,
         INESTRepository<AiCreateIndex, string> aiCreateIndexRepository,
         INESTRepository<AIImageIndex, string> aIImageIndexRepository,
-        IAIArtProvider aiArtProvider
+        IAIArtProvider aiArtProvider,
+        IOpenAiRedisTokenBucket openAiRedisTokenBucket
     )
     {
         _chainOptionsMonitor = chainOptionsMonitor;
@@ -58,6 +61,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _aiCreateIndexRepository = aiCreateIndexRepository;
         _aIImageIndexRepository = aIImageIndexRepository;
         _aiArtProvider = aiArtProvider;
+        _openAiRedisTokenBucket = openAiRedisTokenBucket;
 
     }
 
@@ -164,7 +168,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         });
         var openAiHeader = new Dictionary<string, string>
         {
-            [CommonConstant.Authorization] = CommonConstant.BearerToken + _openAiOptionsMonitor.CurrentValue.ApiKeyList[0]
+            [CommonConstant.Authorization] = CommonConstant.BearerToken + _openAiOptionsMonitor.CurrentValue.ApiKeyList[_openAiRedisTokenBucket.GetNextToken()]
         };
 
         var result = new OpenAiImageGenerationResponse();
@@ -264,11 +268,19 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
         }
 
+        
+        for (var i = 0; transactionResultDto.Status.Equals(TransactionState.Notexisted) && i <= _openAiOptionsMonitor.CurrentValue.DelayMaxTime; i++)
+        {
+            await Task.Delay(_openAiOptionsMonitor.CurrentValue.DelayMillisecond);
+            transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
+        }
+        
         if (!transactionResultDto.Status.Equals(TransactionState.Mined))
         {
-            _logger.LogError("QueryTransactionResult is fail, transactionId={A} result={B}", transactionId,
-                JsonConvert.SerializeObject(transactionResultDto));
-            throw new SystemException("QueryTransactionResult is fail transactionId=" + transactionId);
+            _logger.LogError("QueryTransactionResult is fail, transactionId={A} result={B} status={C}", transactionId,
+                JsonConvert.SerializeObject(transactionResultDto), transactionResultDto.Status);
+            throw new SystemException("QueryTransactionResult is fail transactionId=" + transactionId + "status=" +
+                                      transactionResultDto.Status);
         }
 
         return transactionId;
