@@ -106,6 +106,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             Number = createArtInput.Number,
             PaintingStyle = createArtInput.PaintingStyle.ToEnum<AiPaintingStyleType>(),
             Promt = createArtInput.Promt,
+            Size = createArtInput.Size.ToEnum<AiSizeType>(),
             Status = AiCreateStatus.PAYSUCCESS,
             RetryCount = 0
         };

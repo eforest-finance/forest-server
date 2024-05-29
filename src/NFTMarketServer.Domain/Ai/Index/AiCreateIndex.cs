@@ -29,12 +29,15 @@ public class AiCreateIndex : NFTMarketEntity<string>, IIndexBuild
 
 public enum AiCreateStatus
 {
+    INIT,
     PAYSUCCESS,
     IMAGECREATED
 }
 
 public enum AiSizeType
 {
+    [EnumMember(Value = "none")]
+    NONE,
     [EnumMember(Value = "256x256")]
     SIZE256x256,
     [EnumMember(Value = "512x512")]
@@ -50,6 +53,8 @@ public enum AiSizeType
 
 public enum AiStyleType
 {
+    [EnumMember(Value = "none")]
+    NONE,
     [EnumMember(Value = "vivid")]
     VIVID,
     [EnumMember(Value = "natural")]
@@ -58,6 +63,8 @@ public enum AiStyleType
 
 public enum AiPaintingStyleType
 {
+    [EnumMember(Value = "none")]
+    NONE,
     [EnumMember(Value = "Pixel")]
     PIXEL,
     [EnumMember(Value = "Cartoon")]
@@ -74,6 +81,8 @@ public enum AiPaintingStyleType
 
 public enum AiModelType
 {
+    [EnumMember(Value = "none")]
+    NONE,
     [EnumMember(Value = "dall-e-2")]
     DALLE2,
     [EnumMember(Value = "dall-e-3")]
@@ -81,6 +90,8 @@ public enum AiModelType
 }
 public enum AiQualityType
 {
+    [EnumMember(Value = "none")]
+    NONE,
     [EnumMember(Value = "standard")]
     STANDARD,
     [EnumMember(Value = "hd")]
