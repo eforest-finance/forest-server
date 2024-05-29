@@ -264,11 +264,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     public async Task<PagedResultDto<List<string>>> GetAiArtsAsync(GetAIArtsInput input)
     {
         var currentUserAddress = "";
-        _logger.LogInformation("GetCurrentUserAddress address:{}",currentUserAddress);
-
         try
         {
             currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
+            _logger.LogInformation("GetCurrentUserAddress address:{}",currentUserAddress);
+
             if (currentUserAddress.IsNullOrEmpty())
             {
                 _logger.LogError("GetCurrentUserAddress error");
