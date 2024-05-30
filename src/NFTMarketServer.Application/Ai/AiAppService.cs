@@ -249,10 +249,12 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
     private static string BuildFullPrompt(CreateArtInput createArtInput)
     {
-        return createArtInput.Promt + (createArtInput.PaintingStyle.IsNullOrEmpty() ? "" :
-                                        ". Image style:" + createArtInput.PaintingStyle) 
-                                    + (createArtInput.NegativePrompt.IsNullOrEmpty() ? "" :
-                                        ". without:" + createArtInput.NegativePrompt);
+        return "prompt：" + createArtInput.Promt + ";" + (createArtInput.PaintingStyle.IsNullOrEmpty()
+                   ? ""
+                   : "; Image style:" + createArtInput.PaintingStyle)
+               + (createArtInput.NegativePrompt.IsNullOrEmpty()
+                   ? ""
+                   : "; negative prompt:" + createArtInput.NegativePrompt);
     }
 
     private async Task<string> SendTransactionAsync(string chainId, Transaction transaction)
