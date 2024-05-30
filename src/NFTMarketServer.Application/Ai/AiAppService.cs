@@ -98,7 +98,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             TotalCount = s3UrlDic.Count,
             Items = s3UrlDic
-                .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value })
+                .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"","") })
                 .ToList()
         };
     }
