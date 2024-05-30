@@ -298,7 +298,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             {
                 Address = input.Address,
                 SkipCount = input.SkipCount,
-                MaxResultCount = input.MaxResultCount
+                MaxResultCount = input.MaxResultCount,
+                Status = input.Status
             });
 
             if (tuple == null || tuple.Item1 == 0)
