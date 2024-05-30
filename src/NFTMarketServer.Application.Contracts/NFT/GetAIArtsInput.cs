@@ -4,4 +4,6 @@ namespace NFTMarketServer.NFT;
 
 public class GetAIArtsInput : PagedAndSortedResultRequestDto
 {
+    public string Address { get; set; }
+
 }

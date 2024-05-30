@@ -274,20 +274,16 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     }
     public async Task<PagedResultDto<List<string>>> GetAiArtsAsync(GetAIArtsInput input)
     {
-        var currentUserAddress = "";
         try
         {
-            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
-            _logger.LogInformation("GetCurrentUserAddress address:{}",currentUserAddress);
-
-            if (currentUserAddress.IsNullOrEmpty())
+            if (input.Address.IsNullOrEmpty())
             {
-                _logger.LogError("GetCurrentUserAddress error");
-                throw new UserFriendlyException("GetCurrentUserAddress error,Please log in again.");
+                _logger.LogError("invalid  address");
+                throw new UserFriendlyException("invalid  address.");
             }
             var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
             {
-                Address = currentUserAddress,
+                Address = input.Address,
                 SkipCount = input.SkipCount,
                 MaxResultCount = input.MaxResultCount
             });
@@ -306,8 +302,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
         catch (Exception e)
         {
-            _logger.LogError(e,"GetAiArtsAsync Exception: user:{address}",currentUserAddress);
-            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{address} e:{error}",currentUserAddress, e.Message);
+            _logger.LogError(e,"GetAiArtsAsync Exception: user:{address}",input.Address);
+            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{address} e:{error}",input.Address, e.Message);
         }
     }
 }
