@@ -6,4 +6,7 @@ public class TransactionFeeDto
     public decimal TransactionFeeOfUsd { get; set; }
     public decimal ForestServiceRate { get; set; }
     public decimal CreatorLoyaltyRate { get; set; }
+    
+    public double AIIMageFee { get; set; }
+
 }
