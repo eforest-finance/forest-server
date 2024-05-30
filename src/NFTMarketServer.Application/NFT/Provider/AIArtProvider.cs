@@ -31,6 +31,12 @@ public class AIArtProvider : IAIArtProvider, ISingletonDependency
             mustQuery.Add(q => q.Term(i =>
                 i.Field(f => f.Address).Value(input.Address)));
         }
+
+        if (input.Status != -1)
+        {
+            mustQuery.Add(q => q.Term(i =>
+                i.Field(f => f.status).Value(input.Status)));
+        }
         
         QueryContainer Filter(QueryContainerDescriptor<AIImageIndex> f) =>
             f.Bool(b => b.Must(mustQuery));

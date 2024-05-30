@@ -14,4 +14,6 @@ public class AIImageIndex : NFTMarketEntity<string>, IIndexBuild
     [Text(Index = false)] public string IpfsId { get; set; }
     public DateTime Ctime { get; set; }
     public DateTime Utime { get; set; }
+    
+    public int status { get; set; }
 }
