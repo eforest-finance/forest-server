@@ -7,6 +7,6 @@ public class TransactionFeeDto
     public decimal ForestServiceRate { get; set; }
     public decimal CreatorLoyaltyRate { get; set; }
     
-    public double AIIMageFee { get; set; }
+    public double AIImageFee { get; set; }
 
 }

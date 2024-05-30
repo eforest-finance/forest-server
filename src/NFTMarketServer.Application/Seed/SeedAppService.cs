@@ -580,7 +580,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             TransactionFeeOfUsd = roundedResult,
             ForestServiceRate = transactionFeeOption.ForestServiceRate,
             CreatorLoyaltyRate = transactionFeeOption.CreatorLoyaltyRate,
-            AIIMageFee = transactionFeeOption.AIImageFee
+            AIImageFee = transactionFeeOption.AIImageFee
         };
     }
 
