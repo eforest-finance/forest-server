@@ -9,3 +9,9 @@ public class CreateAiArtInput
     public string PublicKey { get; set; }
     [NotNull]public string ChainId { get; set; }
 }
+
+public class CreateAiArtDto
+{
+    public string Url { get; set; }
+    public string Hash { get; set; }
+}

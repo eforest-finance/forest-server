@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
 using Forest;
+using GraphQL;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -68,7 +69,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
     }
 
-    public async Task<PagedResultDto<string>> CreateAiArtAsync(CreateAiArtInput input)
+    public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
     {
         var chainId = input.ChainId;
         string transactionId;
@@ -91,12 +92,14 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             throw new SystemException(e.Message);
         }
 
-        var s3UrlList = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex);
-        
-        return new PagedResultDto<string>()
+        var s3UrlDic = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex);
+
+        return new PagedResultDto<CreateAiArtDto>()
         {
-            TotalCount = s3UrlList.Count,
-            Items = s3UrlList
+            TotalCount = s3UrlDic.Count,
+            Items = s3UrlDic
+                .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value })
+                .ToList()
         };
     }
     
@@ -157,7 +160,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return createArtInput;
     }
-    private async Task<List<string>> GenerateImageAsync(CreateArtInput createArtInput, Transaction transaction,
+    private async Task<Dictionary<string,string>> GenerateImageAsync(CreateArtInput createArtInput, Transaction transaction,
         string transactionId, AiCreateIndex aiCreateIndex)
     {
         var openAiUrl = _openAiOptionsMonitor.CurrentValue.ImagesUrlV1;
@@ -214,7 +217,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
         
         
-        var s3UrlList = new List<string>();
+        var s3UrlDic = new Dictionary<string,string>();
         var addList = new List<AIImageIndex>();
         for (var j = 0; j < result.Data.Count; j++)
         {
@@ -223,17 +226,19 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
             try
             {
-                var s3Url = await _symbolIconAppService.UpdateNFTIconAsync(imageBytes,
+                var s3UrlValuePairs = await _symbolIconAppService.UpdateNFTIconWithHashAsync(imageBytes,
                     transactionId + CommonConstant.Underscore + transaction.From.ToBase58() + CommonConstant.Underscore +
                     DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + CommonConstant.ImagePNG);
-                s3UrlList.Add(s3Url);
+                if (s3UrlValuePairs.Key.IsNullOrEmpty()) continue;
+                s3UrlDic.Add(s3UrlValuePairs.Key,s3UrlValuePairs.Value);
                 addList.Add(new AIImageIndex
                 {
-                    Id = IdGenerateHelper.GetAIImageId(transactionId,transaction.To.ToBase58(),j),
+                    Id = IdGenerateHelper.GetAIImageId(transactionId, transaction.To.ToBase58(), j),
                     Address = transaction.From.ToBase58(),
                     Ctime = DateTime.UtcNow,
                     Utime = DateTime.UtcNow,
-                    S3Url = s3Url,
+                    S3Url = s3UrlValuePairs.Key,
+                    Hash = s3UrlValuePairs.Value,
                     TransactionId = transactionId
                 });
                 
@@ -243,8 +248,13 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 _logger.LogError("s3 upload error openAiImageGeneration={A}", openAiImageGeneration.Url);
             }
         }
+
+        if (addList.IsNullOrEmpty())
+        {
+            throw new SystemException("s3 upload error,result is empty");
+        }
         await _aIImageIndexRepository.BulkAddOrUpdateAsync(addList);
-        return s3UrlList;
+        return s3UrlDic;
     }
 
     private static string BuildFullPrompt(CreateArtInput createArtInput)
