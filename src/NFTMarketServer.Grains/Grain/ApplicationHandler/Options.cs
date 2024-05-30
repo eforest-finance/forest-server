@@ -9,6 +9,8 @@ public class OpenAiOptions
 
     public int DelayMaxTime { get; set; } = 0;
     public int DelayMillisecond { get; set; } = 0;
+    
+    public bool RepeatRequestIsOn { get; set; } = false;
 }
 
 public class ChainOptions

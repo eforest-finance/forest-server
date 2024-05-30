@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
 using Forest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Basic;
@@ -162,19 +162,19 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             Model = createArtInput.Model,
             N = createArtInput.Number,
-            Prompt = createArtInput.Promt + ".Image style:" + createArtInput.PaintingStyle + ". without:" +
-                     createArtInput.NegativePrompt,
-            Size = createArtInput.Size
+            Size = createArtInput.Size,
+            Prompt = BuildFullPrompt(createArtInput)
         });
+       
         var openAiHeader = new Dictionary<string, string>
         {
             [CommonConstant.Authorization] = CommonConstant.BearerToken + _openAiOptionsMonitor.CurrentValue.ApiKeyList[_openAiRedisTokenBucket.GetNextToken()]
         };
 
         var result = new OpenAiImageGenerationResponse();
-        var retryCount = 1;
+        var retryCount = CommonConstant.IntOne;
         var openAiMsg = "";
-        for (;retryCount <= 3; retryCount++)
+        for (; retryCount <= CommonConstant.IntThree; retryCount++)
         {
             var openAiResult =
                 await HttpUtil.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
@@ -201,7 +201,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             aiCreateIndex.Result = openAiMsg;
             await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
-            throw new SystemException("Ai Image Generation Error");
+            _logger.LogError("Ai Image Generation Error {A}",JsonConvert.SerializeObject(result));
+            throw new SystemException("Ai Image Generation Error. "+result?.Error.Message);
         }
         else
         {
@@ -243,17 +244,28 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         return s3UrlList;
     }
 
+    private static string BuildFullPrompt(CreateArtInput createArtInput)
+    {
+        return createArtInput.Promt + (createArtInput.PaintingStyle.IsNullOrEmpty() ? "" :
+                                        ". Image style:" + createArtInput.PaintingStyle) 
+                                    + (createArtInput.NegativePrompt.IsNullOrEmpty() ? "" :
+                                        ". without:" + createArtInput.NegativePrompt);
+    }
+
     private async Task<string> SendTransactionAsync(string chainId, Transaction transaction)
     {
         var transactionOutput = await _contractProvider.SendTransactionAsync(chainId, transaction);
 
         var transactionId = transactionOutput.TransactionId;
-        
-        var id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58());
-        var existRecord = await _aiCreateIndexRepository.GetAsync(id);
-        if (existRecord != null)
+
+        if (!_openAiOptionsMonitor.CurrentValue.RepeatRequestIsOn)
         {
-            throw new ArgumentException("Please do not initiate duplicate requests.");
+            var id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58());
+            var existRecord = await _aiCreateIndexRepository.GetAsync(id);
+            if (existRecord != null)
+            {
+                throw new ArgumentException("Please do not initiate duplicate requests.");
+            }
         }
 
         var transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
