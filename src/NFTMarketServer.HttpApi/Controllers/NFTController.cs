@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Ai;
+using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Models;
 using NFTMarketServer.NFT;
 using Volo.Abp;
@@ -207,7 +208,7 @@ namespace NFTMarketServer.Controllers
         
         [HttpGet]
         [Route("ai-arts")]
-        public async Task<PagedResultDto<List<string>>> GETAIArts(GetAIArtsInput input)
+        public async Task<PagedResultDto<List<AIImageIndex>>> GETAIArts(GetAIArtsInput input)
         {
             return await _aiAppService.GetAiArtsAsync(input);
         }
