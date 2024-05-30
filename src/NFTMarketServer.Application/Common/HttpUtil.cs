@@ -96,9 +96,8 @@ public class HttpUtil
                 {
                     return await response.Content.ReadAsStringAsync();
                 }
-
-                return JsonConvert.SerializeObject(" PostRequest StatusCode is Not Success: " +
-                                                   response?.StatusCode + " " + response);
+                
+                return await response.Content.ReadAsStringAsync();
             }
         }
         catch (Exception ex)

@@ -8,6 +8,7 @@ public static class CommonConstant
     public const long LongEmpty = 0;
     public const int IntZero = 0;
     public const int IntOne = 1;
+    public const int IntThree = 3;
     public const int IntNegativeOne = -1;
     public const int IntTen = 10;
     public const int RecentSearchNumber = 30000;
