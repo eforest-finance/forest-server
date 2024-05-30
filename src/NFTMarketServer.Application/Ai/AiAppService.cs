@@ -6,7 +6,6 @@ using AElf.Types;
 using Forest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Basic;
@@ -335,5 +334,54 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             _logger.LogError(e,"GetAiArtsAsync Exception: user:{address}",input.Address);
             throw new UserFriendlyException("GetAiArtsAsync Exception: user:{address} e:{error}",input.Address, e.Message);
         }
+    }
+
+    public async Task<ResultDto<string>> UseAIArtsAsync(UseAIArtsInput input)
+    {
+        var currentAddress = "";
+        try
+        {
+            currentAddress =  await _userAppService.GetCurrentUserAddressAsync();
+            _logger.LogInformation("UseAIArtsAsync request, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
+            if (currentAddress.IsNullOrEmpty())
+            {
+                _logger.LogError("please login");
+                throw new UserFriendlyException("please login");
+            }
+            var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
+            {
+                Address = currentAddress,
+                SkipCount = 0,
+                MaxResultCount = input.ImageList.Count,
+                Status = (int)AiImageUseStatus.UNUSE,
+                ImageIds = input.ImageList
+            });
+
+            if (tuple == null || tuple.Item1 == 0)
+            {
+                _logger.LogInformation("UseAIArtsAsync Image not found, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
+                var result = new ResultDto<string>()
+                {
+                    Success = false,
+                    Message = "Please enter your correct imageId"
+                };
+                return result;
+            }
+
+            var images = tuple.Item2;
+            foreach (var imageIndex in images)
+            {
+                imageIndex.status = (int)AiImageUseStatus.USE;
+            }
+            var artList = tuple.Item2;
+            await _aIImageIndexRepository.BulkAddOrUpdateAsync(images);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,"UseAIArtsAsync Exception address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
+            return new ResultDto<string>() {Success = false, Message = e.Message };
+
+        }
+        return new ResultDto<string>() {Success = true, Message = "" };
     }
 }

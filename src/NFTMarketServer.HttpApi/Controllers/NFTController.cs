@@ -212,5 +212,12 @@ namespace NFTMarketServer.Controllers
         {
             return await _aiAppService.GetAiArtsAsync(input);
         }
+        
+        [HttpPost]
+        [Route("ai-arts")]
+        public async Task<ResultDto<string>> UseAIArts(UseAIArtsInput input)
+        {
+            return await _aiAppService.UseAIArtsAsync(input);
+        }
     }
 }
