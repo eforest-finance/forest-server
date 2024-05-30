@@ -306,8 +306,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }
             if (input.Address.IsNullOrEmpty())
             {
-                _logger.LogError("invalid  address");
-                throw new UserFriendlyException("invalid  address.");
+                _logger.LogError("invalid address");
+                throw new UserFriendlyException("invalid address.");
             }
             var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
             {
@@ -341,6 +341,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var currentAddress = "";
         try
         {
+            if (input.ImageList.IsNullOrEmpty())
+            {
+                _logger.LogError("invalid imageIds");
+                throw new UserFriendlyException("invalid imageIds");
+            }
             currentAddress =  await _userAppService.GetCurrentUserAddressAsync();
             _logger.LogInformation("UseAIArtsAsync request, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
             if (currentAddress.IsNullOrEmpty())
@@ -356,7 +361,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 Status = (int)AiImageUseStatus.UNUSE,
                 ImageIds = input.ImageList
             });
-
+            
             if (tuple == null || tuple.Item1 == 0)
             {
                 _logger.LogInformation("UseAIArtsAsync Image not found, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));

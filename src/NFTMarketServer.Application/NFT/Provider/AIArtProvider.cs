@@ -37,7 +37,7 @@ internal class AIArtProvider : IAIArtProvider, ISingletonDependency
 
         if (!input.ImageIds.IsNullOrEmpty())
         {
-            mustQuery.Add(q => q.Terms(i => i.Field(f => f.S3Url).Terms(input.ImageIds)));
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Id).Terms(input.ImageIds)));
         }
 
         QueryContainer Filter(QueryContainerDescriptor<AIImageIndex> f) =>
