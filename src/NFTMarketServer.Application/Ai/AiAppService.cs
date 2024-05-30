@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
@@ -37,6 +38,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly INESTRepository<AIImageIndex, string> _aIImageIndexRepository;
     private readonly IAIArtProvider _aiArtProvider;
     private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
+    private readonly IOptionsMonitor<AIPromptsOptions> _aiPromptsOptions;
 
 
     public AiAppService(IOptionsMonitor<ChainOptions> chainOptionsMonitor,
@@ -48,7 +50,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         INESTRepository<AiCreateIndex, string> aiCreateIndexRepository,
         INESTRepository<AIImageIndex, string> aIImageIndexRepository,
         IAIArtProvider aiArtProvider,
-        IOpenAiRedisTokenBucket openAiRedisTokenBucket
+        IOpenAiRedisTokenBucket openAiRedisTokenBucket,
+        IOptionsMonitor<AIPromptsOptions> aiPromptsOptions
     )
     {
         _chainOptionsMonitor = chainOptionsMonitor;
@@ -61,6 +64,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _aIImageIndexRepository = aIImageIndexRepository;
         _aiArtProvider = aiArtProvider;
         _openAiRedisTokenBucket = openAiRedisTokenBucket;
+        _aiPromptsOptions = aiPromptsOptions;
 
     }
 
@@ -388,5 +392,21 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         }
         return new ResultDto<string>() {Success = true, Message = "" };
+    }
+
+    public ResultDto<string> GETAIPrompts()
+    {
+        var promptConfig = _aiPromptsOptions?.CurrentValue;
+        if (promptConfig == null || promptConfig.AIPrompts.IsNullOrEmpty())
+        {
+            return new ResultDto<string>() {Success = false, Message = "have not config prompts " };
+        }
+        var words = promptConfig.AIPrompts.Split('/');
+        var random = new Random();
+        var randomWords = words.OrderBy(x => random.Next()).Take(20).ToArray();
+        var result = string.Join(" ", randomWords);
+
+        return new ResultDto<string>() {Success = true, Message = "", Data = result};
+
     }
 }

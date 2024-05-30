@@ -219,5 +219,12 @@ namespace NFTMarketServer.Controllers
         {
             return await _aiAppService.UseAIArtsAsync(input);
         }
+        
+        [HttpGet]
+        [Route("api/app/nft/ai-prompts")]
+        public  ResultDto<string> GETAIPrompts()
+        {
+            return _aiAppService.GETAIPrompts();
+        }
     }
 }
