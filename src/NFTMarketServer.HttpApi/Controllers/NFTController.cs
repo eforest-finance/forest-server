@@ -221,7 +221,7 @@ namespace NFTMarketServer.Controllers
         }
         
         [HttpGet]
-        [Route("api/app/nft/ai-prompts")]
+        [Route("ai-prompts")]
         public  ResultDto<string> GETAIPrompts()
         {
             return _aiAppService.GETAIPrompts();
