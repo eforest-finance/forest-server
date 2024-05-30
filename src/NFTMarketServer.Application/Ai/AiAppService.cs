@@ -303,6 +303,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             if (input.Address.IsNullOrEmpty())
             {
+                input.Address = await _userAppService.GetCurrentUserAddressAsync();
+            }
+            if (input.Address.IsNullOrEmpty())
+            {
                 _logger.LogError("invalid  address");
                 throw new UserFriendlyException("invalid  address.");
             }
