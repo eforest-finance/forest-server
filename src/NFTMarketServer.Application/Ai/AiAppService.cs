@@ -91,7 +91,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             throw new SystemException(e.Message);
         }
 
-        var s3UrlDic = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex);
+        var s3UrlDic = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex, currentUserAddress);
 
         return new PagedResultDto<CreateAiArtDto>()
         {
