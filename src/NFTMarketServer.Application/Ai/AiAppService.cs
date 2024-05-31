@@ -73,7 +73,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     {
         var chainId = input.ChainId;
         string transactionId;
-        
+        var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
         CreateArtInput createArtInput;
         Transaction transaction;
         AiCreateIndex aiCreateIndex;
@@ -82,8 +82,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
             transactionId = await SendTransactionAsync(chainId, transaction);
-
-            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput);
+            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput, currentUserAddress);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
         }
         catch (Exception e)
@@ -103,7 +102,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         };
     }
     
-    private static AiCreateIndex BuildAiCreateIndex(string transactionId,Transaction transaction,CreateArtInput createArtInput)
+    private static AiCreateIndex BuildAiCreateIndex(string transactionId,Transaction transaction,CreateArtInput createArtInput, string currentUserAddress)
     {
         if (createArtInput.Number < CommonConstant.IntOne || createArtInput.Number > CommonConstant.IntTen)
         {
@@ -113,7 +112,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             Id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58()),
             TransactionId = transactionId,
-            Address = transaction.From.ToBase58(),
+            Address = currentUserAddress,
             Ctime = DateTime.UtcNow,
             Utime = DateTime.UtcNow,
             Model = createArtInput.Model.ToEnum<AiModelType>(),
@@ -161,7 +160,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         return createArtInput;
     }
     private async Task<Dictionary<string,string>> GenerateImageAsync(CreateArtInput createArtInput, Transaction transaction,
-        string transactionId, AiCreateIndex aiCreateIndex)
+        string transactionId, AiCreateIndex aiCreateIndex, string currentUserAddress)
     {
         var openAiUrl = _openAiOptionsMonitor.CurrentValue.ImagesUrlV1;
         var openAiRequestBody = JsonConvert.SerializeObject(new OpenAiImageGenerationDto
@@ -234,7 +233,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 addList.Add(new AIImageIndex
                 {
                     Id = IdGenerateHelper.GetAIImageId(transactionId, transaction.To.ToBase58(), j),
-                    Address = transaction.From.ToBase58(),
+                    Address = currentUserAddress,
                     Ctime = DateTime.UtcNow,
                     Utime = DateTime.UtcNow,
                     S3Url = s3UrlValuePairs.Key,
