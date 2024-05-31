@@ -311,7 +311,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return transactionId;
     }
-    public async Task<PagedResultDto<List<AIImageIndex>>> GetAiArtsAsync(GetAIArtsInput input)
+    public async Task<PagedResultDto<AIImageIndex>> GetAiArtsAsync(GetAIArtsInput input)
     {
         try
         {
@@ -334,14 +334,14 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
             if (tuple == null || tuple.Item1 == 0)
             {
-                return new PagedResultDto<List<AIImageIndex>>();
+                return new PagedResultDto<AIImageIndex>();
             }
 
             var artList = tuple.Item2;
-            return new PagedResultDto<List<AIImageIndex>>()
+            return new PagedResultDto<AIImageIndex>()
             {
                 TotalCount = tuple.Item1,
-                Items = new[] {artList}
+                Items = artList
             };
         }
         catch (Exception e)

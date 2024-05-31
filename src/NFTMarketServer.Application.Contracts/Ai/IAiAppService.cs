@@ -11,7 +11,7 @@ namespace NFTMarketServer.Ai
     {
         Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input);
         
-        Task<PagedResultDto<List<AIImageIndex>>> GetAiArtsAsync(GetAIArtsInput input); 
+        Task<PagedResultDto<AIImageIndex>> GetAiArtsAsync(GetAIArtsInput input); 
         Task<ResultDto<string>> UseAIArtsAsync(UseAIArtsInput input);
         
         ResultDto<string> GETAIPrompts();

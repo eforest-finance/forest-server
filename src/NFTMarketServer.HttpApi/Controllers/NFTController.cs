@@ -209,7 +209,7 @@ namespace NFTMarketServer.Controllers
         
         [HttpGet]
         [Route("ai-arts")]
-        public async Task<PagedResultDto<List<AIImageIndex>>> GETAIArts(GetAIArtsInput input)
+        public async Task<PagedResultDto<AIImageIndex>> GETAIArts(GetAIArtsInput input)
         {
             return await _aiAppService.GetAiArtsAsync(input);
         }
