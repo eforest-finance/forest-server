@@ -5,14 +5,13 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
 using Forest;
-using GraphQL;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Basic;
-using NFTMarketServer.Common;
 using NFTMarketServer.Common.AElfSdk;
+using NFTMarketServer.Common.Http;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.NFT;
@@ -38,6 +37,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly INESTRepository<AiCreateIndex, string> _aiCreateIndexRepository;
     private readonly INESTRepository<AIImageIndex, string> _aIImageIndexRepository;
     private readonly IAIArtProvider _aiArtProvider;
+    private readonly IHttpService _httpService;
     private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
     private readonly IOptionsMonitor<AIPromptsOptions> _aiPromptsOptions;
 
@@ -51,6 +51,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         INESTRepository<AiCreateIndex, string> aiCreateIndexRepository,
         INESTRepository<AIImageIndex, string> aIImageIndexRepository,
         IAIArtProvider aiArtProvider,
+        IHttpService httpService,
         IOpenAiRedisTokenBucket openAiRedisTokenBucket,
         IOptionsMonitor<AIPromptsOptions> aiPromptsOptions
     )
@@ -66,6 +67,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _aiArtProvider = aiArtProvider;
         _openAiRedisTokenBucket = openAiRedisTokenBucket;
         _aiPromptsOptions = aiPromptsOptions;
+        _httpService = httpService;
 
     }
 
@@ -182,7 +184,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         for (; retryCount <= CommonConstant.IntThree; retryCount++)
         {
             var openAiResult =
-                await HttpUtil.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
+                await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
             try
             {
                 result = JsonConvert.DeserializeObject<OpenAiImageGenerationResponse>(openAiResult);
@@ -221,7 +223,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         for (var j = 0; j < result.Data.Count; j++)
         {
             var openAiImageGeneration = result.Data[j];
-            var imageBytes = await HttpUtil.DownloadImageAsUtf8BytesAsync(openAiImageGeneration.Url);
+            var imageBytes = await _httpService.DownloadImageAsUtf8BytesAsync(openAiImageGeneration.Url);
 
             try
             {
