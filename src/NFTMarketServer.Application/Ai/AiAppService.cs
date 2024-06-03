@@ -375,7 +375,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 throw new UserFriendlyException("please login");
             }
 
-            var status = (int)AiImageUseStatus.UNUSE;
+            var status = (int)AiImageUseStatus.USE;
             if (input.Status.Equals(AiImageUseStatus.ABANDONED))
             {
                 status = (int)AiImageUseStatus.ABANDONED;
@@ -386,7 +386,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 Address = currentAddress,
                 SkipCount = 0,
                 MaxResultCount = input.ImageList.Count,
-                Status = status,
+                Status =  (int)AiImageUseStatus.UNUSE,
                 ImageHash = input.ImageList,
             });
             
@@ -404,7 +404,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             var images = tuple.Item2;
             foreach (var imageIndex in images)
             {
-                imageIndex.status = (int)AiImageUseStatus.USE;
+                imageIndex.status = status;
             }
             var artList = tuple.Item2;
             await _aIImageIndexRepository.BulkAddOrUpdateAsync(images);
