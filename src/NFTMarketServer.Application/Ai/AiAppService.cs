@@ -376,7 +376,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }
 
             var status = (int)AiImageUseStatus.USE;
-            if (input.Status.Equals(AiImageUseStatus.ABANDONED))
+            if (input.Status.Equals((int)AiImageUseStatus.ABANDONED))
             {
                 status = (int)AiImageUseStatus.ABANDONED;
             }

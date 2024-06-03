@@ -6,7 +6,7 @@ namespace NFTMarketServer.NFT;
 public class UseAIArtsInput 
 {
     public List<string> ImageList { get; set; }
-    public AiImageUseStatus Status { get; set; }
+    public int Status { get; set; }
 
 }
 public enum AiImageUseStatus
