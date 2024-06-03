@@ -183,21 +183,19 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var openAiMsg = "";
         for (; retryCount <= CommonConstant.IntThree; retryCount++)
         {
-            var openAiResult =
-                await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
+            var openAiResult = "";
             try
             {
+                openAiResult =
+                    await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
                 result = JsonConvert.DeserializeObject<OpenAiImageGenerationResponse>(openAiResult);
             }
             catch (Exception e)
             {
-               openAiMsg = "OpenAiImageGeneration Error Url=" + openAiUrl + " openAiRequestBody=" + openAiRequestBody
-                           + " result=" + openAiResult + " createArtInput=" +
-                           JsonConvert.SerializeObject(createArtInput);
+                openAiMsg = "Url=" + openAiUrl + " .openAiRequestBody=" + openAiRequestBody + " .createArtInput=" +
+                            JsonConvert.SerializeObject(createArtInput) + e.Message;
                 _logger.LogError(e,
-                    "OpenAiImageGeneration Error Url={A} openAiRequestBody={B} result={C} createArtInput={D}",
-                    openAiUrl,
-                    openAiRequestBody, openAiResult, JsonConvert.SerializeObject(createArtInput));
+                    "OpenAiImageGeneration Error {A}", openAiMsg);
             }
 
             if (result != null && result.Data?.Count > 0) break;
@@ -206,10 +204,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         aiCreateIndex.RetryCount = retryCount;
         if (result == null || result.Data.IsNullOrEmpty())
         {
-            aiCreateIndex.Result = openAiMsg;
+            aiCreateIndex.Result = openAiMsg.IsNullOrEmpty() ? (result?.Error?.Message) : openAiMsg;
             await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
-            _logger.LogError("Ai Image Generation Error {A}",JsonConvert.SerializeObject(result));
-            throw new SystemException("Ai Image Generation Error. "+result?.Error.Message);
+            _logger.LogError("Ai Image Generation Error {A}", JsonConvert.SerializeObject(aiCreateIndex.Result));
+            throw new SystemException("Ai Image Generation Error. " + result?.Error?.Message);
         }
         else
         {

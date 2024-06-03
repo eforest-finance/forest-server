@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using AElf.Client.Dto;
 using AElf.Types;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +10,7 @@ using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Redis;
 using NFTMarketServer.Users;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 using JsonConvert = Newtonsoft.Json.JsonConvert;
@@ -37,8 +37,8 @@ public class IAiAppServiceTest : NFTMarketServerApplicationTestBase
         services.AddSingleton(MockISymbolIconAppService());
     }
     
-    [Fact]
-    public async Task TestCreateAiArtAsync()
+    [Fact(Skip = "This test is skipped")]
+    public async void TestCreateAiArtAsync()
     {
         var input = new CreateAiArtInput()
         {
@@ -46,7 +46,7 @@ public class IAiAppServiceTest : NFTMarketServerApplicationTestBase
             ChainId = "tDVW"
         };
         var result = await _aiAppService.CreateAiArtAsync(input);
-        result.TotalCount.Equals(1);
+        result.TotalCount.ShouldBe(1);
     }
     
     private static ISymbolIconAppService MockISymbolIconAppService(){

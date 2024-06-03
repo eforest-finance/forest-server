@@ -40,12 +40,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ContractReference Include="..\..\protobuf\forest_contract.proto">
-            <Link>Protobuf\Proto\forest_contract.proto</Link>
-        </ContractReference>
-        <ContractReference Include="..\..\protobuf\authority_info.proto">
-            <Link>Protobuf\Proto\authority_info.proto</Link>
-        </ContractReference>
+<!--        <ContractReference Include="..\..\protobuf\forest_contract.proto">-->
+<!--            <Link>Protobuf\Proto\forest_contract.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\authority_info.proto">-->
+<!--            <Link>Protobuf\Proto\authority_info.proto</Link>-->
+<!--        </ContractReference>-->
 <!--        <ContractReference Include="..\..\protobuf\acs12.proto">-->
 <!--            <Link>Protobuf\Proto\acs12.proto</Link>-->
 <!--        </ContractReference>-->
@@ -61,7 +61,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Protobuf\Generated\" />
+      <Folder Include="Protobufs\Generated\" />
     </ItemGroup>
 
 </Project>

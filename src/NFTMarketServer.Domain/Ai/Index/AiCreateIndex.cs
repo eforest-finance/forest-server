@@ -20,7 +20,7 @@ public class AiCreateIndex : NFTMarketEntity<string>, IIndexBuild
     public int Number { get; set; }
     public AiCreateStatus Status { get; set; }
     public int RetryCount { get; set; }
-    [Keyword] public string Result { get; set; }
+    [Text(Index = false)] public string Result { get; set; }
     [Keyword] public string TransactionId { get; set; }
     public DateTime Ctime { get; set; }
     public DateTime Utime { get; set; }
