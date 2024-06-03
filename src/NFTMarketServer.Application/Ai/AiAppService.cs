@@ -374,12 +374,19 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 _logger.LogError("please login");
                 throw new UserFriendlyException("please login");
             }
+
+            var status = (int)AiImageUseStatus.UNUSE;
+            if (input.Status.Equals(AiImageUseStatus.ABANDONED))
+            {
+                status = (int)AiImageUseStatus.ABANDONED;
+            }
+
             var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
             {
                 Address = currentAddress,
                 SkipCount = 0,
                 MaxResultCount = input.ImageList.Count,
-                Status = (int)AiImageUseStatus.UNUSE,
+                Status = status,
                 ImageHash = input.ImageList,
             });
             
