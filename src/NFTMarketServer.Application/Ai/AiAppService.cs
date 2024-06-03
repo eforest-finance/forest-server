@@ -380,7 +380,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 SkipCount = 0,
                 MaxResultCount = input.ImageList.Count,
                 Status = (int)AiImageUseStatus.UNUSE,
-                ImageIds = input.ImageList
+                ImageHash = input.ImageList,
             });
             
             if (tuple == null || tuple.Item1 == 0)

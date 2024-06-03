@@ -8,5 +8,6 @@ namespace NFTMarketServer.NFT
         public int Status { get; set; }
         
         public List<string> ImageIds { get; set; }
+        public List<string> ImageHash { get; set; }
     }
 }

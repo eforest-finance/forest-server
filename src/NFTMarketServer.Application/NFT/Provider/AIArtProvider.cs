@@ -39,6 +39,11 @@ internal class AIArtProvider : IAIArtProvider, ISingletonDependency
         {
             mustQuery.Add(q => q.Terms(i => i.Field(f => f.Id).Terms(input.ImageIds)));
         }
+        
+        if (!input.ImageHash.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Hash).Terms(input.ImageHash)));
+        }
 
         QueryContainer Filter(QueryContainerDescriptor<AIImageIndex> f) =>
             f.Bool(b => b.Must(mustQuery));
