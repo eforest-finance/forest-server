@@ -1417,7 +1417,13 @@ namespace NFTMarketServer.NFT
                 OfferPrice = maxOffer?.Price ?? CommonConstant.DefaultValueNone,
                 LatestDealPrice = nftInfoIndex.LatestDealPrice,
                 AllOwnerCount = nftInfoIndex.AllOwnerCount,
-                RealOwner = accountDto
+                RealOwner = accountDto,
+                Rank = nftInfoIndex.Rank,
+                Rarity = nftInfoIndex.Rarity,
+                Level = nftInfoIndex.Level,
+                Grade = nftInfoIndex.Grade,
+                Star = nftInfoIndex.Star,
+                Describe = nftInfoIndex.Describe
             };
         }
 

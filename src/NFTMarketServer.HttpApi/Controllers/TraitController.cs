@@ -40,4 +40,11 @@ public class TraitController : NFTMarketServerController
     {
         return await _traitInfoAppService.QueryCollectionGenerationInfoAsync(input);
     }
+    
+    [HttpGet]
+    [Route("nft-collection-rarity-info")]
+    public async Task<CollectionRarityInfoDto> QueryCollectionRarityInfoAsync(QueryCollectionRarityInfoInput input)
+    {
+        return await _traitInfoAppService.QueryCollectionRarityInfoAsync(input);
+    }
 }

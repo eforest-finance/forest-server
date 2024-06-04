@@ -103,6 +103,11 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             mustQuery.Add(q => q.Terms(i => i.Field(f => f.Generation).Terms(dto.Generation)));
         }
         
+        if (!dto.RarityList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Rarity).Terms(dto.RarityList)));
+        }
+        
         if (!dto.Traits.IsNullOrEmpty())
         {
             var nestedQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();

@@ -18,6 +18,7 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
     private readonly INFTCollectionProvider _nftCollectionProvider;
     private readonly ITraitInfoProvider _traitInfoProvider;
     private readonly IObjectMapper _objectMapper;
+    private static readonly string[] Order = { "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze" };  
 
     public TraitInfoAppService(INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
         ITraitInfoProvider traitInfoProvider,
@@ -190,5 +191,31 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
         }
 
         return result;
+    }
+    
+    public async Task<CollectionRarityInfoDto> QueryCollectionRarityInfoAsync(
+        QueryCollectionRarityInfoInput input)
+    {
+        var nftCollectionInfo = await _nftCollectionProvider.GetNFTCollectionIndexAsync(input.Id);
+        if (nftCollectionInfo == null)
+        {
+            return new CollectionRarityInfoDto();
+        }
+
+        var result = await _traitInfoProvider.QueryCollectionRarityInfoAsync(nftCollectionInfo.Symbol);
+        if (result.IsNullOrEmpty())
+        {
+            return new CollectionRarityInfoDto();
+        }
+
+        var rarityList = result.Select(kvp => new RarityInfoDto
+            { Rarity = kvp.Key, ItemsCount = kvp.Value }).ToList();
+        rarityList.Sort(new RarityComparer());
+        return new CollectionRarityInfoDto()
+        {
+            Id = nftCollectionInfo.Symbol,
+            TotalCount = result.Count,
+            Items = rarityList
+        };
     }
 }

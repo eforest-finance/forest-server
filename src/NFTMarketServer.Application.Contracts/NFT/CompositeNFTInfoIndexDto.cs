@@ -34,5 +34,12 @@ namespace NFTMarketServer.NFT
         public long AllOwnerCount  { get; set; }
 
         public AccountDto RealOwner { get; set; }
+
+        public int Rank { get; set; }
+        public string Level { get; set; }
+        public string Grade { get; set; }
+        public string Star { get; set; }
+        public string Rarity { get; set; }
+        public string Describe { get; set; }
     }
 }
