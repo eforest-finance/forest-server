@@ -89,6 +89,11 @@ public class IdGenerateHelper
         return GetId(collectionSymbol, Generation);
     }
     
+    public static string GetNFTCollectionRarityId(string collectionSymbol, string rarity)
+    {
+        return GetId(collectionSymbol, rarity);
+    }
+    
     public static string GetSeedMainChainChangeId(string chainId, string symbol)
     {
         return GetId(chainId, symbol);

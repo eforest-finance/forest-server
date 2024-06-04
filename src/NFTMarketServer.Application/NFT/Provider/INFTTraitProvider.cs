@@ -32,6 +32,9 @@ public interface INFTTraitProvider
 
     Task<NFTInfoNewIndex> QueryFloorPriceNFTForNFTWithTraitPair(string key, string value,
         string nftCollectionId);
+    
+    Task CheckAndUpdateRarityInfo(NFTInfoNewIndex nftInfoNewIndex);
+
 }
 
 public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
@@ -40,6 +43,8 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
     private readonly INESTRepository<NFTCollectionTraitPairsIndex, string> _nftCollectionTraitPairsIndexRepository;
     private readonly INESTRepository<NFTCollectionTraitGenerationIndex, string>
         _nftCollectionTraitGenerationIndexRepository;
+    private readonly INESTRepository<NFTCollectionRarityIndex, string>
+        _nftCollectionRarityIndexRepository;
     private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
     private readonly ILogger<NFTTraitProvider> _logger;
     private readonly IObjectMapper _objectMapper;
@@ -49,6 +54,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         INESTRepository<NFTCollectionTraitKeyIndex, string> nftCollectionTraitKeyIndexRepository,
         INESTRepository<NFTCollectionTraitPairsIndex, string> nftCollectionTraitPairsIndexRepository,
         INESTRepository<NFTCollectionTraitGenerationIndex, string> nftCollectionTraitGenerationIndexRepository,
+        INESTRepository<NFTCollectionRarityIndex, string> nftCollectionRarityIndexRepository,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         IObjectMapper objectMapper
     )
@@ -59,6 +65,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         _nftCollectionTraitGenerationIndexRepository = nftCollectionTraitGenerationIndexRepository;
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
         _objectMapper = objectMapper;
+        _nftCollectionRarityIndexRepository = nftCollectionRarityIndexRepository;
     }
     
     public async Task<long> QueryItemCountForNFTCollectionWithTraitKeyAsync(string key,
@@ -212,9 +219,19 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                 sortType: SortOrder.Ascending, sortExp: o => o.ListingPrice);
             return result?.Item2?.FirstOrDefault();
         }
+
+        public async Task CheckAndUpdateRarityInfo(NFTInfoNewIndex nftInfoNewIndex)
+        {
+            if (nftInfoNewIndex == null)
+            {
+                return;
+            }
         
-        
-    public async Task<NFTInfoNewIndex> QueryLatestDealPriceNFTForNFTWithTraitPair(string key, string value,
+            await CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(nftInfoNewIndex);
+        }
+
+
+        public async Task<NFTInfoNewIndex> QueryLatestDealPriceNFTForNFTWithTraitPair(string key, string value,
             string nftCollectionId)
         {
             var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
@@ -298,6 +315,11 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
     public async Task<NFTCollectionTraitGenerationIndex> QueryNFTCollectionTraitGenerationIndexById(string id)
     {
         return await _nftCollectionTraitGenerationIndexRepository.GetAsync(id);
+    }
+    
+    public async Task<NFTCollectionRarityIndex> QueryNFTCollectionRarityIndexById(string id)
+    {
+        return await _nftCollectionRarityIndexRepository.GetAsync(id);
     }
 
     private async Task CheckAndUpdateNFTCollectionTraitKeyIndexInfo(NFTInfoNewIndex nftInfoNewIndex,
@@ -448,6 +470,42 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
         nftCollectionTraitGenerationIndex.ItemCount = newCount;
 
         await _nftCollectionTraitGenerationIndexRepository.AddOrUpdateAsync(nftCollectionTraitGenerationIndex);
+    }
+    
+    private async Task CheckAndUpdateNFTCollectionRarityIndexInfo(NFTInfoNewIndex nftInfoNewIndex)
+    {
+        if (nftInfoNewIndex == null)
+        {
+            return;
+        }
+
+        var id = IdGenerateHelper.GetNFTCollectionRarityId(nftInfoNewIndex.CollectionSymbol,
+            nftInfoNewIndex.Rarity);
+        var nftCollectionRarityIndex = await QueryNFTCollectionRarityIndexById(id);
+        if (nftCollectionRarityIndex == null)
+        {
+            nftCollectionRarityIndex = new NFTCollectionRarityIndex()
+            {
+                Id = id,
+                CollectionSymbol = nftInfoNewIndex.CollectionSymbol,
+                ItemCount = FTHelper.IsGreaterThanEqualToOne(nftInfoNewIndex.Supply, nftInfoNewIndex.Decimals)
+                    ? CommonConstant.LongOne
+                    : CommonConstant.IntZero,
+                Rarity = nftInfoNewIndex.Rarity
+            };
+        }
+        
+        var newCount = await QueryItemCountForNFTCollectionGenerationAsync(
+            nftInfoNewIndex.CollectionId, nftInfoNewIndex.Generation);
+        
+        if (nftCollectionRarityIndex.ItemCount == newCount && newCount != CommonConstant.IntZero)
+        {
+            return;
+        }
+        
+        nftCollectionRarityIndex.ItemCount = newCount;
+
+        await _nftCollectionRarityIndexRepository.AddOrUpdateAsync(nftCollectionRarityIndex);
     }
     
     private async Task<long> QueryRealCountAsync(

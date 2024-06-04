@@ -1096,6 +1096,7 @@ namespace NFTMarketServer.NFT
 
             await UpdateNFTOtherInfoAsync(nftInfo);
             await _inftTraitProvider.CheckAndUpdateTraitInfo(nftInfo);
+            await _inftTraitProvider.CheckAndUpdateRarityInfo(nftInfo);
         }
 
         private async Task BuildRarityInfo(NFTInfoNewIndex nftInfo)
