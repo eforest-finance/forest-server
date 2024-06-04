@@ -84,6 +84,10 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(des => des.Key, opt => opt.MapFrom(source => source.TraitType));
         CreateMap<NFTInfoNewIndex, NFTInfoIndex>();
         CreateMap<IndexerNFTInfo, NFTTraitsInfoDto>().Ignore(o => o.Id);
+        CreateMap<IndexerNFTInfo, CollectionActivityBasicDto>()
+            .Ignore(o => o.NFTInfoId)
+            .Ignore(o => o.NFTTokenName)
+            .Ignore(o => o.Image);
         CreateMap<IndexerTokenInfo, TokenInfoIndex>();
         CreateMap<IndexerNFTListingChange, NFTListingChangeEto>();
         CreateMap<IndexerActivity, SymbolMarketActivityDto>();
