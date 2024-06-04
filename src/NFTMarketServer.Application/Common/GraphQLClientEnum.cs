@@ -4,5 +4,6 @@ public enum GraphQLClientEnum
 {
     ForestClient,
     InscriptionClient,
-    DropClient
+    DropClient,
+    SchrodingerClient
 }

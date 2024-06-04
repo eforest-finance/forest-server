@@ -44,6 +44,10 @@ namespace NFTMarketServer.Common
                             client = new GraphQLHttpClient(_graphQlClientOptions.DropConfiguration,
                                 new NewtonsoftJsonSerializer());
                             break;
+                        case GraphQLClientEnum.SchrodingerClient:
+                            client = new GraphQLHttpClient(_graphQlClientOptions.SchrodingerConfiguration,
+                                new NewtonsoftJsonSerializer());
+                            break;
                     }
                    
                     _clientDic[clientName] = client;

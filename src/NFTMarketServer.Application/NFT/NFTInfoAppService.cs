@@ -18,6 +18,7 @@ using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Market;
+using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
@@ -79,8 +80,11 @@ namespace NFTMarketServer.NFT
             _collectionActivityNFTLimitOptionsMonitor;
         
         private readonly IOptionsMonitor<RecommendHotNFTOptions> _recommendHotNFTOptionsMonitor;
-        
+        private readonly IOptionsMonitor<ChainOptions> _chainOptionsMonitor;
+
         private readonly IUserBalanceProvider _userBalanceProvider;
+        private readonly ISchrodingerInfoProvider _schrodingerInfoProvider;
+        private readonly string _defaultMainChain = "AELF";
 
         public NFTInfoAppService(
             ITokenAppService tokenAppService, IUserAppService userAppService,
@@ -109,7 +113,9 @@ namespace NFTMarketServer.NFT
             INFTActivityAppService nftActivityAppService,
             ISeedAppService seedAppService,
             IOptionsMonitor<RecommendHotNFTOptions> recommendHotNFTOptionsMonitor,
-            IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor)
+            IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor,
+            ISchrodingerInfoProvider schrodingerInfoProvider,
+            IOptionsMonitor<ChainOptions> chainOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
             _userAppService = userAppService;
@@ -141,6 +147,8 @@ namespace NFTMarketServer.NFT
             _nftActivityAppService = nftActivityAppService;
             _seedAppService = seedAppService;
             _recommendHotNFTOptionsMonitor = recommendHotNFTOptionsMonitor;
+            _schrodingerInfoProvider = schrodingerInfoProvider;
+            _chainOptionsMonitor = chainOptionsMonitor;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -1083,9 +1091,43 @@ namespace NFTMarketServer.NFT
                     }
                 }
             }
-            
+            // add rarity info
+            await BuildRarityInfo(nftInfo);
+
             await UpdateNFTOtherInfoAsync(nftInfo);
             await _inftTraitProvider.CheckAndUpdateTraitInfo(nftInfo);
+        }
+
+        private async Task BuildRarityInfo(NFTInfoNewIndex nftInfo)
+        {
+            if (nftInfo.Generation == CommonConstant.Gen9)
+            {
+                var input = new GetCatListInput()
+                {
+                    ChainId = GetDefaultSideChainId(),
+                    SkipCount = 0,
+                    MaxResultCount = 1,
+                    FilterSgr = true,
+                    Keyword = nftInfo.Symbol
+                };
+                var schrodingerInfo = await _schrodingerInfoProvider.GetSchrodingerInfoAsync(input);
+                if (schrodingerInfo.TotalCount != 0 && !schrodingerInfo.Data.IsNullOrEmpty())
+                {
+                    nftInfo.Rarity = schrodingerInfo.Data.First().Rarity;
+                    nftInfo.Rank = schrodingerInfo.Data.First().Rank;
+                    nftInfo.Level = schrodingerInfo.Data.First().Level;
+                    nftInfo.Grade = schrodingerInfo.Data.First().Grade;
+                    nftInfo.Star = schrodingerInfo.Data.First().Star;
+                    nftInfo.Describe = GetDescribeByRank(schrodingerInfo.Data.First().Rank, schrodingerInfo.Data.First().Level);
+                }
+            }
+        }
+
+        private static string GetDescribeByRank(int rank, string level)
+        {
+            SchrodingerRankConsts.RankClassifyDictionary.TryGetValue(rank.ToString(), out var classify);
+            SchrodingerLevelConsts.LevelDescribeDictionary.TryGetValue((level + "-" + classify),out var describe);
+            return describe;
         }
 
         private async Task UpdateNFTOtherInfoAsync(NFTInfoNewIndex nftInfoNewIndex)
@@ -1509,6 +1551,19 @@ namespace NFTMarketServer.NFT
                 Items = returnItems,
                 TotalCount = returnItems.Count
             };
+        }
+        private string GetDefaultSideChainId()
+        {
+            var chainIds = _chainOptionsMonitor.CurrentValue.ChainInfos.Keys;
+            foreach (var chainId in chainIds)
+            {
+                if (!chainId.Equals(_defaultMainChain))
+                {
+                    return chainId;
+                }
+            }
+
+            return _defaultMainChain;
         }
     }
 }

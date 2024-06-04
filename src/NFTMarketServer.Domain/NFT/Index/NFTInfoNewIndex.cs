@@ -72,6 +72,8 @@ public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
     [Keyword] public string Grade { get; set; }
     [Keyword] public string Star{ get; set; }
     [Keyword] public string Rarity { get; set; }
+    [Keyword] public string Describe{ get; set; }
+    
     public (string Description, decimal Price) GetDescriptionAndPrice(decimal queryMaxOfferPrice)
     {
         if (HasListingFlag)
