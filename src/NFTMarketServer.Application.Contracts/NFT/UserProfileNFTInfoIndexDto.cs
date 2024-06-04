@@ -25,6 +25,11 @@ namespace NFTMarketServer.NFT
         public UserProfileTokenDto? WhitelistPriceToken { get; set; }
         public List<MetadataDto> TraitPairsDictionary { get; set; }
         public int Generation { get; set; } = -1;
+        public int Rank { get; set; }
+        public string Level { get; set; }
+        public string Grade { get; set; }
+        public string Star{ get; set; }
+        public string Rarity { get; set; }
     }
 
     
