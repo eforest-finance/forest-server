@@ -1,9 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NFTMarketServer.Ai;
+using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Models;
 using NFTMarketServer.NFT;
 using Volo.Abp;
@@ -21,9 +22,12 @@ namespace NFTMarketServer.Controllers
         private readonly INFTCollectionAppService _nftCollectionAppService;
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly ISeedOwnedSymbolAppService _seedOwnedSymbolAppService;
+        private readonly IAiAppService _aiAppService;
 
 
-        public NFTController(INFTInfoAppService nftAppService,
+        public NFTController(
+            IAiAppService aiAppService,
+            INFTInfoAppService nftAppService,
             INFTCollectionAppService nftCollectionAppService,
             INFTActivityAppService nftActivityAppService, 
             ISeedOwnedSymbolAppService seedOwnedSymbolAppService)
@@ -32,6 +36,15 @@ namespace NFTMarketServer.Controllers
             _nftCollectionAppService = nftCollectionAppService;
             _nftActivityAppService = nftActivityAppService;
             _seedOwnedSymbolAppService = seedOwnedSymbolAppService;
+            _aiAppService = aiAppService;
+        }
+
+        [HttpPost]
+        [Route("create-ai-arts")]
+        [Authorize]
+        public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
+        {
+            return await _aiAppService.CreateAiArtAsync(input);
         }
         
         [HttpPost]
@@ -179,7 +192,7 @@ namespace NFTMarketServer.Controllers
         {
             return _nftActivityAppService.GetListAsync(input);
         }
-        
+
         [HttpGet]
         [Route("nft-info-owners")]
         public Task<NFTOwnerDto> GetNFTOwners(GetNFTOwnersInput input)
@@ -192,6 +205,28 @@ namespace NFTMarketServer.Controllers
         public Task<PagedResultDto<NFTActivityDto>> GetActivityListAsync(GetActivitiesInput input)
         {
             return _nftAppService.GetActivityListAsync(input);
+        }
+        
+        [HttpGet]
+        [Route("ai-arts")]
+        public async Task<PagedResultDto<CreateAiArtDto>> GETAIArts(GetAIArtsInput input)
+        {
+            return await _aiAppService.GetAiArtsAsync(input);
+        }
+        
+        [HttpPost]
+        [Route("ai-arts")]
+        [Authorize]
+        public async Task<ResultDto<string>> UseAIArts(UseAIArtsInput input)
+        {
+            return await _aiAppService.UseAIArtsAsync(input);
+        }
+        
+        [HttpGet]
+        [Route("ai-prompts")]
+        public  ResultDto<string> GETAIPrompts()
+        {
+            return _aiAppService.GETAIPrompts();
         }
     }
 }

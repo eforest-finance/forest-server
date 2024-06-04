@@ -18,6 +18,7 @@
         <PackageReference Include="GraphQL.Client.Abstractions" Version="6.0.0" />
         <PackageReference Include="GraphQL.SystemTextJson" Version="7.4.1" />
         <PackageReference Include="MassTransit.Abstractions" Version="8.1.0" />
+        <PackageReference Include="StackExchange.Redis" Version="2.2.4" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.25.1" />
         <PackageReference Include="Volo.Abp.Account.Application" Version="7.0.0" />
         <PackageReference Include="Volo.Abp.BlobStoring" Version="7.0.0" />
@@ -38,22 +39,29 @@
 
     </ItemGroup>
 
-
     <ItemGroup>
-
-        <!--    <ContractReference Include="..\..\protobuf\acs12.proto">-->
-        <!--      <Link>Protobuf\Proto\acs12.proto</Link>-->
-        <!--    </ContractReference>-->
-        <!--        <ContractReference Include="..\..\protobuf\auction_contract.proto">-->
-        <!--            <Link>Protobuf\Proto\auction_contract.proto</Link>-->
-        <!--        </ContractReference>-->
-        <!--        <ContractReference Include="..\..\protobuf\symbol_registrar_contract.proto">-->
-        <!--            <Link>Protobuf\Proto\symbol_registrar_contract.proto</Link>-->
-        <!--        </ContractReference>-->
-        <!--        <ContractReference Include="..\..\protobuf\proxy_account_contract.proto">-->
-        <!--            <Link>Protobuf\Proto\proxy_account_contract.proto</Link>-->
-        <!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\forest_contract.proto">-->
+<!--            <Link>Protobuf\Proto\forest_contract.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\authority_info.proto">-->
+<!--            <Link>Protobuf\Proto\authority_info.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\acs12.proto">-->
+<!--            <Link>Protobuf\Proto\acs12.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\auction_contract.proto">-->
+<!--            <Link>Protobuf\Proto\auction_contract.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\symbol_registrar_contract.proto">-->
+<!--            <Link>Protobuf\Proto\symbol_registrar_contract.proto</Link>-->
+<!--        </ContractReference>-->
+<!--        <ContractReference Include="..\..\protobuf\proxy_account_contract.proto">-->
+<!--            <Link>Protobuf\Proto\proxy_account_contract.proto</Link>-->
+<!--        </ContractReference>-->
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Protobufs\Generated\" />
+    </ItemGroup>
 
 </Project>

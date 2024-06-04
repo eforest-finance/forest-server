@@ -8,6 +8,7 @@ public static class CommonConstant
     public const long LongEmpty = 0;
     public const int IntZero = 0;
     public const int IntOne = 1;
+    public const int IntThree = 3;
     public const int IntNegativeOne = -1;
     public const int IntTen = 10;
     public const int RecentSearchNumber = 30000;
@@ -47,6 +48,12 @@ public static class CommonConstant
     
     public const string ResetNFTNewSyncHeightFlagCacheKey = "ResetNFTNewSyncHeightFlagCacheKey";
     public const string NFTNewResetHeightFlagCacheKey = "NFTNewResetHeightFlagCacheKey";
+    public const string BearerToken = "Bearer ";
+    public const string Authorization = "Authorization";
+    public const string Underscore = "_";
+    public const string ImagePNG = ".png";
+    public const string MethodManagerForwardCall = "ManagerForwardCall";
+    public const string MethodCreateArt = "CreateArt";
     
     public const int CacheExpirationMinutes = 60*24;
     public const int BeginHeight = 1;

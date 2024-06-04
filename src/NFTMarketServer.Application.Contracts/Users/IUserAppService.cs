@@ -13,5 +13,7 @@ namespace NFTMarketServer.Users
         Task UserUpdateAsync(UserUpdateDto input);
         Task<UserDto> GetByUserAddressAsync(string inputAddress);
         Task<long> GetUserCountAsync(DateTime beginTime, DateTime endTIme);
+
+        Task<string> GetCurrentUserAddressAsync();
     }
 }
