@@ -15,6 +15,7 @@ public class NFTTraitsInfoDto : EntityDto<string>
     public string Grade { get; set; }
     public string Star{ get; set; }
     public string Rarity { get; set; }
+    public string Describe { get; set; }
 }
 
 public class NFTTraitInfoDto

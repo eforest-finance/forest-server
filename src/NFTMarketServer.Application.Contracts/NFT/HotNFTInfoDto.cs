@@ -23,4 +23,5 @@ public class HotNFTInfoDto: EntityDto<string>
     public string Grade { get; set; }
     public string Star{ get; set; }
     public string Rarity { get; set; }
+    public string Describe { get; set; }
 }
