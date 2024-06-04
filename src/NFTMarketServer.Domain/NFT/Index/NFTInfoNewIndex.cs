@@ -67,6 +67,11 @@ public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
     [Text(Index = false)] public string RealOwner { get; set; }
     public long AllOwnerCount { get; set; }
     
+    public int Rank { get; set; }
+    [Keyword] public string Level { get; set; }
+    [Keyword] public string Grade { get; set; }
+    [Keyword] public string Star{ get; set; }
+    [Keyword] public string Rarity { get; set; }
     public (string Description, decimal Price) GetDescriptionAndPrice(decimal queryMaxOfferPrice)
     {
         if (HasListingFlag)
