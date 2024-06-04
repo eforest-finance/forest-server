@@ -65,6 +65,12 @@ namespace NFTMarketServer.NFT
         public TokenDto? MaxOfferToken { get; set; }
         
         public InscriptionInfoDto InscriptionInfo { get; set; }
+        
+        public int Rank { get; set; }
+        public string Level { get; set; }
+        public string Grade { get; set; }
+        public string Star{ get; set; }
+        public string Rarity { get; set; }
     }
 
     public class CreateTokenInformation
