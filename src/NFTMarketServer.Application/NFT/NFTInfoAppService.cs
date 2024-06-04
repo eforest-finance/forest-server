@@ -1118,7 +1118,8 @@ namespace NFTMarketServer.NFT
                     nftInfo.Level = schrodingerInfo.Data.First().Level;
                     nftInfo.Grade = schrodingerInfo.Data.First().Grade;
                     nftInfo.Star = schrodingerInfo.Data.First().Star;
-                    nftInfo.Describe = GetDescribeByRank(schrodingerInfo.Data.First().Rank, schrodingerInfo.Data.First().Level);
+                    nftInfo.Describe = GetDescribeByRank(schrodingerInfo.Data.First().Rank,
+                        schrodingerInfo.Data.First().Level);
                 }
             }
         }
