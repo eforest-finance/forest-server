@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Nest;
-using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Entities;
 using NFTMarketServer.NFT.Index;
-using NFTMarketServer.Tokens;
-using Orleans.Runtime;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
 
@@ -173,6 +169,28 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
 
             return await QueryRealCountAsync(mustQuery);
         }
+        
+        public async Task<long> QueryItemCountForNFTCollectionRarityAsync(string nftCollectionId,
+            string rarity)
+        {
+            var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(nftCollectionId)));
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.Rarity).Value(rarity)));
+            mustQuery.Add(q =>
+                q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
+            
+            QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
+                => f.Bool(b => b.Must(mustQuery));
+
+            var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, skip: CommonConstant.IntZero,
+                limit: CommonConstant.IntZero);
+            if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
+            {
+                return result.Item1;
+            }
+
+            return await QueryRealCountAsync(mustQuery);
+        }
 
         public async Task<NFTInfoNewIndex> QueryFloorPriceNFTForNFTWithTraitPair(string key, string value,
             string nftCollectionId)
@@ -227,7 +245,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
                 return;
             }
         
-            await CheckAndUpdateNFTCollectionTraitGenerationIndexInfo(nftInfoNewIndex);
+            await CheckAndUpdateNFTCollectionRarityIndexInfo(nftInfoNewIndex);
         }
 
 
@@ -495,8 +513,8 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
             };
         }
         
-        var newCount = await QueryItemCountForNFTCollectionGenerationAsync(
-            nftInfoNewIndex.CollectionId, nftInfoNewIndex.Generation);
+        var newCount = await QueryItemCountForNFTCollectionRarityAsync(
+            nftInfoNewIndex.CollectionId, nftInfoNewIndex.Rarity);
         
         if (nftCollectionRarityIndex.ItemCount == newCount && newCount != CommonConstant.IntZero)
         {
