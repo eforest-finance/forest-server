@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Nest;
+using Newtonsoft.Json;
 using NFTMarketServer.Chains;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Helper;
@@ -246,6 +247,36 @@ namespace NFTMarketServer.Users
             
             var resp = await _userExtraIndexRepository.CountAsync(Filter);
             return resp.Count;
+        }
+
+        public async Task<string> GetCurrentUserAddressAsync()
+        {
+            var userGrain = _clusterClient.GetGrain<IUserGrain>(CurrentUser.GetId());
+            var user = await userGrain.GetUserAsync();
+            if (user?.Data == null)
+            {
+                throw new Exception("Please log in again");
+            }
+            
+            _logger.LogInformation("GetCurrentUserAddressAsync grain:{}", JsonConvert.SerializeObject(user));
+
+            var address = "";
+            if (!user.Data.AelfAddress.IsNullOrEmpty())
+            {
+                address = user.Data.AelfAddress;
+                return address;
+            }
+            if (!user.Data.CaAddressSide.IsNullOrEmpty())
+            {
+                address = user.Data.CaAddressSide.First().Value;
+                return address;
+            }
+            if (!user.Data.CaAddressMain.IsNullOrEmpty())
+            {
+                address = user.Data.CaAddressMain;
+                return address;
+            }
+            return address;
         }
     }
 }

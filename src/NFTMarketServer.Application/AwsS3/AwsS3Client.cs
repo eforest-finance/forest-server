@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -62,7 +63,7 @@ public class AwsS3Client : ISingletonDependency
             CannedACL = S3CannedACL.PublicRead,
         };
         var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
-
+        
         UriBuilder uriBuilder = new UriBuilder
         {
             Scheme = HttpSchema,
@@ -71,8 +72,30 @@ public class AwsS3Client : ISingletonDependency
         };
 
         return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
-            ? uriBuilder.ToString()
-            : string.Empty;
+            ? uriBuilder.ToString() : string.Empty;
+    }
+    
+    public async Task<KeyValuePair<string,string>> UpLoadFileForNFTWithHashAsync(Stream steam, string fileName)
+    {
+        var putObjectRequest = new PutObjectRequest
+        {
+            InputStream = steam,
+            BucketName = _awsS3Option.BucketName,
+            Key = _awsS3Option.S3KeyForest + "/" + fileName,
+            CannedACL = S3CannedACL.PublicRead,
+        };
+        var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
+        
+        UriBuilder uriBuilder = new UriBuilder
+        {
+            Scheme = HttpSchema,
+            Host = _awsS3Option.BucketName + HostS3,
+            Path = "/" + _awsS3Option.S3KeyForest + "/" + fileName
+        };
+
+        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
+            ? new KeyValuePair<string, string>(uriBuilder.ToString(),putObjectResponse.ETag)
+            : new KeyValuePair<string, string>();
     }
 
     public async Task<string> GetSpecialSymbolUrl(string fileName)

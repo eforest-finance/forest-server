@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -82,6 +83,12 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
     {
         var stream = new MemoryStream(utf8Bytes);
         return await _awsS3Client.UpLoadFileForNFTAsync(stream, symbol);
+    }
+    
+    public async Task<KeyValuePair<string,string>> UpdateNFTIconWithHashAsync(byte[] utf8Bytes, string symbol)
+    {
+        var stream = new MemoryStream(utf8Bytes);
+        return await _awsS3Client.UpLoadFileForNFTWithHashAsync(stream, symbol);
     }
 
     private Stream AddWaterMarkByStream(string symbol)
