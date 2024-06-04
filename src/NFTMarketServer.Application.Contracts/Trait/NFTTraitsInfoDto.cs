@@ -9,6 +9,12 @@ public class NFTTraitsInfoDto : EntityDto<string>
 {
     public int Generation { get; set; } = -1;
     public List<NFTTraitInfoDto> TraitInfos { get; set; }
+    
+    public int Rank { get; set; }
+    public string Level { get; set; }
+    public string Grade { get; set; }
+    public string Star{ get; set; }
+    public string Rarity { get; set; }
 }
 
 public class NFTTraitInfoDto
@@ -22,5 +28,5 @@ public class NFTTraitInfoDto
     public TokenDto? ItemFloorPriceToken { get; set; }
     
     public decimal? LatestDealPrice { get; set; } = -1;
-    
+
 }

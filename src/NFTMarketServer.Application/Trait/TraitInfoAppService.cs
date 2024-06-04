@@ -38,9 +38,8 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
             return new NFTTraitsInfoDto();
         }
 
-        var result = new NFTTraitsInfoDto();
+        var result = _objectMapper.Map<IndexerNFTInfo, NFTTraitsInfoDto>(nftInfo);
         result.Id = input.Id;
-        result.Generation = nftInfo.Generation;
         if (nftInfo.TraitPairsDictionary.IsNullOrEmpty())
         {
             return result;
