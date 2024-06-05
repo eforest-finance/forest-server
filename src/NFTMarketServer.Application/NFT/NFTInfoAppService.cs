@@ -633,8 +633,8 @@ namespace NFTMarketServer.NFT
                 new List<string> { nftInfoIndex.CollectionId });
             
             var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
+            _logger.LogDebug("nftinfo TryGetCurrentUserAddressAsync {A}",loginAddress);
             var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
-            _logger.LogDebug("NFTINFO CheckAddressIsInWhiteListAsync {A}",loginAddress);
             var nftInfoIndexDto =
                 MapForIndexerNFTInfos(nftInfoIndex, accounts, nftExtensions, collectionInfos, isInRarityWhiteList);
             //set default true
@@ -864,6 +864,7 @@ namespace NFTMarketServer.NFT
             bool isInRarityWhiteList)
         {
             var info = _objectMapper.Map<IndexerNFTInfo, NFTInfoIndexDto>(index);
+            _logger.LogDebug("MapForIndexerNFTInfos {A} {B}",isInRarityWhiteList,JsonConvert.SerializeObject(info));
             if (!isInRarityWhiteList)
             {
                 info.Rank = CommonConstant.IntZero;
