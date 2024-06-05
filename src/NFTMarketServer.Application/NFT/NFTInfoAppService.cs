@@ -1098,7 +1098,6 @@ namespace NFTMarketServer.NFT
 
             await UpdateNFTOtherInfoAsync(nftInfo);
             await _inftTraitProvider.CheckAndUpdateTraitInfo(nftInfo);
-            await _inftTraitProvider.CheckAndUpdateRarityInfo(nftInfo);
         }
 
         private async Task BuildRarityInfo(NFTInfoNewIndex nftInfo)
@@ -1124,6 +1123,7 @@ namespace NFTMarketServer.NFT
                     nftInfo.Describe = GetDescribeByRank(schrodingerInfo.Data.First().Rank,
                         schrodingerInfo.Data.First().Level);
                 }
+                await _inftTraitProvider.CheckAndUpdateRarityInfo(nftInfo);
             }
         }
 
