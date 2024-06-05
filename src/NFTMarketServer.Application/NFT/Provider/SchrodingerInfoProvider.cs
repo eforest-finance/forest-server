@@ -29,7 +29,7 @@ public class SchrodingerInfoProvider : ISchrodingerInfoProvider, ISingletonDepen
             var indexerResult = await client.SendQueryAsync<SchrodingerSymbolIndexerListDto>(new GraphQLRequest
             {
                 Query =
-                    @"query($keyword:String!, $chainId:String!, $tick:String!, $traits:[TraitsInput!],$raritys:[String!],$generations:[Int!],$skipCount:Int!,$maxResultCount:Int!,$filterSgr:Boolean!){
+                    @"query($keyword:String!, $chainId:String! ,$skipCount:Int!,$maxResultCount:Int!,$filterSgr:Boolean!){
                     getAllSchrodingerList(input: {keyword:$keyword,chainId:$chainId,tick:$tick,traits:$traits,raritys:$raritys,generations:$generations,skipCount:$skipCount,maxResultCount:$maxResultCount,filterSgr:$filterSgr}){
                         totalCount,
                         data{
