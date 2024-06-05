@@ -634,6 +634,7 @@ namespace NFTMarketServer.NFT
             
             var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
             var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
+            _logger.LogDebug("NFTINFO CheckAddressIsInWhiteListAsync {A}",loginAddress);
             var nftInfoIndexDto =
                 MapForIndexerNFTInfos(nftInfoIndex, accounts, nftExtensions, collectionInfos, isInRarityWhiteList);
             //set default true
