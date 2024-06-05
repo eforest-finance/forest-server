@@ -64,6 +64,7 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
         Configure<TransactionFeeOption>(configuration.GetSection("TransactionFee"));
         Configure<RecommendedCollectionsOptions>(configuration);
         Configure<HideCollectionInfoOptions>(configuration);
+        Configure<RarityShowWhiteOptions>(configuration);
         Configure<RecommendHotNFTOptions>(configuration);
         Configure<ResetNFTSyncHeightExpireMinutesOptions>(configuration);
         Configure<ChoiceNFTInfoNewFlagOptions>(configuration);
