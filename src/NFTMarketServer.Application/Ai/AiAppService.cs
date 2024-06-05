@@ -246,6 +246,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }
             catch (Exception e)
             {
+                aiCreateIndex.Result = e.Message;
+                await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
                 _logger.LogError(e, "s3 upload error openAiImageGeneration={A}", openAiImageGeneration.Url);
                 throw new SystemException("s3 upload error", e);
             }
