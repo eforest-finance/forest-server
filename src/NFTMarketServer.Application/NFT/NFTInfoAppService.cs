@@ -429,6 +429,7 @@ namespace NFTMarketServer.NFT
             }
             
             var address = await _userAppService.TryGetCurrentUserAddressAsync();
+            _logger.LogDebug("HotNFT TryGetCurrentUserAddressAsync address={A}",address);
             var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(address);
             var result = MapForHotNFTInfoDtoPage(resultList, recommendHotNFTList, isInRarityWhiteList);
 

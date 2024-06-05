@@ -281,17 +281,17 @@ namespace NFTMarketServer.Users
         
         public async Task<string> TryGetCurrentUserAddressAsync()
         {
-            if (CurrentUser == null || CurrentUser.GetId() == null)
+            if (CurrentUser == null || CurrentUser.Id == null || CurrentUser.GetId() == Guid.Empty)
             {
                 return "";
             } 
             var userGrain = _clusterClient.GetGrain<IUserGrain>(CurrentUser.GetId());
             var user = await userGrain.GetUserAsync();
-            if (user?.Data == null)
+            if (user == null || user?.Data == null)
             {
                 return "";
             }
-
+            
             _logger.LogDebug("TryGetCurrentUserAddressAsync grain:{}", JsonConvert.SerializeObject(user));
 
             var address = "";
