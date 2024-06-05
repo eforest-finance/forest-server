@@ -31,7 +31,8 @@ public enum AiCreateStatus
 {
     INIT,
     PAYSUCCESS,
-    IMAGECREATED
+    IMAGECREATED,
+    UPLOADS3
 }
 
 public enum AiSizeType
