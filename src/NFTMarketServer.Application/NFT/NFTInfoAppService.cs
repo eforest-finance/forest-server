@@ -174,8 +174,9 @@ namespace NFTMarketServer.NFT
             {
                 resultNftInfos.AddRange(nftInfos.IndexerNftInfos.Select(MapForIndexerNFTInfo));
             }
-
-            var result = await BuildNFTInfoIndexListAsync(input.Address, resultNftInfos);
+            var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
+            var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
+            var result = await BuildNFTInfoIndexListAsync(input.Address, resultNftInfos, isInRarityWhiteList);
             return new PagedResultDto<UserProfileNFTInfoIndexDto>
             {
                 Items = result.Select(item =>
@@ -625,8 +626,11 @@ namespace NFTMarketServer.NFT
                 await _nftInfoExtensionProvider.GetNFTInfoExtensionsAsync(new List<string> { nftInfoIndex.Id });
             var collectionInfos = await _nftCollectionProvider.GetNFTCollectionIndexByIdsAsync(
                 new List<string> { nftInfoIndex.CollectionId });
+            
+            var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
+            var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
             var nftInfoIndexDto =
-                MapForIndexerNFTInfos(nftInfoIndex, accounts, nftExtensions, collectionInfos);
+                MapForIndexerNFTInfos(nftInfoIndex, accounts, nftExtensions, collectionInfos, isInRarityWhiteList);
             //set default true
             var canBuyFlag = true;
             if (!input.Address.IsNullOrWhiteSpace())
@@ -820,7 +824,7 @@ namespace NFTMarketServer.NFT
         }
 
         private async Task<List<NFTInfoIndexDto>> BuildNFTInfoIndexListAsync(string address,
-            List<IndexerNFTInfo> nftInfos)
+            List<IndexerNFTInfo> nftInfos, bool isInRarityWhiteList)
         {
             var addresses = new List<string>();
             foreach (var info in nftInfos)
@@ -841,7 +845,8 @@ namespace NFTMarketServer.NFT
                 nftInfos.Select(item => item.CollectionId).ToList());
 
             var result = nftInfos
-                .Select(o => MapForIndexerNFTInfos(o, accounts, nftExtensions, collectionInfos)).ToList();
+                .Select(o => MapForIndexerNFTInfos(o, accounts, nftExtensions, collectionInfos, isInRarityWhiteList))
+                .ToList();
 
             return result;
         }
@@ -849,9 +854,19 @@ namespace NFTMarketServer.NFT
         private NFTInfoIndexDto MapForIndexerNFTInfos(IndexerNFTInfo index,
             Dictionary<string, AccountDto> accounts,
             Dictionary<string, NFTInfoExtensionIndex> nftInfoExtensions,
-            Dictionary<string, IndexerNFTCollection> nftCollections)
+            Dictionary<string, IndexerNFTCollection> nftCollections,
+            bool isInRarityWhiteList)
         {
             var info = _objectMapper.Map<IndexerNFTInfo, NFTInfoIndexDto>(index);
+            if (!isInRarityWhiteList)
+            {
+                info.Rank = CommonConstant.IntZero;
+                info.Level = "";
+                info.Grade = "";
+                info.Star = "";
+                info.Rarity = "";
+                info.Describe = "";
+            }
 
             if (info.IssueChainId != 0)
             {
