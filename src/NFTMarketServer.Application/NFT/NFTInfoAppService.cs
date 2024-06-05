@@ -428,6 +428,7 @@ namespace NFTMarketServer.NFT
                 resultList.AddRange(realHotNFTPageInfo.Item2);
             }
 
+            var address = _userAppService.TryGetCurrentUserAddressAsync();
             var result = MapForHotNFTInfoDtoPage(resultList, recommendHotNFTList);
             var pageResult = new PagedResultDto<HotNFTInfoDto>()
             {
