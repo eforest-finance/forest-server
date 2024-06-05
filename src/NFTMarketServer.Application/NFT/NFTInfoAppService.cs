@@ -324,15 +324,7 @@ namespace NFTMarketServer.NFT
                     return result;
                 }
 
-                basicInfoDic = nftResult.Item2.Select(item =>
-                {
-                    var collectionActivityBasicDto = new CollectionActivityBasicDto
-                    {
-                        Image = FTHelper.BuildIpfsUrl(item.ImageUrl)
-                    };
-                    _objectMapper.Map(item, collectionActivityBasicDto);
-                    return collectionActivityBasicDto;
-                }).ToList().ToDictionary(e => e.NFTInfoId, e => e);
+                basicInfoDic = BuildCollectionActivityBasicDtoDic(nftResult);
             }
             
             var getCollectionActivityListInput = new GetCollectionActivityListInput
@@ -370,6 +362,19 @@ namespace NFTMarketServer.NFT
 
             return result;
 
+        }
+
+        private Dictionary<string, CollectionActivityBasicDto> BuildCollectionActivityBasicDtoDic(Tuple<long, List<IndexerNFTInfo>> nftResult)
+        {
+            return nftResult.Item2.Select(item =>
+            {
+                var collectionActivityBasicDto = new CollectionActivityBasicDto
+                {
+                    Image = FTHelper.BuildIpfsUrl(item.ImageUrl)
+                };
+                _objectMapper.Map(item, collectionActivityBasicDto);
+                return collectionActivityBasicDto;
+            }).ToList().ToDictionary(e => e.NFTInfoId, e => e);
         }
 
         public async Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync()
