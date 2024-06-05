@@ -29,6 +29,7 @@ public class RarityProvider : IRarityProvider, ISingletonDependency
 
     public async Task<bool> CheckAddressIsInWhiteListAsync(string address)
     {
+        return true;
         var whiteList = _rarityShowWhiteOptionsMonitor.CurrentValue.RarityShowWhiteList;
         if (address.IsNullOrEmpty())
         {
