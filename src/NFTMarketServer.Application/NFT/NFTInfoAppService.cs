@@ -428,8 +428,9 @@ namespace NFTMarketServer.NFT
                 resultList.AddRange(realHotNFTPageInfo.Item2);
             }
 
-            var address = _userAppService.TryGetCurrentUserAddressAsync();
-            var result = MapForHotNFTInfoDtoPage(resultList, recommendHotNFTList);
+            var address = await _userAppService.TryGetCurrentUserAddressAsync();
+            var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(address);
+            var result = MapForHotNFTInfoDtoPage(resultList, recommendHotNFTList, isInRarityWhiteList);
             var pageResult = new PagedResultDto<HotNFTInfoDto>()
             {
                 TotalCount = result.Count,
@@ -458,7 +459,7 @@ namespace NFTMarketServer.NFT
         }
 
         private List<HotNFTInfoDto> MapForHotNFTInfoDtoPage(
-            List<IndexerNFTInfo> nftInfoList, IEnumerable<RecommendHotNFT> recommendHotNFTList)
+            List<IndexerNFTInfo> nftInfoList, IEnumerable<RecommendHotNFT> recommendHotNFTList, bool isInRarityWhiteList)
         {
             if (nftInfoList.IsNullOrEmpty())
             {
@@ -489,7 +490,22 @@ namespace NFTMarketServer.NFT
                 info.PreviewImage = FTHelper.BuildIpfsUrl(info?.PreviewImage);
             }
 
-            var result = _objectMapper.Map<List<IndexerNFTInfo>, List<HotNFTInfoDto>>(nftInfoList);
+            var result = nftInfoList.Select(item =>
+                {
+                    var tem = _objectMapper.Map<IndexerNFTInfo, HotNFTInfoDto>(item);
+                    if (!isInRarityWhiteList)
+                    {
+                        tem.Rank = CommonConstant.IntZero;
+                        tem.Level = "";
+                        tem.Grade = "";
+                        tem.Star = "";
+                        tem.Rarity = "";
+                        tem.Describe = "";
+                    }
+
+                    return tem;
+                }
+            ).ToList();
 
             var recommendHotNFTDic = recommendHotNFTList?.ToDictionary(item => item.NFTInfoId, item => item);
 
