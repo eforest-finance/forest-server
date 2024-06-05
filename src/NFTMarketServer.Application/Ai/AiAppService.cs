@@ -291,14 +291,23 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         while (transactionResultDto.Status.Equals(TransactionState.Pending))
         {
+            await Task.Delay(CommonConstant.IntOneThousand);
             transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
         }
-
         
-        for (var i = 0; transactionResultDto.Status.Equals(TransactionState.Notexisted) && i <= _openAiOptionsMonitor.CurrentValue.DelayMaxTime; i++)
+        for (var i = 0;
+             (transactionResultDto.Status.Equals(TransactionState.Notexisted) ||
+              transactionResultDto.Status.Equals(TransactionState.Pending)) &&
+             i <= _openAiOptionsMonitor.CurrentValue.DelayMaxTime;
+             i++)
         {
             await Task.Delay(_openAiOptionsMonitor.CurrentValue.DelayMillisecond);
             transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
+            while (transactionResultDto.Status.Equals(TransactionState.Pending))
+            {
+                await Task.Delay(CommonConstant.IntOneThousand);
+                transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
+            }
         }
         
         if (!transactionResultDto.Status.Equals(TransactionState.Mined))
