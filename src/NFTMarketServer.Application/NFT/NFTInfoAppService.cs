@@ -1102,6 +1102,8 @@ namespace NFTMarketServer.NFT
 
         private async Task BuildRarityInfo(NFTInfoNewIndex nftInfo)
         {
+            _logger.Info("BuildRarityInfo symbol ={A} gen={B}",
+                nftInfo.Symbol,nftInfo.Generation);
             if (nftInfo.Generation == CommonConstant.Gen9)
             {
                 var input = new GetCatListInput()
@@ -1113,6 +1115,8 @@ namespace NFTMarketServer.NFT
                     Keyword = nftInfo.Symbol
                 };
                 var schrodingerInfo = await _schrodingerInfoProvider.GetSchrodingerInfoAsync(input);
+                _logger.Info("BuildRarityInfo symbol ={A} gen={B} query:{C}",
+                    nftInfo.Symbol,nftInfo.Generation,JsonConvert.SerializeObject(schrodingerInfo));
                 if (schrodingerInfo.TotalCount != 0 && !schrodingerInfo.Data.IsNullOrEmpty())
                 {
                     nftInfo.Rarity = schrodingerInfo.Data.First().Rarity;
