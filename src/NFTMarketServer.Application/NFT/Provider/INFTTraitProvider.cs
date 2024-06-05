@@ -240,7 +240,7 @@ public class NFTTraitProvider : INFTTraitProvider, ISingletonDependency
 
         public async Task CheckAndUpdateRarityInfo(NFTInfoNewIndex nftInfoNewIndex)
         {
-            if (nftInfoNewIndex == null)
+            if (nftInfoNewIndex == null || nftInfoNewIndex.Rarity.IsNullOrEmpty())
             {
                 return;
             }
