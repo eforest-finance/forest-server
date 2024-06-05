@@ -31,3 +31,7 @@ public class TraitsInfo
     public string TraitType { get; set; }
     public string Value { get; set; }
 }
+public class SchrodingerSymbolIndexerQuery
+{
+    public SchrodingerSymbolIndexerListDto GetAllSchrodingerList { get; set; }
+}

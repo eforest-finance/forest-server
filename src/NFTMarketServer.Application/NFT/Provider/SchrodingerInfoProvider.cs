@@ -26,10 +26,10 @@ public class SchrodingerInfoProvider : ISchrodingerInfoProvider, ISingletonDepen
 
         try
         {
-            var indexerResult = await client.SendQueryAsync<SchrodingerSymbolIndexerListDto>(new GraphQLRequest
+            var indexerResult = await client.SendQueryAsync<SchrodingerSymbolIndexerQuery>(new GraphQLRequest
             {
                 Query =
-                    @"query($keyword:String!, $chainId:String! ,$skipCount:Int!,$maxResultCount:Int!,$filterSgr:Boolean!){
+                    @"query($keyword:String!, $chainId:String!, $tick:String!, $traits:[TraitsInput!],$raritys:[String!],$generations:[Int!],$skipCount:Int!,$maxResultCount:Int!,$filterSgr:Boolean!){
                     getAllSchrodingerList(input: {keyword:$keyword,chainId:$chainId,tick:$tick,traits:$traits,raritys:$raritys,generations:$generations,skipCount:$skipCount,maxResultCount:$maxResultCount,filterSgr:$filterSgr}){
                         totalCount,
                         data{
@@ -52,12 +52,12 @@ public class SchrodingerInfoProvider : ISchrodingerInfoProvider, ISingletonDepen
             }",
                 Variables = new
                 {
-                    keyword = input.Keyword ?? "", chainId = input.ChainId ?? "",
+                    keyword = input.Keyword ?? "", chainId = input.ChainId ?? "", tick = "",
                     skipCount = input.SkipCount, maxResultCount = input.MaxResultCount,filterSgr = input.FilterSgr
                 }
             });
 
-            return indexerResult?.Data;
+            return indexerResult?.Data.GetAllSchrodingerList;
         }
         catch (Exception e)
         {
