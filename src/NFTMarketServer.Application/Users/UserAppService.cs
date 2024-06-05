@@ -281,7 +281,6 @@ namespace NFTMarketServer.Users
         
         public async Task<string> TryGetCurrentUserAddressAsync()
         {
-            return "";
             if (CurrentUser == null || CurrentUser.Id == null || CurrentUser.GetId() == Guid.Empty)
             {
                 return "";
