@@ -324,11 +324,14 @@ namespace NFTMarketServer.NFT
                     return result;
                 }
 
-                basicInfoDic = nftResult.Item2.Select(item => new CollectionActivityBasicDto
+                basicInfoDic = nftResult.Item2.Select(item =>
                 {
-                    NFTInfoId = item.Id,
-                    NFTTokenName = item.TokenName,
-                    Image = FTHelper.BuildIpfsUrl(item.ImageUrl)
+                    var collectionActivityBasicDto = new CollectionActivityBasicDto
+                    {
+                        Image = FTHelper.BuildIpfsUrl(item.ImageUrl)
+                    };
+                    _objectMapper.Map(item, collectionActivityBasicDto);
+                    return collectionActivityBasicDto;
                 }).ToList().ToDictionary(e => e.NFTInfoId, e => e);
             }
             
@@ -354,8 +357,7 @@ namespace NFTMarketServer.NFT
                 basicInfoDic.TryGetValue(item.NFTInfoId, out var collectionActivityBasicDto);
                 if (collectionActivityBasicDto != null)
                 {
-                    itemNew.NFTName = collectionActivityBasicDto.NFTTokenName;
-                    itemNew.PreviewImage = collectionActivityBasicDto.Image;
+                    _objectMapper.Map(collectionActivityBasicDto, itemNew);
                 }
                 return itemNew;
             }).ToList();
