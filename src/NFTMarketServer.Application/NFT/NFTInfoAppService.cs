@@ -1066,6 +1066,11 @@ namespace NFTMarketServer.NFT
                 return;
             }
 
+            if (!fromNFTInfo.Symbol.Contains("SGR"))
+            {
+                return;
+            }
+
             var nftInfo = _objectMapper.Map<NFTInfoIndex, NFTInfoNewIndex>(fromNFTInfo);
 
             nftInfo.CountedFlag = FTHelper.IsGreaterThanEqualToOne(nftInfo.Supply, nftInfo.Decimals);
