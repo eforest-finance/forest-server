@@ -6,6 +6,7 @@ using NFTMarketServer.Basic;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Tokens;
+using NFTMarketServer.Users;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
@@ -17,17 +18,23 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
     private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
     private readonly INFTCollectionProvider _nftCollectionProvider;
     private readonly ITraitInfoProvider _traitInfoProvider;
+    private readonly IUserAppService _userAppService;
+    private readonly IRarityProvider _rarityProvider;
     private readonly IObjectMapper _objectMapper;
     private static readonly string[] Order = { "Diamond", "Emerald", "Platinum", "Gold", "Silver", "Bronze" };  
 
     public TraitInfoAppService(INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
         ITraitInfoProvider traitInfoProvider,
         INFTCollectionProvider nftCollectionProvider,
+        IUserAppService userAppService,
+        IRarityProvider rarityProvider,
         IObjectMapper objectMapper)
     {
         _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
         _traitInfoProvider = traitInfoProvider;
         _nftCollectionProvider = nftCollectionProvider;
+        _userAppService = userAppService;
+        _rarityProvider = rarityProvider;
         _objectMapper = objectMapper;
     }
 
@@ -41,6 +48,19 @@ public class TraitInfoAppService : ITraitInfoAppService, ISingletonDependency
 
         var result = _objectMapper.Map<IndexerNFTInfo, NFTTraitsInfoDto>(nftInfo);
         result.Id = input.Id;
+        
+        var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
+        var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
+
+        if (!isInRarityWhiteList)
+        {
+            result.Rank = CommonConstant.IntZero;
+            result.Level = "";
+            result.Grade = "";
+            result.Star = "";
+            result.Rarity = "";
+            result.Describe = "";
+        }
         if (nftInfo.TraitPairsDictionary.IsNullOrEmpty())
         {
             return result;

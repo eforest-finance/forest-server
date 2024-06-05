@@ -354,12 +354,16 @@ namespace NFTMarketServer.NFT
                return result;
             }
 
+            var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
+            var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
+            
             var collectionActivitiesDtoList = nftActivityDtoPage.Items.ToList().Select(item =>
             {
                 var itemNew = _objectMapper.Map<NFTActivityDto, CollectionActivitiesDto>(item);
                 itemNew.NFTCollectionName = collectionInfo.TokenName;
                 basicInfoDic.TryGetValue(item.NFTInfoId, out var collectionActivityBasicDto);
-                if (collectionActivityBasicDto != null)
+                
+                if (collectionActivityBasicDto != null && isInRarityWhiteList)
                 {
                     _objectMapper.Map(collectionActivityBasicDto, itemNew);
                 }
