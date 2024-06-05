@@ -84,6 +84,7 @@ namespace NFTMarketServer.NFT
 
         private readonly IUserBalanceProvider _userBalanceProvider;
         private readonly ISchrodingerInfoProvider _schrodingerInfoProvider;
+        private readonly IRarityProvider _rarityProvider;
         private readonly string _defaultMainChain = "AELF";
 
         public NFTInfoAppService(
@@ -115,6 +116,7 @@ namespace NFTMarketServer.NFT
             IOptionsMonitor<RecommendHotNFTOptions> recommendHotNFTOptionsMonitor,
             IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor,
             ISchrodingerInfoProvider schrodingerInfoProvider,
+            IRarityProvider rarityProvider,
             IOptionsMonitor<ChainOptions> chainOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
@@ -149,6 +151,7 @@ namespace NFTMarketServer.NFT
             _recommendHotNFTOptionsMonitor = recommendHotNFTOptionsMonitor;
             _schrodingerInfoProvider = schrodingerInfoProvider;
             _chainOptionsMonitor = chainOptionsMonitor;
+            _rarityProvider = rarityProvider;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
