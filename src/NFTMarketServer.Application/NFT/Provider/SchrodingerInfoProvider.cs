@@ -53,7 +53,6 @@ public class SchrodingerInfoProvider : ISchrodingerInfoProvider, ISingletonDepen
                 Variables = new
                 {
                     keyword = input.Keyword ?? "", chainId = input.ChainId ?? "",
-                    tick = input.Tick ?? "", traits = input.Traits,raritys = input.Rarities, generations = input.Generations,
                     skipCount = input.SkipCount, maxResultCount = input.MaxResultCount,filterSgr = input.FilterSgr
                 }
             });
