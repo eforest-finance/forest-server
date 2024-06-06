@@ -1,9 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using AElf;
-using AElf.Client.Proto;
-using Hash = AElf.Types.Hash;
 
 namespace NFTMarketServer;
 
@@ -87,6 +83,11 @@ public class IdGenerateHelper
     public static string GetNFTCollectionTraitGenerationId(string collectionSymbol, int Generation)
     {
         return GetId(collectionSymbol, Generation);
+    }
+    
+    public static string GetNFTCollectionRarityId(string collectionSymbol, string rarity)
+    {
+        return GetId(collectionSymbol, rarity);
     }
     
     public static string GetSeedMainChainChangeId(string chainId, string symbol)

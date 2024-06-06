@@ -13,4 +13,7 @@ public interface ITraitInfoAppService
 
     public Task<CollectionGenerationInfoDto> QueryCollectionGenerationInfoAsync(
         QueryCollectionGenerationInfoInput input);
+    
+    public Task<CollectionRarityInfoDto> QueryCollectionRarityInfoAsync(
+        QueryCollectionRarityInfoInput input);
 }

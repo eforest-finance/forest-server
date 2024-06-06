@@ -42,6 +42,7 @@ using NFTMarketServer.SymbolMarketToken.Index;
 using NFTMarketServer.Synchronize.Dto;
 using NFTMarketServer.Synchronize.Eto;
 using NFTMarketServer.Tokens;
+using NFTMarketServer.Trait;
 using NFTMarketServer.Users;
 using NFTMarketServer.Users.Dto;
 using NFTMarketServer.Users.Eto;
@@ -82,6 +83,14 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<AttributeDictionary, ExternalInfoDictionary>()
             .ForMember(des => des.Key, opt => opt.MapFrom(source => source.TraitType));
         CreateMap<NFTInfoNewIndex, NFTInfoIndex>();
+        CreateMap<IndexerNFTInfo, NFTTraitsInfoDto>().Ignore(o => o.Id);
+        CreateMap<IndexerNFTInfo, CollectionActivityBasicDto>()
+            .Ignore(o => o.Image)
+            .ForMember(des => des.NFTInfoId, opt => opt.MapFrom(source => source.Id))
+            .ForMember(des => des.NFTTokenName, opt => opt.MapFrom(source => source.TokenName));
+        CreateMap<CollectionActivityBasicDto, CollectionActivitiesDto>()
+            .ForMember(des => des.NFTName, opt => opt.MapFrom(source => source.NFTTokenName))
+            .ForMember(des => des.PreviewImage, opt => opt.MapFrom(source => source.Image));
         CreateMap<IndexerTokenInfo, TokenInfoIndex>();
         CreateMap<IndexerNFTListingChange, NFTListingChangeEto>();
         CreateMap<IndexerActivity, SymbolMarketActivityDto>();

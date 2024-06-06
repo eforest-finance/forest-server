@@ -8,6 +8,9 @@ public class GraphQLOptions
     public string InscriptionConfiguration { get; set; }
     
     public string DropConfiguration { get; set; }
+    
+    public string SchrodingerConfiguration { get; set; }
+
 }
 
 public class ForestChainOptions
