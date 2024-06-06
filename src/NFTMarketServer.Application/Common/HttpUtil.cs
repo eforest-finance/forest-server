@@ -20,6 +20,10 @@ public class HttpUtil
     private const int MaxRetryCount = 3;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
 
+    public static async Task<byte[]> DownloadImageAsUtf8BytesWithRetryAsync(string url,int retryNumber = MaxRetryCount)
+    {
+        return await SendRequestWithRetry(async () => await DownloadImageAsUtf8BytesAsync(url), retryNumber);
+    }
     public static async Task<byte[]> DownloadImageAsUtf8BytesAsync(string url)
     {
         using (var httpClient = new HttpClient())
@@ -57,6 +61,31 @@ public class HttpUtil
         return await SendRequestWithRetry(async () => await GetRequest(apiUrl, header));
     }
 
+    private static async Task<byte[]> SendRequestWithRetry(Func<Task<byte[]>> requestAction,int maxRetryCount = MaxRetryCount)
+    {
+        var currentRetry = 0;
+
+        while (true)
+        {
+            try
+            {
+                return await requestAction();
+            }
+            catch (Exception ex)
+            {
+                if (currentRetry >= maxRetryCount)
+                {
+                    throw new SystemException("Maximum retry count reached. Request failed. currentRetry=" +
+                                              currentRetry + " Exception= " + ex);
+                }
+
+                await Task.Delay(RetryDelay);
+
+                currentRetry++;
+            }
+        }
+    }
+    
     private static async Task<string> SendRequestWithRetry(Func<Task<string>> requestAction,int maxRetryCount = MaxRetryCount)
     {
         var currentRetry = 0;
