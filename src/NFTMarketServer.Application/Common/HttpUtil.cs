@@ -24,6 +24,7 @@ public class HttpUtil
     {
         return await SendRequestWithRetry(async () => await DownloadImageAsUtf8BytesAsync(url), retryNumber);
     }
+
     public static async Task<byte[]> DownloadImageAsUtf8BytesAsync(string url)
     {
         using (var httpClient = new HttpClient())

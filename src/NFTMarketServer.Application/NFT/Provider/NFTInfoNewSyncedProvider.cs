@@ -103,6 +103,11 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             mustQuery.Add(q => q.Terms(i => i.Field(f => f.Generation).Terms(dto.Generation)));
         }
         
+        if (!dto.RarityList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Rarity).Terms(dto.RarityList)));
+        }
+        
         if (!dto.Traits.IsNullOrEmpty())
         {
             var nestedQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
@@ -317,10 +322,9 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
 
         QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
             => f.Bool(b => b.Must(mustQuery));
-
         
-        var result = await _nftInfoNewIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
-            sortExp: item => item.BlockHeight,
+        var sort = GetSortForNFTBrife();
+        var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, sortFunc: sort,
             limit: maxLimit);
 
         var nftInfoIndexList = _objectMapper.Map<List<NFTInfoNewIndex>, List<IndexerNFTInfo>>(result?.Item2);
@@ -504,6 +508,16 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
                 sortDescriptor.Descending(a => a.BlockHeight);
                 break;
         }
+        return s => sortDescriptor;
+    }
+    
+    private static Func<SortDescriptor<NFTInfoNewIndex>, IPromise<IList<ISort>>> GetSortForNFTBrife()
+    {
+        SortDescriptor<NFTInfoNewIndex> sortDescriptor = new SortDescriptor<NFTInfoNewIndex>();
+        sortDescriptor.Descending(a => a.LatestDealTime);
+        sortDescriptor.Descending(a => a.LatestOfferTime);
+        sortDescriptor.Descending(a => a.LatestListingTime);
+        sortDescriptor.Descending(a => a.CreateTime);
         return s => sortDescriptor;
     }
 

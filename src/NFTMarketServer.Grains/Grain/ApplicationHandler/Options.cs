@@ -35,6 +35,11 @@ public class HideCollectionInfoOptions
     public List<string> HideCollectionInfoList { get; set; }
 }
 
+public class RarityShowWhiteOptions
+{
+    public List<string> RarityShowWhiteList { get; set; }
+}
+
 public class CollectionTradeInfoOptions
 {
     public bool GrayIsOn { get; set; } = false;

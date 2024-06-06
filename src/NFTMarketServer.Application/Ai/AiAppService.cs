@@ -226,7 +226,6 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             {
                 var imageBytes =
                     await _httpService.DownloadImageAsUtf8BytesAsync(openAiImageGeneration.Url, CommonConstant.IntThree);
-
                 var s3UrlValuePairs = await _symbolIconAppService.UpdateNFTIconWithHashAsync(imageBytes,
                     transactionId + CommonConstant.Underscore + transaction.From.ToBase58() + CommonConstant.Underscore +
                     DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + CommonConstant.ImagePNG);

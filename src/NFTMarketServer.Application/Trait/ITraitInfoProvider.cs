@@ -27,6 +27,9 @@ public interface ITraitInfoProvider
 
     public Task<Dictionary<int, long>> QueryCollectionGenerationInfoAsync(
         string collectionSymbol);
+    
+    public Task<Dictionary<string, long>> QueryCollectionRarityInfoAsync(
+        string collectionSymbol);
 }
 
 public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
@@ -36,15 +39,19 @@ public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
 
     private readonly INESTRepository<NFTCollectionTraitGenerationIndex, string>
         _nftCollectionTraitGenerationIndexRepository;
+    private readonly INESTRepository<NFTCollectionRarityIndex, string>
+        _nftCollectionRarityIndexRepository;
 
     public TraitInfoProvider(
         INESTRepository<NFTCollectionTraitKeyIndex, string> nftCollectionTraitKeyIndexRepository,
         INESTRepository<NFTCollectionTraitPairsIndex, string> nftCollectionTraitPairsIndexRepository,
-        INESTRepository<NFTCollectionTraitGenerationIndex, string> nftCollectionTraitGenerationIndexRepository)
+        INESTRepository<NFTCollectionTraitGenerationIndex, string> nftCollectionTraitGenerationIndexRepository,
+        INESTRepository<NFTCollectionRarityIndex, string> nftCollectionRarityIndexRepository)
     {
         _nftCollectionTraitKeyIndexRepository = nftCollectionTraitKeyIndexRepository;
         _nftCollectionTraitPairsIndexRepository = nftCollectionTraitPairsIndexRepository;
         _nftCollectionTraitGenerationIndexRepository = nftCollectionTraitGenerationIndexRepository;
+        _nftCollectionRarityIndexRepository = nftCollectionRarityIndexRepository;
     }
 
     public async Task<Dictionary<string, NFTCollectionTraitKeyIndex>> QueryCollectionTraitKeyInfosAsync(
@@ -176,5 +183,24 @@ public class TraitInfoProvider : ITraitInfoProvider, ISingletonDependency
         if (pairInfoDictionaries.IsNullOrEmpty()) return new List<string>();
         return pairInfoDictionaries
             .Select(x => IdGenerateHelper.GetNFTCollectionTraitPairsId(collectionSymbol, x.Key, x.Value)).ToList();
+    }
+    
+    public async Task<Dictionary<string, long>> QueryCollectionRarityInfoAsync(string collectionSymbol)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTCollectionRarityIndex>, QueryContainer>>();
+
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionSymbol).Value(collectionSymbol)));
+        mustQuery.Add(q => q.Range(i => i.Field(f => f.ItemCount).GreaterThanOrEquals(CommonConstant.IntOne)));
+        
+        QueryContainer Filter(QueryContainerDescriptor<NFTCollectionRarityIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var result = await _nftCollectionRarityIndexRepository.GetListAsync(Filter);
+        if (result?.Item1 == null || result?.Item1 == CommonConstant.EsLimitTotalNumber)
+        {
+            return new Dictionary<string, long>();
+        }
+
+        return result.Item2.ToDictionary(x => x.Rarity, x => x.ItemCount);
     }
 }

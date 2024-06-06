@@ -278,5 +278,39 @@ namespace NFTMarketServer.Users
             }
             return address;
         }
+        
+        public async Task<string> TryGetCurrentUserAddressAsync()
+        {
+            if (CurrentUser == null || CurrentUser.Id == null || CurrentUser.GetId() == Guid.Empty)
+            {
+                return "";
+            } 
+            var userGrain = _clusterClient.GetGrain<IUserGrain>(CurrentUser.GetId());
+            var user = await userGrain.GetUserAsync();
+            if (user == null || user?.Data == null)
+            {
+                return "";
+            }
+            
+            _logger.LogDebug("TryGetCurrentUserAddressAsync grain:{}", JsonConvert.SerializeObject(user));
+
+            var address = "";
+            if (!user.Data.AelfAddress.IsNullOrEmpty())
+            {
+                address = user.Data.AelfAddress;
+                return address;
+            }
+            if (!user.Data.CaAddressSide.IsNullOrEmpty())
+            {
+                address = user.Data.CaAddressSide.First().Value;
+                return address;
+            }
+            if (!user.Data.CaAddressMain.IsNullOrEmpty())
+            {
+                address = user.Data.CaAddressMain;
+                return address;
+            }
+            return address;
+        }
     }
 }
