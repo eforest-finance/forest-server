@@ -89,7 +89,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "SendTransactionAsync error");
+            _logger.LogError(e, "SendTransactionAsync error request={}", JsonConvert.SerializeObject(input));
             throw new SystemException(e.Message);
         }
 
@@ -195,7 +195,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 openAiMsg = "Url=" + openAiUrl + " .openAiRequestBody=" + openAiRequestBody + " .createArtInput=" +
                             JsonConvert.SerializeObject(createArtInput) + e.Message;
                 _logger.LogError(e,
-                    "OpenAiImageGeneration Error {A}", openAiMsg);
+                    "OpenAiImageGeneration Error {A} retryCount={B}", openAiMsg, retryCount);
             }
 
             if (result != null && result.Data?.Count > 0) break;
@@ -221,10 +221,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         for (var j = 0; j < result.Data.Count; j++)
         {
             var openAiImageGeneration = result.Data[j];
-            var imageBytes = await _httpService.DownloadImageAsUtf8BytesAsync(openAiImageGeneration.Url);
-
+            
             try
             {
+                var imageBytes =
+                    await _httpService.DownloadImageAsUtf8BytesAsync(openAiImageGeneration.Url, CommonConstant.IntThree);
                 var s3UrlValuePairs = await _symbolIconAppService.UpdateNFTIconWithHashAsync(imageBytes,
                     transactionId + CommonConstant.Underscore + transaction.From.ToBase58() + CommonConstant.Underscore +
                     DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + CommonConstant.ImagePNG);
@@ -244,15 +245,16 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }
             catch (Exception e)
             {
-                _logger.LogError("s3 upload error openAiImageGeneration={A}", openAiImageGeneration.Url);
+                aiCreateIndex.Result = e.Message;
+                await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
+                _logger.LogError(e, "s3 upload error openAiImageGeneration={A}", openAiImageGeneration.Url);
+                throw new SystemException("s3 upload error", e);
             }
         }
-
-        if (addList.IsNullOrEmpty())
-        {
-            throw new SystemException("s3 upload error,result is empty");
-        }
+        
         await _aIImageIndexRepository.BulkAddOrUpdateAsync(addList);
+        aiCreateIndex.Status = AiCreateStatus.UPLOADS3;
+        await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
         return s3UrlDic;
     }
 
@@ -291,14 +293,23 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         while (transactionResultDto.Status.Equals(TransactionState.Pending))
         {
+            await Task.Delay(CommonConstant.IntOneThousand);
             transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
         }
-
         
-        for (var i = 0; transactionResultDto.Status.Equals(TransactionState.Notexisted) && i <= _openAiOptionsMonitor.CurrentValue.DelayMaxTime; i++)
+        for (var i = 0;
+             (transactionResultDto.Status.Equals(TransactionState.Notexisted) ||
+              transactionResultDto.Status.Equals(TransactionState.Pending)) &&
+             i <= _openAiOptionsMonitor.CurrentValue.DelayMaxTime;
+             i++)
         {
             await Task.Delay(_openAiOptionsMonitor.CurrentValue.DelayMillisecond);
             transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
+            while (transactionResultDto.Status.Equals(TransactionState.Pending))
+            {
+                await Task.Delay(CommonConstant.IntOneThousand);
+                transactionResultDto = await _contractProvider.QueryTransactionResult(transactionId, chainId);
+            }
         }
         
         if (!transactionResultDto.Status.Equals(TransactionState.Mined))

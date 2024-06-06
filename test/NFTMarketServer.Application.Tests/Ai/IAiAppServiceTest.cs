@@ -72,7 +72,7 @@ public class IAiAppServiceTest : NFTMarketServerApplicationTestBase
         
         mock.Setup(cals => cals.SendPostRequest(It.IsAny<string>(),It.IsAny<string>(),It.IsAny<Dictionary<string, string>>(),It.IsAny<int>())).ReturnsAsync(JsonConvert.SerializeObject(result));
 
-        mock.Setup(cals => cals.DownloadImageAsUtf8BytesAsync(It.IsAny<string>())).ReturnsAsync(new byte[]{});
+        mock.Setup(cals => cals.DownloadImageAsUtf8BytesAsync(It.IsAny<string>(),It.IsAny<int>())).ReturnsAsync(new byte[]{});
         
         return mock.Object;
     }

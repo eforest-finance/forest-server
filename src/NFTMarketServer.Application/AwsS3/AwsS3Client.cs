@@ -5,7 +5,9 @@ using System.Net;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NFTMarketServer.Basic;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.AwsS3;
@@ -15,11 +17,13 @@ public class AwsS3Client : ISingletonDependency
     private const string HttpSchema = "https";
     private const string HostS3 = ".s3.amazonaws.com";
     private readonly AwsS3Option _awsS3Option;
+    private readonly ILogger<AwsS3Client> _logger;
 
     private AmazonS3Client _amazonS3Client;
 
-    public AwsS3Client(IOptionsSnapshot<AwsS3Option> awsS3Option)
+    public AwsS3Client(IOptionsSnapshot<AwsS3Option> awsS3Option,ILogger<AwsS3Client> logger)
     {
+        _logger = logger;
         _awsS3Option = awsS3Option.Value;
         InitAmazonS3Client();
     }
@@ -84,18 +88,42 @@ public class AwsS3Client : ISingletonDependency
             Key = _awsS3Option.S3KeyForest + "/" + fileName,
             CannedACL = S3CannedACL.PublicRead,
         };
-        var putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
+        var putObjectResponse = new PutObjectResponse();
+
+        var msg = "";
+        for (var i = 0; i < CommonConstant.IntThree; i++)
+        {
+            try
+            {
+                putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "UpLoadFileForNFTWithHashAsync e");
+                msg = e.Message;
+            }
+            if (putObjectResponse.HttpStatusCode == HttpStatusCode.OK)
+            {
+                break;
+            }
+
+            await Task.Delay(CommonConstant.IntOneThousand);
+        }
         
-        UriBuilder uriBuilder = new UriBuilder
+        var uriBuilder = new UriBuilder
         {
             Scheme = HttpSchema,
             Host = _awsS3Option.BucketName + HostS3,
             Path = "/" + _awsS3Option.S3KeyForest + "/" + fileName
         };
-
-        return putObjectResponse.HttpStatusCode == HttpStatusCode.OK
-            ? new KeyValuePair<string, string>(uriBuilder.ToString(),putObjectResponse.ETag)
-            : new KeyValuePair<string, string>();
+        if (putObjectResponse.HttpStatusCode == HttpStatusCode.OK)
+        {
+            return new KeyValuePair<string, string>(uriBuilder.ToString(), putObjectResponse.ETag);
+        }
+        else
+        {
+            throw new SystemException(msg);
+        }
     }
 
     public async Task<string> GetSpecialSymbolUrl(string fileName)
