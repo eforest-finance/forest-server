@@ -11,7 +11,7 @@ public class OpenAiWordCheckResponse
 public class AIResult
 {
     public bool Flagged  { get; set; }
-    public Category  Categories { get; set; }
+    public Dictionary<string, bool> Categories { get; set; }  
 }
 
 public class Category
