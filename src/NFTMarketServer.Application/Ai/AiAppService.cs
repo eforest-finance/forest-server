@@ -138,7 +138,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             {
                 return new ResultDto<CreateAiResultDto>()
                 {
-                    Success = false, Message = wordCheckRes.Message
+                    Success = false, Message = wordCheckRes.Message,  Data = new CreateAiResultDto()
+                    {
+                        CanRetry = isCanRetry,
+                        TransactionId = transactionId
+                    }
                 };
             }
             //send transaction
@@ -246,49 +250,95 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             var message = new StringBuilder();
             message.Append("Your promot contains sensitive words, type:");
             var category = result.Results.First().Categories;
-            if (category.Sexual)
+            var flag = false;
+            if (category.TryGetValue("sexual", out flag))  
             {
-                message.Append("Sexual ");
+                if (flag)
+                {
+                    message.Append("Sexual ");
+                    flag = false;
+                }
+            } 
+            if (category.TryGetValue("hate", out flag))  
+            {
+                if (flag)
+                {
+                    message.Append("hate ");
+                    flag = false;
+                }
+            } 
+            
+            if (category.TryGetValue("harassment", out flag))  
+            {
+                if (flag)
+                {
+                    message.Append("harassment ");
+                    flag = false;
+                }
             }
-            if (category.Hate)
+            if (category.TryGetValue("self-harm", out flag))  
             {
-                message.Append("Hate");
+                if (flag)
+                {
+                    message.Append("self-harm ");
+                    flag = false;
+                }
             }
-            if (category.Harassment)
+            if (category.TryGetValue("sexual/minors", out flag))  
             {
-                message.Append("Harassment");
+                if (flag)
+                {
+                    message.Append("sexual/minors ");
+                    flag = false;
+                }
             }
-            if (category.SelfHarm)
+            if (category.TryGetValue("hate/threatening", out flag))  
             {
-                message.Append("Self-Harm");
+                if (flag)
+                {
+                    message.Append("hate/threatening ");
+                    flag = false;
+                }
             }
-            if (category.SexualMinors)
+            if (category.TryGetValue("violence/graphic", out flag))  
             {
-                message.Append("Sexual/Minors");
+                if (flag)
+                {
+                    message.Append("violence/graphic ");
+                    flag = false;
+                }
             }
-            if(category.HateThreatening)
+            if (category.TryGetValue("self-harm/intent", out flag))  
             {
-                message.Append("Hate/Threatening");
+                if (flag)
+                {
+                    message.Append("self-harm/intent ");
+                    flag = false;
+                }
             }
-            if (category.ViolenceGraphic)
+            if (category.TryGetValue("self-harm/instructions", out flag))  
             {
-                message.Append("Violence/Graphic");
+                if (flag)
+                {
+                    message.Append("self-harm/instructions ");
+                    flag = false;
+                }
             }
-            if (category.SelfHarmInstructions)
+            if (category.TryGetValue("harassment/threatening", out flag))  
             {
-                message.Append("Self-Harm/Instructions");
+                if (flag)
+                {
+                    message.Append("harassment/threatening ");
+                    flag = false;
+                }
             }
-            if (category.SelfHarmIntent)
+            if (category.TryGetValue("violence", out flag))  
             {
-                message.Append("Self-Harm/Intent");
-            }
-            if (category.HarassmentThreatening)
-            {
-                message.Append("Harassment/Threatening");
-            }
-            if (category.Violence)
-            {
-                message.Append("Violence");
+                if (flag)
+                {
+                    message.Append("violence ");
+                    flag = false;
+                }
             }
 
             return new ResultDto<string>()
