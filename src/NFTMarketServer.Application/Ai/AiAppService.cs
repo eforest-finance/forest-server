@@ -219,7 +219,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             throw new SystemException("Network error, please try again");
         }
 
-        if (!result.Results.Flagged)
+        if (!result.Results.First().Flagged)
         {
             return new ResultDto<string>()
             {
@@ -229,7 +229,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         {
             var message = "";
-            var category = result.Results.Categories;
+            var category = result.Results.First().Categories;
             if (category.Sexual)
             {
                 message = "Sexual";

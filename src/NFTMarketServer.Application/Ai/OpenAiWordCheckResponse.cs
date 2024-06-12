@@ -1,8 +1,10 @@
+using System.Collections.Generic;
+
 namespace NFTMarketServer.Ai;
 
 public class OpenAiWordCheckResponse
 {
-    public AIResult Results { get; set; }
+    public List<AIResult> Results { get; set; }
 }
 
 public class AIResult
