@@ -11,6 +11,9 @@ public class OpenAiOptions
     public int DelayMillisecond { get; set; } = 0;
     
     public bool RepeatRequestIsOn { get; set; } = false;
+    
+    public string WordCheckUrl { get; set; }
+
 }
 
 public class ChainOptions

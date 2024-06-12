@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Ai;
 
@@ -9,6 +10,15 @@ public class CreateAiArtInput
     public string PublicKey { get; set; }
     [NotNull]public string ChainId { get; set; }
 }
+
+public class CreateAiResultDto
+{
+    public bool CanRetry { get; set; }
+    public string TransactionId { get; set; }
+    public PagedResultDto<CreateAiArtDto> PagedResultDto{ get; set; }
+}
+
+
 
 public class CreateAiArtDto
 {

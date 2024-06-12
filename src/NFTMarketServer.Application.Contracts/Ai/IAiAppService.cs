@@ -1,8 +1,5 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using NFTMarketServer.Ai.Index;
 using NFTMarketServer.NFT;
-using NFTMarketServer.Ai;
 using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Ai
@@ -16,6 +13,9 @@ namespace NFTMarketServer.Ai
         Task<PagedResultDto<AiArtFailDto>> QueryAiArtFailAsync(QueryAiArtFailInput input);
         
         Task<PagedResultDto<CreateAiArtDto>> GetAiArtsAsync(GetAIArtsInput input); 
+        
+        Task<ResultDto<CreateAiResultDto>> CreateAiArtAsyncV2(CreateAiArtInput input);
+
         Task<ResultDto<string>> UseAIArtsAsync(UseAIArtsInput input);
         
         ResultDto<string> GETAIPrompts();

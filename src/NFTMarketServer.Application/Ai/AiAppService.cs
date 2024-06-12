@@ -40,6 +40,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly IHttpService _httpService;
     private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
     private readonly IOptionsMonitor<AIPromptsOptions> _aiPromptsOptions;
+    private const int PromotMaxLength = 500;
+    private const int NegativePromotMaxLength = 400;
 
 
     public AiAppService(IOptionsMonitor<ChainOptions> chainOptionsMonitor,
@@ -103,7 +105,174 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 .ToList()
         };
     }
-    
+    public async Task<ResultDto<CreateAiResultDto>> CreateAiArtAsyncV2(CreateAiArtInput input)
+    {
+        var chainId = input.ChainId;
+        string transactionId = null;
+        var isCanRetry = false;
+        var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+        CreateArtInput createArtInput;
+        Transaction transaction;
+        AiCreateIndex aiCreateIndex;
+        Dictionary<string, string> s3UrlDic;
+        try
+        {
+            transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
+            createArtInput = TransferToCreateArtInput(transaction, chainId);
+            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput, currentUserAddress);
+            //Sensitive words check
+            var wordCheckRes = await SensitiveWordCheckAsync(aiCreateIndex);
+            if (!wordCheckRes.Success)
+            {
+                return new ResultDto<CreateAiResultDto>()
+                {
+                    Success = false, Message = wordCheckRes.Message
+                };
+            }
+            //send transaction
+            transactionId = await SendTransactionAsync(chainId, transaction);
+            if (!transactionId.IsNullOrEmpty())
+            {
+                isCanRetry = true;
+            }
+            //add record
+            await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
+            //create image
+            s3UrlDic = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex, currentUserAddress);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "SendTransactionAsync error request={}", JsonConvert.SerializeObject(input));
+            return new ResultDto<CreateAiResultDto>()
+            {
+                Success = false, Message = e.Message, Data = new CreateAiResultDto()
+                {
+                    CanRetry = isCanRetry,
+                    TransactionId = transactionId
+                }
+            };
+        }
+
+        return new ResultDto<CreateAiResultDto>()
+        {
+            Success = true, Message = "", Data = new CreateAiResultDto()
+            {
+                CanRetry = false,
+                TransactionId = transactionId,
+                PagedResultDto = new PagedResultDto<CreateAiArtDto>()
+                {
+                    TotalCount = s3UrlDic.Count,
+                    Items = s3UrlDic
+                        .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
+                        .ToList()
+                }
+            }
+        };
+    }
+
+    private async Task<ResultDto<string>> SensitiveWordCheckAsync(AiCreateIndex aiCreateIndex)
+    {
+        if (aiCreateIndex.Promt.Length > PromotMaxLength)
+        {
+            var message = $"Prompt words with a length exceeding {PromotMaxLength}";
+            return new ResultDto<string>()
+            {
+                Success = false, Message = message
+            };
+        }
+        if (aiCreateIndex.NegativePrompt.Length > NegativePromotMaxLength)
+        {
+            var message = $"NegativePrompt words with a length exceeding {NegativePromotMaxLength}";
+            return new ResultDto<string>()
+            {
+                Success = false, Message = message
+            };
+        }
+        
+        var openAiUrl = _openAiOptionsMonitor.CurrentValue.WordCheckUrl;
+        var openAiRequestBody = JsonConvert.SerializeObject(new OpenAiWordCheckDto
+        {
+            Input = String.Concat(aiCreateIndex.Promt, " ", aiCreateIndex.NegativePrompt)
+        });
+       
+        var openAiHeader = new Dictionary<string, string>
+        {
+            [CommonConstant.Authorization] = CommonConstant.BearerToken + _openAiOptionsMonitor.CurrentValue.ApiKeyList.First()
+        };
+
+        var result = new OpenAiWordCheckResponse();
+        try
+        {
+            var openAiResult =
+                await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
+            result = JsonConvert.DeserializeObject<OpenAiWordCheckResponse>(openAiResult);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "SensitiveWordCheckAsync Promt {A} NegativePrompt={B}", aiCreateIndex.Promt, aiCreateIndex.NegativePrompt);
+            throw new SystemException($"Network error, please try again. {e.Message}");
+        }
+
+        if (result == null || result.Results == null)
+        {
+            throw new SystemException("Network error, please try again");
+        }
+
+        if (!result.Results.Flagged)
+        {
+            return new ResultDto<string>()
+            {
+                Success = true, Message = ""
+            };
+        }
+
+        {
+            var message = "";
+            var category = result.Results.Categories;
+            if (category.Sexual)
+            {
+                message = "Sexual";
+            }else if (category.Hate)
+            {
+                message = "Hate";
+            }else if (category.Harassment)
+            {
+                message = "Harassment";
+            }else if (category.SelfHarm)
+            {
+                message = "Self-Harm";
+            }else if (category.SexualMinors)
+            {
+                message = "Sexual/Minors";
+            }else if (category.HateThreatening)
+            {
+                message = "Hate/Threatening";
+            }else if (category.ViolenceGraphic)
+            {
+                message = "Violence/Graphic";
+            }else if (category.SelfHarmInstructions)
+            {
+                message = "Self-Harm/Instructions";
+            }else if (category.SelfHarmIntent)
+            {
+                message = "Self-Harm/Intent";
+            }else if (category.HarassmentThreatening)
+            {
+                message = "Harassment/Threatening";
+            }else if (category.Violence)
+            {
+                message = "Violence";
+            }
+
+            return new ResultDto<string>()
+            {
+                Success = false, Message = message
+            };
+        }
+
+    }
+
     private static AiCreateIndex BuildAiCreateIndex(string transactionId,Transaction transaction,CreateArtInput createArtInput, string currentUserAddress)
     {
         if (createArtInput.Number < CommonConstant.IntOne || createArtInput.Number > CommonConstant.IntTen)

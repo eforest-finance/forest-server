@@ -49,6 +49,19 @@ public class IAiAppServiceTest : NFTMarketServerApplicationTestBase
         result.TotalCount.ShouldBe(1);
     }
     
+    [Fact]
+    public async void TestCreateAiArtAsyncV2()
+    {
+        var input = new CreateAiArtInput()
+        {
+            RawTransaction = "0a220a2048d657339e3046765001266ac666a930af4a9828e3b2b748bd4aa6e51dc5a2fb12220a2088881d4350a8c77c59a42fc86bbcd796b129e086da7e61d24fb86a6cbb6b2f3b18f4f2dc39220476f4de552a124d616e61676572466f727761726443616c6c32760a220a200548ca657f48982cba770e620a3f8932a6bb53c321026876f055b4cca0ff91e012220a20838138b89acb974d85e3acadcf04f056d06d655da910ce6c377232b63cff51ab1a0943726561746541727422210a036361741a0864616c6c2d652d3232073235367832353638024205506978656c82f10441cbdaa3eb587b37cbc641955726f582de5a9306b1f9c96a9ae8a8f84212d2525c7f4bdaf36fa88fa6fa17a4712a99e68d9557ff1aea6b4f23003fd3402cb3251d01",
+            ChainId = "tDVW"
+        };
+        var result = await _aiAppService.CreateAiArtAsyncV2(input);
+        var a = JsonConvert.SerializeObject(result);
+        var canRetry = result.Data.CanRetry;
+    }
+    
     private static ISymbolIconAppService MockISymbolIconAppService(){
         var mock = new Mock<ISymbolIconAppService>();
         mock.Setup(cals => cals.UpdateNFTIconWithHashAsync(It.IsAny<byte[]>(),It.IsAny<string>())).ReturnsAsync(new KeyValuePair<string,string>("pairkey","pairValue"));
