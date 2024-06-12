@@ -85,6 +85,12 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
+            //Sensitive words check
+            var wordCheckRes = await SensitiveWordCheckAsync(createArtInput.Promt, createArtInput.NegativePrompt);
+            if (!wordCheckRes.Success)
+            {
+                throw new SystemException(wordCheckRes.Message);
+            }
             transactionId = await SendTransactionAsync(chainId, transaction);
             aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput, currentUserAddress);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
