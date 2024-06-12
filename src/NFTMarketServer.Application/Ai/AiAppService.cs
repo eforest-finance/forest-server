@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
@@ -234,46 +235,57 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
 
         {
-            var message = "";
+            var message = new StringBuilder();
+            message.Append("Your promot contains sensitive words, type:");
             var category = result.Results.First().Categories;
             if (category.Sexual)
             {
-                message = "Sexual";
-            }else if (category.Hate)
+                message.Append("Sexual ");
+            }
+            if (category.Hate)
             {
-                message = "Hate";
-            }else if (category.Harassment)
+                message.Append("Hate");
+            }
+            if (category.Harassment)
             {
-                message = "Harassment";
-            }else if (category.SelfHarm)
+                message.Append("Harassment");
+            }
+            if (category.SelfHarm)
             {
-                message = "Self-Harm";
-            }else if (category.SexualMinors)
+                message.Append("Self-Harm");
+            }
+            if (category.SexualMinors)
             {
-                message = "Sexual/Minors";
-            }else if (category.HateThreatening)
+                message.Append("Sexual/Minors");
+            }
+            if(category.HateThreatening)
             {
-                message = "Hate/Threatening";
-            }else if (category.ViolenceGraphic)
+                message.Append("Hate/Threatening");
+            }
+            if (category.ViolenceGraphic)
             {
-                message = "Violence/Graphic";
-            }else if (category.SelfHarmInstructions)
+                message.Append("Violence/Graphic");
+            }
+            if (category.SelfHarmInstructions)
             {
-                message = "Self-Harm/Instructions";
-            }else if (category.SelfHarmIntent)
+                message.Append("Self-Harm/Instructions");
+            }
+            if (category.SelfHarmIntent)
             {
-                message = "Self-Harm/Intent";
-            }else if (category.HarassmentThreatening)
+                message.Append("Self-Harm/Intent");
+            }
+            if (category.HarassmentThreatening)
             {
-                message = "Harassment/Threatening";
-            }else if (category.Violence)
+                message.Append("Harassment/Threatening");
+            }
+            if (category.Violence)
             {
-                message = "Violence";
+                message.Append("Violence");
             }
 
             return new ResultDto<string>()
             {
-                Success = false, Message = message
+                Success = false, Message = message.ToString()
             };
         }
 
