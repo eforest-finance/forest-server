@@ -47,6 +47,22 @@ namespace NFTMarketServer.Controllers
             return await _aiAppService.CreateAiArtAsync(input);
         }
         
+        [HttpGet]
+        [Route("create-ai-arts-retry")]
+        [Authorize]
+        public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtRetryAsync(CreateAiArtRetryInput input)
+        {
+            return await _aiAppService.CreateAiArtRetryAsync(input);
+        }
+        
+        [HttpPost]
+        [Route("ai-arts-fail")]
+        [Authorize]
+        public async Task<PagedResultDto<AiArtFailDto>> CreateAiArtFailAsync(QueryAiArtFailInput input)
+        {
+            return await _aiAppService.QueryAiArtFailAsync(input);
+        }
+        
         [HttpPost]
         [Route("nft-collections-migrate")]
         public async Task CollectionMigrateAsync(CollectionMigrateInput input)

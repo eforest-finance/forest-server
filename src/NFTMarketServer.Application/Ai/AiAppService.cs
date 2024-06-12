@@ -442,4 +442,14 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         return new ResultDto<string>() {Success = true, Message = "", Data = result};
 
     }
+
+    public Task<PagedResultDto<CreateAiArtDto>> CreateAiArtRetryAsync(CreateAiArtRetryInput input)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<PagedResultDto<AiArtFailDto>> QueryAiArtFailAsync(QueryAiArtFailInput input)
+    {
+        throw new NotImplementedException();
+    }
 }
