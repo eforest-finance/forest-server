@@ -82,6 +82,7 @@ namespace NFTMarketServer.NFT
         
         private readonly IOptionsMonitor<RecommendHotNFTOptions> _recommendHotNFTOptionsMonitor;
         private readonly IOptionsMonitor<ChainOptions> _chainOptionsMonitor;
+
         private readonly IUserBalanceProvider _userBalanceProvider;
         private readonly ISchrodingerInfoProvider _schrodingerInfoProvider;
         private readonly string _defaultMainChain = "AELF";
