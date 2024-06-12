@@ -8,6 +8,7 @@ using AElf.Types;
 using Forest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Basic;
@@ -19,10 +20,12 @@ using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Redis;
 using NFTMarketServer.Users;
+using Org.BouncyCastle.Security;
 using Orleans.Runtime;
 using Portkey.Contracts.CA;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.Ai;
 
@@ -41,6 +44,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly IHttpService _httpService;
     private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
     private readonly IOptionsMonitor<AIPromptsOptions> _aiPromptsOptions;
+    private readonly IObjectMapper _objectMapper;
     private const int PromotMaxLength = 500;
     private const int NegativePromotMaxLength = 400;
 
@@ -55,6 +59,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         INESTRepository<AIImageIndex, string> aIImageIndexRepository,
         IAIArtProvider aiArtProvider,
         IHttpService httpService,
+        IObjectMapper objectMapper,
         IOpenAiRedisTokenBucket openAiRedisTokenBucket,
         IOptionsMonitor<AIPromptsOptions> aiPromptsOptions
     )
@@ -71,6 +76,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _openAiRedisTokenBucket = openAiRedisTokenBucket;
         _aiPromptsOptions = aiPromptsOptions;
         _httpService = httpService;
+        _objectMapper = objectMapper;
 
     }
 
@@ -86,8 +92,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
+            _logger.LogInformation("CreateAiArtAsync chainId={A} createArtInput={B}", chainId,
+                JsonConvert.SerializeObject(createArtInput));
             transactionId = await SendTransactionAsync(chainId, transaction);
-            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput, currentUserAddress);
+            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction.From.ToBase58(), createArtInput,
+                currentUserAddress);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
         }
         catch (Exception e)
@@ -96,7 +105,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             throw new SystemException(e.Message);
         }
 
-        var s3UrlDic = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex, currentUserAddress);
+        var s3UrlDic = await GenerateImageAsync(transaction.From.ToBase58(), transactionId,
+            aiCreateIndex, currentUserAddress);
 
         return new PagedResultDto<CreateAiArtDto>()
         {
@@ -120,6 +130,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
+            _logger.LogInformation("CreateAiArtAsyncV2 chainId={A} createArtInput={B}", chainId,
+                JsonConvert.SerializeObject(createArtInput));
             //Sensitive words check
             var wordCheckRes = await SensitiveWordCheckAsync(createArtInput.Promt, createArtInput.NegativePrompt);
             if (!wordCheckRes.Success)
@@ -136,10 +148,12 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 isCanRetry = true;
             }
             //add record
-            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput, currentUserAddress);
+            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction.From.ToBase58(), createArtInput,
+                currentUserAddress);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
             //create image
-            s3UrlDic = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex, currentUserAddress);
+            s3UrlDic = await GenerateImageAsync(transaction.From.ToBase58(), transactionId,
+                aiCreateIndex, currentUserAddress);
         }
         catch (Exception e)
         {
@@ -285,7 +299,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
     }
 
-    private static AiCreateIndex BuildAiCreateIndex(string transactionId,Transaction transaction,CreateArtInput createArtInput, string currentUserAddress)
+    private static AiCreateIndex BuildAiCreateIndex(string transactionId, string from, CreateArtInput createArtInput,
+        string currentUserAddress)
     {
         if (createArtInput.Number < CommonConstant.IntOne || createArtInput.Number > CommonConstant.IntTen)
         {
@@ -293,7 +308,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
         return new AiCreateIndex
         {
-            Id = IdGenerateHelper.GetAiCreateId(transactionId, transaction.From.ToBase58()),
+            Id = IdGenerateHelper.GetAiCreateId(transactionId, from),
             TransactionId = transactionId,
             Address = currentUserAddress,
             Ctime = DateTime.UtcNow,
@@ -342,16 +357,16 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return createArtInput;
     }
-    private async Task<Dictionary<string,string>> GenerateImageAsync(CreateArtInput createArtInput, Transaction transaction,
+    private async Task<Dictionary<string,string>> GenerateImageAsync(string fromAddress,
         string transactionId, AiCreateIndex aiCreateIndex, string currentUserAddress)
     {
         var openAiUrl = _openAiOptionsMonitor.CurrentValue.ImagesUrlV1;
         var openAiRequestBody = JsonConvert.SerializeObject(new OpenAiImageGenerationDto
         {
-            Model = createArtInput.Model,
-            N = createArtInput.Number,
-            Size = createArtInput.Size,
-            Prompt = BuildFullPrompt(createArtInput)
+            Model = aiCreateIndex.Model.ToEnumString(),
+            N = aiCreateIndex.Number,
+            Size = aiCreateIndex.Size.ToEnumString(),
+            Prompt = BuildFullPrompt(aiCreateIndex)
         });
        
         var openAiHeader = new Dictionary<string, string>
@@ -373,8 +388,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }
             catch (Exception e)
             {
-                openAiMsg = "Url=" + openAiUrl + " .openAiRequestBody=" + openAiRequestBody + " .createArtInput=" +
-                            JsonConvert.SerializeObject(createArtInput) + e.Message;
+                openAiMsg = "Url=" + openAiUrl + " .openAiRequestBody=" + openAiRequestBody + " .aiCreateIndex=" +
+                            JsonConvert.SerializeObject(aiCreateIndex) + e.Message;
                 _logger.LogError(e,
                     "OpenAiImageGeneration Error {A} retryCount={B}", openAiMsg, retryCount);
             }
@@ -382,7 +397,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             if (result != null && result.Data?.Count > 0) break;
         }
 
-        aiCreateIndex.RetryCount = retryCount;
+        aiCreateIndex.RetryCount += retryCount;
         if (result == null || result.Data.IsNullOrEmpty())
         {
             aiCreateIndex.Result = openAiMsg.IsNullOrEmpty() ? (result?.Error?.Message) : openAiMsg;
@@ -408,13 +423,13 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 var imageBytes =
                     await _httpService.DownloadImageAsUtf8BytesAsync(openAiImageGeneration.Url, CommonConstant.IntThree);
                 var s3UrlValuePairs = await _symbolIconAppService.UpdateNFTIconWithHashAsync(imageBytes,
-                    transactionId + CommonConstant.Underscore + transaction.From.ToBase58() + CommonConstant.Underscore +
+                    transactionId + CommonConstant.Underscore + fromAddress + CommonConstant.Underscore +
                     DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + CommonConstant.ImagePNG);
                 if (s3UrlValuePairs.Key.IsNullOrEmpty()) continue;
                 s3UrlDic.Add(s3UrlValuePairs.Key,s3UrlValuePairs.Value);
                 addList.Add(new AIImageIndex
                 {
-                    Id = IdGenerateHelper.GetAIImageId(transactionId, transaction.To.ToBase58(), j),
+                    Id = IdGenerateHelper.GetAIImageId(transactionId, fromAddress, j),
                     Address = currentUserAddress,
                     Ctime = DateTime.UtcNow,
                     Utime = DateTime.UtcNow,
@@ -439,14 +454,14 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         return s3UrlDic;
     }
 
-    private static string BuildFullPrompt(CreateArtInput createArtInput)
+    private static string BuildFullPrompt(AiCreateIndex aiCreateIndex)
     {
-        return "prompt：" + createArtInput.Promt + ";" + (createArtInput.PaintingStyle.IsNullOrEmpty()
+        return "prompt：" + aiCreateIndex.Promt + ";" + (aiCreateIndex.PaintingStyle == null
                    ? ""
-                   : "; Image style:" + createArtInput.PaintingStyle)
-               + (createArtInput.NegativePrompt.IsNullOrEmpty()
+                   : "; Image style:" + aiCreateIndex.PaintingStyle.ToEnumString())
+               + (aiCreateIndex.NegativePrompt.IsNullOrEmpty()
                    ? ""
-                   : "; negative prompt:" + createArtInput.NegativePrompt);
+                   : "; negative prompt:" + aiCreateIndex.NegativePrompt);
     }
 
     private async Task<string> SendTransactionAsync(string chainId, Transaction transaction)
@@ -624,13 +639,54 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
     }
 
-    public Task<PagedResultDto<CreateAiArtDto>> CreateAiArtRetryAsync(CreateAiArtRetryInput input)
+    public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtRetryAsync(CreateAiArtRetryInput input)
     {
-        throw new NotImplementedException();
+        if (input == null || input.TransactionId.IsNullOrEmpty())
+        {
+            throw new InvalidParameterException("request param must not be null");
+        }
+        var address = await _userAppService.GetCurrentUserAddressAsync();
+
+        var aiCreateIndex =
+            await _aiArtProvider.GetAiCreateIndexById(IdGenerateHelper.GetAiCreateId(input.TransactionId, address));
+
+        var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
+            aiCreateIndex, address);
+
+        return new PagedResultDto<CreateAiArtDto>()
+        {
+            TotalCount = s3UrlDic.Count,
+            Items = s3UrlDic
+                .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"","") })
+                .ToList()
+        };
     }
 
-    public Task<PagedResultDto<AiArtFailDto>> QueryAiArtFailAsync(QueryAiArtFailInput input)
+    public async Task<PagedResultDto<AiArtFailDto>> QueryAiArtFailAsync(QueryAiArtFailInput input)
     {
-        throw new NotImplementedException();
+        var address = await _userAppService.TryGetCurrentUserAddressAsync();
+        if (address.IsNullOrEmpty())
+        {
+            return new PagedResultDto<AiArtFailDto>()
+            {
+                TotalCount = CommonConstant.IntZero,
+                Items = new List<AiArtFailDto>()
+            };
+        }
+
+        var result = await _aiArtProvider.GetFailAiCreateIndexListAsync(address, input);
+        if (result == null || result.Item1 <= CommonConstant.IntZero)
+        {
+            return new PagedResultDto<AiArtFailDto>()
+            {
+                TotalCount = CommonConstant.IntZero,
+                Items = new List<AiArtFailDto>()
+            };
+        }
+        return new PagedResultDto<AiArtFailDto>()
+        {
+            TotalCount = result.Item1,
+            Items = _objectMapper.Map<List<AiCreateIndex>, List<AiArtFailDto>>(result.Item2)
+        };
     }
 }
