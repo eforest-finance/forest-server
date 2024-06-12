@@ -119,9 +119,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
-            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput, currentUserAddress);
             //Sensitive words check
-            var wordCheckRes = await SensitiveWordCheckAsync(aiCreateIndex);
+            var wordCheckRes = await SensitiveWordCheckAsync(createArtInput.Promt, createArtInput.NegativePrompt);
             if (!wordCheckRes.Success)
             {
                 return new ResultDto<CreateAiResultDto>()
@@ -136,6 +135,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 isCanRetry = true;
             }
             //add record
+            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction, createArtInput, currentUserAddress);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
             //create image
             s3UrlDic = await GenerateImageAsync(createArtInput, transaction, transactionId, aiCreateIndex, currentUserAddress);
@@ -170,9 +170,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         };
     }
 
-    private async Task<ResultDto<string>> SensitiveWordCheckAsync(AiCreateIndex aiCreateIndex)
+    private async Task<ResultDto<string>> SensitiveWordCheckAsync(string promot, string negativePromot)
     {
-        if (aiCreateIndex.Promt.Length > PromotMaxLength)
+        if (promot.Length > PromotMaxLength)
         {
             var message = $"Prompt words with a length exceeding {PromotMaxLength}";
             return new ResultDto<string>()
@@ -180,7 +180,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 Success = false, Message = message
             };
         }
-        if (aiCreateIndex.NegativePrompt.Length > NegativePromotMaxLength)
+        if (negativePromot.Length > NegativePromotMaxLength)
         {
             var message = $"NegativePrompt words with a length exceeding {NegativePromotMaxLength}";
             return new ResultDto<string>()
@@ -192,7 +192,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var openAiUrl = _openAiOptionsMonitor.CurrentValue.WordCheckUrl;
         var openAiRequestBody = JsonConvert.SerializeObject(new OpenAiWordCheckDto
         {
-            Input = String.Concat(aiCreateIndex.Promt, " ", aiCreateIndex.NegativePrompt)
+            Input = String.Concat(promot, " ", negativePromot)
         });
        
         var openAiHeader = new Dictionary<string, string>
@@ -210,7 +210,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         catch (Exception e)
         {
             _logger.LogError(e,
-                "SensitiveWordCheckAsync Promt {A} NegativePrompt={B}", aiCreateIndex.Promt, aiCreateIndex.NegativePrompt);
+                "SensitiveWordCheckAsync Promt {A} NegativePrompt={B}", promot, negativePromot);
             throw new SystemException($"Network error, please try again. {e.Message}");
         }
 
