@@ -17,4 +17,8 @@ public class AiArtFailDto
     public string Quality { get; set; }
     public int Number { get; set; }
     public string TransactionId { get; set; }
+    
+    public int RetryCount { get; set; }
+    
+    public string Result { get; set; }
 }
