@@ -84,8 +84,25 @@ internal class AIArtProvider : IAIArtProvider, ISingletonDependency
         return tuple;
     }
 
-    public async Task<AiCreateIndex> GetAiCreateIndexById(string id)
+    public async Task<AiCreateIndex> GetAiCreateIndexByTransactionId(string transactionId, string address)
     {
-        return await _aiCreateIndexRepository.GetAsync(id);
+        var mustQuery = new List<Func<QueryContainerDescriptor<AiCreateIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Term(i =>
+            i.Field(f => f.Address).Value(address)));
+        mustQuery.Add(q => q.Term(i =>
+            i.Field(f => f.TransactionId).Value(transactionId)));
+
+        QueryContainer Filter(QueryContainerDescriptor<AiCreateIndex> f) =>
+            f.Bool(b => b.Must(mustQuery));
+
+        var tuple = await _aiCreateIndexRepository.GetListAsync(Filter, skip: CommonConstant.IntZero,
+            limit: CommonConstant.IntOne);
+
+        if (tuple == null || tuple.Item2.IsNullOrEmpty())
+        {
+            return null;
+        }
+
+        return tuple.Item2[CommonConstant.IntZero];
     }
 }

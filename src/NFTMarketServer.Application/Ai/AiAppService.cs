@@ -709,7 +709,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var address = await _userAppService.GetCurrentUserAddressAsync();
 
         var aiCreateIndex =
-            await _aiArtProvider.GetAiCreateIndexById(IdGenerateHelper.GetAiCreateId(input.TransactionId, address));
+            await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
         if (aiCreateIndex == null)
         {
             _logger.LogError(

@@ -12,5 +12,5 @@ public interface IAIArtProvider
 
     Task<Tuple<long, List<AiCreateIndex>>> GetFailAiCreateIndexListAsync(string address, QueryAiArtFailInput input);
 
-    Task<AiCreateIndex> GetAiCreateIndexById(string id);
+    Task<AiCreateIndex> GetAiCreateIndexByTransactionId(string transactionId, string address);
 }
