@@ -715,63 +715,59 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var timeout = TimeSpan.FromSeconds(CommonConstant.IntThreeHundred);
         var lockName = CommonConstant.CreateAiArtRetryLockPrefix + input.TransactionId +
                        address;
-        var cancellationToken = CancellationToken.None;
-        await using (var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout, cancellationToken))
+        await using var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout);
+        if (lockHandle == null)
         {
-            if (lockHandle == null)
-            {
-                _logger.LogError(
-                    "CreateAiArtRetryAsync Another request is running. Please do not initiate duplicate requests. TransactionId={A} address={B}",
-                    input.TransactionId, address);
-                throw new SystemException("Another request is running. Please do not initiate duplicate requests");
-            }
-
-            try
-            {
-                var aiCreateIndex =
-                    await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
-                if (aiCreateIndex == null)
-                {
-                    _logger.LogError(
-                        "CreateAiArtRetryAsync The request parameter does not exist. TransactionId={A} address={B}",
-                        input.TransactionId, address);
-                    throw new InvalidParameterException("The request parameter does not exist. TransactionId=" +
-                                                        input.TransactionId);
-                }
-
-                if (aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
-                {
-                    _logger.LogError(
-                        "CreateAiArtRetryAsync Request has succeeded. Please do not initiate duplicate requests. TransactionId={A} address={B}",
-                        input.TransactionId, address);
-                    throw new InvalidParameterException(
-                        "Request has succeeded. Please do not initiate duplicate requests.");
-                }
-
-                var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
-                    aiCreateIndex, address);
-
-                return new PagedResultDto<CreateAiArtDto>()
-                {
-                    TotalCount = s3UrlDic.Count,
-                    Items = s3UrlDic
-                        .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
-                        .ToList()
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex,
-                    "CreateAiArtRetryAsync something is wrong. TransactionId={A} address={B}",
-                    input.TransactionId, address);
-                throw new SystemException("Something is wrong "+ex.Message);
-            }
-            finally
-            {
-                _logger.LogInformation("CreateAiArtRetryAsync Lock released. lockName = {A}",lockName);
-            }
+            _logger.LogError(
+                "CreateAiArtRetryAsync Another request is running. Please do not initiate duplicate requests. TransactionId={A} address={B}",
+                input.TransactionId, address);
+            throw new SystemException("Another request is running. Please do not initiate duplicate requests");
         }
 
+        try
+        {
+            var aiCreateIndex =
+                await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
+            if (aiCreateIndex == null)
+            {
+                _logger.LogError(
+                    "CreateAiArtRetryAsync The request parameter does not exist. TransactionId={A} address={B}",
+                    input.TransactionId, address);
+                throw new InvalidParameterException("The request parameter does not exist. TransactionId=" +
+                                                    input.TransactionId);
+            }
+
+            if (aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
+            {
+                _logger.LogError(
+                    "CreateAiArtRetryAsync Request has succeeded. Please do not initiate duplicate requests. TransactionId={A} address={B}",
+                    input.TransactionId, address);
+                throw new InvalidParameterException(
+                    "Request has succeeded. Please do not initiate duplicate requests.");
+            }
+
+            var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
+                aiCreateIndex, address);
+
+            return new PagedResultDto<CreateAiArtDto>()
+            {
+                TotalCount = s3UrlDic.Count,
+                Items = s3UrlDic
+                    .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
+                    .ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "CreateAiArtRetryAsync something is wrong. TransactionId={A} address={B}",
+                input.TransactionId, address);
+            throw new SystemException("Something is wrong "+ex.Message);
+        }
+        finally
+        {
+            _logger.LogInformation("CreateAiArtRetryAsync Lock released. lockName = {A}",lockName);
+        }
     }
 
     public async Task<PagedResultDto<AiArtFailDto>> QueryAiArtFailAsync(QueryAiArtFailInput input)
