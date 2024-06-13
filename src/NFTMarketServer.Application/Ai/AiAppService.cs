@@ -83,7 +83,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
     {
         var chainId = input.ChainId;
-        string transactionId;
+        var transactionId = "";
         var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
         CreateArtInput createArtInput;
         Transaction transaction;
@@ -101,7 +101,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "SendTransactionAsync error request={}", JsonConvert.SerializeObject(input));
+            _logger.LogError(e, "SendTransactionAsync error transactionId={A} request={B} rawTransaction={C}",
+                transactionId, JsonConvert.SerializeObject(input), input?.RawTransaction);
             throw new SystemException(e.Message);
         }
 
