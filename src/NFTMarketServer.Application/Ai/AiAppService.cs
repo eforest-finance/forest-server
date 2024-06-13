@@ -92,9 +92,12 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
-            _logger.LogInformation("CreateAiArtAsync chainId={A} createArtInput={B}", chainId,
-                JsonConvert.SerializeObject(createArtInput));
+            
             transactionId = await SendTransactionAsync(chainId, transaction);
+            _logger.LogInformation("CreateAiArtAsync chainId={A} transactionId={B} fromAddress={C} createArtInput={D}",
+                chainId,
+                transactionId, transaction.From.ToBase58(),
+                JsonConvert.SerializeObject(createArtInput));
             aiCreateIndex = BuildAiCreateIndex(transactionId, transaction.From.ToBase58(), createArtInput,
                 currentUserAddress);
             await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
@@ -131,8 +134,6 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
             createArtInput = TransferToCreateArtInput(transaction, chainId);
-            _logger.LogInformation("CreateAiArtAsyncV2 chainId={A} createArtInput={B}", chainId,
-                JsonConvert.SerializeObject(createArtInput));
             //Sensitive words check
             var wordCheckRes = await SensitiveWordCheckAsync(createArtInput.Promt, createArtInput.NegativePrompt);
             if (!wordCheckRes.Success)
@@ -148,6 +149,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }
             //send transaction
             transactionId = await SendTransactionAsync(chainId, transaction);
+            _logger.LogInformation("CreateAiArtAsyncV2 chainId={A} transactionId={B} fromAddress={C} createArtInput={D}",
+                chainId,
+                transactionId, transaction.From.ToBase58(),
+                JsonConvert.SerializeObject(createArtInput));
             if (!transactionId.IsNullOrEmpty())
             {
                 isCanRetry = true;
@@ -162,7 +167,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "SendTransactionAsync error request={}", JsonConvert.SerializeObject(input));
+            _logger.LogError(e, "CreateAiArtAsyncV2 error transactionId={A} request={B} rawTransaction={C}",
+                transactionId, JsonConvert.SerializeObject(input), input?.RawTransaction);
+
             return new ResultDto<CreateAiResultDto>()
             {
                 Success = false, Message = e.Message, Data = new CreateAiResultDto()
