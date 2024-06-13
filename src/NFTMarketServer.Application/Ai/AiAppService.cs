@@ -190,13 +190,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             {
                 CanRetry = false,
                 TransactionId = transactionId,
-                PagedResultDto = new PagedResultDto<CreateAiArtDto>()
-                {
-                    TotalCount = s3UrlDic.Count,
-                    Items = s3UrlDic
-                        .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
-                        .ToList()
-                }
+                TotalCount = s3UrlDic.Count,
+                itms = s3UrlDic
+                    .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
+                    .ToList()
             }
         };
     }
@@ -718,7 +715,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var timeout = TimeSpan.FromSeconds(CommonConstant.IntThreeHundred);
         var lockName = CommonConstant.CreateAiArtRetryLockPrefix + input.TransactionId +
                        address;
-        await using var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout);
+        var cancellationToken = CancellationToken.None;
+        await using var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout, cancellationToken);
         if (lockHandle == null)
         {
             _logger.LogError(
