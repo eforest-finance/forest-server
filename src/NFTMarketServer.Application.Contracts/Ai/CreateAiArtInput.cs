@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Volo.Abp.Application.Dtos;
 
@@ -15,7 +16,10 @@ public class CreateAiResultDto
 {
     public bool CanRetry { get; set; }
     public string TransactionId { get; set; }
-    public PagedResultDto<CreateAiArtDto> PagedResultDto{ get; set; }
+    
+    public int TotalCount{ get; set; }
+
+    public List<CreateAiArtDto> itms { get; set; }
 }
 
 

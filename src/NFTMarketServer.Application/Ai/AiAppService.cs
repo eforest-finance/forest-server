@@ -190,13 +190,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             {
                 CanRetry = false,
                 TransactionId = transactionId,
-                PagedResultDto = new PagedResultDto<CreateAiArtDto>()
-                {
-                    TotalCount = s3UrlDic.Count,
-                    Items = s3UrlDic
-                        .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
-                        .ToList()
-                }
+                TotalCount = s3UrlDic.Count,
+                itms = s3UrlDic
+                    .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
+                    .ToList()
             }
         };
     }
