@@ -715,7 +715,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var timeout = TimeSpan.FromSeconds(CommonConstant.IntThreeHundred);
         var lockName = CommonConstant.CreateAiArtRetryLockPrefix + input.TransactionId +
                        address;
-        await using var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout);
+        var cancellationToken = CancellationToken.None;
+        await using var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout, cancellationToken);
         if (lockHandle == null)
         {
             _logger.LogError(
