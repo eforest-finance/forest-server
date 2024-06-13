@@ -719,6 +719,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         try
         {
+            await Task.Delay(CommonConstant.IntOneThousand);
+
             var aiCreateIndex =
                 await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
             if (aiCreateIndex == null)
