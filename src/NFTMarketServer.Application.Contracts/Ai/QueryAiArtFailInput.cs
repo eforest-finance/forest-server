@@ -10,6 +10,7 @@ public class QueryAiArtFailInput : PagedAndSortedResultRequestDto
 
 public class AiArtFailDto
 {
+    public string Id { get; set; }
     public string Prompt { get; set; }
     public string NegativePrompt { get; set; }
     public string AiPaintingStyleType { get; set; }

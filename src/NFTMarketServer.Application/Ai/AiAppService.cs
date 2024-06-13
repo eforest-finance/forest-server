@@ -712,10 +712,16 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             await _aiArtProvider.GetAiCreateIndexById(IdGenerateHelper.GetAiCreateId(input.TransactionId, address));
         if (aiCreateIndex == null)
         {
+            _logger.LogError(
+                "CreateAiArtRetryAsync The request parameter does not exist. TransactionId={A} address={B}",
+                input.TransactionId, address);
             throw new InvalidParameterException("The request parameter does not exist. TransactionId=" + input.TransactionId);
         } 
         if(aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
         {
+            _logger.LogError(
+                "CreateAiArtRetryAsync Request has succeeded. Please do not initiate duplicate requests. TransactionId={A} address={B}",
+                input.TransactionId, address);
             throw new InvalidParameterException("Request has succeeded. Please do not initiate duplicate requests.");
         }
         
