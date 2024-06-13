@@ -1,4 +1,5 @@
 
+using System;
 using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Ai;
@@ -24,4 +25,7 @@ public class AiArtFailDto
     public string Result { get; set; }
     
     public string Address { get; set; }
+    
+    public DateTime Ctime { get; set; }
+    public DateTime Utime { get; set; }
 }

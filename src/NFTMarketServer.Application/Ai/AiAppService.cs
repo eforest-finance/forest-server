@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
@@ -25,6 +26,7 @@ using Orleans.Runtime;
 using Portkey.Contracts.CA;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.DistributedLocking;
 using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.Ai;
@@ -45,6 +47,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
     private readonly IOptionsMonitor<AIPromptsOptions> _aiPromptsOptions;
     private readonly IObjectMapper _objectMapper;
+    private IAbpDistributedLock _distributedLock;
     private const int PromotMaxLength = 500;
     private const int NegativePromotMaxLength = 400;
 
@@ -60,6 +63,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         IAIArtProvider aiArtProvider,
         IHttpService httpService,
         IObjectMapper objectMapper,
+        IAbpDistributedLock distributedLock,
         IOpenAiRedisTokenBucket openAiRedisTokenBucket,
         IOptionsMonitor<AIPromptsOptions> aiPromptsOptions
     )
@@ -77,7 +81,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _aiPromptsOptions = aiPromptsOptions;
         _httpService = httpService;
         _objectMapper = objectMapper;
-
+        _distributedLock = distributedLock;
     }
 
     public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
@@ -707,34 +711,66 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             throw new InvalidParameterException("The request parameter must not be null.");
         }
         var address = await _userAppService.GetCurrentUserAddressAsync();
+        var timeout = TimeSpan.FromSeconds(CommonConstant.IntThreeHundred);
+        var lockName = CommonConstant.CreateAiArtRetryLockPrefix + input.TransactionId +
+                       address;
+        var cancellationToken = CancellationToken.None;
+        await using (var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout, cancellationToken))
+        {
+            if (lockHandle == null)
+            {
+                _logger.LogError(
+                    "CreateAiArtRetryAsync Another request is running. Please do not initiate duplicate requests. TransactionId={A} address={B}",
+                    input.TransactionId, address);
+                throw new SystemException("Another request is running. Please do not initiate duplicate requests");
+            }
 
-        var aiCreateIndex =
-            await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
-        if (aiCreateIndex == null)
-        {
-            _logger.LogError(
-                "CreateAiArtRetryAsync The request parameter does not exist. TransactionId={A} address={B}",
-                input.TransactionId, address);
-            throw new InvalidParameterException("The request parameter does not exist. TransactionId=" + input.TransactionId);
-        } 
-        if(aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
-        {
-            _logger.LogError(
-                "CreateAiArtRetryAsync Request has succeeded. Please do not initiate duplicate requests. TransactionId={A} address={B}",
-                input.TransactionId, address);
-            throw new InvalidParameterException("Request has succeeded. Please do not initiate duplicate requests.");
+            try
+            {
+                var aiCreateIndex =
+                    await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
+                if (aiCreateIndex == null)
+                {
+                    _logger.LogError(
+                        "CreateAiArtRetryAsync The request parameter does not exist. TransactionId={A} address={B}",
+                        input.TransactionId, address);
+                    throw new InvalidParameterException("The request parameter does not exist. TransactionId=" +
+                                                        input.TransactionId);
+                }
+
+                if (aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
+                {
+                    _logger.LogError(
+                        "CreateAiArtRetryAsync Request has succeeded. Please do not initiate duplicate requests. TransactionId={A} address={B}",
+                        input.TransactionId, address);
+                    throw new InvalidParameterException(
+                        "Request has succeeded. Please do not initiate duplicate requests.");
+                }
+
+                var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
+                    aiCreateIndex, address);
+
+                return new PagedResultDto<CreateAiArtDto>()
+                {
+                    TotalCount = s3UrlDic.Count,
+                    Items = s3UrlDic
+                        .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
+                        .ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "CreateAiArtRetryAsync something is wrong. TransactionId={A} address={B}",
+                    input.TransactionId, address);
+                throw new SystemException("Something is wrong "+ex.Message);
+            }
+            finally
+            {
+                _logger.LogInformation("CreateAiArtRetryAsync Lock released. lockName = {A}",lockName);
+            }
         }
-        
-        var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
-            aiCreateIndex, address);
 
-        return new PagedResultDto<CreateAiArtDto>()
-        {
-            TotalCount = s3UrlDic.Count,
-            Items = s3UrlDic
-                .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"","") })
-                .ToList()
-        };
     }
 
     public async Task<PagedResultDto<AiArtFailDto>> QueryAiArtFailAsync(QueryAiArtFailInput input)
