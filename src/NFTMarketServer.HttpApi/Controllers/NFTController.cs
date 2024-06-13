@@ -49,7 +49,7 @@ namespace NFTMarketServer.Controllers
         [HttpPost]
         [Route("create-ai-arts/v2")]
         [Authorize]
-        public async Task<ResultDto<CreateAiResultDto>> CreateAiArtAsyncV2(CreateAiArtInput input)
+        public async Task<CreateAiResultDto> CreateAiArtAsyncV2(CreateAiArtInput input)
         {
             return await _aiAppService.CreateAiArtAsyncV2(input);
         }

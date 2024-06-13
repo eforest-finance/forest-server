@@ -20,6 +20,11 @@ public class CreateAiResultDto
     public int TotalCount{ get; set; }
 
     public List<CreateAiArtDto> itms { get; set; }
+    
+    public bool Success { get; set; }
+    
+    public string ErrorMsg { get; set; }
+
 }
 
 

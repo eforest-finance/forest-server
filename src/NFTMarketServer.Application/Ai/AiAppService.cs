@@ -124,7 +124,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 .ToList()
         };
     }
-    public async Task<ResultDto<CreateAiResultDto>> CreateAiArtAsyncV2(CreateAiArtInput input)
+    public async Task<CreateAiResultDto> CreateAiArtAsyncV2(CreateAiArtInput input)
     {
         var chainId = input.ChainId;
         string transactionId = null;
@@ -142,13 +142,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             var wordCheckRes = await SensitiveWordCheckAsync(createArtInput.Promt, createArtInput.NegativePrompt);
             if (!wordCheckRes.Success)
             {
-                return new ResultDto<CreateAiResultDto>()
+                return new CreateAiResultDto()
                 {
-                    Success = false, Message = wordCheckRes.Message,  Data =  new CreateAiResultDto()
-                    {
-                        CanRetry = isCanRetry,
-                        TransactionId = transactionId
-                    }
+                    CanRetry = isCanRetry,
+                    TransactionId = transactionId,
+                    Success = false, ErrorMsg = wordCheckRes.Message
                 };
             }
             //send transaction
@@ -174,27 +172,23 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             _logger.LogError(e, "CreateAiArtAsyncV2 error transactionId={A} request={B} rawTransaction={C}",
                 transactionId, JsonConvert.SerializeObject(input), input?.RawTransaction);
 
-            return new ResultDto<CreateAiResultDto>()
+            return new CreateAiResultDto()
             {
-                Success = false, Message = e.Message, Data = new CreateAiResultDto()
-                {
-                    CanRetry = isCanRetry,
-                    TransactionId = transactionId
-                }
+                CanRetry = isCanRetry,
+                TransactionId = transactionId,
+                Success = false, ErrorMsg = e.Message,
             };
         }
 
-        return new ResultDto<CreateAiResultDto>()
+        return new CreateAiResultDto()
         {
-            Success = true, Message = "", Data = new CreateAiResultDto()
-            {
-                CanRetry = false,
-                TransactionId = transactionId,
-                TotalCount = s3UrlDic.Count,
-                itms = s3UrlDic
-                    .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
-                    .ToList()
-            }
+            Success = true, ErrorMsg = "",
+            CanRetry = false,
+            TransactionId = transactionId,
+            TotalCount = s3UrlDic.Count,
+            itms = s3UrlDic
+                .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
+                .ToList()
         };
     }
 
