@@ -6,6 +6,7 @@ public class OpenAiOptions
 {
     public string ImagesUrlV1 { get; set; }
     public List<string> ApiKeyList { get; set; }
+    public List<string> ApiKeyListTmp { get; set; }
 
     public int DelayMaxTime { get; set; } = 0;
     public int DelayMillisecond { get; set; } = 0;

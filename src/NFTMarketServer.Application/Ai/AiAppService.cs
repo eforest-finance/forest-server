@@ -224,7 +224,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
        
         var openAiHeader = new Dictionary<string, string>
         {
-            [CommonConstant.Authorization] = CommonConstant.BearerToken + _openAiOptionsMonitor.CurrentValue.ApiKeyList.First()
+            //[CommonConstant.Authorization] = CommonConstant.BearerToken + _openAiOptionsMonitor.CurrentValue.ApiKeyList.First()
+            [CommonConstant.Authorization] = CommonConstant.BearerToken + _openAiOptionsMonitor.CurrentValue.ApiKeyListTmp.First()
+
         };
 
         var result = new OpenAiWordCheckResponse();
