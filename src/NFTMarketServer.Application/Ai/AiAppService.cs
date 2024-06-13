@@ -693,13 +693,21 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     {
         if (input == null || input.TransactionId.IsNullOrEmpty())
         {
-            throw new InvalidParameterException("request param must not be null");
+            throw new InvalidParameterException("The request parameter must not be null.");
         }
         var address = await _userAppService.GetCurrentUserAddressAsync();
 
         var aiCreateIndex =
             await _aiArtProvider.GetAiCreateIndexById(IdGenerateHelper.GetAiCreateId(input.TransactionId, address));
-
+        if (aiCreateIndex == null)
+        {
+            throw new InvalidParameterException("The request parameter does not exist. TransactionId=" + input.TransactionId);
+        } 
+        if(aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
+        {
+            throw new InvalidParameterException("Request has succeeded. Please do not initiate duplicate requests.");
+        }
+        
         var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
             aiCreateIndex, address);
 
