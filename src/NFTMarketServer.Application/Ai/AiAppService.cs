@@ -47,7 +47,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
     private readonly IOptionsMonitor<AIPromptsOptions> _aiPromptsOptions;
     private readonly IObjectMapper _objectMapper;
-    private IAbpDistributedLock _distributedLock;
+    private readonly IAbpDistributedLock _distributedLock;
     private const int PromotMaxLength = 500;
     private const int NegativePromotMaxLength = 400;
 
@@ -706,11 +706,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             throw new InvalidParameterException("The request parameter must not be null.");
         }
         var address = await _userAppService.GetCurrentUserAddressAsync();
-        var timeout = TimeSpan.FromSeconds(CommonConstant.IntThreeHundred);
         var lockName = CommonConstant.CreateAiArtRetryLockPrefix + input.TransactionId +
                        address;
-        var cancellationToken = CancellationToken.None;
-        await using var lockHandle = await _distributedLock.TryAcquireAsync(lockName, timeout, cancellationToken);
+        await using var lockHandle = await _distributedLock.TryAcquireAsync(lockName);
         if (lockHandle == null)
         {
             _logger.LogError(
