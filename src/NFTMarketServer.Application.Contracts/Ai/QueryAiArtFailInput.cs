@@ -22,4 +22,6 @@ public class AiArtFailDto
     public int RetryCount { get; set; }
     
     public string Result { get; set; }
+    
+    public string Address { get; set; }
 }
