@@ -460,7 +460,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         {
             aiCreateIndex.Result = openAiMsg.IsNullOrEmpty() ? (result?.Error?.Message) : openAiMsg;
             await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
-            _logger.LogError("Ai Image Generation Error {A}", JsonConvert.SerializeObject(aiCreateIndex.Result));
+            _logger.LogError("Ai Image Generation Error {A} transactionId={B} fromAddress={C}",
+                JsonConvert.SerializeObject(aiCreateIndex.Result), transactionId, fromAddress);
             throw new SystemException("Ai Image Generation Error. " + result?.Error?.Message);
         }
         else
