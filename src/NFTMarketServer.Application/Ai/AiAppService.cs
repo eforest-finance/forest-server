@@ -465,6 +465,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         if (result == null || result.Data.IsNullOrEmpty())
         {
             aiCreateIndex.Result = openAiMsg.IsNullOrEmpty() ? (result?.Error?.Message) : openAiMsg;
+            aiCreateIndex.Utime = DateTime.UtcNow;
             await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
             _logger.LogError("Ai Image Generation Error {A} transactionId={B} fromAddress={C}",
                 JsonConvert.SerializeObject(aiCreateIndex.Result), transactionId, fromAddress);
@@ -473,6 +474,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         else
         {
             aiCreateIndex.Status = AiCreateStatus.IMAGECREATED;
+            aiCreateIndex.Utime = DateTime.UtcNow;
             await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
         }
         
@@ -507,6 +509,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             catch (Exception e)
             {
                 aiCreateIndex.Result = e.Message;
+                aiCreateIndex.Utime = DateTime.UtcNow;
                 await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
                 _logger.LogError(e, "s3 upload error openAiImageGeneration={A}", openAiImageGeneration.Url);
                 throw new SystemException("s3 upload error", e);
@@ -515,6 +518,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         
         await _aIImageIndexRepository.BulkAddOrUpdateAsync(addList);
         aiCreateIndex.Status = AiCreateStatus.UPLOADS3;
+        aiCreateIndex.Utime = DateTime.UtcNow;
         await _aiCreateIndexRepository.UpdateAsync(aiCreateIndex);
         return s3UrlDic;
     }
