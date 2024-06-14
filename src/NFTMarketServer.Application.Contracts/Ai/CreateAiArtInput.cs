@@ -19,7 +19,7 @@ public class CreateAiResultDto
     
     public int TotalCount{ get; set; }
 
-    public List<CreateAiArtDto> items { get; set; }
+    public List<CreateAiArtDto> Items { get; set; }
     
     public bool Success { get; set; }
     
