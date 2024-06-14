@@ -126,6 +126,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     }
     public async Task<CreateAiResultDto> CreateAiArtAsyncV2(CreateAiArtInput input)
     {
+        
         var chainId = input.ChainId;
         string transactionId = null;
         var isCanRetry = false;
