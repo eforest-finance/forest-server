@@ -757,7 +757,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             _logger.LogError(ex,
                 "CreateAiArtRetryAsync something is wrong. TransactionId={A} address={B}",
                 input.TransactionId, address);
-            throw new SystemException("Something is wrong "+ex.Message);
+            throw new SystemException("Something is wrong : "+ex.Message);
         }
         finally
         {
