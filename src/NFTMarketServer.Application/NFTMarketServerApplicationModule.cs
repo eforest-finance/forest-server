@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using AElf.Whitelist;
 using Castle.Core.Configuration;
+using Medallion.Threading;
+using Medallion.Threading.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NFTMarketServer.Bid;
@@ -114,6 +116,7 @@ namespace NFTMarketServer
             Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
             
             ConfigureTokenBucketService(context, configuration);
+            ConfigureDistributedLocking(context, configuration);
         }
         
         private static void ConfigureTokenBucketService(
@@ -126,6 +129,18 @@ namespace NFTMarketServer
                 var database = connection.GetDatabase();
                 return new OpenAiRedisTokenBucket(database, "openAiTokenBucket",
                     configuration.GetSection("OpenAi").GetSection("ApiKeyList").Get<string[]>().Length-1);
+            });
+        }
+        
+        private static void ConfigureDistributedLocking(
+            ServiceConfigurationContext context,
+            IConfiguration configuration)
+        {
+            context.Services.AddSingleton<IDistributedLockProvider>(sp =>
+            {
+                var connection = ConnectionMultiplexer
+                    .Connect(configuration["Redis:Configuration"]);
+                return new RedisDistributedSynchronizationProvider(connection.GetDatabase());
             });
         }
     }
