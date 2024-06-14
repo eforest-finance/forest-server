@@ -280,7 +280,7 @@ namespace NFTMarketServer.NFT
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Something is wrong : {Message}", e.Message);
+                _logger.LogError(e, "Something is wrong {Message}", e.Message);
             }
 
             return await MapForCompositeNftInfoIndexDtoPage(result);

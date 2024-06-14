@@ -4,8 +4,6 @@ using AElf;
 using AutoMapper;
 using NFTMarketServer.Activity;
 using NFTMarketServer.Activity.Index;
-using NFTMarketServer.Ai;
-using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.BId.Index;
@@ -82,14 +80,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
         CreateMap<NFTInfoIndex, NFTInfoNewIndex>();
-        CreateMap<AiCreateIndex, AiArtFailDto>().ForMember(des => des.AiPaintingStyleType,
-                opt => opt.MapFrom(source => source.PaintingStyle.ToEnumString()))
-            .ForMember(des => des.NegativePrompt, opt => opt.MapFrom(source => source.NegativePrompt))
-            .ForMember(des => des.Number, opt => opt.MapFrom(source => source.Number))
-            .ForMember(des => des.Prompt, opt => opt.MapFrom(source => source.Promt))
-            .ForMember(des => des.Quality, opt => opt.MapFrom(source => source.Quality.ToEnumString()))
-            .ForMember(des => des.TransactionId, opt => opt.MapFrom(source => source.TransactionId))
-            .ForMember(des => des.Size, opt => opt.MapFrom(source => source.Size.ToEnumString()));
         CreateMap<AttributeDictionary, ExternalInfoDictionary>()
             .ForMember(des => des.Key, opt => opt.MapFrom(source => source.TraitType));
         CreateMap<NFTInfoNewIndex, NFTInfoIndex>();
