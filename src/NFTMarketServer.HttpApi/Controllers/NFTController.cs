@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Ai;
-using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Models;
 using NFTMarketServer.NFT;
 using Volo.Abp;
@@ -45,6 +44,30 @@ namespace NFTMarketServer.Controllers
         public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
         {
             return await _aiAppService.CreateAiArtAsync(input);
+        }
+        
+        [HttpPost]
+        [Route("create-ai-arts/v2")]
+        [Authorize]
+        public async Task<CreateAiResultDto> CreateAiArtAsyncV2(CreateAiArtInput input)
+        {
+            return await _aiAppService.CreateAiArtAsyncV2(input);
+        }
+        
+        [HttpGet]
+        [Route("create-ai-arts-retry")]
+        [Authorize]
+        public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtRetryAsync(CreateAiArtRetryInput input)
+        {
+            return await _aiAppService.CreateAiArtRetryAsync(input);
+        }
+        
+        [HttpPost]
+        [Route("ai-arts-fail")]
+        [Authorize]
+        public async Task<PagedResultDto<AiArtFailDto>> CreateAiArtFailAsync(QueryAiArtFailInput input)
+        {
+            return await _aiAppService.QueryAiArtFailAsync(input);
         }
         
         [HttpPost]
