@@ -82,6 +82,7 @@ namespace NFTMarketServer.NFT
         
         private readonly IOptionsMonitor<RecommendHotNFTOptions> _recommendHotNFTOptionsMonitor;
         private readonly IOptionsMonitor<ChainOptions> _chainOptionsMonitor;
+
         private readonly IUserBalanceProvider _userBalanceProvider;
         private readonly ISchrodingerInfoProvider _schrodingerInfoProvider;
         private readonly string _defaultMainChain = "AELF";
@@ -279,7 +280,7 @@ namespace NFTMarketServer.NFT
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Something is wrong {Message}", e.Message);
+                _logger.LogError(e, "Something is wrong : {Message}", e.Message);
             }
 
             return await MapForCompositeNftInfoIndexDtoPage(result);
