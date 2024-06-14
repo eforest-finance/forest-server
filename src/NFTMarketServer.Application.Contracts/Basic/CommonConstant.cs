@@ -12,7 +12,6 @@ public static class CommonConstant
     public const int IntNegativeOne = -1;
     public const int IntTen = 10;
     public const int IntOneThousand = 1000;
-    public const int IntThreeHundred = 300;
     public const int RecentSearchNumber = 30000;
     public const long LongOne = 1;
     public const int IntError = -1;
@@ -56,7 +55,6 @@ public static class CommonConstant
     public const string ImagePNG = ".png";
     public const string MethodManagerForwardCall = "ManagerForwardCall";
     public const string MethodCreateArt = "CreateArt";
-    public const string CreateAiArtRetryLockPrefix = "CreateAiArtRetryLockPrefix";
     
     public const int CacheExpirationMinutes = 60*24;
     public const int BeginHeight = 1;
