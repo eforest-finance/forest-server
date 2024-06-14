@@ -144,6 +144,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             {
                 return new CreateAiResultDto()
                 {
+                    IsSensitive = true,
                     CanRetry = isCanRetry,
                     TransactionId = transactionId,
                     Success = false, ErrorMsg = wordCheckRes.Message

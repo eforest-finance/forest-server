@@ -24,6 +24,8 @@ public class CreateAiResultDto
     public bool Success { get; set; }
     
     public string ErrorMsg { get; set; }
+    
+    public bool IsSensitive{ get; set; }
 
 }
 
