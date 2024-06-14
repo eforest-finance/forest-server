@@ -59,7 +59,7 @@ public class IAiAppServiceTest : NFTMarketServerApplicationTestBase
         };
         var result = await _aiAppService.CreateAiArtAsyncV2(input);
         var a = JsonConvert.SerializeObject(result);
-        var canRetry = result.Data.CanRetry;
+        var canRetry = result.CanRetry;
     }
     
     private static ISymbolIconAppService MockISymbolIconAppService(){
