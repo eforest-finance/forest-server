@@ -24,4 +24,22 @@ public static class EnumHelper
 
         throw new ArgumentException($"No matching enum value found for "+nameof(value)+" . EnumType:"+typeof(TEnum).Name);
     }
+    
+    public static string ToEnumString<TEnum>(this TEnum enumValue) where TEnum : struct, Enum
+    {
+        var field = typeof(TEnum).GetField(enumValue.ToString());
+        if (field != null)
+        {
+            if (Attribute.GetCustomAttribute(field, typeof(EnumMemberAttribute)) is EnumMemberAttribute attribute)
+            {
+                return attribute.Value;
+            }
+            else
+            {
+                return field.Name;
+            }
+        }
+
+        throw new ArgumentException($"No matching string value found for enum {nameof(enumValue)}. EnumType: {typeof(TEnum).Name}");
+    }
 }
