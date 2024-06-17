@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using AElf.Indexing.Elasticsearch;
 using Nest;
+using NFTMarketServer.Entities;
+using Volo.Abp.Domain.Entities;
 
 namespace NFTMarketServer.Message;
 
-public class MessageInfoIndex : IIndexBuild
+public class MessageInfoIndex :  NFTMarketEntity<string>, IIndexBuild
 {
     [Keyword] public string Id { get; set; }
     [Keyword] public string Address { get; set; }
-    public int status { get; set; }
+    public int Status { get; set; }
     public BusinessType BusinessType { get; set; }
     public SecondLevelType SecondLevelType { get; set; }
     [Keyword] public string Title { get; set; }

@@ -7,6 +7,7 @@ using NFTMarketServer.Message;
 using NFTMarketServer.Users;
 using NFTMarketServer.Users.Dto;
 using Volo.Abp;
+using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Controllers
 {
@@ -26,9 +27,9 @@ namespace NFTMarketServer.Controllers
         [HttpGet]
         [Route("list")]
         [Authorize]
-        public Task<List<MessageInfoDto>> GetMessageListAsync()
+        public Task<PagedResultDto<MessageInfoDto>> GetMessageListAsync(QueryMessageListInput input)
         {
-            return _messageService.GetMessageListAsync();
+            return _messageService.GetMessageListAsync(input);
         }
         
     }
