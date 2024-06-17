@@ -23,6 +23,7 @@ using NFTMarketServer.Grains.State.Dealer;
 using NFTMarketServer.Grains.State.Inscription;
 using NFTMarketServer.Inscription;
 using NFTMarketServer.Market;
+using NFTMarketServer.Message;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Dto;
 using NFTMarketServer.NFT.Dtos;
@@ -50,6 +51,7 @@ using NFTMarketServer.Users.Dto;
 using NFTMarketServer.Users.Eto;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.AutoMapper;
+using ExternalInfoDictionary = NFTMarketServer.Entities.ExternalInfoDictionary;
 
 namespace NFTMarketServer;
 
@@ -353,5 +355,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTDropInfoIndex, NFTDropQuotaDto>()
             .ForMember(destination => destination.AddressClaimLimit,
                 opt => opt.MapFrom(source => source.ClaimMax));
+        CreateMap<MessageInfoIndex, MessageInfoDto>();
     }
 }
