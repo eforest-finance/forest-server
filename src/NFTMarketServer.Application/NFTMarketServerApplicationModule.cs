@@ -21,6 +21,7 @@ using NFTMarketServer.Seed;
 using StackExchange.Redis;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.EventBus.RabbitMq;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
 using Volo.Abp.Modularity;
@@ -41,7 +42,8 @@ namespace NFTMarketServer
         typeof(AbpFeatureManagementApplicationModule),
         typeof(AbpSettingManagementApplicationModule),
         typeof(NFTMarketServerGrainsModule),
-        typeof(AElfWhitelistApplicationModule)
+        typeof(AElfWhitelistApplicationModule),
+        typeof(AbpEventBusRabbitMqModule) 
     )]
     public class NFTMarketServerApplicationModule : AbpModule
     {
@@ -105,6 +107,7 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, NFTOfferChangeScheduleService>();
 
             context.Services.AddTransient<IScheduleSyncDataService, InscriptionCrossChainScheduleService>();
+            context.Services.AddTransient<IScheduleSyncDataService, NFTActivityMessageScheduleService>();
 
             Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
             Configure<AwsS3Option>(configuration.GetSection("AwsS3"));
