@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ namespace NFTMarketServer.Controllers
         [HttpGet]
         [Route("list")]
         [Authorize]
-        public Task<MessageInfoDto> GetMessageListAsync()
+        public Task<List<MessageInfoDto>> GetMessageListAsync()
         {
             return _messageService.GetMessageListAsync();
         }
