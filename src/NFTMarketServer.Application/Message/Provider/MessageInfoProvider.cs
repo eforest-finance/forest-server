@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Nest;
 using Newtonsoft.Json;
 using NFTMarketServer.Basic;
+using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Dtos;
@@ -87,7 +88,7 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
         {
             _logger.LogInformation("SaveOrUpdateMessageInfoAsync messageInfo={A}",
                 JsonConvert.SerializeObject(messageInfo));
-            //if (TimeHelper.IsWithin30MinutesUtc(messageInfo.Ctime))
+            if (TimeHelper.IsWithin30MinutesUtc(messageInfo.Ctime))
             {
                 await _bus.Publish(new NewIndexEvent<MessageChangeEto>
                 {

@@ -36,15 +36,14 @@ public class NewMessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>
                 _logger.LogError("MessageChangeHandler param is null");
                 return;
             }
-
-            _logger.LogInformation(
-                "MessageChangeHandler: {groupName}, address:{Bidder},nftInfoId:{NFTInfoId}, chainid:{ChainId} start time {time}",
-                _marketHubGroupProvider.QueryMethodNameForReceiveMessageChangeSignal()
-                , eventData.Message.Data.Address, DateTime.Now.ToString());
-
-
             var groupName =
                 _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(eventData.Message.Data.Address);
+
+            _logger.LogInformation(
+                "MessageChangeHandler: {groupName}, address:{Bidder} start time {time}",
+                groupName
+                , eventData.Message.Data.Address, DateTime.Now.ToString());
+
             var signal = new ChangeSignalBaseDto
             {
                 HasChanged = true
