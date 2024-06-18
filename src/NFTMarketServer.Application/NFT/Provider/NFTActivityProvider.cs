@@ -110,7 +110,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var graphQLResponse = await _graphQlHelper.QueryAsync<NFTActivityIndex>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int]) {
+			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int!]) {
                     data:messageActivityList(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types}){
                         totalRecordCount,
                         indexerNftactivity:data{
