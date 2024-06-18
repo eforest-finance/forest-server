@@ -77,7 +77,7 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
         if (messageInfoList.IsNullOrEmpty())
         {
             _logger.LogError("SaveOrUpdateMessageInfoAsync messageInfoList is null nftMessageActivityDto={A}",
-                nftMessageActivityDto);
+                JsonConvert.SerializeObject(nftMessageActivityDto));
             return;
         }
 
