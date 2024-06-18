@@ -8,7 +8,7 @@ namespace NFTMarketServer.Message;
 
 public class MessageInfoIndex :  NFTMarketEntity<string>, IIndexBuild
 {
-    [Keyword] public string Id { get; set; }
+    [Keyword] public override string Id { get; set; }
     [Keyword] public string Address { get; set; }
     public int Status { get; set; }
     public BusinessType BusinessType { get; set; }
