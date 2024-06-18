@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 using Nest;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
-using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Dtos;
@@ -22,18 +23,21 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
     private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
     private readonly IBus _bus;
+    private readonly ILogger<MessageInfoProvider> _logger;
 
     public MessageInfoProvider(
         INESTRepository<MessageInfoIndex, string> messageInfoIndexRepository,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
-        IBus bus
+        IBus bus,
+        ILogger<MessageInfoProvider> logger
         )
     {
         _messageInfoIndexRepository = messageInfoIndexRepository;
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
         _bus = bus;
+        _logger = logger;
     }
     public async Task<Tuple<long, List<MessageInfoIndex>>> GetUserMessageInfosAsync(string address, QueryMessageListInput input)
     {
@@ -65,12 +69,15 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
     {
         if (nftMessageActivityDto == null)
         {
+            _logger.LogError("SaveOrUpdateMessageInfoAsync messageInfo is null");
             return;
         }
 
         var messageInfoList = await BuildMessageInfoIndexListAsync(nftMessageActivityDto);
         if (messageInfoList.IsNullOrEmpty())
         {
+            _logger.LogError("SaveOrUpdateMessageInfoAsync messageInfoList is null nftMessageActivityDto={A}",
+                nftMessageActivityDto);
             return;
         }
 
@@ -78,7 +85,8 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
 
         foreach (var messageInfo in messageInfoList)
         {
-            if(messageInfo == null || messageInfo.Address.IsNullOrEmpty()) continue;
+            _logger.LogInformation("SaveOrUpdateMessageInfoAsync messageInfo={A}",
+                JsonConvert.SerializeObject(messageInfo));
             //if (TimeHelper.IsWithin30MinutesUtc(messageInfo.Ctime))
             {
                 await _bus.Publish(new NewIndexEvent<MessageChangeEto>

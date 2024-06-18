@@ -30,6 +30,7 @@ public class MessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>>, 
     {
         try
         {
+            _logger.LogInformation("MessageChangeHandler eventData={A}", JsonConvert.SerializeObject(eventData));
             if (eventData == null || eventData.Message.Data.Address.IsNullOrEmpty())
             {
                 _logger.LogError("MessageChangeHandler param is null");
