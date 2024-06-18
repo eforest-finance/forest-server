@@ -72,6 +72,7 @@ namespace NFTMarketServer
                 x.AddConsumer<NewBidInfoHandler>();
                 x.AddConsumer<NewOfferChangeHandler>();
                 x.AddConsumer<NFTListingChangeHandler>();
+                x.AddConsumer<MessageChangeHandler>();
                 x.UsingRabbitMq((ctx, cfg) =>
                 {
                     var rabbitMqConfig = configuration.GetSection("MassTransit:RabbitMQ").Get<RabbitMqOptions>();
@@ -94,6 +95,7 @@ namespace NFTMarketServer
                         e.ConfigureConsumer<NewBidInfoHandler>(ctx);
                         e.ConfigureConsumer<NewOfferChangeHandler>(ctx);
                         e.ConfigureConsumer<NFTListingChangeHandler>(ctx);
+                        e.ConfigureConsumer<MessageChangeHandler>(ctx);
                     });
                 });
     
