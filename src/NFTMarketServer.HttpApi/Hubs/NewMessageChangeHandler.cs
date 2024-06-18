@@ -10,16 +10,16 @@ using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.Hubs;
 
-public class MessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>>, ITransientDependency
+public class NewMessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>>, ITransientDependency
 {
-    private readonly ILogger<MessageChangeHandler> _logger;
+    private readonly ILogger<NewMessageChangeHandler> _logger;
     private readonly IHubContext<MarketHub> _hubContext;
     private readonly IMarketHubGroupProvider _marketHubGroupProvider;
 
-    public MessageChangeHandler(
+    public NewMessageChangeHandler(
         IHubContext<MarketHub> hubContext,
         IMarketHubGroupProvider marketHubGroupProvider,
-        ILogger<MessageChangeHandler> logger)
+        ILogger<NewMessageChangeHandler> logger)
     {
         _logger = logger;
         _hubContext = hubContext;
