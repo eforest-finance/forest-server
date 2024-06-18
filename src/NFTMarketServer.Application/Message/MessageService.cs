@@ -57,13 +57,16 @@ public class MessageService: NFTMarketServerAppService, IMessageService
                 Items = new List<MessageInfoDto>()
             };
         }
+
+        var resultMessageList = _objectMapper.Map<List<MessageInfoIndex>, List<MessageInfoDto>>(result.Item2);
+
         //update messge read
-        var resultMessageList = result.Item2;
         await BatchUpdateMessageToReadAsync(result.Item2);
+        
         return new PagedResultDto<MessageInfoDto>()
         {
             TotalCount = result.Item1,
-            Items = _objectMapper.Map<List<MessageInfoIndex>, List<MessageInfoDto>>(resultMessageList)
+            Items = resultMessageList
         };
     }
 
