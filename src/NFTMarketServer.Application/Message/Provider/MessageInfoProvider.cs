@@ -92,6 +92,11 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
         }
     }
 
+    public async Task BatchSaveOrUpdateMessageInfoAsync(List<MessageInfoIndex> messageInfoIndices)
+    {
+        await _messageInfoIndexRepository.BulkAddOrUpdateAsync(messageInfoIndices);
+    }
+
     private async Task<List<MessageInfoIndex>> BuildMessageInfoIndexListAsync(NFTMessageActivityDto activityDto)
     {
         var resultList = new List<MessageInfoIndex>();

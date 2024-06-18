@@ -10,4 +10,7 @@ public interface IMessageInfoProvider
     public Task<Tuple<long, List<MessageInfoIndex>>> GetUserMessageInfosAsync(string address, QueryMessageListInput input);
 
     public Task SaveOrUpdateMessageInfoAsync(NFTMessageActivityDto nftMessageActivityDto);
+    
+    public Task BatchSaveOrUpdateMessageInfoAsync(List<MessageInfoIndex> messageInfoIndices);
+
 }
