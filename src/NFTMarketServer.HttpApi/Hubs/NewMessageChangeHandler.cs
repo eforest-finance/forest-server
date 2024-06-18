@@ -30,17 +30,12 @@ public class NewMessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>
     {
         try
         {
-            _logger.LogInformation("MessageChangeHandler eventData={A}", JsonConvert.SerializeObject(eventData));
-            if (eventData == null || eventData.Message.Data.Address.IsNullOrEmpty())
-            {
-                _logger.LogError("MessageChangeHandler param is null");
-                return;
-            }
+            var address = eventData.Message.Data.Address;
             var groupName =
                 _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(eventData.Message.Data.Address);
 
-            _logger.LogInformation(
-                "MessageChangeHandler: {A}, address:{B}", groupName, eventData.Message.Data.Address);
+            _logger.LogDebug(
+                "MessageChangeHandler: groupName:{A}, address:{B}", groupName, address);
 
             var signal = new ChangeSignalBaseDto
             {
