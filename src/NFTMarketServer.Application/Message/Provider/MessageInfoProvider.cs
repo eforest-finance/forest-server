@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
+using MassTransit;
 using Nest;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
@@ -22,19 +23,19 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
     private readonly INESTRepository<MessageInfoIndex, string> _messageInfoIndexRepository;
     private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
-    private readonly IDistributedEventBus _distributedEventBus;
+    private readonly IBus _bus;
 
     public MessageInfoProvider(
         INESTRepository<MessageInfoIndex, string> messageInfoIndexRepository,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
-        IDistributedEventBus distributedEventBus
+        IBus bus
         )
     {
         _messageInfoIndexRepository = messageInfoIndexRepository;
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
-        _distributedEventBus = distributedEventBus;
+        _bus = bus;
     }
     public async Task<Tuple<long, List<MessageInfoIndex>>> GetUserMessageInfosAsync(string address, QueryMessageListInput input)
     {
@@ -82,9 +83,12 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
             if(messageInfo == null || messageInfo.Address.IsNullOrEmpty()) continue;
             if (TimeHelper.IsWithin30MinutesUtc(messageInfo.Ctime))
             {
-                await _distributedEventBus.PublishAsync(new MessageChangeEto
+                await _bus.Publish(new NewIndexEvent<MessageChangeEto>
                 {
-                    Address = messageInfo.Address
+                    Data = new MessageChangeEto
+                    {
+                        Address = messageInfo.Address
+                    }
                 });
             }
         }

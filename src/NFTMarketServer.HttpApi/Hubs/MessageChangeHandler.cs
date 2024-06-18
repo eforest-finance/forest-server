@@ -1,16 +1,16 @@
 using System;
 using System.Threading.Tasks;
+using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Eto;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.EventBus.Distributed;
 
 namespace NFTMarketServer.Hubs;
 
-public class MessageChangeHandler : IDistributedEventHandler<MessageChangeEto>, ISingletonDependency
+public class MessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>>, ITransientDependency
 {
     private readonly ILogger<MessageChangeHandler> _logger;
     private readonly IHubContext<MarketHub> _hubContext;
@@ -26,11 +26,11 @@ public class MessageChangeHandler : IDistributedEventHandler<MessageChangeEto>, 
         _marketHubGroupProvider = marketHubGroupProvider;
     }
 
-    public async Task HandleEventAsync(MessageChangeEto eventData)
+    public async Task Consume(ConsumeContext<NewIndexEvent<MessageChangeEto>> eventData)
     {
         try
         {
-            if (eventData == null || eventData.Address.IsNullOrEmpty())
+            if (eventData == null || eventData.Message.Data.Address.IsNullOrEmpty())
             {
                 _logger.LogError("MessageChangeHandler param is null");
                 return;
@@ -39,11 +39,11 @@ public class MessageChangeHandler : IDistributedEventHandler<MessageChangeEto>, 
             _logger.LogInformation(
                 "MessageChangeHandler: {groupName}, address:{Bidder},nftInfoId:{NFTInfoId}, chainid:{ChainId} start time {time}",
                 _marketHubGroupProvider.QueryMethodNameForReceiveMessageChangeSignal()
-                , eventData.Address, DateTime.Now.ToString());
+                , eventData.Message.Data.Address, DateTime.Now.ToString());
 
 
             var groupName =
-                _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(eventData.Address);
+                _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(eventData.Message.Data.Address);
             var signal = new ChangeSignalBaseDto
             {
                 HasChanged = true
