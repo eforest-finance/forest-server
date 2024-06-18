@@ -17,12 +17,12 @@ using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace NFTMarketServer.Ai;
 
-public class IAiAppServiceTest : NFTMarketServerApplicationTestBase
+public class MessageServiceTest : NFTMarketServerApplicationTestBase
 {
     private readonly IAiAppService _aiAppService;
-    public IAiAppServiceTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    public MessageServiceTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
     {
-        _aiAppService = GetRequiredService<IAiAppService>();
+        _aiAppService = GetRequiredService<IMessageService>();
     }
     
     protected override void AfterAddApplication(IServiceCollection services)
