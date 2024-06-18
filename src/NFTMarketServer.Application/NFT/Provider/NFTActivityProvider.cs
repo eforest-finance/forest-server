@@ -15,7 +15,7 @@ public interface INFTActivityProvider
     public Task<NFTActivityIndex> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
         List<int> types, int skipCount, int maxResultCount);
 
-    public Task<NFTActivityIndex> GetMessageActivityListAsync(List<NFTActivityType> types, int skipCount, long startBlockHeight);
+    public Task<NFTActivityIndex> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight);
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
@@ -105,13 +105,13 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         return graphQLResponse?.Data;
     }
 
-    public async Task<NFTActivityIndex> GetMessageActivityListAsync(List<NFTActivityType> types, int skipCount, long startBlockHeight)
+    public async Task<NFTActivityIndex> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight)
     {
         var graphQLResponse = await _graphQlHelper.QueryAsync<NFTActivityIndex>(new GraphQLRequest
         {
             Query = @"
 			    query($skipCount:Int!,$blockHeight:Int!,$types:[Int]) {
-                    data:messageActivityList(i(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types}){
+                    data:messageActivityList(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types}){
                         totalRecordCount,
                         indexerNftactivity:data{
                                             id,
