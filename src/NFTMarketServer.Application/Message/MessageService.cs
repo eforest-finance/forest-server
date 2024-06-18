@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 using Volo.Abp.ObjectMapping;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Message.Provider;
 using NFTMarketServer.Users;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Message;
+[RemoteService(IsEnabled = false)]
 
 public class MessageService: NFTMarketServerAppService, IMessageService
 {
