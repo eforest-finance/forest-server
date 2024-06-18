@@ -9,9 +9,11 @@ using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Dtos;
+using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Seed.Index;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.EventBus.Distributed;
 
 namespace NFTMarketServer.Message.Provider;
 
@@ -20,16 +22,19 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
     private readonly INESTRepository<MessageInfoIndex, string> _messageInfoIndexRepository;
     private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
+    private readonly IDistributedEventBus _distributedEventBus;
 
     public MessageInfoProvider(
         INESTRepository<MessageInfoIndex, string> messageInfoIndexRepository,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
-        INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository
+        INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
+        IDistributedEventBus distributedEventBus
         )
     {
         _messageInfoIndexRepository = messageInfoIndexRepository;
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
+        _distributedEventBus = distributedEventBus;
     }
     public async Task<Tuple<long, List<MessageInfoIndex>>> GetUserMessageInfosAsync(string address, QueryMessageListInput input)
     {
@@ -71,6 +76,18 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
         }
 
         await _messageInfoIndexRepository.BulkAddOrUpdateAsync(messageInfoList);
+
+        foreach (var messageInfo in messageInfoList)
+        {
+            if(messageInfo == null || messageInfo.Address.IsNullOrEmpty()) continue;
+            if (TimeHelper.IsWithin30MinutesUtc(messageInfo.Ctime))
+            {
+                await _distributedEventBus.PublishAsync(new MessageChangeEto
+                {
+                    Address = messageInfo.Address
+                });
+            }
+        }
     }
 
     private async Task<List<MessageInfoIndex>> BuildMessageInfoIndexListAsync(NFTMessageActivityDto activityDto)
@@ -112,29 +129,7 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
             collectionName = nftInfoNewIndex.CollectionName;
             decimals = nftInfoNewIndex.Decimals;
 
-            image = nftInfoNewIndex.PreviewImage;
-            if (image.IsNullOrEmpty())
-            {
-                var nftImageUrl =
-                    nftInfoNewIndex.TraitPairsDictionary?.FirstOrDefault(o =>
-                        o.Key == CommonConstant.MetadataImageUrlKey);
-                image = nftImageUrl?.Value;
-            }
-
-            if (image.IsNullOrEmpty())
-            {
-                var nftImageUri =
-                    nftInfoNewIndex?.TraitPairsDictionary?.FirstOrDefault(o =>
-                        o.Key == CommonConstant.MetadataImageUriKey);
-                image = nftImageUri?.Value;
-            }
-
-            if (image.IsNullOrEmpty())
-            {
-                image = nftInfoNewIndex.ImageUrl;
-            }
-
-            image = FTHelper.BuildIpfsUrl(image);
+            image = SymbolHelper.BuildNFTImage(nftInfoNewIndex);
         }
         else
         {
@@ -152,69 +147,88 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
         switch (activityDto.Type)
         {
             case NFTActivityType.Sale:
-                resultList.Add(new MessageInfoIndex()
-                {
-                    Id =  fromId,
-                    Address = fromAddress,
-                    Status = 0,
-                    BusinessType = BusinessType.NOTIFICATIONS,
-                    SecondLevelType = SecondLevelType.SELL,
-                    Title = symbolName,
-                    Body = collectionName,
-                    Image = image,
-                    Decimal = decimals,
-                    PriceType = activityDto.PriceTokenInfo.Symbol,
-                    SinglePrice = activityDto.Price,
-                    TotalPrice = activityDto.Price * (activityDto.Amount / (decimal)Math.Pow(10, decimals)),
-                    BusinessId = activityDto.NFTInfoId,
-                    Amount = activityDto.Amount,
-                    Ctime = DateTime.UtcNow,
-                    Utime = DateTime.UtcNow
-                });
-                resultList.Add(new MessageInfoIndex()
-                {
-                    Id =  toId,
-                    Address = toAddress,
-                    Status = 0,
-                    BusinessType = BusinessType.NOTIFICATIONS,
-                    SecondLevelType = SecondLevelType.BUY,
-                    Title = symbolName,
-                    Body = collectionName,
-                    Image = image,
-                    Decimal = decimals,
-                    PriceType = activityDto.PriceTokenInfo.Symbol,
-                    SinglePrice = activityDto.Price,
-                    TotalPrice = activityDto.Price * (activityDto.Amount / (decimal)Math.Pow(10, decimals)),
-                    BusinessId = activityDto.NFTInfoId,
-                    Amount = activityDto.Amount,
-                    Ctime = DateTime.UtcNow,
-                    Utime = DateTime.UtcNow
-                });
+                resultList.Add(BuildSellMessageInfoIndex(fromId, fromAddress, symbolName,
+                    collectionName, image, decimals, activityDto));
+                resultList.Add(BuildBuyMessageInfoIndex(toId, toAddress, symbolName,
+                    collectionName, image, decimals, activityDto));
                 break;
             case NFTActivityType.MakeOffer:
-                resultList.Add(new MessageInfoIndex()
-                {
-                    Id =  toId,
-                    Address = toAddress,
-                    Status = 0,
-                    BusinessType = BusinessType.NOTIFICATIONS,
-                    SecondLevelType = SecondLevelType.RECEIVEOFFER,
-                    Title = symbolName,
-                    Body = collectionName,
-                    Image = image,
-                    Decimal = decimals,
-                    PriceType = activityDto.PriceTokenInfo.Symbol,
-                    SinglePrice = activityDto.Price,
-                    TotalPrice = activityDto.Price * (activityDto.Amount / (decimal)Math.Pow(10, decimals)),
-                    BusinessId = activityDto.NFTInfoId,
-                    Amount = activityDto.Amount,
-                    Ctime = DateTime.UtcNow,
-                    Utime = DateTime.UtcNow
-                });
+                resultList.Add(BuildReceiveOfferMessageInfoIndex(toId, toAddress, symbolName,
+                    collectionName, image, decimals, activityDto));
                 break;
             default:
                 break;
         }
         return resultList;
+    }
+
+    private MessageInfoIndex BuildSellMessageInfoIndex(string fromId, string fromAddress, string symbolName,
+        string collectionName, string image, int decimals, NFTMessageActivityDto activityDto)
+    {
+        return new MessageInfoIndex()
+        {
+            Id = fromId,
+            Address = fromAddress,
+            Status = 0,
+            BusinessType = BusinessType.NOTIFICATIONS,
+            SecondLevelType = SecondLevelType.SELL,
+            Title = symbolName,
+            Body = collectionName,
+            Image = image,
+            Decimal = decimals,
+            PriceType = activityDto.PriceTokenInfo.Symbol,
+            SinglePrice = activityDto.Price,
+            TotalPrice = activityDto.Price * (activityDto.Amount / (decimal)Math.Pow(10, decimals)),
+            BusinessId = activityDto.NFTInfoId,
+            Amount = activityDto.Amount,
+            Ctime = activityDto.Timestamp,
+            Utime = activityDto.Timestamp,
+        };
+    }
+    private MessageInfoIndex BuildBuyMessageInfoIndex(string toId, string toAddress, string symbolName,
+        string collectionName, string image, int decimals, NFTMessageActivityDto activityDto)
+    {
+        return new MessageInfoIndex()
+        {
+            Id =  toId,
+            Address = toAddress,
+            Status = 0,
+            BusinessType = BusinessType.NOTIFICATIONS,
+            SecondLevelType = SecondLevelType.BUY,
+            Title = symbolName,
+            Body = collectionName,
+            Image = image,
+            Decimal = decimals,
+            PriceType = activityDto.PriceTokenInfo.Symbol,
+            SinglePrice = activityDto.Price,
+            TotalPrice = activityDto.Price * (activityDto.Amount / (decimal)Math.Pow(10, decimals)),
+            BusinessId = activityDto.NFTInfoId,
+            Amount = activityDto.Amount,
+            Ctime = activityDto.Timestamp,
+            Utime = activityDto.Timestamp,
+        };
+    }
+    private MessageInfoIndex BuildReceiveOfferMessageInfoIndex(string toId, string toAddress, string symbolName,
+        string collectionName, string image, int decimals, NFTMessageActivityDto activityDto)
+    {
+        return new MessageInfoIndex()
+        {
+            Id =  toId,
+            Address = toAddress,
+            Status = 0,
+            BusinessType = BusinessType.NOTIFICATIONS,
+            SecondLevelType = SecondLevelType.RECEIVEOFFER,
+            Title = symbolName,
+            Body = collectionName,
+            Image = image,
+            Decimal = decimals,
+            PriceType = activityDto.PriceTokenInfo.Symbol,
+            SinglePrice = activityDto.Price,
+            TotalPrice = activityDto.Price * (activityDto.Amount / (decimal)Math.Pow(10, decimals)),
+            BusinessId = activityDto.NFTInfoId,
+            Amount = activityDto.Amount,
+            Ctime = activityDto.Timestamp,
+            Utime = activityDto.Timestamp,
+        };
     }
 }

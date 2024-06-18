@@ -90,6 +90,16 @@ public static class TimeHelper
     {
         return unixTimestampSeconds - 60 * 60 * intervalNumber;
     }
+    
+    public static bool IsWithin30MinutesUtc(DateTime utcTargetTime)
+    {
+        var currentUtcTime = DateTime.UtcNow;
+        
+        var timeSpan = currentUtcTime - utcTargetTime;
+        var minutesDifference = Math.Abs(timeSpan.TotalMinutes);
+        
+        return minutesDifference <= 30;
+    }
 
 
 }

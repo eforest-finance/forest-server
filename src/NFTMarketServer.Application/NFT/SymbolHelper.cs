@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
+using NFTMarketServer.NFT.Index;
 
 namespace NFTMarketServer.NFT;
 
@@ -133,5 +135,34 @@ public class SymbolHelper
         }
 
         return false;
+    }
+
+    public static string BuildNFTImage(NFTInfoNewIndex nftInfoNewIndex)
+    {
+        if (nftInfoNewIndex == null) return "";
+        var image = nftInfoNewIndex.PreviewImage;
+        if (image.IsNullOrEmpty())
+        {
+            var nftImageUrl =
+                nftInfoNewIndex.TraitPairsDictionary?.FirstOrDefault(o =>
+                    o.Key == CommonConstant.MetadataImageUrlKey);
+            image = nftImageUrl?.Value;
+        }
+
+        if (image.IsNullOrEmpty())
+        {
+            var nftImageUri =
+                nftInfoNewIndex?.TraitPairsDictionary?.FirstOrDefault(o =>
+                    o.Key == CommonConstant.MetadataImageUriKey);
+            image = nftImageUri?.Value;
+        }
+
+        if (image.IsNullOrEmpty())
+        {
+            image = nftInfoNewIndex.ImageUrl;
+        }
+
+        image = FTHelper.BuildIpfsUrl(image);
+        return image;
     }
 }
