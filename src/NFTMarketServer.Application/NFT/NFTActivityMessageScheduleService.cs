@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson.IO;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
 using NFTMarketServer.NFT.Dtos;
@@ -16,6 +18,7 @@ using Orleans.Runtime;
 using Volo.Abp.Caching;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
+using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace NFTMarketServer.NFT;
 
@@ -59,7 +62,8 @@ public class NFTActivityMessageScheduleService : ScheduleSyncDataService
         if (changePageInfo == null || changePageInfo.IndexerNftActivity.IsNullOrEmpty())
         {
             _logger.LogInformation(
-                "HandleNFTActivityMessageAsync no data");
+                "HandleNFTActivityMessageAsync no data skipCount={A} lastEndHeight={B} activityTypeList={C}", skipCount,
+                lastEndHeight, JsonConvert.SerializeObject(activityTypeList));
             return 0;
         }
         var processChangeOriginList = changePageInfo.IndexerNftActivity;
