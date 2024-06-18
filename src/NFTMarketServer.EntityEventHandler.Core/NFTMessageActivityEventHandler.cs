@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Message.Provider;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Etos;
 using Volo.Abp.Caching;
@@ -17,19 +18,23 @@ public class NFTMessageActivityEventHandler : IDistributedEventHandler<NFTMessag
     private readonly ILogger<NFTMessageActivityEventHandler> _logger;
     private readonly IDistributedCache<string> _distributedCacheForHeight;
     private readonly INFTInfoAppService _nftInfoAppService;
+    private readonly IMessageInfoProvider _messageInfoProvider;
 
     public NFTMessageActivityEventHandler(ILogger<NFTMessageActivityEventHandler> logger,
-        IDistributedCache<string> distributedCacheForHeight, INFTInfoAppService nftInfoAppService)
+        IDistributedCache<string> distributedCacheForHeight,
+        INFTInfoAppService nftInfoAppService,
+        IMessageInfoProvider messageInfoProvider)
     {
         _logger = logger;
         _distributedCacheForHeight = distributedCacheForHeight;
         _nftInfoAppService = nftInfoAppService;
+        _messageInfoProvider = messageInfoProvider;
     }
 
     public async Task HandleEventAsync(NFTMessageActivityEto etoData)
     {
         _logger.LogInformation("NFTMessageActivityEventHandler receive: {Data}", JsonConvert.SerializeObject(etoData));
-        if (etoData == null || etoData.NFTMessageActivityDto == null ||
+        if (etoData?.NFTMessageActivityDto == null ||
             etoData.NFTMessageActivityDto.Id.IsNullOrEmpty()) return;
 
         var dto = etoData.NFTMessageActivityDto;
@@ -45,7 +50,6 @@ public class NFTMessageActivityEventHandler : IDistributedEventHandler<NFTMessag
                 AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(ExpireSeconds)
             });
         
-        //todo
-
+        await _messageInfoProvider.SaveOrUpdateMessageInfoAsync(etoData.NFTMessageActivityDto);
     }
 }

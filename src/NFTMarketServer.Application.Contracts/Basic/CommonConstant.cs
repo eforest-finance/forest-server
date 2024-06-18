@@ -39,6 +39,7 @@ public static class CommonConstant
     public const int CollectionActivityNFTLimit = 1000;
     
     public const string CollectionTypeSeed = "seed";
+    public const string CollectionSeedName = "SEED";
     public const string CollectionTypeNFT = "nft";
     public const string FILE_TYPE_IMAGE = "image";
     public const string TokenExist = "Token already exists";

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using AElf.Indexing.Elasticsearch;
 using Nest;
 using NFTMarketServer.Entities;
-using Volo.Abp.Domain.Entities;
 
 namespace NFTMarketServer.Message;
 
@@ -19,10 +18,10 @@ public class MessageInfoIndex :  NFTMarketEntity<string>, IIndexBuild
     public string Image { get; set; }
     public int Decimal { get; set; }
     public string PriceType { get; set; }
-    public string SinglePrice { get; set; }
-    public string TotalPrice { get; set; }
+    public decimal SinglePrice { get; set; }
+    public decimal TotalPrice { get; set; }
     public string BusinessId{ get; set; }
-    public string Amount { get; set; }
+    public long Amount { get; set; }
     public string WebLink { get; set; } 
     public string AppLink { get; set; } 
     public DateTime Ctime { get; set; }
@@ -37,12 +36,12 @@ public enum BusinessType
     MARKETING,
     NOTIFICATIONS
 }
-//消息二级分类
+
 public enum SecondLevelType
 {
-    SOLD,
-    RECEIVEOFFER,
-    ACCEPTOFFER
+    SELL,
+    BUY,
+    RECEIVEOFFER
 }
 
 public abstract class ExternalInfoDictionary
