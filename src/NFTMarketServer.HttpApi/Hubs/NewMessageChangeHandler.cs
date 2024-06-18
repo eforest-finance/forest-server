@@ -40,9 +40,7 @@ public class NewMessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>
                 _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(eventData.Message.Data.Address);
 
             _logger.LogInformation(
-                "MessageChangeHandler: {groupName}, address:{Bidder} start time {time}",
-                groupName
-                , eventData.Message.Data.Address, DateTime.Now.ToString());
+                "MessageChangeHandler: {A}, address:{B}", groupName, eventData.Message.Data.Address);
 
             var signal = new ChangeSignalBaseDto
             {
