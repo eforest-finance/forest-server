@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using MassTransit;
@@ -14,7 +13,6 @@ using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Seed.Index;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.EventBus.Distributed;
 
 namespace NFTMarketServer.Message.Provider;
 
@@ -81,7 +79,7 @@ public class MessageInfoProvider : IMessageInfoProvider, ISingletonDependency
         foreach (var messageInfo in messageInfoList)
         {
             if(messageInfo == null || messageInfo.Address.IsNullOrEmpty()) continue;
-            if (TimeHelper.IsWithin30MinutesUtc(messageInfo.Ctime))
+            //if (TimeHelper.IsWithin30MinutesUtc(messageInfo.Ctime))
             {
                 await _bus.Publish(new NewIndexEvent<MessageChangeEto>
                 {
