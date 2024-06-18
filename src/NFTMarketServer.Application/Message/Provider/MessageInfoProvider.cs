@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Nest;
 using NFTMarketServer.Basic;
+using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.Message.Provider;
 
-public class MessageInfoProvider : IMessageInfoProvider
+public class MessageInfoProvider : IMessageInfoProvider,ISingletonDependency
 {
     private readonly INESTRepository<MessageInfoIndex, string> _messageInfoIndexRepository;
     public MessageInfoProvider(
