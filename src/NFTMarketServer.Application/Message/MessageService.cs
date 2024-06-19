@@ -47,7 +47,7 @@ public class MessageService: NFTMarketServerAppService, IMessageService
             };
         }
 
-        input.Status = CommonConstant.MessageUnReadStatus;
+        input.Status = CommonConstant.MessageAllStatus;
         var result = await _messageInfoProvider.GetUserMessageInfosAsync(currentUserAddress, input);
         if (result == null || result.Item1 <= CommonConstant.IntZero)
         {

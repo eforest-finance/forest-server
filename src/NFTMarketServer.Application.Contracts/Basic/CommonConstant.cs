@@ -68,6 +68,8 @@ public static class CommonConstant
     public const int Gen9 = 9;
     public const int MessageUnReadStatus = 0;
     public const int MessageReadStatus = 1;
+    public const int MessageAllStatus = -1;
+
 
 
 }
