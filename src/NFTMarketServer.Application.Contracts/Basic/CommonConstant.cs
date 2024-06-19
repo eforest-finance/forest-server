@@ -39,6 +39,7 @@ public static class CommonConstant
     public const int CollectionActivityNFTLimit = 1000;
     
     public const string CollectionTypeSeed = "seed";
+    public const string CollectionSeedName = "SEED";
     public const string CollectionTypeNFT = "nft";
     public const string FILE_TYPE_IMAGE = "image";
     public const string TokenExist = "Token already exists";
@@ -65,6 +66,10 @@ public static class CommonConstant
     public const long DefaultValueNone = -1;
     public const long OneDayBlockHeight = 172800;
     public const int Gen9 = 9;
+    public const int MessageUnReadStatus = 0;
+    public const int MessageReadStatus = 1;
+    public const int MessageAllStatus = -1;
+
 
 
 }

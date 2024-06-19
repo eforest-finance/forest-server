@@ -10,6 +10,7 @@ using NFTMarketServer.RabbitMq;
 using Volo.Abp.Account;
 using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.AspNetCore.SignalR;
+using Volo.Abp.EventBus.RabbitMq;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
 using Volo.Abp.Localization;
@@ -31,7 +32,8 @@ namespace NFTMarketServer
         typeof(AElfWhitelistHttpApiModule),
         typeof(AbpAspNetCoreMvcModule),
         typeof(AbpSettingManagementHttpApiModule),
-        typeof(AbpAspNetCoreSignalRModule)
+        typeof(AbpAspNetCoreSignalRModule),
+        typeof(AbpEventBusRabbitMqModule)
     )]
     public class NFTMarketServerHttpApiModule : AbpModule
     {
@@ -70,6 +72,7 @@ namespace NFTMarketServer
                 x.AddConsumer<NewBidInfoHandler>();
                 x.AddConsumer<NewOfferChangeHandler>();
                 x.AddConsumer<NFTListingChangeHandler>();
+                x.AddConsumer<NewMessageChangeHandler>();
                 x.UsingRabbitMq((ctx, cfg) =>
                 {
                     var rabbitMqConfig = configuration.GetSection("MassTransit:RabbitMQ").Get<RabbitMqOptions>();
@@ -92,6 +95,7 @@ namespace NFTMarketServer
                         e.ConfigureConsumer<NewBidInfoHandler>(ctx);
                         e.ConfigureConsumer<NewOfferChangeHandler>(ctx);
                         e.ConfigureConsumer<NFTListingChangeHandler>(ctx);
+                        e.ConfigureConsumer<NewMessageChangeHandler>(ctx);
                     });
                 });
     

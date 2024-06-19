@@ -42,4 +42,12 @@ public static class EnumHelper
 
         throw new ArgumentException($"No matching string value found for enum {nameof(enumValue)}. EnumType: {typeof(TEnum).Name}");
     }
+    
+    public static int GetIndex(this Enum value)
+    {
+        var enumType = value.GetType();
+        var name = Enum.GetName(enumType, value);
+        var names = Enum.GetNames(enumType);
+        return Array.IndexOf(names, name);
+    }
 }

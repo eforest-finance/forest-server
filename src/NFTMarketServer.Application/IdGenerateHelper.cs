@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using AElf;
+using NFTMarketServer.Helper;
 
 namespace NFTMarketServer;
 
@@ -105,6 +106,11 @@ public class IdGenerateHelper
         }
 
         return "";
+    }
+
+    public static string GetMessageActivityId(string bizId,string address)
+    {
+        return GetId(HashHelper.ComputeFrom(bizId).ToHex(), FullAddressHelper.ToShortAddress(address));
     }
     
     private static string TransferToHashStr(string str)
