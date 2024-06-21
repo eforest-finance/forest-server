@@ -4,6 +4,7 @@ using ImageMagick;
 using Microsoft.AspNetCore.SignalR;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Bid.Dtos;
+using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using Volo.Abp.AspNetCore.SignalR;
 
@@ -64,6 +65,37 @@ public class MarketHub  : AbpHub
         }
         await TryRemoveFromGroupAsync(Context.ConnectionId,
             _marketHubGroupProvider.QueryNameForReceiveListingChangeSignal(seedSymbol));
+    }
+    
+    public async Task RequestMessageChangeSignal(string address)
+    {
+        if (string.IsNullOrEmpty(address))
+        {
+            return;
+        }
+
+        address = FullAddressHelper.ToShortAddress(address);
+        
+        await Groups.AddToGroupAsync(Context.ConnectionId,
+            _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(address));
+        
+        var signal = new ChangeSignalBaseDto
+        {
+            HasChanged = false
+        };
+        await Clients.Caller.SendAsync(_marketHubGroupProvider.QueryMethodNameForReceiveMessageChangeSignal(), signal);
+    }
+
+    public async Task UnsubscribeMessageChangeSignal(string address)
+    {
+        if (string.IsNullOrEmpty(address))
+        {
+            return;
+        }
+
+        address = FullAddressHelper.ToShortAddress(address);
+        await TryRemoveFromGroupAsync(Context.ConnectionId,
+            _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(address));
     }
     
     public async Task UnsubscribeSymbolBidInfo(string seedSymbol)
