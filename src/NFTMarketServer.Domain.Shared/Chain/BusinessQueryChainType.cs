@@ -26,4 +26,5 @@ public enum BusinessQueryChainType
     NftOfferSync,
     InscriptionCrossChain,
     NFTActivityMessageSync,
+    NFTActivitySync
 }
