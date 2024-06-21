@@ -125,9 +125,9 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
             return;
         }
 
-        await _distributedEventBus.PublishAsync(new NFTActivityEto
+        await _distributedEventBus.PublishAsync(new NFTActivitySyncEto
         {
-            NFTMessageActivityDto = _objectMapper.Map<NFTActivityItem, NFTMessageActivityDto>(item)
+            NFTActivitySyncDto = _objectMapper.Map<NFTActivityItem, NFTActivitySyncDto>(item)
         });
     }
     

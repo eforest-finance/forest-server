@@ -84,6 +84,9 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTActivityItem, NFTMessageActivityDto>().ForMember(des => des.PriceTokenInfo,
             opt => opt.MapFrom(source => new NFTMarketServer.NFT.Dtos.TokenInfoDto
                 { Symbol = source.PriceTokenInfo.Symbol }));
+        CreateMap<NFTActivityItem, NFTActivitySyncDto>().ForMember(des => des.PriceTokenInfo,
+            opt => opt.MapFrom(source => new NFTMarketServer.NFT.Dtos.TokenInfoDto
+                { Symbol = source.PriceTokenInfo.Symbol }));
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
         CreateMap<NFTInfoIndex, NFTInfoNewIndex>();

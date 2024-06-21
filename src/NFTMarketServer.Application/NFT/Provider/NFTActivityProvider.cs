@@ -1,37 +1,44 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
+using Microsoft.Extensions.Logging;
 using NFTMarketServer.Common;
+using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Index;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.NFT.Provider;
 
-public interface INFTActivityProvider
+public partial interface INFTActivityProvider
 {
-    public Task<NFTActivityIndex> GetNFTActivityListAsync(string NFtInfoId, List<int> types, long timestampMin,
+    public Task<IndexerNFTActivityPage> GetNFTActivityListAsync(string NFtInfoId, List<int> types, long timestampMin,
         long timestampMax, int skipCount, int maxResultCount);
     
-    public Task<NFTActivityIndex> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
+    public Task<IndexerNFTActivityPage> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
         List<int> types, int skipCount, int maxResultCount);
 
-    public Task<NFTActivityIndex> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight);
+    public Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight);
+    
+    public Task SaveOrUpdateNFTActivityInfoAsync(NFTActivitySyncDto nftActivitySyncDto);
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 {
     private readonly IGraphQLHelper _graphQlHelper;
+    private readonly ILogger<NFTActivityProvider> _logger;
 
-    public NFTActivityProvider(IGraphQLHelper graphQlHelper)
+    public NFTActivityProvider(IGraphQLHelper graphQlHelper,
+        ILogger<NFTActivityProvider> logger)
     {
         _graphQlHelper = graphQlHelper;
+        _logger = logger;
     }
 
 
-    public async Task<NFTActivityIndex> GetNFTActivityListAsync(string NFtInfoId, List<int> types, long timestampMin,
+    public async Task<IndexerNFTActivityPage> GetNFTActivityListAsync(string NFtInfoId, List<int> types, long timestampMin,
         long timestampMax, int skipCount, int maxResultCount)
     {
-        var graphQLResponse = await _graphQlHelper.QueryAsync<NFTActivityIndex>(new GraphQLRequest
+        var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
 			    query($skipCount:Int!,$maxResultCount:Int!,$types:[Int!],$timestampMin:Long,$timestampMax:Long,$nFTInfoId:String) {
@@ -67,10 +74,10 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         return graphQLResponse?.Data;
     }
 
-    public async Task<NFTActivityIndex> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
+    public async Task<IndexerNFTActivityPage> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
         List<int> types, int skipCount, int maxResultCount)
     {
-        var graphQLResponse = await _graphQlHelper.QueryAsync<NFTActivityIndex>(new GraphQLRequest
+        var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
 			    query($skipCount:Int!,$maxResultCount:Int!,$collectionId:String!,$types:[Int!],$bizIdList:[String]) {
@@ -105,9 +112,9 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         return graphQLResponse?.Data;
     }
 
-    public async Task<NFTActivityIndex> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight)
+    public async Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight)
     {
-        var graphQLResponse = await _graphQlHelper.QueryAsync<NFTActivityIndex>(new GraphQLRequest
+        var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
 			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int!]) {
@@ -141,5 +148,11 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             }
         });
         return graphQLResponse?.Data;
+    }
+
+    public async Task SaveOrUpdateNFTActivityInfoAsync(NFTActivitySyncDto nftActivitySyncDto)
+    {
+        //todo
+        throw new System.NotImplementedException();
     }
 }

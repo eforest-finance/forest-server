@@ -32,7 +32,7 @@ public sealed partial class NFTActivityAppServiceTest : NFTMarketServerApplicati
                 It.IsAny<string>(),
                 It.IsAny<List<int>>(),
                 It.IsAny<long>(), It.IsAny<long>(), It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(new NFTActivityIndex()
+            .ReturnsAsync(new IndexerNFTActivityPage()
             {
                 TotalRecordCount = 1,
                 IndexerNftActivity = new List<NFTActivityItem>

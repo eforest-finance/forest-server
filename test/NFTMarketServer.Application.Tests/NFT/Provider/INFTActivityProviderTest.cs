@@ -39,11 +39,11 @@ public class INFTActivityProviderTest : NFTMarketServerApplicationTestBase
     {
         var mockIGraphQLHelper = new Mock<IGraphQLHelper>();
             
-        mockIGraphQLHelper.Setup(cals => cals.QueryAsync<NFTActivityIndex>(It.IsAny<GraphQLRequest>()))
-            .ReturnsAsync(new NFTActivityIndex
+        mockIGraphQLHelper.Setup(cals => cals.QueryAsync<IndexerNFTActivityPage>(It.IsAny<GraphQLRequest>()))
+            .ReturnsAsync(new IndexerNFTActivityPage
             {
                 TotalRecordCount = 1,
-                Data = new NFTActivityIndex()
+                Data = new IndexerNFTActivityPage()
                 {
                     TotalRecordCount = 1,
                     IndexerNftActivity = new List<NFTActivityItem>()
