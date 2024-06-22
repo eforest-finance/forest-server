@@ -139,6 +139,6 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
 
     public override BusinessQueryChainType GetBusinessType()
     {
-        return BusinessQueryChainType.NFTActivityMessageSync;
+        return BusinessQueryChainType.NFTActivitySync;
     }
 }

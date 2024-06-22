@@ -139,6 +139,6 @@ public class UserBalanceSyncScheduleService : ScheduleSyncDataService
 
     public override BusinessQueryChainType GetBusinessType()
     {
-        return BusinessQueryChainType.NFTActivityMessageSync;
+        return BusinessQueryChainType.UserBalanceSync;
     }
 }
