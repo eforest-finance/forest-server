@@ -6,6 +6,11 @@ namespace NFTMarketServer;
 
 public class IdGenerateHelper
 {
+    public static string GetCollectionRelationId(string collectionId, string address)
+    {
+        return GetId(collectionId, address);
+    }
+    
     public static string GetAIImageId(string transactionId, string address, int number)
     {
         return GetId(transactionId, address, number);
