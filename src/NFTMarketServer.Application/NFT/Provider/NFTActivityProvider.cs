@@ -41,6 +41,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
         INESTRepository<CollectionRelationIndex, string> collectionRelationIndexRepository,
+        INESTRepository<NFTActivityIndex, string> nftActivityIndexRepository,
         ILogger<NFTActivityProvider> logger)
     {
         _graphQlHelper = graphQlHelper;
@@ -48,6 +49,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
         _collectionRelationIndexRepository = collectionRelationIndexRepository;
+        _nftActivityIndexRepository = nftActivityIndexRepository;
     }
     
     public async Task<IndexerNFTActivityPage> GetNFTActivityListAsync(string NFtInfoId, List<int> types, long timestampMin,
