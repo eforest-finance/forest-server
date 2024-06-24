@@ -102,7 +102,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 opt => opt.MapFrom(source => source.CollectionName))
             .ForMember(des => des.NFTName,
                 opt => opt.MapFrom(source => source.NFTName))
-            .ForMember(des => des,
+            .ForMember(des => des.PreviewImage,
                 opt => opt.MapFrom(source => source.NFTImage));
         CreateMap<NFTActivityDto, CollectedCollectionActivitiesDto>();
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
