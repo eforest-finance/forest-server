@@ -94,7 +94,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 Decimals = source.PriceTokenInfo.Decimals
             }));
         CreateMap<TokenInfoDto, TokenInfoIndex>();
-        CreateMap<NFTActivityIndex, NFTActivityDto>().ForMember(
+        CreateMap<NFTActivityIndex, CollectedCollectionActivitiesDto>().ForMember(
             destination => destination.Timestamp,
             opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.Timestamp)));
         CreateMap<NFTActivityDto, CollectedCollectionActivitiesDto>();

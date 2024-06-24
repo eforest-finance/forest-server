@@ -386,7 +386,7 @@ namespace NFTMarketServer.NFT
         {
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
 
-            var nftActivityDtoPage = new PagedResultDto<NFTActivityDto>();
+            var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
             if (input.Traits.IsNullOrEmpty())
             {
                 nftActivityDtoPage = await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input);

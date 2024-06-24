@@ -10,5 +10,5 @@ public interface INFTActivityAppService
     
     Task<PagedResultDto<NFTActivityDto>> GetCollectionActivityListAsync(GetCollectionActivityListInput input);
     
-    Task<PagedResultDto<NFTActivityDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input);
+    Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input);
 }
