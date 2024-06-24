@@ -9,6 +9,7 @@ using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.NFT;
 
@@ -17,13 +18,16 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
 {
     private readonly IUserAppService _userAppService;
     private readonly INFTActivityProvider _nftActivityProvider;
+    private readonly IObjectMapper _objectMapper;
 
     public NFTActivityAppService(
         IUserAppService userAppService,
-        INFTActivityProvider nftActivityProvider)
+        INFTActivityProvider nftActivityProvider,
+        IObjectMapper objectMapper)
     {
         _userAppService = userAppService;
         _nftActivityProvider = nftActivityProvider;
+        _objectMapper = objectMapper;
     }
 
     public async Task<PagedResultDto<NFTActivityDto>> GetListAsync(GetActivitiesInput input)
@@ -143,7 +147,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
 
     private CollectedCollectionActivitiesDto Map(NFTActivityIndex index, Dictionary<string, AccountDto> accounts)
     {
-        var activityDto = ObjectMapper.Map<NFTActivityIndex, CollectedCollectionActivitiesDto>(index);
+        var activityDto = _objectMapper.Map<NFTActivityIndex, CollectedCollectionActivitiesDto>(index);
         if (index.PriceTokenInfo != null)
         {
             activityDto.PriceToken = new TokenDto
@@ -183,7 +187,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
 
     private NFTActivityDto Map(NFTActivityItem index, Dictionary<string, AccountDto> accounts)
     {
-        var activityDto = ObjectMapper.Map<NFTActivityItem, NFTActivityDto>(index);
+        var activityDto = _objectMapper.Map<NFTActivityItem, NFTActivityDto>(index);
         if (index.PriceTokenInfo != null)
         {
             activityDto.PriceToken = new TokenDto
