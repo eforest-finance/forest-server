@@ -296,14 +296,12 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         {
             return null;
         }
-
-        var shortAddress = FullAddressHelper.ToShortAddress(input.Address);
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
 
         if (!input.CollectionIdList.IsNullOrEmpty())
         {
             mustQuery.Add(q =>
-                q.Terms(i => i.Field(f => f.CollectionId).Terms(!input.CollectionIdList.IsNullOrEmpty())));
+                q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
         }
 
         if (!input.ChainList.IsNullOrEmpty())
@@ -313,8 +311,8 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         }
         var shouldQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
 
-        shouldQuery.Add(q => q.Terms(i => i.Field(f => f.From).Terms(shortAddress)));
-        shouldQuery.Add(q => q.Term(i => i.Field(f => f.To).Value(shortAddress)));
+        shouldQuery.Add(q => q.Terms(i => i.Field(f => f.From).Terms(input.Address)));
+        shouldQuery.Add(q => q.Term(i => i.Field(f => f.To).Value(input.Address)));
 
         if (shouldQuery.Any())
         {

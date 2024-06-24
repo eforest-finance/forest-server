@@ -108,9 +108,10 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
         };
     }
 
-    public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+    public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
+        GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds)
     {
-        var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input, null);
+        var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
         var list = nftActivityIndexTuple?.Item2;
         if (list.IsNullOrEmpty())
         {
