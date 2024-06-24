@@ -163,7 +163,8 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
                                               blockHash,
                                               blockHeight,
                                               previousBlockHash,
-                                              symbol
+                                              symbol,
+                                              decimals
                                             }
                          }
                     }

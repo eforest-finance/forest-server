@@ -141,7 +141,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
         };
     }
 
-    private NFTActivityDto Map(NFTActivityIndex index,Dictionary<string, AccountDto> accounts)
+    private NFTActivityDto Map(NFTActivityIndex index, Dictionary<string, AccountDto> accounts)
     {
         var activityDto = ObjectMapper.Map<NFTActivityIndex, NFTActivityDto>(index);
         if (index.PriceTokenInfo != null)
