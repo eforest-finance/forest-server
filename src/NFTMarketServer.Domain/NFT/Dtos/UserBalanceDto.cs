@@ -26,6 +26,8 @@ public class UserBalanceDto
     public string FullAddress { get; set; }
     public int Decimals { get; set; }
     public long BlockHeight { get; set; }
+    public string ChainId { get; set; }
+
 }
 
 public class UserBalanceIndexerListDto 
