@@ -25,5 +25,7 @@ public class UserBalanceIndex : NFTMarketEntity<string>, IIndexBuild
     [Keyword] public string CollectionId { get; set; }
     [Keyword] public string FullAddress { get; set; }
     public int Decimals { get; set; }
+    public long BlockHeight { get; set; }
+
 
 }
