@@ -389,7 +389,7 @@ namespace NFTMarketServer.NFT
             var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
             if (input.Traits.IsNullOrEmpty())
             {
-                nftActivityDtoPage = await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, null);
+                nftActivityDtoPage = await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, new List<string>());
             }
             else
             {
