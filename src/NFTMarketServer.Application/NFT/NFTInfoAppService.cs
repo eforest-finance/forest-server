@@ -380,6 +380,12 @@ namespace NFTMarketServer.NFT
 
         }
 
+        public async Task<PagedResultDto<CollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+        {
+            //todo
+            throw new NotImplementedException();
+        }
+
         public async Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync()
         {
             var resultList = new List<IndexerNFTInfo>();

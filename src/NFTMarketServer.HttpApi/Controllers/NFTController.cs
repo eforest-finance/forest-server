@@ -126,6 +126,13 @@ namespace NFTMarketServer.Controllers
             return _nftAppService.GetCollectionActivitiesAsync(input);
         }
         
+        [HttpPost]
+        [Route("collected-collection-activities")]
+        public Task<PagedResultDto<CollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+        {
+            return _nftAppService.GetCollectedCollectionActivitiesAsync(input);
+        }
+        
         [HttpGet]
         [Route("hot-nft-infos")]
         public Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync()
