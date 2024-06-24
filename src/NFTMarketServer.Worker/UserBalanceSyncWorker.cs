@@ -10,7 +10,7 @@ namespace NFTMarketServer.Worker;
 
 public class UserBalanceSyncWorker : NFTMarketServerWorkBase
 {
-    protected override BusinessQueryChainType BusinessType => BusinessQueryChainType.NFTActivitySync;
+    protected override BusinessQueryChainType BusinessType => BusinessQueryChainType.UserBalanceSync;
     
     public UserBalanceSyncWorker(ILogger<ScheduleSyncDataContext> logger, AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory, IScheduleSyncDataContext scheduleSyncDataContext, IOptionsMonitor<WorkerOptions> optionsMonitor) : base(logger, timer, serviceScopeFactory, scheduleSyncDataContext, optionsMonitor)
     {
