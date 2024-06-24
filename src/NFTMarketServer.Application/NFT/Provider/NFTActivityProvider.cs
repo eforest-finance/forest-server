@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using GraphQL;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Nest;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
@@ -12,6 +14,7 @@ using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Seed.Index;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
 using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
@@ -31,7 +34,7 @@ public partial interface INFTActivityProvider
     public Task SaveOrUpdateNFTActivityInfoAsync(NFTActivitySyncDto nftActivitySyncDto);
 
     public Task<Task<Tuple<long, List<NFTActivityIndex>>>> GetCollectedCollectionActivitiesAsync(
-        GetCollectedCollectionActivitiesInput input);
+        GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds);
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
@@ -147,6 +150,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
                     data:messageActivityList(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types}){
                         totalRecordCount,
                         indexerNftactivity:data{
+                                            chainId,
                                             id,
                                             nftInfoId,
                                             type,
@@ -223,8 +227,8 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 
         var from = FullAddressHelper.ToShortAddress(activityDto.From);
         var to = FullAddressHelper.ToShortAddress(activityDto.To);
-        var fullFromAddress = FullAddressHelper.ToShortAddress(activityDto.From);
-        var fullToAddress = FullAddressHelper.ToShortAddress(activityDto.To);
+        var fullFromAddress = FullAddressHelper.ToFullAddress(activityDto.From, activityDto.ChainId);
+        var fullToAddress = FullAddressHelper.ToFullAddress(activityDto.To, activityDto.ChainId);
 
         var collectionRelationIndexList = BuildCollectionRelationIndexList(collectionId, from, to);
         await _collectionRelationIndexRepository.BulkAddOrUpdateAsync(collectionRelationIndexList);
@@ -248,7 +252,8 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             NFTType = SymbolHelper.CheckSymbolIsCommonNFTInfoId(activityDto.NFTInfoId) ? NFTType.NFT : NFTType.Seed,
             NFTImage = image,
             ToNFTIssueFlag = to.Equals(issuer),
-            PriceTokenInfo = _objectMapper.Map<TokenInfoDto, TokenInfoIndex>(activityDto.PriceTokenInfo) 
+            PriceTokenInfo = _objectMapper.Map<TokenInfoDto, TokenInfoIndex>(activityDto.PriceTokenInfo),
+            ChainId = activityDto.ChainId
         };
         await _nftActivityIndexRepository.AddOrUpdateAsync(nftActivityIndex);
 
@@ -278,14 +283,47 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         {
             Id = IdGenerateHelper.GetCollectionRelationId(collectionId,to),
             CollectionId = collectionId,
-            Address = to
+            Address = to,
+            
         };
         collectionRelationList.Add(collectionRelationTo);
         return collectionRelationList;
     }
 
-    public async Task<Task<Tuple<long, List<NFTActivityIndex>>>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+    public async Task<Task<Tuple<long, List<NFTActivityIndex>>>> GetCollectedCollectionActivitiesAsync(
+        GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds)
     {
-        throw new NotImplementedException();
+        if (input == null || input.Address.IsNullOrEmpty())
+        {
+            return null;
+        }
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+        var mustNotQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+
+        if (!input.CollectionIdList.IsNullOrEmpty())
+        {
+            mustNotQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.CollectionId).Terms(!input.CollectionIdList.IsNullOrEmpty())));
+        }
+
+        if (!input.ChainList.IsNullOrEmpty())
+        {
+            mustNotQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.ChainId).Terms(input.ChainList)));
+        }
+        var shouldQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+
+        shouldQuery.Add(q => q.Terms(i => i.Field(f => f.From).Terms(input.Address)));
+        shouldQuery.Add(q => q.Term(i => i.Field(f => f.To).Value(input.Address)));
+        
+        if (shouldQuery.Any()){    mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));}
+
+        QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f)
+            => f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
+
+        var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
+            sortExp: item => item.Timestamp);
+
+        return null;
     }
 }

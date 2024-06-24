@@ -9,4 +9,5 @@ public class CollectionRelationIndex :  NFTMarketEntity<string>, IIndexBuild
     [Keyword] public override string Id { get; set; }
     [Keyword] public string CollectionId { get; set; }
     [Keyword] public string Address { get; set; }
+    
 }

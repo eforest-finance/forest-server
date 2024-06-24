@@ -106,7 +106,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
 
     public async Task<PagedResultDto<NFTActivityDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
     {
-        var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input);
+        var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input, null);
         var list = nftActivityIndexTuple?.Result?.Item2;
         if (list.IsNullOrEmpty())
         {
