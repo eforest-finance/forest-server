@@ -16,7 +16,7 @@ public interface IUserBalanceProvider
     
     Task<IndexerUserMatchedNftIds> GetUserMatchedNftIdsAsync(GetNFTInfosProfileInput input, bool isSeed);
     
-    public Task<IndexerUserBalance> QueryUserBalanceListAsync(QueryUserBalanceInput input);
+    public Task<UserBalanceIndexerListDto> QueryUserBalanceListAsync(QueryUserBalanceInput input);
 
 }
 
@@ -26,12 +26,18 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
     
     private readonly IGraphQLHelper _graphQlHelper;
     private readonly IObjectMapper _objectMapper;
+    private readonly IGraphQLClientFactory _graphQlClientFactory;
+    private const GraphQLClientEnum ClientType = GraphQLClientEnum.ForestClient;
+
 
     public UserBalanceProvider(IGraphQLHelper graphQlHelper,
-        IObjectMapper objectMapper)
+        IObjectMapper objectMapper,
+        IGraphQLClientFactory graphQlClientFactory)
     {
         _graphQlHelper = graphQlHelper;
         _objectMapper = objectMapper;
+        _graphQlClientFactory = graphQlClientFactory;
+
     }
     
     public async Task<IndexerNFTBalanceInfo> GetNFTBalanceInfoAsync(string nftInfoId)
@@ -102,33 +108,41 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var result = indexerCommonResult?.Data ?? new IndexerUserMatchedNftIds();
         return result;
     }
-    
-    public async Task<IndexerUserBalance> QueryUserBalanceListAsync(QueryUserBalanceInput input)
+
+    public async Task<UserBalanceIndexerListDto> QueryUserBalanceListAsync(QueryUserBalanceInput input)
     {
-        var indexerCommonResult =  await _graphQlHelper.QueryAsync<IndexerUserBalance>(new GraphQLRequest
+        var client = _graphQlClientFactory.GetClient(ClientType);
+
+        var indexerCommonResult = await client.SendQueryAsync<UserBalanceIndexerQuery>(new GraphQLRequest
         {
-            Query = @"query($skipCount: Int!
-\                    ,$blockHeight: Long!
-                ) {
-                data: queryUserBalanceList(input: {
-                skipCount: $skipCount
-                ,blockHeight: $blockHeight
-                }) {
-                        totalCount
-                        indexerUserBalances:data {
-                          id,
-                          address,
-                          amount
+            Query = 
+                @"query($skipCount: Int!,$blockHeight: Long!) {
+                    queryUserBalanceList(input: {
+                    skipCount: $skipCount
+                    ,blockHeight: $blockHeight
+                    }) {
+                        totalCount,
+                        data {
+                        id,
+                        chainId,
+                        blockHeight,
+                        address,
+                        amount,
+                        nFTInfoId,
+                        symbol,
+                        changeTime,
+                        listingPrice,
+                        listingTime
                         }
                     }
                 }",
             Variables = new
             {
                 skipCount = input.SkipCount,
-                blockHeith = input.BlockHeight,
+                blockHeight = input.BlockHeight
             }
         });
 
-        return indexerCommonResult?.Data;
+        return indexerCommonResult?.Data.QueryUserBalanceList;
     }
 }

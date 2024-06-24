@@ -9,7 +9,7 @@ public class UserBalanceDto
     public string Id { get; set; }
     
     //userAccount Address
-     public string Address { get; set; }
+    public string Address { get; set; }
     
     public long Amount { get; set; }
     
@@ -28,9 +28,14 @@ public class UserBalanceDto
     public long BlockHeight { get; set; }
 }
 
-public class IndexerUserBalance : IndexerCommonResult<IndexerUserBalance>
+public class UserBalanceIndexerListDto 
 {
     public long TotalCount { get; set; }
-    public List<UserBalanceDto> IndexerUserBalances { get; set; }
+    public List<UserBalanceDto> Data { get; set; }
+}
+
+public class UserBalanceIndexerQuery
+{
+    public UserBalanceIndexerListDto QueryUserBalanceList { get; set; }
 }
 

@@ -58,14 +58,14 @@ public class UserBalanceSyncScheduleService : ScheduleSyncDataService
                 BlockHeight = lastEndHeight
             });
 
-        if (changePageInfo == null || changePageInfo.IndexerUserBalances.IsNullOrEmpty())
+        if (changePageInfo == null || changePageInfo.Data.IsNullOrEmpty())
         {
             _logger.LogInformation(
                 "graphql QueryUserBalanceListAsync no data skipCount={A} lastEndHeight={B}", skipCount,
                 lastEndHeight);
             return 0;
         }
-        var processChangeOriginList = changePageInfo.IndexerUserBalances;
+        var processChangeOriginList = changePageInfo.Data;
         
         _logger.LogInformation(
             "graphql QueryUserBalanceListAsync count: {count} queryList count{count},chainId:{chainId} ",
