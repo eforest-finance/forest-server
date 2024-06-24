@@ -396,6 +396,10 @@ namespace NFTMarketServer.NFT
                 var nftInfoIdList =
                     await _userBalanceProvider.GetNFTIdListByUserBalancesAsync(input, CommonConstant.IntZero,
                         CommonConstant.IntOneThousand);
+                if (nftInfoIdList.IsNullOrEmpty())
+                {
+                    return result;
+                }
                 nftActivityDtoPage =
                     await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIdList);
             }

@@ -76,4 +76,11 @@ public class FileController : AbpController
             return "";
         }
     }
+    
+    [HttpGet]
+    [Route("randomImage")]
+    public async Task<string> RandomImage()
+    {
+        return await _symbolIconAppService.GetRandomImageAsync();
+    }
 }
