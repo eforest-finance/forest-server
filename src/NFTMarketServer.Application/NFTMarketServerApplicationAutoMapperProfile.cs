@@ -52,6 +52,7 @@ using NFTMarketServer.Users.Eto;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.AutoMapper;
 using ExternalInfoDictionary = NFTMarketServer.Entities.ExternalInfoDictionary;
+using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
 
 namespace NFTMarketServer;
 
@@ -87,6 +88,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTActivityItem, NFTActivitySyncDto>().ForMember(des => des.PriceTokenInfo,
             opt => opt.MapFrom(source => new NFTMarketServer.NFT.Dtos.TokenInfoDto
                 { Symbol = source.PriceTokenInfo.Symbol }));
+        CreateMap<TokenInfoDto, TokenInfoIndex>();
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
         CreateMap<NFTInfoIndex, NFTInfoNewIndex>();

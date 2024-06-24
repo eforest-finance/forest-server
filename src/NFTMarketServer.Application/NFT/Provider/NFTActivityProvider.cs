@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
@@ -12,6 +13,8 @@ using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Seed.Index;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.ObjectMapping;
+using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
 
 namespace NFTMarketServer.NFT.Provider;
 
@@ -26,6 +29,9 @@ public partial interface INFTActivityProvider
     public Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight);
     
     public Task SaveOrUpdateNFTActivityInfoAsync(NFTActivitySyncDto nftActivitySyncDto);
+
+    public Task<Task<Tuple<long, List<NFTActivityIndex>>>> GetCollectedCollectionActivitiesAsync(
+        GetCollectedCollectionActivitiesInput input);
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
@@ -36,13 +42,15 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
     private readonly INESTRepository<CollectionRelationIndex, string> _collectionRelationIndexRepository;
     private readonly INESTRepository<NFTActivityIndex, string> _nftActivityIndexRepository;
+    private readonly IObjectMapper _objectMapper;
 
     public NFTActivityProvider(IGraphQLHelper graphQlHelper,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
         INESTRepository<CollectionRelationIndex, string> collectionRelationIndexRepository,
         INESTRepository<NFTActivityIndex, string> nftActivityIndexRepository,
-        ILogger<NFTActivityProvider> logger)
+        ILogger<NFTActivityProvider> logger,
+        IObjectMapper objectMapper)
     {
         _graphQlHelper = graphQlHelper;
         _logger = logger;
@@ -50,6 +58,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
         _collectionRelationIndexRepository = collectionRelationIndexRepository;
         _nftActivityIndexRepository = nftActivityIndexRepository;
+        _objectMapper = objectMapper;
     }
     
     public async Task<IndexerNFTActivityPage> GetNFTActivityListAsync(string NFtInfoId, List<int> types, long timestampMin,
@@ -237,7 +246,8 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             Timestamp = activityDto.Timestamp,
             NFTType = SymbolHelper.CheckSymbolIsCommonNFTInfoId(activityDto.NFTInfoId) ? NFTType.NFT : NFTType.Seed,
             NFTImage = image,
-            ToNFTIssueFlag = to.Equals(issuer)
+            ToNFTIssueFlag = to.Equals(issuer),
+            PriceTokenInfo = _objectMapper.Map<TokenInfoDto, TokenInfoIndex>(activityDto.PriceTokenInfo) 
         };
         await _nftActivityIndexRepository.AddOrUpdateAsync(nftActivityIndex);
 
@@ -245,7 +255,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 
     private static List<CollectionRelationIndex> BuildCollectionRelationIndexList(string collectionId,string from,string to)
     {
-        if (from.IsNullOrEmpty() || to.IsNullOrEmpty())
+        if (CollectionUtilities.IsNullOrEmpty(from) || CollectionUtilities.IsNullOrEmpty(to))
         {
             return null;
         }
@@ -271,5 +281,10 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         };
         collectionRelationList.Add(collectionRelationTo);
         return collectionRelationList;
+    }
+
+    public async Task<Task<Tuple<long, List<NFTActivityIndex>>>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+    {
+        throw new NotImplementedException();
     }
 }
