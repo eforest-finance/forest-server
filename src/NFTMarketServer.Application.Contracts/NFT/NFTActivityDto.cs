@@ -24,5 +24,7 @@ public class NFTActivityDto: EntityDto<string>
     public decimal TotalPrice{ get; set; }
     
     public string NFTUrl{ get; set; }
+    
+    public string NFTName{ get; set; }
 
 }

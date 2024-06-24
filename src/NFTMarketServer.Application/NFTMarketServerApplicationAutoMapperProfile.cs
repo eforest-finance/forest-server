@@ -98,11 +98,11 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(
                 destination => destination.Timestamp,
                 opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.Timestamp)))
-            .ForMember(des => des.NFTCollectionName,
+            .ForMember(des => des.CollectionName,
                 opt => opt.MapFrom(source => source.CollectionName))
             .ForMember(des => des.NFTName,
                 opt => opt.MapFrom(source => source.NFTName))
-            .ForMember(des => des.PreviewImage,
+            .ForMember(des => des.NFTUrl,
                 opt => opt.MapFrom(source => source.NFTImage));
         CreateMap<NFTActivityDto, CollectedCollectionActivitiesDto>();
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
