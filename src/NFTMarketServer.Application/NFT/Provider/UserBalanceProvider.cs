@@ -1,7 +1,9 @@
 using System.Threading.Tasks;
 using GraphQL;
 using NFTMarketServer.Common;
+using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Index;
+using NFTMarketServer.Users;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
 
@@ -13,6 +15,9 @@ public interface IUserBalanceProvider
     Task<IndexerNFTBalanceInfo> GetNFTBalanceInfoAsync(string nftInfoId);
     
     Task<IndexerUserMatchedNftIds> GetUserMatchedNftIdsAsync(GetNFTInfosProfileInput input, bool isSeed);
+    
+    public Task<IndexerUserBalance> QueryUserBalanceListAsync(QueryUserBalanceInput input);
+
 }
 
 
@@ -96,5 +101,34 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         });
         var result = indexerCommonResult?.Data ?? new IndexerUserMatchedNftIds();
         return result;
+    }
+    
+    public async Task<IndexerUserBalance> QueryUserBalanceListAsync(QueryUserBalanceInput input)
+    {
+        var indexerCommonResult =  await _graphQlHelper.QueryAsync<IndexerUserBalance>(new GraphQLRequest
+        {
+            Query = @"query($skipCount: Int!
+\                    ,$blockHeight: Long!
+                ) {
+                data: queryUserBalanceList(input: {
+                skipCount: $skipCount
+                ,blockHeight: $blockHeight
+                }) {
+                        totalCount
+                        indexerUserBalances:data {
+                          id,
+                          address,
+                          amount
+                        }
+                    }
+                }",
+            Variables = new
+            {
+                skipCount = input.SkipCount,
+                blockHeith = input.BlockHeight,
+            }
+        });
+
+        return indexerCommonResult?.Data;
     }
 }
