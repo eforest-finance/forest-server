@@ -94,6 +94,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 Decimals = source.PriceTokenInfo.Decimals
             }));
         CreateMap<TokenInfoDto, TokenInfoIndex>();
+        CreateMap<NFTActivityIndex, NFTActivityDto>();
         CreateMap<NFTActivityDto, CollectedCollectionActivitiesDto>();
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
