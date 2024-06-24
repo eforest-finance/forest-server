@@ -107,7 +107,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
     public async Task<PagedResultDto<NFTActivityDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
     {
         var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input, null);
-        var list = nftActivityIndexTuple?.Result?.Item2;
+        var list = nftActivityIndexTuple?.Item2;
         if (list.IsNullOrEmpty())
         {
             return new PagedResultDto<NFTActivityDto>
@@ -132,8 +132,8 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
         }
 
         var accounts = await _userAppService.GetAccountsAsync(addresses);
-        var result = nftActivityIndexTuple.Result.Item2.ToList().Select(item=>Map(item,accounts)).ToList();
-        var totalCount = nftActivityIndexTuple.Result.Item1;
+        var result = nftActivityIndexTuple.Item2.ToList().Select(item=>Map(item,accounts)).ToList();
+        var totalCount = nftActivityIndexTuple.Item1;
         return new PagedResultDto<NFTActivityDto>
         {
             Items = result,

@@ -14,7 +14,6 @@ using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Seed.Index;
-using Volo.Abp.Application.Dtos;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
 using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
@@ -33,7 +32,7 @@ public partial interface INFTActivityProvider
     
     public Task SaveOrUpdateNFTActivityInfoAsync(NFTActivitySyncDto nftActivitySyncDto);
 
-    public Task<Task<Tuple<long, List<NFTActivityIndex>>>> GetCollectedCollectionActivitiesAsync(
+    public Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedCollectionActivitiesAsync(
         GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds);
 }
 
@@ -290,7 +289,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         return collectionRelationList;
     }
 
-    public async Task<Task<Tuple<long, List<NFTActivityIndex>>>> GetCollectedCollectionActivitiesAsync(
+    public async Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedCollectionActivitiesAsync(
         GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds)
     {
         if (input == null || input.Address.IsNullOrEmpty())
@@ -323,7 +322,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 
         var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
             sortExp: item => item.Timestamp);
-
-        return null;
+        
+        return result;
     }
 }
