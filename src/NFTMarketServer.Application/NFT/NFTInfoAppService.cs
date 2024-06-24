@@ -381,25 +381,17 @@ namespace NFTMarketServer.NFT
 
         }
 
-        public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+        public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
+            GetCollectedCollectionActivitiesInput input)
         {
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
-            
+
+            var nftActivityDtoPage = new PagedResultDto<NFTActivityDto>();
             if (input.Traits.IsNullOrEmpty())
             {
-                var getCollectionActivityListInput = new GetCollectionActivityListInput
-                {
-                    CollectionId = input.CollectionId,
-                    BizIdList = basicInfoDic.Keys.ToList(),
-                    Types = input.Type,
-                    SkipCount = input.SkipCount,
-                    MaxResultCount = input.MaxResultCount
-                };
-                var nftActivityDtoPage =await _nftActivityAppService.GetCollectionActivityListAsync(getCollectionActivityListInput);
+                nftActivityDtoPage = await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input);
             }
             
-            
-
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
             {
                 return result;
@@ -407,21 +399,11 @@ namespace NFTMarketServer.NFT
 
             var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
             var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
-            
+
             var collectionActivitiesDtoList = nftActivityDtoPage.Items.ToList().Select(item =>
-            {
-                var itemNew = _objectMapper.Map<NFTActivityDto, CollectionActivitiesDto>(item);
-                itemNew.NFTCollectionName = collectionInfo.TokenName;
-                basicInfoDic.TryGetValue(item.NFTInfoId, out var collectionActivityBasicDto);
-                
-                if (collectionActivityBasicDto != null && isInRarityWhiteList)
-                {
-                    _objectMapper.Map(collectionActivityBasicDto, itemNew);
-                }
-                return itemNew;
-            }).ToList();
-            
-            result = new PagedResultDto<CollectionActivitiesDto>()
+                _objectMapper.Map<NFTActivityDto, CollectedCollectionActivitiesDto>(item)).ToList();
+
+            result = new PagedResultDto<CollectedCollectionActivitiesDto>()
             {
                 TotalCount = nftActivityDtoPage.TotalCount,
                 Items = collectionActivitiesDtoList
