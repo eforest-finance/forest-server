@@ -104,6 +104,83 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
         };
     }
 
+    public async Task<PagedResultDto<NFTActivityDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+    {
+        var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input);
+        var list = nftActivityIndexTuple?.Result?.Item2;
+        if (list.IsNullOrEmpty())
+        {
+            return new PagedResultDto<NFTActivityDto>
+            {
+                Items = new List<NFTActivityDto>(),
+                TotalCount = 0
+            };
+        }
+
+        var addresses = new List<string>();
+        foreach (var info in list)
+        {
+            if (!info.From.IsNullOrWhiteSpace())
+            {
+                addresses.Add(info.From);
+            }
+
+            if (!info.To.IsNullOrWhiteSpace())
+            {
+                addresses.Add(info.To);
+            }
+        }
+
+        var accounts = await _userAppService.GetAccountsAsync(addresses);
+        var result = nftActivityIndexTuple.Result.Item2.ToList().Select(item=>Map(item,accounts)).ToList();
+        var totalCount = nftActivityIndexTuple.Result.Item1;
+        return new PagedResultDto<NFTActivityDto>
+        {
+            Items = result,
+            TotalCount = totalCount
+        };
+    }
+
+    private NFTActivityDto Map(NFTActivityIndex index,Dictionary<string, AccountDto> accounts)
+    {
+        var activityDto = ObjectMapper.Map<NFTActivityIndex, NFTActivityDto>(index);
+        if (index.PriceTokenInfo != null)
+        {
+            activityDto.PriceToken = new TokenDto
+            {
+                Id = index.PriceTokenInfo.Id,
+                ChainId = index.PriceTokenInfo.ChainId,
+                Symbol = index.PriceTokenInfo.Symbol,
+                Decimals = index.PriceTokenInfo.Decimals
+            };
+        }
+        if (!index.From.IsNullOrWhiteSpace() && accounts.TryGetValue(index.From, out var account))
+        {
+            activityDto.From = account;
+        }
+        else
+        {
+            activityDto.From = new AccountDto(FullAddressHelper.ToShortAddress(index.From))
+            {
+                Name = index.From
+            };
+        }
+
+        if (!index.To.IsNullOrWhiteSpace() && accounts.TryGetValue(index.To, out var account1))
+        {
+            activityDto.To = account1;
+        }
+        else
+        {
+            activityDto.To = new AccountDto(FullAddressHelper.ToShortAddress(index.To))
+            {
+                Name = index.To
+            };
+        }
+
+        return activityDto;
+    }
+
     private NFTActivityDto Map(NFTActivityItem index, Dictionary<string, AccountDto> accounts)
     {
         var activityDto = ObjectMapper.Map<NFTActivityItem, NFTActivityDto>(index);

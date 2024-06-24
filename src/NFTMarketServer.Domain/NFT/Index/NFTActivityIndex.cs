@@ -43,5 +43,7 @@ public class NFTActivityIndex :  NFTMarketEntity<string>, IIndexBuild
     [Text(Index = false)] public string NFTImage { get; set; }
 
     public bool ToNFTIssueFlag { get; set; }
+    
+    public TokenInfoIndex PriceTokenInfo { get; set; }
 
 }
