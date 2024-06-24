@@ -296,29 +296,33 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         {
             return null;
         }
+
+        var shortAddress = FullAddressHelper.ToShortAddress(input.Address);
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
-        var mustNotQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
 
         if (!input.CollectionIdList.IsNullOrEmpty())
         {
-            mustNotQuery.Add(q =>
+            mustQuery.Add(q =>
                 q.Terms(i => i.Field(f => f.CollectionId).Terms(!input.CollectionIdList.IsNullOrEmpty())));
         }
 
         if (!input.ChainList.IsNullOrEmpty())
         {
-            mustNotQuery.Add(q =>
+            mustQuery.Add(q =>
                 q.Terms(i => i.Field(f => f.ChainId).Terms(input.ChainList)));
         }
         var shouldQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
 
-        shouldQuery.Add(q => q.Terms(i => i.Field(f => f.From).Terms(input.Address)));
-        shouldQuery.Add(q => q.Term(i => i.Field(f => f.To).Value(input.Address)));
-        
-        if (shouldQuery.Any()){    mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));}
+        shouldQuery.Add(q => q.Terms(i => i.Field(f => f.From).Terms(shortAddress)));
+        shouldQuery.Add(q => q.Term(i => i.Field(f => f.To).Value(shortAddress)));
+
+        if (shouldQuery.Any())
+        {
+            mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
+        }
 
         QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f)
-            => f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
+            => f.Bool(b => b.Must(mustQuery));
 
         var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
             sortExp: item => item.Timestamp);
