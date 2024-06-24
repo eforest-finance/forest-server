@@ -12,7 +12,7 @@ public class NFTActivityIndex :  NFTMarketEntity<string>, IIndexBuild
     
     [Keyword] public string NftInfoId { get; set; }
     
-    public decimal Decimals { get; set; }
+    public int Decimals { get; set; }
     
     public NFTActivityType Type { get; set; }
     
