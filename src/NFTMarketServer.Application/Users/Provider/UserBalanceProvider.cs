@@ -5,16 +5,11 @@ using AElf.Indexing.Elasticsearch;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Nest;
-using Newtonsoft.Json;
-using NFTMarketServer.Basic;
-using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
-using NFTMarketServer.Message;
 using NFTMarketServer.Message.Provider;
-using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Dtos;
-using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
+using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Seed.Index;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.DependencyInjection;
@@ -24,24 +19,25 @@ namespace NFTMarketServer.Users.Provider;
 public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
 {
     private readonly INESTRepository<UserBalanceIndex, string> _userBalanceIndexRepository;
-    private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
-    private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
     private readonly IBus _bus;
     private readonly ILogger<MessageInfoProvider> _logger;
+    private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
+
 
     public UserBalanceProvider(
         INESTRepository<UserBalanceIndex, string> userBalanceIndexRepository,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
         IBus bus,
-        ILogger<MessageInfoProvider> logger
+        ILogger<MessageInfoProvider> logger,
+        INFTInfoNewSyncedProvider nftInfoNewSyncedProvider
         )
     {
         _userBalanceIndexRepository = userBalanceIndexRepository;
-        _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
-        _seedSymbolIndexRepository = seedSymbolIndexRepository;
         _bus = bus;
         _logger = logger;
+        _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
+
     }
     public async Task<Tuple<long, List<UserBalanceIndex>>> GetUserBalancesAsync(string address, QueryUserBalanceListInput input)
     {
@@ -65,116 +61,47 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
     }
     
 
-    public async Task SaveOrUpdateUserBalanceAsync(UserBalanceDto userBalanceDto)
+    public async Task SaveOrUpdateUserBalanceAsync(UserBalanceDto dto)
     {
-        if (userBalanceDto == null)
+        if (dto == null)
         {
             _logger.LogError("SaveOrUpdateUserBalanceAsync messageInfo is null");
             return;
         }
+        
+        var nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(dto.NFTInfoId);
+        var collectionId = "";
+        var decimals = 0;
 
-        var userBalanceList = new List<UserBalanceIndex>();
-        if (userBalanceList.IsNullOrEmpty())
+        if (nftInfoIndex != null)
         {
-            _logger.LogError("SaveOrUpdateUserBalanceAsync userBalanceList is null userBalanceDto={A}",
-                JsonConvert.SerializeObject(userBalanceDto));
-            return;
+            collectionId = nftInfoIndex.CollectionId;
+            decimals = nftInfoIndex.Decimals;
         }
-
-        await _userBalanceIndexRepository.BulkAddOrUpdateAsync(userBalanceList);
-
-        foreach (var userBalance in userBalanceList)
+        var FullAddress = FullAddressHelper.ToFullAddress(dto.Address, dto.ChainId);
+        var userBalanceIndex = new UserBalanceIndex()
         {
-            _logger.LogInformation("SaveOrUpdateUserBalanceAsync userBalance={A}",
-                JsonConvert.SerializeObject(userBalance));
-            if (TimeHelper.IsWithin30MinutesUtc(userBalance.ChangeTime))
-            {
-                await _bus.Publish(new NewIndexEvent<UserBalanceDto>
-                {
-                    Data = new UserBalanceDto
-                    {
-                        Address = userBalance.Address
-                    }
-                });
-            }
-        }
+            Id = dto.Id,
+            Address = dto.Address,
+            Amount = dto.Amount,
+            NFTInfoId = dto.NFTInfoId,
+            Symbol = dto.Symbol,
+            ChangeTime = dto.ChangeTime,
+            ListingPrice = dto.ListingPrice,
+            ListingTime = dto.ListingTime,
+            BlockHeight = dto.BlockHeight,
+            ChainId = dto.ChainId,
+            FullAddress = FullAddress,
+            CollectionId = collectionId,
+            Decimals = decimals
+        };
+
+        await _userBalanceIndexRepository.AddOrUpdateAsync(userBalanceIndex);
+        
     }
 
     public async Task BatchSaveOrUpdateUserBalanceAsync(List<UserBalanceIndex> userBalanceIndices)
     {
         await _userBalanceIndexRepository.BulkAddOrUpdateAsync(userBalanceIndices);
     }
-
-    /*private async Task<List<MessageInfoIndex>> BuildMessageInfoIndexListAsync(NFTMessageActivityDto activityDto)
-    {
-        var resultList = new List<MessageInfoIndex>();
-        if (activityDto == null)
-        {
-            return resultList;
-        }
-
-        var fromAddress = FullAddressHelper.ToShortAddress(activityDto.From);
-        var fromId = IdGenerateHelper.GetMessageActivityId(activityDto.Id, fromAddress);
-        var fromMessageExist = await _messageInfoIndexRepository.GetAsync(fromId);
-        if (fromMessageExist != null)
-        {
-            return resultList;
-        }
-        
-        var toAddress = FullAddressHelper.ToShortAddress(activityDto.To);
-        var toId = IdGenerateHelper.GetMessageActivityId(activityDto.Id, toAddress);
-        var toMessageExist = await _messageInfoIndexRepository.GetAsync(toId);
-        if (toMessageExist != null)
-        {
-            return resultList;
-        }
-
-        var symbolName = "";
-        var collectionName = "";
-        var decimals = 0;
-        var image = "";
-        if (SymbolHelper.CheckSymbolIsCommonNFTInfoId(activityDto.NFTInfoId))
-        {
-            var nftInfoNewIndex = await _nftInfoNewIndexRepository.GetAsync(activityDto.NFTInfoId);
-            if (nftInfoNewIndex == null)
-            {
-                return resultList;
-            }
-            symbolName = nftInfoNewIndex.TokenName;
-            collectionName = nftInfoNewIndex.CollectionName;
-            decimals = nftInfoNewIndex.Decimals;
-
-            image = SymbolHelper.BuildNFTImage(nftInfoNewIndex);
-        }
-        else
-        {
-            var seedInfoIndex = await _seedSymbolIndexRepository.GetAsync(activityDto.NFTInfoId);
-            if (seedInfoIndex == null)
-            {
-                return resultList;
-            }
-            symbolName = seedInfoIndex.TokenName;
-            collectionName = CommonConstant.CollectionSeedName;
-            decimals = seedInfoIndex.Decimals;
-            image = seedInfoIndex.SeedImage;
-        }
-        
-        switch (activityDto.Type)
-        {
-            case NFTActivityType.Sale:
-                resultList.Add(BuildSellMessageInfoIndex(fromId, fromAddress, symbolName,
-                    collectionName, image, decimals, activityDto));
-                resultList.Add(BuildBuyMessageInfoIndex(toId, toAddress, symbolName,
-                    collectionName, image, decimals, activityDto));
-                break;
-            case NFTActivityType.MakeOffer:
-                resultList.Add(BuildReceiveOfferMessageInfoIndex(toId, toAddress, symbolName,
-                    collectionName, image, decimals, activityDto));
-                break;
-            default:
-                break;
-        }
-        return resultList;
-    }*/
-    
 }
