@@ -96,7 +96,7 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
             
             blockHeight = Math.Max(blockHeight, nftActivity.BlockHeight);
             stopwatch.Start();
-            await MessageActivitySignalAsync(nftActivity);
+            await NFTActivitySignalAsync(nftActivity);
             stopwatch.Stop();
             _logger.LogInformation(
                 "It took {Elapsed} ms to execute HandleNFTActivityAsync for symbol ChainId:{chainId} bizId: {A} blockHeight: {B}.",
@@ -118,7 +118,7 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
         return blockHeight;
     }
 
-    private async Task MessageActivitySignalAsync(NFTActivityItem item)
+    private async Task NFTActivitySignalAsync(NFTActivityItem item)
     {
         if (item == null)
         {
@@ -139,6 +139,6 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
 
     public override BusinessQueryChainType GetBusinessType()
     {
-        return BusinessQueryChainType.NFTActivityMessageSync;
+        return BusinessQueryChainType.NFTActivitySync;
     }
 }
