@@ -22,4 +22,8 @@ public class UserBalanceIndex : NFTMarketEntity<string>, IIndexBuild
 
     public decimal ListingPrice { get; set; }
     public DateTime? ListingTime { get; set; }
+    [Keyword] public string CollectionId { get; set; }
+    [Keyword] public string FullAddress { get; set; }
+    public int Decimals { get; set; }
+
 }
