@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NFTMarketServer.Basic;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
@@ -26,13 +27,15 @@ namespace NFTMarketServer.Market
         private readonly IUserBalanceProvider _userBalanceProvider;
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly IObjectMapper _objectMapper;
+        private readonly ILogger<NFTOfferAppService> _logger;
         
         public NFTOfferAppService(IUserAppService userAppService, INFTOfferProvider nftOfferProvider
                 ,INFTCollectionProvider nftCollectionProvider,
                 INFTCollectionExtensionProvider nftCollectionExtensionProvider,
                 IUserBalanceProvider userBalanceProvider,
                 INFTActivityAppService nftActivityAppService,
-                IObjectMapper objectMapper)
+                IObjectMapper objectMapper,
+                ILogger<NFTOfferAppService> logger)
         {
             _userAppService = userAppService;
             _nftOfferProvider = nftOfferProvider;
@@ -41,6 +44,7 @@ namespace NFTMarketServer.Market
             _userBalanceProvider = userBalanceProvider;
             _nftActivityAppService = nftActivityAppService;
             _objectMapper = objectMapper;
+            _logger = logger;
         }
 
         public async Task<PagedResultDto<NFTOfferDto>> GetNFTOffersAsync(GetNFTOffersInput input)
@@ -50,7 +54,7 @@ namespace NFTMarketServer.Market
 
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    input.ChainId, input.NFTInfoId);
+                    input.ChainId, new List<string>(), input.NFTInfoId, "", "");
             if (nftOfferIndexes == null || nftOfferIndexes.TotalRecordCount==0)
                 return buildInitNFTOffersDto();
             
@@ -92,40 +96,22 @@ namespace NFTMarketServer.Market
 
             var result = PagedResultWrapper<CollectedCollectionOffersMadeDto>.Initialize();
 
-            var userBalanceList =
-                await _userBalanceProvider.GetNFTIdListByUserBalancesAsync(input.CollectionIdList, input.Address,
-                    input.ChainList, CommonConstant.IntZero,
-                    CommonConstant.IntOneThousand, input.SearchParam);
-            if (userBalanceList == null)
+            var nftOfferIndexes =
+                await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
+                    "", input.ChainList, "", input.Address, "");
+            if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
             }
-
-            var nftInfoIdList = userBalanceList.Item2?.Select(item => item.NFTInfoId).ToList();
-            if (nftInfoIdList.IsNullOrEmpty())
-            {
-                return result;
-            }
-
-            var userBalancedic = userBalanceList.Item2?.ToDictionary(item => item.NFTInfoId,
-                item => FTHelper.GetIntegerDivision(item.Amount, item.Decimals));
-
-
-            var activityListRequestDto = BuildGetCollectedActivityListDto(input.CollectionIdList, input.ChainList,
-                input.Address, CommonConstant.IntOneThousand, nftInfoIdList, CommonConstant.IntZero, "",
-                new List<NFTActivityType>()
-                {
-                    NFTActivityType.MakeOffer
-                });
-
-            var basicResult = await _nftActivityAppService.GetCollectedActivityListAsync(activityListRequestDto);
+            
+            var nftInfoIdList = nftOfferIndexes.IndexerNFTOfferList?.Select(item => item.BizInfoId).ToList();
 
             var nftCollectionExtensionDic =
                 await _nftCollectionExtensionProvider.GetNFTCollectionExtensionsAsync(nftInfoIdList
                     .Select(item => SymbolHelper.TransferNFTIdToCollectionId(item)).ToList());
 
             var addresses = new List<string>();
-            foreach (var info in basicResult.Item2)
+            foreach (var info in nftOfferIndexes.IndexerNFTOfferList)
             {
                 if (!info.From.IsNullOrWhiteSpace())
                     addresses.Add(info.From);
@@ -135,33 +121,37 @@ namespace NFTMarketServer.Market
 
             var accounts = await _userAppService.GetAccountsAsync(addresses.Distinct().ToList());
 
-            return Map(result, userBalancedic, basicResult, nftCollectionExtensionDic, accounts);
+            return Map(result, nftOfferIndexes, nftCollectionExtensionDic, accounts);
         }
 
         private PagedResultDto<CollectedCollectionOffersMadeDto> Map(
-            PagedResultDto<CollectedCollectionOffersMadeDto> result, Dictionary<string, long> userBalancedic,
-            Tuple<long, List<NFTActivityIndex>> basicResult,
+            PagedResultDto<CollectedCollectionOffersMadeDto> result,
+            IndexerNFTOffers nftOfferIndexes,
             Dictionary<string, NFTCollectionExtensionIndex> nftCollectionExtensionDic,
             Dictionary<string, AccountDto> accounts)
         {
-            result.TotalCount = basicResult.Item1;
+            result.TotalCount = nftOfferIndexes.TotalRecordCount;
 
-            basicResult.Item2.Select(index =>
+            nftOfferIndexes.IndexerNFTOfferList.Select(index =>
             {
-                var dto = _objectMapper.Map<NFTActivityIndex, CollectedCollectionOffersMadeDto>(index);
+                
+                var dto = _objectMapper.Map<IndexerNFTOffer, CollectedCollectionOffersMadeDto>(index);
+                _logger.LogDebug("CollectedCollectionOffersMadeDto 1 from {A} to {B}",JsonConvert.SerializeObject(index),JsonConvert.SerializeObject(dto));
 
                 if (!index.From.IsNullOrWhiteSpace() && accounts.ContainsKey(index.From))
                     dto.From = index.From.IsNullOrWhiteSpace() ? null : accounts[index.From];
 
                 if (!index.To.IsNullOrWhiteSpace() && accounts.ContainsKey(index.To))
                     dto.To = index.To.IsNullOrWhiteSpace() ? null : accounts[index.To];
-                var collectionId = SymbolHelper.TransferNFTIdToCollectionId(index.NftInfoId);
-                if (nftCollectionExtensionDic[collectionId] == null)
+                var collectionId = SymbolHelper.TransferNFTIdToCollectionId(index.BizInfoId);
+                if (nftCollectionExtensionDic.ContainsKey(collectionId) && nftCollectionExtensionDic[collectionId] != null)
                 {
-                    return dto;
+                    dto.FloorPrice = nftCollectionExtensionDic[collectionId] .FloorPrice;
+                    dto.FloorPriceSymbol = nftCollectionExtensionDic[collectionId] .FloorPriceSymbol;
+                    dto.CollectionName = nftCollectionExtensionDic[collectionId].TokenName;
                 }
-                dto.FloorPrice = nftCollectionExtensionDic[collectionId] .FloorPrice;
-                dto.FloorPriceSymbol = nftCollectionExtensionDic[collectionId] .FloorPriceSymbol;
+                
+                _logger.LogDebug("CollectedCollectionOffersMadeDto 2 from {A} to {B}",JsonConvert.SerializeObject(index),JsonConvert.SerializeObject(dto));
 
                 return dto;
             }).ToList();

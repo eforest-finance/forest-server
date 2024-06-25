@@ -38,6 +38,8 @@ public partial interface INFTActivityProvider
         GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds);
     
     Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedActivityListAsync(GetCollectedActivityListDto dto);
+    
+    Task<Tuple<long, List<NFTActivityIndex>>> GetActivityByIdListAsync(List<string> idList);
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
@@ -402,6 +404,26 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 
         var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
             sortExp: item => item.Timestamp, skip: dto.SkipCount, limit: dto.MaxResultCount);
+
+        return result;
+    }
+
+    public async Task<Tuple<long, List<NFTActivityIndex>>> GetActivityByIdListAsync(List<string> idList)
+    {
+        if (idList.IsNullOrEmpty())
+        {
+            return null;
+        }
+
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+        mustQuery.Add(q =>
+            q.Terms(i => i.Field(f => f.Id).Terms(idList)));
+        
+        QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
+            sortExp: item => item.Timestamp);
 
         return result;
     }

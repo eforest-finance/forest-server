@@ -11,7 +11,7 @@ namespace NFTMarketServer.NFT.Provider;
 public interface INFTOfferProvider
 {
     public Task<IndexerNFTOffers> GetNFTOfferIndexesAsync(int skipCount, int maxResultCount,
-        string chainId, string nftInfoId);
+        string chainId, List<string> chainIdList, string nftInfoId, string offerFrom, string offerTo);
     
     public Task<IndexerNFTOffer> GetMaxOfferInfoAsync(string nftInfoId);
     Task<List<ExpiredNftMaxOfferDto>> GetNftMaxOfferAsync(string chainId, long expiredSecond);
@@ -30,13 +30,14 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
     public async Task<IndexerNFTOffers> GetNFTOfferIndexesAsync(int inputSkipCount,
         int inputMaxResultCount,
         string inputChainId,
-        string inputNFTInfoId)
+        List<string> inputChainIdList,
+        string inputNFTInfoId, string inputOfferFrom, string inputOfferTo)
     {
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTOffers>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$chainId:String!,$nftInfoId:String,$expireTimeGt:Long) {
-                    data:nftOffers(dto:{skipCount:$skipCount,maxResultCount:$maxResultCount,chainId:$chainId,nFTInfoId:$nftInfoId,expireTimeGt:$expireTimeGt}){
+			    query($skipCount:Int!,$maxResultCount:Int!,$chainId:String,$chainIdList:[String],$nftInfoId:String,$expireTimeGt:Long,$offerFrom:String,$offerTo:String) {
+                    data:nftOffers(dto:{skipCount:$skipCount,maxResultCount:$maxResultCount,chainId:$chainId,chainIdList:$chainIdList,nFTInfoId:$nftInfoId,expireTimeGt:$expireTimeGt,offerFrom:$offerFrom,offerTo:$offerTo}){
                         totalRecordCount,
                         indexerNFTOfferList:data{
                           id,
@@ -49,7 +50,8 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
                           expireTime,
                           purchaseToken{
                             id,chainId,symbol,decimals,address:issuer
-                          }
+                          },
+                          
                        }
                     }
                 }",
@@ -58,8 +60,11 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
                 skipCount = inputSkipCount,
                 maxResultCount = inputMaxResultCount,
                 chainId = inputChainId,
+                chainIdList = inputChainIdList,
                 nftInfoId = inputNFTInfoId,
-                expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
+                expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow),
+                offerFrom = inputOfferFrom,
+                offerTo = inputOfferTo
             }
         });
         return indexerCommonResult?.Data;
