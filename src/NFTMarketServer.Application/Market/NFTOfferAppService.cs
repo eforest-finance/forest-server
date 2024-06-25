@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NFTMarketServer.Basic;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
@@ -26,13 +27,15 @@ namespace NFTMarketServer.Market
         private readonly IUserBalanceProvider _userBalanceProvider;
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly IObjectMapper _objectMapper;
+        private readonly ILogger<NFTOfferAppService> _logger;
         
         public NFTOfferAppService(IUserAppService userAppService, INFTOfferProvider nftOfferProvider
                 ,INFTCollectionProvider nftCollectionProvider,
                 INFTCollectionExtensionProvider nftCollectionExtensionProvider,
                 IUserBalanceProvider userBalanceProvider,
                 INFTActivityAppService nftActivityAppService,
-                IObjectMapper objectMapper)
+                IObjectMapper objectMapper,
+                ILogger<NFTOfferAppService> logger)
         {
             _userAppService = userAppService;
             _nftOfferProvider = nftOfferProvider;
@@ -41,6 +44,7 @@ namespace NFTMarketServer.Market
             _userBalanceProvider = userBalanceProvider;
             _nftActivityAppService = nftActivityAppService;
             _objectMapper = objectMapper;
+            _logger = logger;
         }
 
         public async Task<PagedResultDto<NFTOfferDto>> GetNFTOffersAsync(GetNFTOffersInput input)
@@ -142,7 +146,9 @@ namespace NFTMarketServer.Market
 
             nftOfferIndexes.IndexerNFTOfferList.Select(index =>
             {
+                
                 var dto = _objectMapper.Map<IndexerNFTOffer, CollectedCollectionOffersMadeDto>(index);
+                _logger.LogDebug("CollectedCollectionOffersMadeDto 1 from {A} to {B}",JsonConvert.SerializeObject(index),JsonConvert.SerializeObject(dto));
 
                 if (!index.From.IsNullOrWhiteSpace() && accounts.ContainsKey(index.From))
                     dto.From = index.From.IsNullOrWhiteSpace() ? null : accounts[index.From];
@@ -161,7 +167,8 @@ namespace NFTMarketServer.Market
                     dto.NFTUrl = activityDic[index.BizInfoId].NFTImage;
                     dto.CollectionName = activityDic[index.BizInfoId].CollectionName;
                 }
-                
+                _logger.LogDebug("CollectedCollectionOffersMadeDto 2 from {A} to {B}",JsonConvert.SerializeObject(index),JsonConvert.SerializeObject(dto));
+
                 return dto;
             }).ToList();
             
