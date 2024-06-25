@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NFTMarketServer.Helper;
-using NFTMarketServer.Market;
 using NFTMarketServer.NFT.Dto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
@@ -151,6 +150,11 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
     public async Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedActivityListAsync(GetCollectedActivityListDto dto)
     {
         return await _nftActivityProvider.GetCollectedActivityListAsync(dto);
+    }
+
+    public async Task<Tuple<long, List<NFTActivityIndex>>> GetActivityByIdListAsync(List<string> idList)
+    {
+        return await _nftActivityProvider.GetActivityByIdListAsync(idList);
     }
 
     private CollectedCollectionActivitiesDto Map(NFTActivityIndex index, Dictionary<string, AccountDto> accounts)

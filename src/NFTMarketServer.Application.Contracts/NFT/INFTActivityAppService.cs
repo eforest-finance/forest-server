@@ -19,4 +19,6 @@ public interface INFTActivityAppService
     
     Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedActivityListAsync(
         GetCollectedActivityListDto dto);
+    
+    Task<Tuple<long, List<NFTActivityIndex>>> GetActivityByIdListAsync(List<string> idList);
 }
