@@ -50,7 +50,8 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
                           expireTime,
                           purchaseToken{
                             id,chainId,symbol,decimals,address:issuer
-                          }
+                          },
+                          
                        }
                     }
                 }",
