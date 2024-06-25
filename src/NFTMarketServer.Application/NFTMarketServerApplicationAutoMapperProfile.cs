@@ -94,6 +94,16 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 Decimals = source.PriceTokenInfo.Decimals
             }));
         CreateMap<TokenInfoDto, TokenInfoIndex>();
+        CreateMap<NFTActivityIndex, CollectedCollectionOffersMadeDto>()
+            .ForMember(
+                destination => destination.ExpireTime,
+                opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.Timestamp)))
+            .ForMember(des => des.CollectionName,
+                opt => opt.MapFrom(source => source.CollectionName))
+            .ForMember(des => des.NFTName,
+                opt => opt.MapFrom(source => source.NFTName))
+            .ForMember(des => des.NFTUrl,
+                opt => opt.MapFrom(source => source.NFTImage));
         CreateMap<NFTActivityIndex, CollectedCollectionActivitiesDto>()
             .ForMember(
                 destination => destination.Timestamp,

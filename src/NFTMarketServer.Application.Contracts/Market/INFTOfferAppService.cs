@@ -6,5 +6,7 @@ namespace NFTMarketServer.Market
     public interface INFTOfferAppService
     {
         Task<PagedResultDto<NFTOfferDto>> GetNFTOffersAsync(GetNFTOffersInput input);
+        
+        Task<PagedResultDto<CollectedCollectionOffersMadeDto>> GetCollectedCollectionOffersMadeAsync(GetCollectedCollectionOffersMadeInput input);
     }
 }

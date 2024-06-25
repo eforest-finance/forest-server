@@ -4,15 +4,16 @@ using System.ComponentModel.DataAnnotations;
 using JetBrains.Annotations;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Helper;
+using NFTMarketServer.NFT;
+using Volo.Abp.Application.Dtos;
 
-namespace NFTMarketServer.NFT
+namespace NFTMarketServer.Market
 {
-    public class GetCollectedCollectionActivitiesInput : PagedAndSortedMaxCountResultRequestDto
+    public class GetCollectedCollectionOffersMadeInput: PagedAndSortedResultRequestDto
     {
         [CanBeNull] public string SearchParam { get; set; }
         [CanBeNull] public List<string> CollectionIdList { get; set; }
         [CanBeNull] public List<string> ChainList { get; set; }
-        [CanBeNull] public List<int> Type { get; set; }
         public string Address { get; set; }
         
         public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -26,7 +27,4 @@ namespace NFTMarketServer.NFT
 
         }
     }
-    
-    
 }
-    
