@@ -40,6 +40,8 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
                     data:nftOffers(dto:{skipCount:$skipCount,maxResultCount:$maxResultCount,chainId:$chainId,chainIdList:$chainIdList,nFTInfoId:$nftInfoId,expireTimeGt:$expireTimeGt,offerFrom:$offerFrom,offerTo:$offerTo}){
                         totalRecordCount,
                         indexerNFTOfferList:data{
+                          bizSymbol,
+                          bizInfoId,
                           id,
                           chainId,
                           from,
