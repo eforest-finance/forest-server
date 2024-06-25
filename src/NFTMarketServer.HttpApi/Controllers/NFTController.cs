@@ -258,5 +258,12 @@ namespace NFTMarketServer.Controllers
         {
             return _aiAppService.GETAIPrompts();
         }
+        
+        [HttpGet]
+        [Route("nft-collections/myhold")]
+        public Task<PagedResultDto<SearchNFTCollectionsDto>> GetMyHoldNFTCollectionsAsync(GetMyHoldNFTCollectionsInput input)
+        {
+            return _nftCollectionAppService.GetMyHoldNFTCollectionsAsync(input);
+        }
     }
 }

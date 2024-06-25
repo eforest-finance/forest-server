@@ -18,5 +18,8 @@ namespace NFTMarketServer.NFT
         Task CreateCollectionExtensionAsync(CreateCollectionExtensionInput input);
         
         Task CollectionMigrateAsync(CollectionMigrateInput input);
+        
+        Task<PagedResultDto<SearchNFTCollectionsDto>> GetMyHoldNFTCollectionsAsync(GetMyHoldNFTCollectionsInput input);
+
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Nest;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Message.Provider;
+using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
@@ -71,11 +72,19 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         
         var nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(dto.NFTInfoId);
         var collectionId = "";
+        var collectionSymbol = "";
+        var collectionName = "";
+
+        var nFTName = "";
+        
         var decimals = 0;
 
         if (nftInfoIndex != null)
         {
             collectionId = nftInfoIndex.CollectionId;
+            collectionSymbol = nftInfoIndex.CollectionSymbol;
+            collectionName = nftInfoIndex.CollectionName;
+            nFTName = nftInfoIndex.TokenName;
             decimals = nftInfoIndex.Decimals;
         }
         var FullAddress = FullAddressHelper.ToFullAddress(dto.Address, dto.ChainId);
@@ -93,7 +102,10 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             ChainId = dto.ChainId,
             FullAddress = FullAddress,
             CollectionId = collectionId,
-            Decimals = decimals
+            Decimals = decimals,
+            CollectionSymbol = collectionSymbol,
+            NFTName = nFTName,
+            CollectionName = collectionName
         };
 
         await _userBalanceIndexRepository.AddOrUpdateAsync(userBalanceIndex);
@@ -103,5 +115,37 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
     public async Task BatchSaveOrUpdateUserBalanceAsync(List<UserBalanceIndex> userBalanceIndices)
     {
         await _userBalanceIndexRepository.BulkAddOrUpdateAsync(userBalanceIndices);
+    }
+
+    public async Task<Tuple<long, List<UserBalanceIndex>>> GetCollectionIdsAsync(QueryMyHoldNFTCollectionsInput input)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
+        if (!input.Address.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Term(i =>
+                i.Field(f => f.Address).Value(input.Address)));
+        }
+
+        if (input.QueryType == QueryType.HOLDING)
+        {
+            mustQuery.Add(q => q.TermRange(i => i.Field(index => index.Amount).GreaterThanOrEquals(1.ToString())));
+        } 
+        
+        var shouldQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
+        if (!input.KeyWord.IsNullOrEmpty())
+        {
+            shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionName).Value("*" + input.KeyWord + "*")));
+            shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionSymbol).Value("*" + input.KeyWord + "*")));
+        }
+        mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
+        
+        QueryContainer Filter(QueryContainerDescriptor<UserBalanceIndex> f) =>
+            f.Bool(b => b.Must(mustQuery));
+
+        var sorting = new Func<SortDescriptor<UserBalanceIndex>, IPromise<IList<ISort>>>(s =>
+            s.Descending(t => t.ChangeTime));
+        var tuple = await _userBalanceIndexRepository.GetSortListAsync(Filter, skip: input.SkipCount,
+            sortFunc: sorting);
+        return tuple;
     }
 }

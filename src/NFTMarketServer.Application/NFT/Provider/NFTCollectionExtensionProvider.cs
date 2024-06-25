@@ -203,4 +203,26 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
         
         return s => sortDescriptor;
     }
+    
+    public async Task<Tuple<long, List<NFTCollectionExtensionIndex>>> GetNFTCollectionExtensionByIdsAsync(
+        SearchCollectionsFloorPriceInput input)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTCollectionExtensionIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Terms(t => t.Field(f => f.Id).Terms(input.CollectionIdList)));
+        
+        var mustNotQuery = new List<Func<QueryContainerDescriptor<NFTCollectionExtensionIndex>, QueryContainer>>();
+        
+        var hideCollectionInfo = _hideCollectionInfoOptionsMonitor?.CurrentValue;
+        if (hideCollectionInfo != null && !hideCollectionInfo.HideCollectionInfoList.IsNullOrEmpty())
+        {
+            mustNotQuery.Add(q => q.Terms(t => t.Field(f => f.NFTSymbol).Terms(hideCollectionInfo.HideCollectionInfoList)));
+        }
+        
+        QueryContainer Filter(QueryContainerDescriptor<NFTCollectionExtensionIndex> f) =>
+            f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
+        
+        var tuple = await _nftCollectionExtensionIndexRepository.GetListAsync(Filter);
+
+        return tuple;
+    }
 }
