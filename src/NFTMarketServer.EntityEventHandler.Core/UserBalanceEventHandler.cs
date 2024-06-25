@@ -41,6 +41,7 @@ public class NFTBalanceEventHandler : IDistributedEventHandler<UserBalanceEto>, 
         var expireFlag = await _distributedCacheForHeight.GetAsync(dto.Id);
         if (!expireFlag.IsNullOrEmpty())
         {
+            _logger.LogInformation("NFTBalanceEventHandler expireFlag: {expireFlag},Id:{Id}",expireFlag, etoData.UserBalanceDto.Id);
             return;
         }
 
