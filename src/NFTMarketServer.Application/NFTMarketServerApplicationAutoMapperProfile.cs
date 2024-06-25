@@ -160,6 +160,12 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(des => des.ExpireTime, opt
                 => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.ExpireTime)))
             .ForMember(des => des.Quantity, opt => opt.MapFrom(source => source.RealQuantity));
+        CreateMap<IndexerNFTOffer, CollectedCollectionOffersMadeDto>()
+            .ForMember(des => des.FromAddress, opt => opt.MapFrom(source => source.From))
+            .ForMember(des => des.ToAddress, opt => opt.MapFrom(source => source.To))
+            .ForMember(des => des.ExpireTime, opt
+                => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.ExpireTime)))
+            .ForMember(des => des.Quantity, opt => opt.MapFrom(source => source.RealQuantity));
 
         CreateMap<NFTInfoExtensionIndex, IndexerNFTInfo>();
         CreateMap<IndexerListingWhitelistPrice, NFTInfoIndexDto>()
