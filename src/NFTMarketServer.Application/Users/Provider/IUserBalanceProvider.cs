@@ -14,7 +14,9 @@ public interface IUserBalanceProvider
     
     public Task BatchSaveOrUpdateUserBalanceAsync(List<UserBalanceIndex> userBalanceIndices);
     
-    public Task<Tuple<long, List<UserBalanceIndex>>> GetCollectionIdsAsync(QueryMyHoldNFTCollectionsInput input);
+    public Task<Tuple<long, List<UserBalanceIndex>>> GetUserBalancesAsync(QueryUserBalanceIndexInput input);
+
+    public Task<List<UserBalanceIndex>> GetValidUserBalanceInfosAsync(QueryUserBalanceIndexInput input);
 
 
 }

@@ -5,6 +5,7 @@ using AElf.Indexing.Elasticsearch;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Nest;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Message.Provider;
 using NFTMarketServer.NFT;
@@ -23,6 +24,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
     private readonly IBus _bus;
     private readonly ILogger<MessageInfoProvider> _logger;
     private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
+    private const int MaxQueryBalanceCount = 10;
 
 
     public UserBalanceProvider(
@@ -117,7 +119,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         await _userBalanceIndexRepository.BulkAddOrUpdateAsync(userBalanceIndices);
     }
 
-    public async Task<Tuple<long, List<UserBalanceIndex>>> GetCollectionIdsAsync(QueryMyHoldNFTCollectionsInput input)
+    public async Task<Tuple<long, List<UserBalanceIndex>>> GetUserBalancesAsync(QueryUserBalanceIndexInput input)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
         if (!input.Address.IsNullOrEmpty())
@@ -130,7 +132,11 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         {
             mustQuery.Add(q => q.TermRange(i => i.Field(index => index.Amount).GreaterThanOrEquals(1.ToString())));
         } 
-        
+        if (!input.CollectionIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
+        }
         var shouldQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
         if (!input.KeyWord.IsNullOrEmpty())
         {
@@ -148,4 +154,40 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             sortFunc: sorting);
         return tuple;
     }
+    
+    public async Task<List<UserBalanceIndex>> GetValidUserBalanceInfosAsync(QueryUserBalanceIndexInput queryUserBalanceIndexInput)
+    {
+        var userBalanceList = new List<UserBalanceIndex>();
+        var totalCount = -1;
+        var queryCount = 1;
+        while (totalCount > userBalanceList.Count && queryCount <= MaxQueryBalanceCount)
+        {
+            var result = await GetUserBalancesAsync(queryUserBalanceIndexInput);
+            if (result == null || result.Item1 <= CommonConstant.IntZero)
+            {
+                return userBalanceList;
+            }
+
+            if (queryCount == CommonConstant.IntOne)
+            {
+                totalCount = (int)result.Item1;
+            }
+            userBalanceList.AddRange(result.Item2);
+            queryUserBalanceIndexInput.SkipCount = result.Item2.Count;
+            queryCount++;
+        }
+        var returnUserBalances = new List<UserBalanceIndex>();
+        foreach (var userBalance in userBalanceList)
+        {
+            var amount = userBalance.Amount;
+            var decimals = userBalance.Decimals;
+            var minQuantity = (int)(1 * Math.Pow(10, decimals));
+            if (amount >= minQuantity)
+            {
+                returnUserBalances.Add(userBalance);
+            }
+        }
+        return userBalanceList;
+    }
+
 }

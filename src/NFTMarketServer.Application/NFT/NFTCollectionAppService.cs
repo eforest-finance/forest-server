@@ -13,7 +13,6 @@ using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Options;
 using NFTMarketServer.Users;
-using NFTMarketServer.Users.Index;
 using Orleans;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -375,49 +374,25 @@ namespace NFTMarketServer.NFT
 
         public async Task<PagedResultDto<SearchNFTCollectionsDto>> GetMyHoldNFTCollectionsAsync(GetMyHoldNFTCollectionsInput input)
         {
-            var queryMyHoldNFTCollectionsInput = new QueryMyHoldNFTCollectionsInput()
+            var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput()
             {
                 Address = input.Address,
                 QueryType = input.QueryType,
                 KeyWord = input.KeyWord,
                 SkipCount = CommonConstant.IntZero
             };
-            var userBalanceList = new List<UserBalanceIndex>();
-            var totalCount = -1;
-            var queryCount = 1;
-            while (totalCount > userBalanceList.Count && queryCount <= MaxQueryBalanceCount)
+            var userBalanceList = await _userBalanceProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+            if (userBalanceList.IsNullOrEmpty())
             {
-                var result = await _userBalanceProvider.GetCollectionIdsAsync(queryMyHoldNFTCollectionsInput);
-                if (result == null || result.Item1 <= CommonConstant.IntZero)
+                return new PagedResultDto<SearchNFTCollectionsDto>()
                 {
-                    return new PagedResultDto<SearchNFTCollectionsDto>()
-                    {
-                        TotalCount = CommonConstant.IntZero,
-                        Items = new List<SearchNFTCollectionsDto>()
-                    };
-                }
+                    TotalCount = CommonConstant.IntZero,
+                    Items = new List<SearchNFTCollectionsDto>()
+                };
+            }
 
-                if (queryCount == CommonConstant.IntOne)
-                {
-                    totalCount = (int)result.Item1;
-                }
-                userBalanceList.AddRange(result.Item2);
-                queryMyHoldNFTCollectionsInput.SkipCount = result.Item2.Count;
-                queryCount++;
-            }
-            var collectionIds = new List<string>();
-            foreach (var userBalance in userBalanceList)
-            {
-                var amount = userBalance.Amount;
-                var decimals = userBalance.Decimals;
-                var minQuantity = (int)(1 * Math.Pow(10, decimals));
-                if (amount >= minQuantity)
-                {
-                    collectionIds.Add(userBalance.CollectionId);
-                }
-            }
-            collectionIds = collectionIds.Distinct().ToList();
-            //filter amount < 1 by decimals
+            var collectionIds = userBalanceList.Select(i => i.CollectionId).Distinct().ToList();
+
             var collectionDictionary = await _nftCollectionProvider.GetNFTCollectionIndexByIdsAsync(collectionIds);
             if (collectionDictionary == null || collectionDictionary.Count == CommonConstant.IntZero)
             {

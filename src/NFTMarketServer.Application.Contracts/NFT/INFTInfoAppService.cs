@@ -34,6 +34,9 @@ namespace NFTMarketServer.NFT
         Task<PagedResultDto<NFTActivityDto>> GetActivityListAsync(GetActivitiesInput input);
 
         Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync();
+        
+        Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyHoldNFTInfosAsync(GetMyHoldNFTInfosInput input);
+
 
     }
 }
