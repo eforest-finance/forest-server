@@ -13,6 +13,7 @@ using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Options;
 using NFTMarketServer.Users;
+using NFTMarketServer.Users.Index;
 using Orleans;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -381,10 +382,10 @@ namespace NFTMarketServer.NFT
                 KeyWord = input.KeyWord,
                 SkipCount = CommonConstant.IntZero
             };
-            var collectionIds = new List<string>();
+            var userBalanceList = new List<UserBalanceIndex>();
             var totalCount = -1;
             var queryCount = 1;
-            while (totalCount > collectionIds.Count && queryCount <= MaxQueryBalanceCount)
+            while (totalCount > userBalanceList.Count && queryCount <= MaxQueryBalanceCount)
             {
                 var result = await _userBalanceProvider.GetCollectionIdsAsync(queryMyHoldNFTCollectionsInput);
                 if (result == null || result.Item1 <= CommonConstant.IntZero)
@@ -400,10 +401,20 @@ namespace NFTMarketServer.NFT
                 {
                     totalCount = (int)result.Item1;
                 }
-
+                userBalanceList.AddRange(result.Item2);
                 queryMyHoldNFTCollectionsInput.SkipCount = result.Item2.Count;
-                collectionIds.AddRange(result.Item2.Select(q => q.CollectionId).ToList());
                 queryCount++;
+            }
+            var collectionIds = new List<string>();
+            foreach (var userBalance in userBalanceList)
+            {
+                var amount = userBalance.Amount;
+                var decimals = userBalance.Decimals;
+                var minQuantity = (int)(1 * Math.Pow(10, decimals));
+                if (amount >= minQuantity)
+                {
+                    collectionIds.Add(userBalance.CollectionId);
+                }
             }
             collectionIds = collectionIds.Distinct().ToList();
             //filter amount < 1 by decimals
