@@ -78,7 +78,7 @@ public class FileController : AbpController
     }
     
     [HttpGet]
-    [Route("randomImage")]
+    [Route("random-image")]
     public async Task<string> RandomImage()
     {
         return await _symbolIconAppService.GetRandomImageAsync();
