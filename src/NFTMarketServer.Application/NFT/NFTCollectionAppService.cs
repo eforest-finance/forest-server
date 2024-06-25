@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Grains;
@@ -392,8 +393,11 @@ namespace NFTMarketServer.NFT
             }
 
             var collectionIds = userBalanceList.Select(i => i.CollectionId).Distinct().ToList();
+            _logger.LogDebug("GetMyHoldNFTCollectionsAsync for debug query userBalance collectionIdsCount:{A} collectionIds:{}", collectionIds.Count, JsonConvert.SerializeObject(collectionIds));
 
             var collectionDictionary = await _nftCollectionProvider.GetNFTCollectionIndexByIdsAsync(collectionIds);
+            _logger.LogDebug("GetMyHoldNFTCollectionsAsync for debug query userBalance collectionDictionary:{A}", JsonConvert.SerializeObject(collectionDictionary));
+
             if (collectionDictionary == null || collectionDictionary.Count == CommonConstant.IntZero)
             {
                 return new PagedResultDto<SearchNFTCollectionsDto>()
