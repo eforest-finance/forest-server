@@ -161,9 +161,9 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
     public async Task<List<UserBalanceIndex>> GetValidUserBalanceInfosAsync(QueryUserBalanceIndexInput queryUserBalanceIndexInput)
     {
         var userBalanceList = new List<UserBalanceIndex>();
-        var totalCount = -1;
+        var totalCount = 0;
         var queryCount = 1;
-        while (totalCount > userBalanceList.Count && queryCount <= MaxQueryBalanceCount)
+        while (queryCount <= MaxQueryBalanceCount)
         {
             var result = await GetUserBalancesAsync(queryUserBalanceIndexInput);
             if (result == null || result.Item1 <= CommonConstant.IntZero)
@@ -181,6 +181,10 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
 
             queryUserBalanceIndexInput.SkipCount = result.Item2.Count;
             queryCount++;
+            if (totalCount == userBalanceList.Count)
+            {
+                break;
+            }
         }
         var returnUserBalances = new List<UserBalanceIndex>();
         foreach (var userBalance in userBalanceList)
