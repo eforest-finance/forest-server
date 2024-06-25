@@ -30,4 +30,5 @@ public class UserBalanceIndex : NFTMarketEntity<string>, IIndexBuild
     [Wildcard] public string CollectionSymbol { get; set; }
     [Wildcard] public string CollectionName { get; set; }
     [Keyword] public string NFTName { get; set; }
+    public bool CountedFlag { get; set; } = false;
 }

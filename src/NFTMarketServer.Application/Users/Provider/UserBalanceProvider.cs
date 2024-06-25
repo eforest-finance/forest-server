@@ -71,6 +71,8 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             _logger.LogError("SaveOrUpdateUserBalanceAsync messageInfo is null");
             return;
         }
+        _logger.LogInformation("SaveOrUpdateUserBalanceAsync messageInfo id:{A}",dto.Id);
+
         
         var nftInfoIndex = await _nftInfoNewSyncedProvider.GetNFTInfoIndexAsync(dto.NFTInfoId);
         var collectionId = "";
