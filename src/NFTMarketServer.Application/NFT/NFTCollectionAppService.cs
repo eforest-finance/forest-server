@@ -434,12 +434,15 @@ namespace NFTMarketServer.NFT
             dto.TokenName = nftCollection.TokenName;
             dto.ChainId = nftCollection.ChainId;
             dto.Symbol = nftCollection.Symbol;
+            dto.Id = nftCollection.Id;
             if (!extensionIndices.IsNullOrEmpty())
             {
                 var extension = extensionIndices.First(i => i.Id.Equals(nftCollection.Id));
                 if (extension != null)
                 {
                     dto.FloorPrice = extension.FloorPrice;
+                    dto.FloorPriceSymbol = extension.FloorPriceSymbol;
+                    dto.ItemTotal = extension.ItemTotal;
                 }
             }
 
