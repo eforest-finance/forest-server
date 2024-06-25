@@ -5,6 +5,7 @@ using AElf.Indexing.Elasticsearch;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Nest;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Message.Provider;
@@ -139,13 +140,13 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             mustQuery.Add(q =>
                 q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
         }
-        var shouldQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
         if (!input.KeyWord.IsNullOrEmpty())
-        {
+        {        
+            var shouldQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
             shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionName).Value("*" + input.KeyWord + "*")));
             shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionSymbol).Value("*" + input.KeyWord + "*")));
+            mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
         }
-        mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
         
         QueryContainer Filter(QueryContainerDescriptor<UserBalanceIndex> f) =>
             f.Bool(b => b.Must(mustQuery));
@@ -169,7 +170,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             {
                 return userBalanceList;
             }
-            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{}", result.Item1, result.Item2.Count);
+            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{} input:{C}", result.Item1, result.Item2.Count, JsonConvert.SerializeObject(queryUserBalanceIndexInput));
 
             if (queryCount == CommonConstant.IntOne)
             {
