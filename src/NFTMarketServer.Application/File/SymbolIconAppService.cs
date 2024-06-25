@@ -15,7 +15,7 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
 {
     private readonly AwsS3Client _awsS3Client;
     private readonly ISymbolIconProvider _symbolIconProvider;
-    private readonly IOptionsMonitor<HideCollectionInfoOptions> _hideCollectionInfoOptionsMonitor;
+    private readonly IOptionsMonitor<RandomImageListOptions> _randomImageListOptionsMonitor;
 
 
     private const string SvgBackGroundData = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -45,12 +45,12 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
 
     public SymbolIconAppService(AwsS3Client awsS3Client,
         ISymbolIconProvider symbolIconProvider,
-        IOptionsMonitor<HideCollectionInfoOptions> hideCollectionInfoOptionsMonitor
+        IOptionsMonitor<RandomImageListOptions> randomImageListOptionsMonitor
     )
     {
         _awsS3Client = awsS3Client;
         _symbolIconProvider = symbolIconProvider;
-        _hideCollectionInfoOptionsMonitor = hideCollectionInfoOptionsMonitor;
+        _randomImageListOptionsMonitor = randomImageListOptionsMonitor;
     }
 
     public async Task<string> UpLoadIconAsync(Stream stream, string seedSymbol, string symbol)
@@ -99,7 +99,7 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
 
     public async Task<string> GetRandomImageAsync()
     {
-        var randomList = _hideCollectionInfoOptionsMonitor.CurrentValue.HideCollectionInfoList;
+        var randomList = _randomImageListOptionsMonitor.CurrentValue.RandomImageList;
         if (randomList.Count == CommonConstant.IntZero)
         {
             return "";

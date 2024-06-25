@@ -39,9 +39,9 @@ public class HideCollectionInfoOptions
     public List<string> HideCollectionInfoList { get; set; }
 }
 
-public class RandomNFTUrlListOptions
+public class RandomImageListOptions
 {
-    public List<string> RandomNFTUrlList { get; set; }
+    public List<string> RandomImageList { get; set; }
 }
 
 public class RarityShowWhiteOptions
