@@ -90,6 +90,12 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         {
             mustQuery.Add(q => q.Ids(i => i.Values(dto.NFTIdList)));
         }
+
+        if (!dto.IssueAddress.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.IssueManagerSet).Terms(dto.IssueAddress)));
+        }
+
         if (!dto.SearchParam.IsNullOrEmpty())
         {
             shouldQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(dto.SearchParam)));

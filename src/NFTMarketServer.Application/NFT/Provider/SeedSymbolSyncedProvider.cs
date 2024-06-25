@@ -63,6 +63,11 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         {
             mustQuery.Add(q => q.Ids(i => i.Values(dto.NFTIdList)));
         }
+        if (!dto.IssueAddress.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Term(i
+                => i.Field(f => f.IssuerTo).Value(dto.IssueAddress)));
+        }
         
         if (!dto.ChainList.IsNullOrEmpty())
         {
