@@ -1,9 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AElf.Indexing.Elasticsearch;
 using GraphQL;
+using Nest;
 using NFTMarketServer.Common;
 using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Users;
+using NFTMarketServer.Users.Index;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
 
@@ -18,6 +24,8 @@ public interface IUserBalanceProvider
     
     public Task<UserBalanceIndexerListDto> QueryUserBalanceListAsync(QueryUserBalanceInput input);
 
+    public Task<List<string>> GetNFTIdListByUserBalancesAsync(GetCollectedCollectionActivitiesInput input,
+        int skipCount, int maxResultCount);
 }
 
 
@@ -28,15 +36,18 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
     private readonly IObjectMapper _objectMapper;
     private readonly IGraphQLClientFactory _graphQlClientFactory;
     private const GraphQLClientEnum ClientType = GraphQLClientEnum.ForestClient;
+    private readonly INESTRepository<UserBalanceIndex, string> _userBalanceIndexRepository;
 
 
     public UserBalanceProvider(IGraphQLHelper graphQlHelper,
         IObjectMapper objectMapper,
-        IGraphQLClientFactory graphQlClientFactory)
+        IGraphQLClientFactory graphQlClientFactory,
+        INESTRepository<UserBalanceIndex, string> userBalanceIndexRepository)
     {
         _graphQlHelper = graphQlHelper;
         _objectMapper = objectMapper;
         _graphQlClientFactory = graphQlClientFactory;
+        _userBalanceIndexRepository = userBalanceIndexRepository;
 
     }
     
@@ -144,5 +155,43 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         });
 
         return indexerCommonResult?.Data.QueryUserBalanceList;
+    }
+
+    public async Task<List<string>> GetNFTIdListByUserBalancesAsync(GetCollectedCollectionActivitiesInput input,
+        int skipCount,
+        int maxResultCount)
+    {
+        if (input == null || input.Address.IsNullOrEmpty())
+        {
+            return null;
+        }
+        var mustQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
+
+        if (!input.CollectionIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
+        }
+
+        if (!input.ChainList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.ChainId).Terms(input.ChainList)));
+        }
+        
+        mustQuery.Add(q => q.Terms(i => i.Field(f => f.Address).Terms(input.Address)));
+
+        QueryContainer Filter(QueryContainerDescriptor<UserBalanceIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var result = await _userBalanceIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
+            sortExp: item => item.ChangeTime, skip: skipCount, limit: maxResultCount);
+
+        if (result == null)
+        {
+            return new List<string>();
+        }
+
+        return result?.Item2?.Select(item => item.NFTInfoId).ToList();
     }
 }

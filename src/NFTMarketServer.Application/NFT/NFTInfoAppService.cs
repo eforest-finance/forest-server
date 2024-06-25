@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
@@ -384,12 +383,25 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
             GetCollectedCollectionActivitiesInput input)
         {
+            input.Address = FullAddressHelper.ToShortAddress(input.Address);
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
 
-            var nftActivityDtoPage = new PagedResultDto<NFTActivityDto>();
+            var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
             if (input.Traits.IsNullOrEmpty())
             {
-                nftActivityDtoPage = await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input);
+                nftActivityDtoPage = await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, new List<string>());
+            }
+            else
+            {
+                var nftInfoIdList =
+                    await _userBalanceProvider.GetNFTIdListByUserBalancesAsync(input, CommonConstant.IntZero,
+                        CommonConstant.IntOneThousand);
+                if (nftInfoIdList.IsNullOrEmpty())
+                {
+                    return result;
+                }
+                nftActivityDtoPage =
+                    await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIdList);
             }
             
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())

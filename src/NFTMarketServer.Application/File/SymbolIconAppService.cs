@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using NFTMarketServer.AwsS3;
+using NFTMarketServer.Basic;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Icon;
 
 namespace NFTMarketServer.File;
@@ -12,6 +15,7 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
 {
     private readonly AwsS3Client _awsS3Client;
     private readonly ISymbolIconProvider _symbolIconProvider;
+    private readonly IOptionsMonitor<RandomImageListOptions> _randomImageListOptionsMonitor;
 
 
     private const string SvgBackGroundData = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -40,11 +44,13 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
         @"<text x=""500"" y=""500"" text-anchor=""middle"" dominant-baseline=""middle"" font-family=""Helvetica"" font-size=""{0}"" style=""fill:white;"">{1}</text>";
 
     public SymbolIconAppService(AwsS3Client awsS3Client,
-        ISymbolIconProvider symbolIconProvider
+        ISymbolIconProvider symbolIconProvider,
+        IOptionsMonitor<RandomImageListOptions> randomImageListOptionsMonitor
     )
     {
         _awsS3Client = awsS3Client;
         _symbolIconProvider = symbolIconProvider;
+        _randomImageListOptionsMonitor = randomImageListOptionsMonitor;
     }
 
     public async Task<string> UpLoadIconAsync(Stream stream, string seedSymbol, string symbol)
@@ -89,6 +95,23 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
     {
         var stream = new MemoryStream(utf8Bytes);
         return await _awsS3Client.UpLoadFileForNFTWithHashAsync(stream, symbol);
+    }
+
+    public async Task<string> GetRandomImageAsync()
+    {
+        var randomList = _randomImageListOptionsMonitor.CurrentValue.RandomImageList;
+        if (randomList.Count == CommonConstant.IntZero)
+        {
+            return "";
+        }
+        if (randomList.Count == CommonConstant.IntOne)
+        {
+            return randomList[CommonConstant.IntZero];
+        }
+
+        var randomNumber =
+            new Random().Next(CommonConstant.IntZero, randomList.Count - CommonConstant.IntOne);
+        return randomList[randomNumber];
     }
 
     private Stream AddWaterMarkByStream(string symbol)

@@ -53,8 +53,7 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
         long maxProcessedBlockHeight = -1;
         //Paging for logical processing
 
-        var activityTypeList = new List<int>
-            { EnumHelper.GetIndex(NFTActivityType.Sale), EnumHelper.GetIndex(NFTActivityType.MakeOffer) };
+        var activityTypeList = new List<int>();
         var changePageInfo = await _nftActivityProvider.GetMessageActivityListAsync(activityTypeList, skipCount,
             lastEndHeight);
 

@@ -5,7 +5,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.NFT;
 
-public class NFTActivityDto: EntityDto<Guid>
+public class NFTActivityDto: EntityDto<string>
 {
     public string NFTInfoId { get; set; }
     public NFTActivityType Type { get; set; }
@@ -24,5 +24,7 @@ public class NFTActivityDto: EntityDto<Guid>
     public decimal TotalPrice{ get; set; }
     
     public string NFTUrl{ get; set; }
+    
+    public string NFTName{ get; set; }
 
 }

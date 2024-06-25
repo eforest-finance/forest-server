@@ -9,6 +9,7 @@ using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.NFT;
 
@@ -17,13 +18,16 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
 {
     private readonly IUserAppService _userAppService;
     private readonly INFTActivityProvider _nftActivityProvider;
+    private readonly IObjectMapper _objectMapper;
 
     public NFTActivityAppService(
         IUserAppService userAppService,
-        INFTActivityProvider nftActivityProvider)
+        INFTActivityProvider nftActivityProvider,
+        IObjectMapper objectMapper)
     {
         _userAppService = userAppService;
         _nftActivityProvider = nftActivityProvider;
+        _objectMapper = objectMapper;
     }
 
     public async Task<PagedResultDto<NFTActivityDto>> GetListAsync(GetActivitiesInput input)
@@ -104,15 +108,16 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
         };
     }
 
-    public async Task<PagedResultDto<NFTActivityDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+    public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
+        GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds)
     {
-        var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input);
-        var list = nftActivityIndexTuple?.Result?.Item2;
+        var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
+        var list = nftActivityIndexTuple?.Item2;
         if (list.IsNullOrEmpty())
         {
-            return new PagedResultDto<NFTActivityDto>
+            return new PagedResultDto<CollectedCollectionActivitiesDto>
             {
-                Items = new List<NFTActivityDto>(),
+                Items = new List<CollectedCollectionActivitiesDto>(),
                 TotalCount = 0
             };
         }
@@ -132,18 +137,18 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
         }
 
         var accounts = await _userAppService.GetAccountsAsync(addresses);
-        var result = nftActivityIndexTuple.Result.Item2.ToList().Select(item=>Map(item,accounts)).ToList();
-        var totalCount = nftActivityIndexTuple.Result.Item1;
-        return new PagedResultDto<NFTActivityDto>
+        var result = nftActivityIndexTuple.Item2.ToList().Select(item=>Map(item,accounts)).ToList();
+        var totalCount = nftActivityIndexTuple.Item1;
+        return new PagedResultDto<CollectedCollectionActivitiesDto>
         {
             Items = result,
             TotalCount = totalCount
         };
     }
 
-    private NFTActivityDto Map(NFTActivityIndex index, Dictionary<string, AccountDto> accounts)
+    private CollectedCollectionActivitiesDto Map(NFTActivityIndex index, Dictionary<string, AccountDto> accounts)
     {
-        var activityDto = ObjectMapper.Map<NFTActivityIndex, NFTActivityDto>(index);
+        var activityDto = _objectMapper.Map<NFTActivityIndex, CollectedCollectionActivitiesDto>(index);
         if (index.PriceTokenInfo != null)
         {
             activityDto.PriceToken = new TokenDto
@@ -183,7 +188,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
 
     private NFTActivityDto Map(NFTActivityItem index, Dictionary<string, AccountDto> accounts)
     {
-        var activityDto = ObjectMapper.Map<NFTActivityItem, NFTActivityDto>(index);
+        var activityDto = _objectMapper.Map<NFTActivityItem, NFTActivityDto>(index);
         if (index.PriceTokenInfo != null)
         {
             activityDto.PriceToken = new TokenDto

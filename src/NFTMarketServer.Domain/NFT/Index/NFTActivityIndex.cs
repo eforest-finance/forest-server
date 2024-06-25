@@ -45,5 +45,8 @@ public class NFTActivityIndex :  NFTMarketEntity<string>, IIndexBuild
     public bool ToNFTIssueFlag { get; set; }
     
     public TokenInfoIndex PriceTokenInfo { get; set; }
+    
+    [Keyword]
+    public string ChainId { get; set; }
 
 }

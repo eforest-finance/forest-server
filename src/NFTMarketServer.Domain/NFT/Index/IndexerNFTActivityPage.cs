@@ -23,6 +23,8 @@ public class NFTActivityItem
     public string TransactionHash { get; set; }
     public DateTime Timestamp { get; set; }
     public long BlockHeight { get; set;}
+    
+    public string ChainId { get; set; }
 }
 
 public class TokenInfoDto
