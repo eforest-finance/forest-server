@@ -169,12 +169,15 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             {
                 return userBalanceList;
             }
+            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{}", result.Item1, result.Item2.Count);
 
             if (queryCount == CommonConstant.IntOne)
             {
                 totalCount = (int)result.Item1;
             }
             userBalanceList.AddRange(result.Item2);
+            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalanceList count:{A}", userBalanceList.Count);
+
             queryUserBalanceIndexInput.SkipCount = result.Item2.Count;
             queryCount++;
         }
@@ -189,6 +192,8 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
                 returnUserBalances.Add(userBalance);
             }
         }
+        _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query returnUserBalances count:{A}", returnUserBalances.Count);
+
         return userBalanceList;
     }
 
