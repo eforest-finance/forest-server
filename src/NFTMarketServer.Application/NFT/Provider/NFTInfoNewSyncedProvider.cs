@@ -86,7 +86,10 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         var shouldQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
 
         mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(dto.CollectionId)));
-        
+        if (!dto.NFTIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Ids(i => i.Values(dto.NFTIdList)));
+        }
         if (!dto.SearchParam.IsNullOrEmpty())
         {
             shouldQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(dto.SearchParam)));

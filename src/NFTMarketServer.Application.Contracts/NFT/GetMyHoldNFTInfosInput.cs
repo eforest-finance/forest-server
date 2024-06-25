@@ -7,15 +7,15 @@ using NFTMarketServer.NFT.Index;
 
 namespace NFTMarketServer.NFT
 {
-    public class GetCompositeNFTInfosInput : PagedAndSortedMaxCountResultRequestDto
+    public class GetMyHoldNFTInfosInput : PagedAndSortedMaxCountResultRequestDto
     {
-        [CanBeNull] public List<string> NFTIdList { get; set; }
-
+        [CanBeNull] public List<string> CollectionIds { get; set; }
         [CanBeNull] public List<int> Generation { get; set; }
         [CanBeNull] public List<TraitDto> Traits { get; set; }
-
+        [Required] public string Address { get; set; }
         [Required] public string CollectionType { get; set; }
-        [Required] public string CollectionId { get; set; }
+        public string KeyWord { get; set; }
+        public QueryType  QueryType{ get; set; }
         [Required] public override string Sorting { get; set; }
 
         [Required,DefaultValue(false)]public bool HasListingFlag { get; set; }
