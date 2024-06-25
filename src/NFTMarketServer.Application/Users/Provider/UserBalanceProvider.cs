@@ -5,6 +5,7 @@ using AElf.Indexing.Elasticsearch;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Nest;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Message.Provider;
@@ -139,13 +140,13 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             mustQuery.Add(q =>
                 q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
         }
-        var shouldQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
         if (!input.KeyWord.IsNullOrEmpty())
-        {
+        {        
+            var shouldQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
             shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionName).Value("*" + input.KeyWord + "*")));
             shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionSymbol).Value("*" + input.KeyWord + "*")));
+            mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
         }
-        mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
         
         QueryContainer Filter(QueryContainerDescriptor<UserBalanceIndex> f) =>
             f.Bool(b => b.Must(mustQuery));
@@ -160,16 +161,16 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
     public async Task<List<UserBalanceIndex>> GetValidUserBalanceInfosAsync(QueryUserBalanceIndexInput queryUserBalanceIndexInput)
     {
         var userBalanceList = new List<UserBalanceIndex>();
-        var totalCount = -1;
+        var totalCount = 0;
         var queryCount = 1;
-        while (totalCount > userBalanceList.Count && queryCount <= MaxQueryBalanceCount)
+        while (queryCount <= MaxQueryBalanceCount)
         {
             var result = await GetUserBalancesAsync(queryUserBalanceIndexInput);
             if (result == null || result.Item1 <= CommonConstant.IntZero)
             {
                 return userBalanceList;
             }
-            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{}", result.Item1, result.Item2.Count);
+            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{} input:{C}", result.Item1, result.Item2.Count, JsonConvert.SerializeObject(queryUserBalanceIndexInput));
 
             if (queryCount == CommonConstant.IntOne)
             {
@@ -180,6 +181,10 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
 
             queryUserBalanceIndexInput.SkipCount = result.Item2.Count;
             queryCount++;
+            if (totalCount == userBalanceList.Count)
+            {
+                break;
+            }
         }
         var returnUserBalances = new List<UserBalanceIndex>();
         foreach (var userBalance in userBalanceList)
