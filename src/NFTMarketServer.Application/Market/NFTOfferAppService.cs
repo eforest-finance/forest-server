@@ -131,8 +131,7 @@ namespace NFTMarketServer.Market
             Dictionary<string, AccountDto> accounts)
         {
             result.TotalCount = nftOfferIndexes.TotalRecordCount;
-
-            nftOfferIndexes.IndexerNFTOfferList.Select(index =>
+            result.Items = nftOfferIndexes.IndexerNFTOfferList.Select(index =>
             {
                 
                 var dto = _objectMapper.Map<IndexerNFTOffer, CollectedCollectionOffersMadeDto>(index);
