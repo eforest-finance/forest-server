@@ -8,7 +8,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Market
 {
-    public class GetCollectedCollectionOffersMadeInput: PagedAndSortedResultRequestDto
+    public class GetCollectedCollectionReceivedOfferInput: PagedAndSortedResultRequestDto
     {
         [CanBeNull] public string SearchParam { get; set; }
         [CanBeNull] public List<string> CollectionIdList { get; set; }

@@ -52,9 +52,15 @@ namespace NFTMarketServer.Controllers
         
         [HttpPost]
         [Route("collected-collection-offers-made")]
-        public Task<PagedResultDto<CollectedCollectionOffersMadeDto>> GetCollectedCollectionOffersMadeAsync(GetCollectedCollectionOffersMadeInput input)
+        public Task<PagedResultDto<CollectedCollectionOffersDto>> GetCollectedCollectionOffersMadeAsync(GetCollectedCollectionOffersMadeInput input)
         {
             return _nftOfferAppService.GetCollectedCollectionOffersMadeAsync(input);
+        }
+        [HttpPost]
+        [Route("collected-collection-received-offer")]
+        public Task<PagedResultDto<CollectedCollectionOffersDto>> GetCollectedCollectionReceivedOfferAsync(GetCollectedCollectionReceivedOfferInput input)
+        {
+            return _nftOfferAppService.GetCollectedCollectionReceivedOfferAsync(input);
         }
 
         [HttpGet]
