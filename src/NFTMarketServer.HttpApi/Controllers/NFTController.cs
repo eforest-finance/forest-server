@@ -266,7 +266,7 @@ namespace NFTMarketServer.Controllers
             return _nftCollectionAppService.GetMyHoldNFTCollectionsAsync(input);
         }
         
-        [HttpPost]
+        [HttpGet]
         [Route("nft-infos-user-profile/myhold")]
         public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyHoldNFTInfosAsync(GetMyHoldNFTInfosInput input)
         {

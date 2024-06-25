@@ -13,7 +13,6 @@ namespace NFTMarketServer.NFT
         [CanBeNull] public List<int> Generation { get; set; }
         [CanBeNull] public List<TraitDto> Traits { get; set; }
         [Required] public string Address { get; set; }
-        [Required] public string CollectionType { get; set; }
         public string KeyWord { get; set; }
         public QueryType  QueryType{ get; set; }
         [Required] public override string Sorting { get; set; }
@@ -33,12 +32,6 @@ namespace NFTMarketServer.NFT
         public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             base.Validate(validationContext);
-
-            if (!CollectionType.Equals(CommonConstant.CollectionTypeSeed) &&
-                !CollectionType.Equals(CommonConstant.CollectionTypeNFT))
-            {
-                yield return new ValidationResult(BasicStatusMessage.IllegalInputData, new[] { "collectionType" });
-            }
             
             if (PriceLow != 0 && PriceLow < 0)
             {
