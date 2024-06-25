@@ -144,7 +144,7 @@ namespace NFTMarketServer.Market
                 if (!index.To.IsNullOrWhiteSpace() && accounts.ContainsKey(index.To))
                     dto.To = index.To.IsNullOrWhiteSpace() ? null : accounts[index.To];
                 var collectionId = SymbolHelper.TransferNFTIdToCollectionId(index.BizInfoId);
-                if (nftCollectionExtensionDic[collectionId] != null)
+                if (nftCollectionExtensionDic.ContainsKey(collectionId) && nftCollectionExtensionDic[collectionId] != null)
                 {
                     dto.FloorPrice = nftCollectionExtensionDic[collectionId] .FloorPrice;
                     dto.FloorPriceSymbol = nftCollectionExtensionDic[collectionId] .FloorPriceSymbol;
