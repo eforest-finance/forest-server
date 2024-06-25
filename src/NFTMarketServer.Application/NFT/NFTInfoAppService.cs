@@ -391,25 +391,9 @@ namespace NFTMarketServer.NFT
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
 
             var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
-
-            var userBalanceList =
-                await _userBalanceProvider.GetNFTIdListByUserBalancesAsync(input.CollectionIdList, input.Address,
-                    input.ChainList, CommonConstant.IntZero,
-                    CommonConstant.IntOneThousand, input.SearchParam);
-            if (userBalanceList == null)
-            {
-                return result;
-            }
-
-            var nftInfoIdList = userBalanceList?.Item2?.Select(item => item.NFTInfoId).ToList();
             
-            if (nftInfoIdList.IsNullOrEmpty())
-            {
-                return result;
-            }
             nftActivityDtoPage =
-                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIdList);
-            
+                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, new List<string>());
             
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
             {
