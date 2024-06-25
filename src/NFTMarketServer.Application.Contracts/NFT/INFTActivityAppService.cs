@@ -1,5 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NFTMarketServer.Market;
+using NFTMarketServer.NFT.Dto;
+using NFTMarketServer.NFT.Index;
 using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.NFT;
@@ -12,4 +16,7 @@ public interface INFTActivityAppService
 
     Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
         GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds);
+    
+    Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedActivityListAsync(
+        GetCollectedActivityListDto dto);
 }

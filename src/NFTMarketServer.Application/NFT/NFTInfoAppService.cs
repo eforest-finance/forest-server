@@ -391,30 +391,30 @@ namespace NFTMarketServer.NFT
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
 
             var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
-            if (input.Traits.IsNullOrEmpty())
+
+            var userBalanceList =
+                await _userBalanceProvider.GetNFTIdListByUserBalancesAsync(input.CollectionIdList, input.Address,
+                    input.ChainList, CommonConstant.IntZero,
+                    CommonConstant.IntOneThousand, input.SearchParam);
+            if (userBalanceList == null)
             {
-                nftActivityDtoPage = await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, new List<string>());
+                return result;
             }
-            else
+
+            var nftInfoIdList = userBalanceList?.Item2?.Select(item => item.NFTInfoId).ToList();
+            
+            if (nftInfoIdList.IsNullOrEmpty())
             {
-                var nftInfoIdList =
-                    await _userBalanceProvider.GetNFTIdListByUserBalancesAsync(input, CommonConstant.IntZero,
-                        CommonConstant.IntOneThousand);
-                if (nftInfoIdList.IsNullOrEmpty())
-                {
-                    return result;
-                }
-                nftActivityDtoPage =
-                    await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIdList);
+                return result;
             }
+            nftActivityDtoPage =
+                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIdList);
+            
             
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
             {
                 return result;
             }
-
-            var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
-            var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
 
             var collectionActivitiesDtoList = nftActivityDtoPage.Items.ToList().Select(item =>
                 _objectMapper.Map<NFTActivityDto, CollectedCollectionActivitiesDto>(item)).ToList();

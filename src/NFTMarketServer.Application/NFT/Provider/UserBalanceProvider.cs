@@ -24,8 +24,9 @@ public interface IUserBalanceProvider
     
     public Task<UserBalanceIndexerListDto> QueryUserBalanceListAsync(QueryUserBalanceInput input);
 
-    public Task<List<string>> GetNFTIdListByUserBalancesAsync(GetCollectedCollectionActivitiesInput input,
-        int skipCount, int maxResultCount);
+    public Task<Tuple<long, List<UserBalanceIndex>>> GetNFTIdListByUserBalancesAsync(List<string> collectionIdList, string address,
+        List<string> chainList,
+        int skipCount, int maxResultCount, string nftName);
 }
 
 
@@ -157,41 +158,41 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         return indexerCommonResult?.Data.QueryUserBalanceList;
     }
 
-    public async Task<List<string>> GetNFTIdListByUserBalancesAsync(GetCollectedCollectionActivitiesInput input,
-        int skipCount,
-        int maxResultCount)
+    public async Task<Tuple<long, List<UserBalanceIndex>>> GetNFTIdListByUserBalancesAsync(List<string> collectionIdList, string address,
+        List<string> chainList,
+        int skipCount, int maxResultCount, string nftName)
     {
-        if (input == null || input.Address.IsNullOrEmpty())
+        if (address.IsNullOrEmpty())
         {
             return null;
         }
+
         var mustQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
 
-        if (!input.CollectionIdList.IsNullOrEmpty())
+        if (!collectionIdList.IsNullOrEmpty())
         {
             mustQuery.Add(q =>
-                q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
+                q.Terms(i => i.Field(f => f.CollectionId).Terms(collectionIdList)));
         }
 
-        if (!input.ChainList.IsNullOrEmpty())
+        if (!chainList.IsNullOrEmpty())
         {
             mustQuery.Add(q =>
-                q.Terms(i => i.Field(f => f.ChainId).Terms(input.ChainList)));
+                q.Terms(i => i.Field(f => f.ChainId).Terms(chainList)));
         }
-        
-        mustQuery.Add(q => q.Terms(i => i.Field(f => f.Address).Terms(input.Address)));
+
+        if (!nftName.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.NFTName).Terms(nftName)));
+        }
+
+        mustQuery.Add(q => q.Terms(i => i.Field(f => f.Address).Terms(address)));
 
         QueryContainer Filter(QueryContainerDescriptor<UserBalanceIndex> f)
             => f.Bool(b => b.Must(mustQuery));
 
-        var result = await _userBalanceIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
+        return await _userBalanceIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
             sortExp: item => item.ChangeTime, skip: skipCount, limit: maxResultCount);
-
-        if (result == null)
-        {
-            return new List<string>();
-        }
-
-        return result?.Item2?.Select(item => item.NFTInfoId).ToList();
     }
 }

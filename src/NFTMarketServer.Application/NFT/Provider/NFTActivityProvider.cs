@@ -10,6 +10,8 @@ using Nest;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
+using NFTMarketServer.Market;
+using NFTMarketServer.NFT.Dto;
 using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
@@ -34,6 +36,8 @@ public partial interface INFTActivityProvider
 
     public Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedCollectionActivitiesAsync(
         GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds);
+    
+    Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedActivityListAsync(GetCollectedActivityListDto dto);
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
@@ -330,6 +334,62 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
             sortExp: item => item.Timestamp, skip: input.SkipCount, limit: input.MaxResultCount);
         
+        return result;
+    }
+
+    public async Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedActivityListAsync(GetCollectedActivityListDto dto)
+    {
+        if (dto == null)
+        {
+            return null;
+        }
+
+        if (dto.FromAddress.IsNullOrEmpty() && dto.ToAddress.IsNullOrEmpty())
+        {
+            return null;
+        }
+        
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+
+        if (!dto.CollectionIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.CollectionId).Terms(dto.CollectionIdList)));
+        }
+
+        if (!dto.ChainList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.ChainId).Terms(dto.ChainList)));
+        }
+
+        if (!dto.NFTInfoIds.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.NftInfoId).Terms(dto.NFTInfoIds)));
+        }
+
+        if (!dto.TypeList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Type).Terms(dto.TypeList)));
+        }
+
+        if (!dto.FromAddress.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.From).Terms(dto.FromAddress)));
+        }
+
+        if (!dto.ToAddress.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.To).Terms(dto.ToAddress)));
+        }
+        
+        QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
+            sortExp: item => item.Timestamp, skip: dto.SkipCount, limit: dto.MaxResultCount);
+
         return result;
     }
 }
