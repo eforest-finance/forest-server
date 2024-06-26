@@ -1642,7 +1642,7 @@ namespace NFTMarketServer.NFT
                 activity.CollectionSymbol = nftInfoIndexDto.NFTCollection.Symbol;
                 activity.CollectionName = nftInfoIndexDto.NFTCollection.TokenName;
                 activity.TotalPrice=(decimal)activity.Price * activity.Amount;
-                activity.NFTUrl = nftInfoIndexDto.PreviewImage;
+                activity.PreviewImage = nftInfoIndexDto.PreviewImage;
                 if(!activity.Symbol.Contains(input.FilterSymbol)) continue;
                 returnItems.Add(activity);
             }
