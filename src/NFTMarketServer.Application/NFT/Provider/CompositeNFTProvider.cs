@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AutoMapper.Internal;
-using AutoMapper.Internal.Mappers;
 using Microsoft.Extensions.Logging;
 using Nest;
 using NFTMarketServer.Basic;
@@ -25,19 +24,16 @@ public interface ICompositeNFTProvider
 public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
 {
     private readonly ILogger<CompositeNFTProvider> _logger;
-    private readonly IObjectMapper _objectMapper;
     private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
 
     public CompositeNFTProvider(
         ILogger<CompositeNFTProvider> logger,
-        IObjectMapper objectMapper,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository
     )
     {
         _logger = logger;
-        _objectMapper = objectMapper;
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
     }
