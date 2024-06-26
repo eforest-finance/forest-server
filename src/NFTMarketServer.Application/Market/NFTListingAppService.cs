@@ -103,8 +103,16 @@ namespace NFTMarketServer.Market
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
+                if (nftInfoIds.IsNullOrEmpty())
+                {
+                    return new PagedResultDto<CollectedCollectionListingDto>()
+                    {
+                        TotalCount = CommonConstant.IntZero,
+                        Items = new List<CollectedCollectionListingDto>()
+                    };
+                }
             }
-            
+
             var collectedNFTListings = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
                 input.MaxResultCount, input.Address, input.ChainList, nftInfoIds);
 

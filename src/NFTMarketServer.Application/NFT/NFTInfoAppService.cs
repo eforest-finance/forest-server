@@ -401,6 +401,10 @@ namespace NFTMarketServer.NFT
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
+                if (nftInfoIds.IsNullOrEmpty())
+                {
+                    return result;
+                }
             }
 
             nftActivityDtoPage =
