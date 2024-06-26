@@ -418,7 +418,21 @@ namespace NFTMarketServer.NFT
             {
                 nftCollectionIndexDtos.Add(MapNFTCollectionInfo(indexerNFTCollection, extensionList));
             }
-            
+
+            if (input.SkipCount >= collectionDictionary.Count)
+            {
+                return new PagedResultDto<SearchNFTCollectionsDto>()
+                {
+                    TotalCount = CommonConstant.IntZero,
+                    Items = new List<SearchNFTCollectionsDto>()
+                };
+            }
+
+            if (input.MaxResultCount > (collectionDictionary.Count - input.SkipCount))
+            {
+                input.MaxResultCount = (collectionDictionary.Count - input.SkipCount);
+            }
+
             return new PagedResultDto<SearchNFTCollectionsDto>()
             {
                 TotalCount = collectionDictionary.Count,
