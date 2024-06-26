@@ -147,7 +147,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                   ){
                     TotalCount: totalRecordCount,
                     Message: message,
-                    Items: data{
+                    nftListingInfo: data{
                       id,
                       businessId,
                       quantity,
