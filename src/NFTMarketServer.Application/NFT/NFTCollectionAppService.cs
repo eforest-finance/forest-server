@@ -423,7 +423,7 @@ namespace NFTMarketServer.NFT
             {
                 return new PagedResultDto<SearchNFTCollectionsDto>()
                 {
-                    TotalCount = CommonConstant.IntZero,
+                    TotalCount = collectionDictionary.Count,
                     Items = new List<SearchNFTCollectionsDto>()
                 };
             }
