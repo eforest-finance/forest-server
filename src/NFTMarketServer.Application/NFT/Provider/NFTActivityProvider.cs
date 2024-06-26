@@ -258,7 +258,8 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             NFTImage = image,
             ToNFTIssueFlag = to.Equals(issuer),
             PriceTokenInfo = _objectMapper.Map<TokenInfoDto, TokenInfoIndex>(activityDto.PriceTokenInfo),
-            ChainId = activityDto.ChainId
+            ChainId = activityDto.ChainId,
+            Type = activityDto.Type
         };
         await _nftActivityIndexRepository.AddOrUpdateAsync(nftActivityIndex);
 
