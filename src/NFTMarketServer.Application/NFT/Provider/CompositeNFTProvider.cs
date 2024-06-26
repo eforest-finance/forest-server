@@ -63,7 +63,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
 
         var maxResultCount = nftInfoIdList.Count;
         var commonNFTInfos =
-            await QueryCompositeNFTInfoForCommonNFTAsync(new List<string>(), new List<string>(), string.Empty,
+            await QueryCompositeNFTInfoForCommonNFTAsync(new List<string>(), nftInfoIdList, string.Empty,
                 CommonConstant.IntZero, maxResultCount
             );
 

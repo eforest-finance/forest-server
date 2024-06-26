@@ -113,7 +113,7 @@ namespace NFTMarketServer.Market
             }
             
             var nftInfoIdList = nftOfferIndexes.IndexerNFTOfferList?.Select(item => item.BizInfoId).ToList();
-
+            
             var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
             
             var nftCollectionExtensionDic =
