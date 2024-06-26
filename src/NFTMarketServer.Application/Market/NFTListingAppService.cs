@@ -91,7 +91,7 @@ namespace NFTMarketServer.Market
             input.Address = FullAddressHelper.ToShortAddress(input.Address);
             var listingDto = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
                 input.MaxResultCount, input.Address, input.ChainList, new List<string>());
-            var listingOwner = listingDto.Items.Select(i => i?.Owner ?? "").ToList();
+            var listingOwner = listingDto.Items?.Select(i => i?.Owner ?? "").ToList();
             
             var addresses = listingOwner
                 .Where(s => !string.IsNullOrEmpty(s))
