@@ -52,8 +52,19 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
         var skipCount = 0;
         long maxProcessedBlockHeight = -1;
         //Paging for logical processing
-
-        var activityTypeList = new List<int>();
+        
+        var activityTypeList = new List<int>
+            { EnumHelper.GetIndex(NFTActivityType.Mint),
+            EnumHelper.GetIndex(NFTActivityType.Burn),
+            EnumHelper.GetIndex(NFTActivityType.Transfer),
+            EnumHelper.GetIndex(NFTActivityType.Sale),
+            EnumHelper.GetIndex(NFTActivityType.ListWithFixedPrice),
+            EnumHelper.GetIndex(NFTActivityType.DeList),
+            EnumHelper.GetIndex(NFTActivityType.MakeOffer),
+            EnumHelper.GetIndex(NFTActivityType.CancelOffer),
+            EnumHelper.GetIndex(NFTActivityType.Sale),
+            EnumHelper.GetIndex(NFTActivityType.PlaceBid),
+                EnumHelper.GetIndex(NFTActivityType.CancelBid) };
         var changePageInfo = await _nftActivityProvider.GetMessageActivityListAsync(activityTypeList, skipCount,
             lastEndHeight);
 
@@ -86,10 +97,6 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
         var activityList = await _distributedCache.GetAsync(cacheKey);
         foreach (var nftActivity in nftActivityList)
         {
-            if (nftActivity.Type == NFTActivityType.MakeOffer || nftActivity.Type == NFTActivityType.Sale)
-            {
-                _logger.LogDebug("HandleNFTActivityAsync MakeOfferOrSale {A}",JsonConvert.SerializeObject(nftActivity));
-            }
             var innerKey = nftActivity.Id + nftActivity.BlockHeight;
             if (activityList != null && activityList.Contains(innerKey))
             {
