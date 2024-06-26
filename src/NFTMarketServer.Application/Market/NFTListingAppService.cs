@@ -23,14 +23,19 @@ namespace NFTMarketServer.Market
         private readonly IUserAppService _userAppService;
         private readonly INFTListingProvider _nftListingProvider;
         private readonly IObjectMapper _objectMapper;
+        private readonly ICompositeNFTProvider _compositeNFTProvider;
 
-        public NFTListingAppService(IUserAppService userAppService, INFTListingProvider nftListingProvider,
-            ILogger<NFTListingAppService> logger, IObjectMapper objectMapper)
+        public NFTListingAppService(IUserAppService userAppService,
+            INFTListingProvider nftListingProvider,
+            ILogger<NFTListingAppService> logger, 
+            IObjectMapper objectMapper,
+                ICompositeNFTProvider compositeNFTProvider)
         {
             _userAppService = userAppService;
             _nftListingProvider = nftListingProvider;
             _logger = logger;
             _objectMapper = objectMapper;
+            _compositeNFTProvider = compositeNFTProvider;
         }
 
         public async Task<PagedResultDto<NFTListingIndexDto>> GetNFTListingsAsync(GetNFTListingsInput input)
@@ -90,8 +95,17 @@ namespace NFTMarketServer.Market
             GetCollectedCollectionListingsInput input)
         {
             input.Address = FullAddressHelper.ToShortAddress(input.Address);
+            
+            var nftInfoIds = new List<string>();
+            if (!input.SearchParam.IsNullOrEmpty() && !input.CollectionIdList.IsNullOrEmpty())
+            {
+                var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
+                    input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
+                nftInfoIds = compositeNFTDic?.Keys.ToList();
+            }
+            
             var collectedNFTListings = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
-                input.MaxResultCount, input.Address, input.ChainList, new List<string>());
+                input.MaxResultCount, input.Address, input.ChainList, nftInfoIds);
 
             if (collectedNFTListings == null || collectedNFTListings.TotalRecordCount == CommonConstant.IntZero)
             {
