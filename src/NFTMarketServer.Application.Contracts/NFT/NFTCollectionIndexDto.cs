@@ -27,5 +27,8 @@ namespace NFTMarketServer.NFT
         public long ItemTotal { get; set; }
         public long OwnerTotal { get; set; }
         public bool IsMainChainCreateNFT { get; set; } = true;
+        public decimal FloorPrice { get; set; } = -1;
+    
+        public string FloorPriceSymbol { get; set; }
     }
 }
