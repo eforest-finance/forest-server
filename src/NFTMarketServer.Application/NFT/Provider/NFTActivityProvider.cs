@@ -331,22 +331,10 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 
         shouldQuery.Add(q => q.Terms(i => i.Field(f => f.From).Terms(input.Address)));
         shouldQuery.Add(q => q.Term(i => i.Field(f => f.To).Value(input.Address)));
-        
-        var shouldQuery2 = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
-
-        if (!input.SearchParam.IsNullOrEmpty())
-        {
-            shouldQuery2.Add(q => q.Terms(i => i.Field(f => f.NFTName).Terms(input.SearchParam)));
-        }
-        
 
         if (shouldQuery.Any())
         {
             mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
-        }
-        if (shouldQuery2.Any())
-        {
-            mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery2)));
         }
 
         QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f)
