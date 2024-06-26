@@ -309,6 +309,12 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             mustQuery.Add(q =>
                 q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
         }
+        
+        if (!input.Type.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.Type).Terms(input.Type)));
+        }
 
         if (!input.ChainList.IsNullOrEmpty())
         {

@@ -70,6 +70,7 @@ namespace NFTMarketServer.NFT
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly ISeedAppService _seedAppService;
         private readonly IRarityProvider _rarityProvider;
+        private readonly ICompositeNFTProvider _compositeNFTProvider;
 
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
@@ -120,6 +121,7 @@ namespace NFTMarketServer.NFT
             ISchrodingerInfoProvider schrodingerInfoProvider,
             IRarityProvider rarityProvider,
             IOptionsMonitor<ChainOptions> chainOptionsMonitor,
+            ICompositeNFTProvider compositeNFTProvider,
             NFTMarketServer.Users.Provider.IUserBalanceProvider userBalanceIndexProvider)
         {
             _tokenAppService = tokenAppService;
@@ -156,6 +158,7 @@ namespace NFTMarketServer.NFT
             _chainOptionsMonitor = chainOptionsMonitor;
             _rarityProvider = rarityProvider;
             _userBalanceIndexProvider = userBalanceIndexProvider;
+            _compositeNFTProvider = compositeNFTProvider;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -391,9 +394,17 @@ namespace NFTMarketServer.NFT
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
 
             var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
-            
+
+            var nftInfoIds = new List<string>();
+            if (!input.SearchParam.IsNullOrEmpty() && !input.CollectionIdList.IsNullOrEmpty())
+            {
+                var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
+                    input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
+                nftInfoIds = compositeNFTDic?.Keys.ToList();
+            }
+
             nftActivityDtoPage =
-                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, new List<string>());
+                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
             
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
             {
@@ -1631,7 +1642,7 @@ namespace NFTMarketServer.NFT
                 activity.CollectionSymbol = nftInfoIndexDto.NFTCollection.Symbol;
                 activity.CollectionName = nftInfoIndexDto.NFTCollection.TokenName;
                 activity.TotalPrice=(decimal)activity.Price * activity.Amount;
-                activity.NFTUrl = nftInfoIndexDto.PreviewImage;
+                activity.PreviewImage = nftInfoIndexDto.PreviewImage;
                 if(!activity.Symbol.Contains(input.FilterSymbol)) continue;
                 returnItems.Add(activity);
             }
