@@ -136,7 +136,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     $expireTimeGt:Long
                 ){
                   collectedNFTListingInfo(
-                    input:{
+                    dto:{
                       skipCount:$skipCount,
                       maxResultCount:$maxResultCount,
                       chainIdList:$chainIdList,
