@@ -132,7 +132,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     $maxResultCount:Int!,
                     $chainIdList:[String],
                     $nFTInfoIdList:[String],
-                    $owner: String!,
+                    $owner:String!,
                     $expireTimeGt:Long
                 ){
                   collectedNFTListingInfo(
@@ -181,7 +181,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error owner={A} chainIdList={B} nftInfoIdList={C}",
+            _logger.LogError(e, "GetCollectedNFTListingsAsync query GraphQL error owner={A} chainIdList={B} nftInfoIdList={C}",
                 owner, JsonConvert.SerializeObject(chainIdList), JsonConvert.SerializeObject(nftInfoIdList));
             throw;
         }
