@@ -90,10 +90,10 @@ namespace NFTMarketServer.Market
             GetCollectedCollectionListingsInput input)
         {
             input.Address = FullAddressHelper.ToShortAddress(input.Address);
-            var listingDto = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
+            var collectedNFTListings = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
                 input.MaxResultCount, input.Address, input.ChainList, new List<string>());
 
-            if (listingDto == null || listingDto.TotalCount == CommonConstant.IntZero)
+            if (collectedNFTListings == null || collectedNFTListings.TotalRecordCount == CommonConstant.IntZero)
             {
                 return new PagedResultDto<CollectedCollectionListingDto>()
                 {
@@ -102,14 +102,14 @@ namespace NFTMarketServer.Market
                 };
             }
             
-            var listingOwner = listingDto.Items?.Select(i => i?.Owner ?? "").ToList();
+            var listingOwner = collectedNFTListings.IndexerNFTListingInfoList?.Select(i => i?.Owner ?? "").ToList();
             
             var addresses = listingOwner
                 .Where(s => !string.IsNullOrEmpty(s))
                 .Distinct().ToList();
             var accountDict = await _userAppService.GetAccountsAsync(addresses);
 
-            var res = listingDto.Items.Select(i =>
+            var res = collectedNFTListings.IndexerNFTListingInfoList.Select(i =>
             {
                 var item = _objectMapper.Map<IndexerNFTListingInfo, CollectedCollectionListingDto>(i);
                 item.Owner = accountDict.GetValueOrDefault(i.Owner, new AccountDto(i.Owner))
@@ -122,7 +122,7 @@ namespace NFTMarketServer.Market
             return new PagedResultDto<CollectedCollectionListingDto>
             {
                 Items = res,
-                TotalCount = listingDto.TotalCount
+                TotalCount = collectedNFTListings.TotalRecordCount
             };
         }
     }

@@ -1,9 +1,17 @@
 using System;
+using System.Collections.Generic;
 using NFTMarketServer.NFT.Index;
 
 namespace NFTMarketServer.NFT.Index;
 
-public class IndexerNFTListingInfo
+
+public class IndexerNFTListingInfos : IndexerCommonResult<IndexerNFTListingInfos>
+{
+    public long TotalRecordCount { get; set; }
+    public List<IndexerNFTListingInfo> IndexerNFTListingInfoList { get; set; }
+}
+
+public class IndexerNFTListingInfo : IndexerCommonResult<IndexerNFTListingInfo>
 {
     public string Id { get; set; }
     public long Quantity { get; set; }
