@@ -32,12 +32,6 @@ namespace NFTMarketServer.NFT
         public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             base.Validate(validationContext);
-
-            if (!CollectionType.Equals(CommonConstant.CollectionTypeSeed) &&
-                !CollectionType.Equals(CommonConstant.CollectionTypeNFT))
-            {
-                yield return new ValidationResult(BasicStatusMessage.IllegalInputData, new[] { "collectionType" });
-            }
             
             if (PriceLow != 0 && PriceLow < 0)
             {
