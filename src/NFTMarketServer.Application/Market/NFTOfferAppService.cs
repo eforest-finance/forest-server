@@ -210,6 +210,7 @@ namespace NFTMarketServer.Market
                     dto.PreviewImage = compositeNFTDic[index.BizInfoId].PreviewImage;
                     dto.NFTName = compositeNFTDic[index.BizInfoId].NFTName;
                     dto.Decimals = compositeNFTDic[index.BizInfoId].Decimals;
+                    dto.NFTSymbol = compositeNFTDic[index.BizInfoId].Symbol;
                 }
                 
                 _logger.LogDebug("CollectedCollectionOffersMadeDto 2 from {A} to {B}",JsonConvert.SerializeObject(index),JsonConvert.SerializeObject(dto));

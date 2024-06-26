@@ -28,5 +28,7 @@ namespace NFTMarketServer.Market
         public string NFTName { get; set; }
         public string PreviewImage { get; set; }
         public int Decimals { get; set; }
+        
+        public string NFTSymbol { get; set; }
     }
 }
