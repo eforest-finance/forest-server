@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
+using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
@@ -139,6 +140,7 @@ namespace NFTMarketServer.Market
                     item.NFTName = compositeNFTInfoDic[i.BusinessId].NFTName;
                     item.CollectionName = compositeNFTInfoDic[i.BusinessId].CollectionName;
                     item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
+                    item.Prices = FTHelper.ToPrice(item.Prices, item.Decimals);
                 }
 
                 return item;
