@@ -396,7 +396,7 @@ namespace NFTMarketServer.NFT
             var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
 
             var nftInfoIds = new List<string>();
-            if (!input.SearchParam.IsNullOrEmpty() && !input.CollectionIdList.IsNullOrEmpty())
+            if (!input.SearchParam.IsNullOrEmpty() || !input.CollectionIdList.IsNullOrEmpty())
             {
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
