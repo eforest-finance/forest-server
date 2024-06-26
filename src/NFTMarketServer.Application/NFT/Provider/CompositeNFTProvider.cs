@@ -44,7 +44,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
     {
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, new List<string>(), searchName, skipCount,
-                maxResultCount);
+                maxResultCount,false);
 
         var seedInfos =
             await QueryCompositeNFTInfoForSeedAsync(searchName, new List<string>(), skipCount, maxResultCount);
@@ -64,7 +64,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         var maxResultCount = nftInfoIdList.Count;
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(new List<string>(), nftInfoIdList, string.Empty,
-                CommonConstant.IntZero, maxResultCount
+                CommonConstant.IntZero, maxResultCount,false
             );
 
         var seedInfos =
@@ -78,7 +78,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
 
     private async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoForCommonNFTAsync(
         List<string> collectionIdList, List<string> nftInfoIdList, string
-            searchName, int skipCount, int maxResultCount)
+            searchName, int skipCount, int maxResultCount, bool countFlagIsTrue)
     {
         if (collectionIdList.IsNullOrEmpty() && searchName.IsNullOrEmpty() && nftInfoIdList.IsNullOrEmpty())
         {
@@ -100,10 +100,13 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         {
             mustQuery.Add(q => q.Term(i => i.Field(f => f.TokenName).Value(searchName)));
         }
-        
-        mustQuery.Add(q =>
-            q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
 
+        if (countFlagIsTrue)
+        {
+            mustQuery.Add(q =>
+                q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
+        }
+        
         QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
             => f.Bool(b => b.Must(mustQuery));
 
