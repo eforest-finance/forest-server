@@ -86,6 +86,10 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
         var activityList = await _distributedCache.GetAsync(cacheKey);
         foreach (var nftActivity in nftActivityList)
         {
+            if (nftActivity.Type == NFTActivityType.MakeOffer || nftActivity.Type == NFTActivityType.Sale)
+            {
+                _logger.LogDebug("HandleNFTActivityAsync MakeOfferOrSale {A}",JsonConvert.SerializeObject(nftActivity));
+            }
             var innerKey = nftActivity.Id + nftActivity.BlockHeight;
             if (activityList != null && activityList.Contains(innerKey))
             {
