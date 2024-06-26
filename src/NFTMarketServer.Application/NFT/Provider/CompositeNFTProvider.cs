@@ -80,7 +80,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         List<string> collectionIdList, List<string> nftInfoIdList, string
             searchName, int skipCount, int maxResultCount)
     {
-        if (collectionIdList.IsNullOrEmpty() && searchName.IsNullOrEmpty())
+        if (collectionIdList.IsNullOrEmpty() && searchName.IsNullOrEmpty() && nftInfoIdList.IsNullOrEmpty())
         {
             return new Dictionary<string, CompositeNFTDto>();
         }
@@ -137,7 +137,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
     private async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoForSeedAsync(string
         searchName, List<string> nftInfoIdList, int skipCount, int maxResultCount)
     {
-        if (searchName.IsNullOrEmpty())
+        if (searchName.IsNullOrEmpty() && nftInfoIdList.IsNullOrEmpty())
         {
             return new Dictionary<string, CompositeNFTDto>();
         }
