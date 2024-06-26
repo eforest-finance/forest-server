@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
@@ -83,5 +84,37 @@ namespace NFTMarketServer.Market
                 throw new UserFriendlyException("Internal error, please try again later.");
             }
         }
+
+        public async Task<PagedResultDto<CollectedCollectionListingDto>> GetCollectedCollectionListingAsync(
+            GetCollectedCollectionListingsInput input)
+        {
+            input.Address = FullAddressHelper.ToShortAddress(input.Address);
+            var listingDto = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
+                input.MaxResultCount, input.Address, input.ChainList, new List<string>());
+            var listingOwner = listingDto.Items.Select(i => i?.Owner ?? "").ToList();
+            
+            var addresses = listingOwner
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Distinct().ToList();
+            var accountDict = await _userAppService.GetAccountsAsync(addresses);
+
+            var res = listingDto.Items.Select(i =>
+            {
+                var item = _objectMapper.Map<IndexerNFTListingInfo, CollectedCollectionListingDto>(i);
+                item.Owner = accountDict.GetValueOrDefault(i.Owner, new AccountDto(i.Owner))
+                    ?.WithChainIdAddress(item.ChainId);
+                item.PurchaseToken = _objectMapper.Map<IndexerTokenInfo, TokenDto>(i.PurchaseToken);
+
+                return item;
+            }).ToList();
+
+            return new PagedResultDto<CollectedCollectionListingDto>
+            {
+                Items = res,
+                TotalCount = listingDto.TotalCount
+            };
+        }
     }
+    
+    
 }

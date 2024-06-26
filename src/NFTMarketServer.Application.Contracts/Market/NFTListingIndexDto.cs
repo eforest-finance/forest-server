@@ -21,4 +21,12 @@ namespace NFTMarketServer.Market
         public NFTImmutableInfoDto NFTInfo { get; set; }
         public TokenDto PurchaseToken { get; set; }
     }
+    
+    public class CollectedCollectionListingDto : NFTListingIndexDto
+    {
+        public string CollectionName { get; set; }
+        public string NFTName { get; set; }
+        
+        public string NFTUrl { get; set; }
+    }
 }

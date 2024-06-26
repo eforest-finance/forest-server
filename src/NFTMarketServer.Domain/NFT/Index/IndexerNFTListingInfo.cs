@@ -20,5 +20,6 @@ public class IndexerNFTListingInfo
     public IndexerNFTInfo NftInfo { get; set; }
     public IndexerNFTCollection NftCollectionDto { get; set; }
     public long RealQuantity { get; set; }
+    public string BusinessId { get; set; }
 
 }
