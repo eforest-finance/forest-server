@@ -55,7 +55,8 @@ public class UserBalanceSyncScheduleService : ScheduleSyncDataService
         var changePageInfo = await _userBalanceProvider.QueryUserBalanceListAsync(new QueryUserBalanceInput()
             {
                 SkipCount = skipCount,
-                BlockHeight = lastEndHeight
+                BlockHeight = lastEndHeight,
+                ChainId = chainId
             });
 
         if (changePageInfo == null || changePageInfo.Data.IsNullOrEmpty())
