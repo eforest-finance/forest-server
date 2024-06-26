@@ -1744,7 +1744,9 @@ namespace NFTMarketServer.NFT
                 MaxResultCount = input.MaxResultCount,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
-                IssueAddress = input.Address
+                IssueAddress = input.Address,
+                PriceLow = input.PriceLow,
+                PriceHigh = input.PriceHigh
                 
             };
             //query nft
