@@ -124,6 +124,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
 
     public async Task<Tuple<long, List<UserBalanceIndex>>> GetUserBalancesAsync(QueryUserBalanceIndexInput input)
     {
+        _logger.LogInformation("GetUserBalancesAsync debug query input:{A}",JsonConvert.SerializeObject(input));
         var mustQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
         if (!input.Address.IsNullOrEmpty())
         {
