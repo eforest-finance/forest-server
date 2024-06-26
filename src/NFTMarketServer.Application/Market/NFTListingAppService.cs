@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
@@ -91,6 +92,16 @@ namespace NFTMarketServer.Market
             input.Address = FullAddressHelper.ToShortAddress(input.Address);
             var listingDto = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
                 input.MaxResultCount, input.Address, input.ChainList, new List<string>());
+
+            if (listingDto == null || listingDto.TotalCount == CommonConstant.IntZero)
+            {
+                return new PagedResultDto<CollectedCollectionListingDto>()
+                {
+                    TotalCount = CommonConstant.IntZero,
+                    Items = new List<CollectedCollectionListingDto>()
+                };
+            }
+            
             var listingOwner = listingDto.Items?.Select(i => i?.Owner ?? "").ToList();
             
             var addresses = listingOwner
