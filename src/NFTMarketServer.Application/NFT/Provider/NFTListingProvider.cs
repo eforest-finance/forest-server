@@ -16,7 +16,7 @@ public interface INFTListingProvider
 {
     Task<PagedResultDto<IndexerNFTListingInfo>> GetNFTListingsAsync(GetNFTListingsDto dto);
 
-    Task<PagedResultDto<IndexerNFTListingInfo>> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount,
+    Task<IndexerNFTListingInfos> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount,
         string owner, List<string> chainIdList, List<string> nftInfoIdList);
     
     Task<IndexerNFTListingInfo> GetMinListingNftAsync(string nftInfoId);
@@ -120,12 +120,12 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
         }
     }
 
-    public async Task<PagedResultDto<IndexerNFTListingInfo>> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount, string owner, List<string> chainIdList,
+    public async Task<IndexerNFTListingInfos> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount, string owner, List<string> chainIdList,
         List<string> nftInfoIdList)
     {
         try
         {
-            var res = await _graphQlHelper.QueryAsync<NFTListingPage>(new GraphQLRequest
+            var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTListingInfos>(new GraphQLRequest
             {
                 Query = @"query (
                     $skipCount:Int!,
@@ -135,7 +135,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     $owner:String!,
                     $expireTimeGt:Long
                 ){
-                  collectedNFTListingInfo(
+                  data:collectedNFTListingInfo(
                     dto:{
                       skipCount:$skipCount,
                       maxResultCount:$maxResultCount,
@@ -145,9 +145,8 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                       expireTimeGt:$expireTimeGt
                     }
                   ){
-                    TotalCount: totalRecordCount,
-                    Message: message,
-                    nftListingInfo: data{
+                    totalRecordCount,
+                    indexerNFTListingInfoList:data{
                       id,
                       businessId,
                       quantity,
@@ -155,8 +154,6 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                       symbol,
                       owner,
                       prices,
-                      whitelistPrices,
-                      whitelistId,
                       startTime,
                       publicTime,
                       expireTime,
@@ -177,7 +174,8 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
                 }
             });
-            return res?.nftListingInfo;
+            return indexerCommonResult?.Data;
+            
         }
         catch (Exception e)
         {
