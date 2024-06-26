@@ -128,10 +128,11 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var indexerCommonResult = await client.SendQueryAsync<UserBalanceIndexerQuery>(new GraphQLRequest
         {
             Query = 
-                @"query($skipCount: Int!,$blockHeight: Long!) {
+                @"query($skipCount: Int!,$blockHeight: Long!,$chainId: String!) {
                     queryUserBalanceList(input: {
                     skipCount: $skipCount
                     ,blockHeight: $blockHeight
+                    ,chainId: $chainId
                     }) {
                         totalCount,
                         data {
@@ -151,7 +152,8 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             Variables = new
             {
                 skipCount = input.SkipCount,
-                blockHeight = input.BlockHeight
+                blockHeight = input.BlockHeight,
+                chainId = input.ChainId
             }
         });
 
