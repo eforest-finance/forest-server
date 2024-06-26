@@ -26,7 +26,7 @@ namespace NFTMarketServer.Market
     {
         public string CollectionName { get; set; }
         public string NFTName { get; set; }
-        
-        public string NFTUrl { get; set; }
+        public string PreviewImage { get; set; }
+        public int Decimals { get; set; }
     }
 }

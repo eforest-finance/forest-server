@@ -19,6 +19,7 @@ public interface ICompositeNFTProvider
 {
     public Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoAsync(List<string> collectionIdList,
         string searchName, int skipCount, int maxResultCount);
+    public Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoAsync(List<string> nftInfoIdList);
 }
 
 public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
@@ -42,18 +43,42 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         string searchName, int skipCount, int maxResultCount)
     {
         var commonNFTInfos =
-            await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, searchName, skipCount, maxResultCount);
+            await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, new List<string>(), searchName, skipCount,
+                maxResultCount);
 
         var seedInfos =
-            await QueryCompositeNFTInfoForSeedAsync(searchName, skipCount, maxResultCount);
+            await QueryCompositeNFTInfoForSeedAsync(searchName, new List<string>(), skipCount, maxResultCount);
 
         var mergedDict = commonNFTInfos.Concat(seedInfos).ToDictionary(pair => pair.Key, pair => pair.Value);
 
         return mergedDict;
     }
-    
-    private async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoForCommonNFTAsync(List<string> collectionIdList, string
-        searchName, int skipCount, int maxResultCount)
+
+    public async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoAsync(List<string> nftInfoIdList)
+    {
+        if (nftInfoIdList.IsNullOrEmpty())
+        {
+            return new Dictionary<string, CompositeNFTDto>();
+        }
+
+        var maxResultCount = nftInfoIdList.Count;
+        var commonNFTInfos =
+            await QueryCompositeNFTInfoForCommonNFTAsync(new List<string>(), new List<string>(), string.Empty,
+                CommonConstant.IntZero, maxResultCount
+            );
+
+        var seedInfos =
+            await QueryCompositeNFTInfoForSeedAsync(string.Empty, nftInfoIdList, CommonConstant.IntZero,
+                maxResultCount);
+
+        var mergedDict = commonNFTInfos.Concat(seedInfos).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+        return mergedDict;
+    }
+
+    private async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoForCommonNFTAsync(
+        List<string> collectionIdList, List<string> nftInfoIdList, string
+            searchName, int skipCount, int maxResultCount)
     {
         if (collectionIdList.IsNullOrEmpty() && searchName.IsNullOrEmpty())
         {
@@ -64,6 +89,11 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         if (!collectionIdList.IsNullOrEmpty())
         {
             mustQuery.Add(q => q.Terms(i => i.Field(f => f.CollectionId).Terms(collectionIdList)));
+        }
+        
+        if (!nftInfoIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Id).Terms(nftInfoIdList)));
         }
 
         if (!searchName.IsNullOrEmpty())
@@ -105,7 +135,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
     }
     
     private async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoForSeedAsync(string
-        searchName, int skipCount, int maxResultCount)
+        searchName, List<string> nftInfoIdList, int skipCount, int maxResultCount)
     {
         if (searchName.IsNullOrEmpty())
         {
@@ -117,6 +147,10 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         if (!searchName.IsNullOrEmpty())
         {
             mustQuery.Add(q => q.Term(i => i.Field(f => f.TokenName).Value(searchName)));
+        }
+        if (!nftInfoIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Id).Terms(nftInfoIdList)));
         }
         
         QueryContainer Filter(QueryContainerDescriptor<SeedSymbolIndex> f)

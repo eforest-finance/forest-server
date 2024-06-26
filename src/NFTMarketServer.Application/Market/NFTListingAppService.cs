@@ -116,6 +116,10 @@ namespace NFTMarketServer.Market
                 };
             }
             
+            var nftInfoIdList = collectedNFTListings.IndexerNFTListingInfoList?.Select(item => item.BusinessId).ToList();
+
+            var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
+            
             var listingOwner = collectedNFTListings.IndexerNFTListingInfoList?.Select(i => i?.Owner ?? "").ToList();
             
             var addresses = listingOwner
@@ -129,6 +133,13 @@ namespace NFTMarketServer.Market
                 item.Owner = accountDict.GetValueOrDefault(i.Owner, new AccountDto(i.Owner))
                     ?.WithChainIdAddress(item.ChainId);
                 item.PurchaseToken = _objectMapper.Map<IndexerTokenInfo, TokenDto>(i.PurchaseToken);
+                if (compositeNFTInfoDic.ContainsKey(i.BusinessId) && compositeNFTInfoDic[i.BusinessId] != null)
+                {
+                    item.PreviewImage = compositeNFTInfoDic[i.BusinessId].PreviewImage;
+                    item.NFTName = compositeNFTInfoDic[i.BusinessId].NFTName;
+                    item.CollectionName = compositeNFTInfoDic[i.BusinessId].CollectionName;
+                    item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
+                }
 
                 return item;
             }).ToList();
