@@ -1685,6 +1685,8 @@ namespace NFTMarketServer.NFT
                 MaxResultCount = input.MaxResultCount,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
+                PriceLow = input.PriceLow,
+                PriceHigh = input.PriceHigh
                 
             };
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
