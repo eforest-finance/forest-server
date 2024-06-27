@@ -222,6 +222,7 @@ namespace NFTMarketServer.Market
                     dto.NFTName = compositeNFTDic[index.BizInfoId].NFTName;
                     dto.Decimals = compositeNFTDic[index.BizInfoId].Decimals;
                     dto.NFTSymbol = compositeNFTDic[index.BizInfoId].Symbol;
+                    dto.NFTInfoId = compositeNFTDic[index.BizInfoId].NFTInfoId;
                     
                     var quantityNoDecimals = FTHelper.GetIntegerDivision(index.Quantity, dto.Decimals);
                     index.RealQuantity = (quantityNoDecimals == index.RealQuantity)
