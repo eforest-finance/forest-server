@@ -257,6 +257,9 @@ namespace NFTMarketServer.NFT
                     return await MapForCompositeNftInfoIndexDtoPage(result);
                 }
 
+                _logger.LogDebug("searchNftCollectionsDto.ItemTotal is not equals  result.TotalCount collectionId ={A} ",
+                    input.CollectionId);
+                
                 var resetNFTSyncHeightFlagCacheKey = CommonConstant.ResetNFTNewSyncHeightFlagCacheKey;
 
                 var resetSyncHeightFlag =
@@ -277,12 +280,11 @@ namespace NFTMarketServer.NFT
                         {
                             AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(resetNftSyncHeightExpireMinutes)
                         });
-
-                    await _distributedEventBus.PublishAsync(new NFTResetFlagEto
-                    {
-                        FlagDesc = resetNFTSyncHeightFlagCacheKey,
-                        Minutes = resetNftSyncHeightExpireMinutes
-                    });
+                    // await _distributedEventBus.PublishAsync(new NFTResetFlagEto
+                    // {
+                    //     FlagDesc = resetNFTSyncHeightFlagCacheKey,
+                    //     Minutes = resetNftSyncHeightExpireMinutes
+                    // });
                 }
             }
             catch (Exception e)
