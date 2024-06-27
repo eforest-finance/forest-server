@@ -148,7 +148,7 @@ namespace NFTMarketServer.Market
                     item.NFTName = compositeNFTInfoDic[i.BusinessId].NFTName;
                     item.CollectionName = compositeNFTInfoDic[i.BusinessId].CollectionName;
                     item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
-                    item.Prices = FTHelper.ToPrice(item.Prices, item.Decimals);
+                    item.Prices = item.Prices;
                     item.NFTSymbol = compositeNFTInfoDic[i.BusinessId].Symbol;
                 }
 
