@@ -132,6 +132,10 @@ namespace NFTMarketServer.Users
             
             var userGrain = _clusterClient.GetGrain<IUserGrain>(CurrentUser.GetId());
             var user = await userGrain.GetUserAsync();
+            if (input.ProfileImage.IsNullOrEmpty())
+            {
+                input.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+            }
             var userWaitUpdatedData = _objectMapper.Map(input, user.Data);
             
             var result = await userGrain.UpdateUserAsync(userWaitUpdatedData);
