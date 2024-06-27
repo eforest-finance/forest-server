@@ -200,6 +200,7 @@ namespace NFTMarketServer.Market
             {
                 
                 var dto = _objectMapper.Map<IndexerNFTOffer, CollectedCollectionOffersDto>(index);
+                
                 _logger.LogDebug("CollectedCollectionOffersMadeDto 1 from {A} to {B}",JsonConvert.SerializeObject(index),JsonConvert.SerializeObject(dto));
 
                 if (!index.From.IsNullOrWhiteSpace() && accounts.ContainsKey(index.From))
@@ -221,6 +222,12 @@ namespace NFTMarketServer.Market
                     dto.NFTName = compositeNFTDic[index.BizInfoId].NFTName;
                     dto.Decimals = compositeNFTDic[index.BizInfoId].Decimals;
                     dto.NFTSymbol = compositeNFTDic[index.BizInfoId].Symbol;
+                    
+                    var quantityNoDecimals = FTHelper.GetIntegerDivision(index.Quantity, dto.Decimals);
+                    index.RealQuantity = (quantityNoDecimals == index.RealQuantity)
+                        ? index.RealQuantity
+                        : Math.Min(index.RealQuantity, quantityNoDecimals);
+                    dto.Quantity = index.RealQuantity;
                 }
                 
                 _logger.LogDebug("CollectedCollectionOffersMadeDto 2 from {A} to {B}",JsonConvert.SerializeObject(index),JsonConvert.SerializeObject(dto));
