@@ -29,12 +29,12 @@ namespace NFTMarketServer.Users
         private readonly INESTRepository<UserIndex, Guid> _userIndexRepository;
         private readonly INESTRepository<UserExtraIndex, Guid> _userExtraIndexRepository;
         private readonly IClusterClient _clusterClient;
-        private readonly IDistributedEventBus _distributedEventBus;
         private readonly ILogger<UserAppService> _logger;
         private readonly IObjectMapper _objectMapper;
         private readonly IUserInformationProvider _userInformationProvider;
         private readonly IChainAppService _chainAppService;
         private readonly ISymbolIconAppService _symbolIconAppService;
+        private readonly INESTRepository<UserIndex, Guid> _userRepository;
         private const string FullAddressPrefix = "ELF";
         public const char FullAddressSeparator = '_';
         private const string AELF = "AELF";
@@ -44,10 +44,10 @@ namespace NFTMarketServer.Users
             INESTRepository<UserIndex, Guid> userIndexRepository,
             INESTRepository<UserExtraIndex, Guid> userExtraIndexRepository,
             ILogger<UserAppService> logger,
-            IDistributedEventBus distributedEventBus,
             IClusterClient clusterClient,
             IChainAppService chainAppService,
             ISymbolIconAppService symbolIconAppService,
+            INESTRepository<UserIndex, Guid> userRepository,
             IObjectMapper objectMapper)
 
         {
@@ -56,10 +56,10 @@ namespace NFTMarketServer.Users
             _userExtraIndexRepository = userExtraIndexRepository;
             _clusterClient = clusterClient;
             _logger = logger;
-            _distributedEventBus = distributedEventBus;
             _chainAppService = chainAppService;
             _objectMapper = objectMapper;
             _symbolIconAppService = symbolIconAppService;
+            _userRepository = userRepository;
         }
 
         public async Task<Dictionary<string, AccountDto>> GetAccountsAsync(List<string> addresses,
@@ -150,8 +150,25 @@ namespace NFTMarketServer.Users
                 _logger.LogError("Update user information fail, UserId: {UserId}", CurrentUser.GetId());
                 return;
             }
-            
-            await _distributedEventBus.PublishAsync(_objectMapper.Map<UserGrainDto, UserInformationEto>(result.Data));
+
+            var eventData = _objectMapper.Map<UserGrainDto, UserInformationEto>(result.Data);
+            var userInfo = _objectMapper.Map<UserInformationEto, UserIndex>(eventData);
+            if (eventData.CaAddressSide !=null)
+            {
+                List<UserAddress> userAddresses = new List<UserAddress>();
+                foreach (var addressMap in eventData.CaAddressSide)
+                {
+                    UserAddress userAddress = new UserAddress
+                    {
+                        ChainId = addressMap.Key,
+                        Address = addressMap.Value
+                    };
+                    userAddresses.Add(userAddress);
+                }
+
+                userInfo.CaAddressListSide = userAddresses;
+            }
+            await _userRepository.AddOrUpdateAsync(userInfo);
         }
 
 
