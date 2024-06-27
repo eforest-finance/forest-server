@@ -64,7 +64,7 @@ public static class CommonConstant
     public const int HttpSuccessCode = 200;
     public const int HttpFileUploadSuccessCode = 20000;
     public const long DefaultValueNone = -1;
-    public const long OneDayBlockHeight = 5000;
+    public const long OneDayBlockHeight = 1800;
     public const int Gen9 = 9;
     public const int MessageUnReadStatus = 0;
     public const int MessageReadStatus = 1;
