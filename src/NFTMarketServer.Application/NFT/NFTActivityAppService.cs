@@ -165,7 +165,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
             activityDto.PriceToken = new TokenDto
             {
                 Id = index.PriceTokenInfo.Id,
-                ChainId = index.PriceTokenInfo.ChainId,
+                ChainId = index.ChainId,
                 Symbol = index.PriceTokenInfo.Symbol,
                 Decimals = index.PriceTokenInfo.Decimals
             };
@@ -212,7 +212,7 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
             activityDto.PriceToken = new TokenDto
             {
                 Id = index.PriceTokenInfo.Id,
-                ChainId = index.PriceTokenInfo.ChainId,
+                ChainId = index.ChainId,
                 Symbol = index.PriceTokenInfo.Symbol,
                 Decimals = index.PriceTokenInfo.Decimals
             };
