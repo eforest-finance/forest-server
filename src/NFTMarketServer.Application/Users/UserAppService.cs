@@ -138,6 +138,10 @@ namespace NFTMarketServer.Users
             {
                 input.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
             }
+            if (input.BannerImage.IsNullOrEmpty())
+            {
+                input.BannerImage = CommonConstant.DefaultBannerImage;
+            }
             var userWaitUpdatedData = _objectMapper.Map(input, user.Data);
             
             var result = await userGrain.UpdateUserAsync(userWaitUpdatedData);
