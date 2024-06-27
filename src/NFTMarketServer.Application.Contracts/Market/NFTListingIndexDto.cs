@@ -32,5 +32,7 @@ namespace NFTMarketServer.Market
         public decimal FloorPrice { get; set; } = -1;
         public string FloorPriceSymbol { get; set; }
         public string NFTInfoId { get; set; }
+        
+        public decimal Price { get; set; }
     }
 }
