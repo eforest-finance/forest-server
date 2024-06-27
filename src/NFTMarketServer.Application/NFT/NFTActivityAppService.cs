@@ -170,6 +170,13 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
                 Decimals = index.PriceTokenInfo.Decimals
             };
         }
+        else
+        {
+            activityDto.PriceToken = new TokenDto
+            {
+                ChainId = index.ChainId
+            };
+        }
         if (!index.From.IsNullOrWhiteSpace() && accounts.TryGetValue(index.From, out var account))
         {
             activityDto.From = account;
@@ -208,6 +215,13 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
                 ChainId = index.PriceTokenInfo.ChainId,
                 Symbol = index.PriceTokenInfo.Symbol,
                 Decimals = index.PriceTokenInfo.Decimals
+            };
+        }
+        else
+        {
+            activityDto.PriceToken = new TokenDto
+            {
+                ChainId = index.ChainId
             };
         }
         if (!index.From.IsNullOrWhiteSpace() && accounts.TryGetValue(index.From, out var account))
