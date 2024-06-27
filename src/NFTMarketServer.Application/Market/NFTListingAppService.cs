@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
-using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
@@ -25,18 +24,21 @@ namespace NFTMarketServer.Market
         private readonly INFTListingProvider _nftListingProvider;
         private readonly IObjectMapper _objectMapper;
         private readonly ICompositeNFTProvider _compositeNFTProvider;
+        private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
 
         public NFTListingAppService(IUserAppService userAppService,
             INFTListingProvider nftListingProvider,
             ILogger<NFTListingAppService> logger, 
             IObjectMapper objectMapper,
-                ICompositeNFTProvider compositeNFTProvider)
+                ICompositeNFTProvider compositeNFTProvider,
+            INFTCollectionExtensionProvider nftCollectionExtensionProvider)
         {
             _userAppService = userAppService;
             _nftListingProvider = nftListingProvider;
             _logger = logger;
             _objectMapper = objectMapper;
             _compositeNFTProvider = compositeNFTProvider;
+            _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
         }
 
         public async Task<PagedResultDto<NFTListingIndexDto>> GetNFTListingsAsync(GetNFTListingsInput input)
@@ -127,6 +129,10 @@ namespace NFTMarketServer.Market
             
             var nftInfoIdList = collectedNFTListings.IndexerNFTListingInfoList?.Select(item => item.BusinessId).ToList();
 
+            var nftCollectionExtensionDic =
+                await _nftCollectionExtensionProvider.GetNFTCollectionExtensionsAsync(nftInfoIdList
+                    .Select(item => SymbolHelper.TransferNFTIdToCollectionId(item)).ToList());
+            
             var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
             
             var listingOwner = collectedNFTListings.IndexerNFTListingInfoList?.Select(i => i?.Owner ?? "").ToList();
@@ -150,6 +156,12 @@ namespace NFTMarketServer.Market
                     item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
                     item.Prices = item.Prices;
                     item.NFTSymbol = compositeNFTInfoDic[i.BusinessId].Symbol;
+                }
+                var collectionId = SymbolHelper.TransferNFTIdToCollectionId(i.BusinessId);
+                if (nftCollectionExtensionDic.ContainsKey(collectionId) && nftCollectionExtensionDic[collectionId] != null)
+                {
+                    item.FloorPrice = nftCollectionExtensionDic[collectionId] .FloorPrice;
+                    item.FloorPriceSymbol = nftCollectionExtensionDic[collectionId] .FloorPriceSymbol;
                 }
 
                 return item;
