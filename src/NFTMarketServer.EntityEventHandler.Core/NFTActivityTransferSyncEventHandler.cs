@@ -11,14 +11,14 @@ using Volo.Abp.EventBus.Distributed;
 
 namespace NFTMarketServer.EntityEventHandler.Core;
 
-public class NFTActivitySyncEventHandler : IDistributedEventHandler<NFTActivitySyncEto>, ISingletonDependency
+public class NFTActivityTransferSyncEventHandler : IDistributedEventHandler<NFTActivitySyncEto>, ISingletonDependency
 {
     private const int ExpireSeconds = 10;
-    private readonly ILogger<NFTActivitySyncEventHandler> _logger;
+    private readonly ILogger<NFTActivityTransferSyncEventHandler> _logger;
     private readonly IDistributedCache<string> _distributedCacheForHeight;
     private readonly INFTActivityProvider _nftActivityProvider;
 
-    public NFTActivitySyncEventHandler(ILogger<NFTActivitySyncEventHandler> logger,
+    public NFTActivityTransferSyncEventHandler(ILogger<NFTActivityTransferSyncEventHandler> logger,
         IDistributedCache<string> distributedCacheForHeight,
         INFTActivityProvider nftActivityProvider)
     {
@@ -29,7 +29,7 @@ public class NFTActivitySyncEventHandler : IDistributedEventHandler<NFTActivityS
 
     public async Task HandleEventAsync(NFTActivitySyncEto etoData)
     {
-        _logger.LogInformation("NFTActivitySyncEventHandler receive: {Data}", JsonConvert.SerializeObject(etoData));
+        _logger.LogInformation("NFTActivityTransferSyncEventHandler receive: {Data}", JsonConvert.SerializeObject(etoData));
         if (etoData?.NFTActivitySyncDto == null ||
             etoData.NFTActivitySyncDto.Id.IsNullOrEmpty()) return;
 

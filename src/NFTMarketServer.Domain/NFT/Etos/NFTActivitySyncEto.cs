@@ -8,3 +8,9 @@ public class NFTActivitySyncEto
 {
     public NFTActivitySyncDto NFTActivitySyncDto { get; set; }
 }
+
+[EventName("NFTActivityTransferSyncEto")]
+public class NFTActivityTransferSyncEto
+{
+    public NFTActivitySyncDto NFTActivitySyncDto { get; set; }
+}

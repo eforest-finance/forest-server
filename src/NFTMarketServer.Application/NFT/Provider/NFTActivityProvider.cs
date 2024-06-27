@@ -30,7 +30,7 @@ public partial interface INFTActivityProvider
     public Task<IndexerNFTActivityPage> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
         List<int> types, int skipCount, int maxResultCount);
 
-    public Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight);
+    public Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight ,string chainId);
     
     public Task SaveOrUpdateNFTActivityInfoAsync(NFTActivitySyncDto nftActivitySyncDto);
 
@@ -146,13 +146,14 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         return graphQLResponse?.Data;
     }
 
-    public async Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount, long startBlockHeight)
+    public async Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount,
+        long startBlockHeight, string chainId)
     {
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int!]) {
-                    data:messageActivityList(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types}){
+			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int!],$chainId:String) {
+                    data:messageActivityList(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types,chainId:$chainId}){
                         totalRecordCount,
                         indexerNftactivity:data{
                                             chainId,
@@ -180,7 +181,10 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
                 }",
             Variables = new
             {
-                skipCount = skipCount, blockHeight = startBlockHeight, types = types
+                skipCount = skipCount,
+                blockHeight = startBlockHeight,
+                types = types,
+                chainId = chainId
             }
         });
         return graphQLResponse?.Data;

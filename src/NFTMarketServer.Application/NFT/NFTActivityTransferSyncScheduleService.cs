@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson.IO;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
 using NFTMarketServer.NFT.Dtos;
@@ -22,9 +20,9 @@ using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace NFTMarketServer.NFT;
 
-public class NFTActivityMessageScheduleService : ScheduleSyncDataService
+public class NFTActivityTransferSyncScheduleService : ScheduleSyncDataService
 {
-    private readonly ILogger<ScheduleSyncDataService> _logger;
+    private readonly ILogger<NFTActivityTransferSyncScheduleService> _logger;
     private readonly IChainAppService _chainAppService;
     private readonly INFTActivityProvider _nftActivityProvider;
     private readonly IDistributedEventBus _distributedEventBus;
@@ -32,7 +30,7 @@ public class NFTActivityMessageScheduleService : ScheduleSyncDataService
     private readonly IDistributedCache<List<string>> _distributedCache;
     private const int HeightExpireMinutes = 5;
 
-    public NFTActivityMessageScheduleService(ILogger<NFTActivityMessageScheduleService> logger,
+    public NFTActivityTransferSyncScheduleService(ILogger<NFTActivityTransferSyncScheduleService> logger,
         IGraphQLProvider graphQlProvider,
         INFTActivityProvider nftActivityProvider,
         IDistributedEventBus distributedEventBus,
@@ -54,33 +52,32 @@ public class NFTActivityMessageScheduleService : ScheduleSyncDataService
         var skipCount = 0;
         long maxProcessedBlockHeight = -1;
         //Paging for logical processing
-
-        var activityTypeList = new List<int>
-            { EnumHelper.GetIndex(NFTActivityType.Sale), EnumHelper.GetIndex(NFTActivityType.MakeOffer) };
+        
+        var activityTypeList = new List<int>{ EnumHelper.GetIndex(NFTActivityType.Transfer) };
         var changePageInfo = await _nftActivityProvider.GetMessageActivityListAsync(activityTypeList, skipCount,
             lastEndHeight, chainId);
 
         if (changePageInfo == null || changePageInfo.IndexerNftActivity.IsNullOrEmpty())
         {
             _logger.LogInformation(
-                "HandleNFTActivityMessageAsync no data skipCount={A} lastEndHeight={B} activityTypeList={C}", skipCount,
+                "HandleNFTActivityTransferAsync no data skipCount={A} lastEndHeight={B} activityTypeList={C}", skipCount,
                 lastEndHeight, JsonConvert.SerializeObject(activityTypeList));
             return 0;
         }
         var processChangeOriginList = changePageInfo.IndexerNftActivity;
         
         _logger.LogInformation(
-            "HandleNFTActivityMessageAsync queryOriginList count: {count} queryList count{count},chainId:{chainId} ",
+            "HandleNFTActivityTransferAsync queryOriginList count: {count} queryList count{count},chainId:{chainId} ",
             processChangeOriginList.Count, processChangeOriginList.Count, chainId);
         
-        var blockHeight = await HandleNFTActivityMessageAsync(chainId, processChangeOriginList, lastEndHeight);
+        var blockHeight = await HandleNFTActivityTransferAsync(chainId, processChangeOriginList, lastEndHeight);
 
         maxProcessedBlockHeight = Math.Max(maxProcessedBlockHeight, blockHeight);
         
         return maxProcessedBlockHeight;
     }
     
-    private async Task<long> HandleNFTActivityMessageAsync(string chainId,
+    private async Task<long> HandleNFTActivityTransferAsync(string chainId,
         List<NFTActivityItem> nftActivityList, long lastEndHeight)
     {
         long blockHeight = -1;
@@ -92,16 +89,16 @@ public class NFTActivityMessageScheduleService : ScheduleSyncDataService
             var innerKey = nftActivity.Id + nftActivity.BlockHeight;
             if (activityList != null && activityList.Contains(innerKey))
             {
-                _logger.Debug("HandleNFTActivityMessageAsync duplicated bizKey: {A}", nftActivity.Id);
+                _logger.Debug("HandleNFTActivityTransferAsync duplicated bizKey: {A}", nftActivity.Id);
                 continue;
             }
             
             blockHeight = Math.Max(blockHeight, nftActivity.BlockHeight);
             stopwatch.Start();
-            await MessageActivitySignalAsync(nftActivity);
+            await NFTActivityTransferSignalAsync(nftActivity);
             stopwatch.Stop();
             _logger.LogInformation(
-                "It took {Elapsed} ms to execute HandleNFTActivityMessageAsync for symbol ChainId:{chainId} bizId: {A} blockHeight: {B}.",
+                "It took {Elapsed} ms to execute HandleNFTActivityTransferAsync for symbol ChainId:{chainId} bizId: {A} blockHeight: {B}.",
                 stopwatch.ElapsedMilliseconds, chainId, nftActivity.Id, nftActivity.BlockHeight);
 
         }
@@ -120,16 +117,16 @@ public class NFTActivityMessageScheduleService : ScheduleSyncDataService
         return blockHeight;
     }
 
-    private async Task MessageActivitySignalAsync(NFTActivityItem item)
+    private async Task NFTActivityTransferSignalAsync(NFTActivityItem item)
     {
         if (item == null)
         {
             return;
         }
 
-        await _distributedEventBus.PublishAsync(new NFTMessageActivityEto
+        await _distributedEventBus.PublishAsync(new NFTActivityTransferSyncEto
         {
-            NFTMessageActivityDto = _objectMapper.Map<NFTActivityItem, NFTMessageActivityDto>(item)
+            NFTActivitySyncDto = _objectMapper.Map<NFTActivityItem, NFTActivitySyncDto>(item)
         });
     }
     
@@ -141,6 +138,6 @@ public class NFTActivityMessageScheduleService : ScheduleSyncDataService
 
     public override BusinessQueryChainType GetBusinessType()
     {
-        return BusinessQueryChainType.NFTActivityMessageSync;
+        return BusinessQueryChainType.NFTActivityTransferSync;
     }
 }
