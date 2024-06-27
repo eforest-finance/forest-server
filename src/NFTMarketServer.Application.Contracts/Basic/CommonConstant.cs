@@ -58,6 +58,7 @@ public static class CommonConstant
     public const string MethodManagerForwardCall = "ManagerForwardCall";
     public const string MethodCreateArt = "CreateArt";
     public const string CreateAiArtRetryLockPrefix = "CreateAiArtRetryLockPrefix";
+    public const string DefaultBannerImage = "https://forest-mainnet.s3.ap-northeast-1.amazonaws.com/1719481381138-1719480974375-banner.png";
     
     public const int CacheExpirationMinutes = 60*24;
     public const int BeginHeight = 1;

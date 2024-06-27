@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Nest;
 using Newtonsoft.Json;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Chains;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.Users;
@@ -159,7 +161,11 @@ namespace NFTMarketServer.Users
             if (user.ProfileImage.IsNullOrEmpty())
             {
                 user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
-                
+            }
+
+            if (user.BannerImage.IsNullOrEmpty())
+            {
+                user.BannerImage = CommonConstant.DefaultBannerImage;
             }
             return user == null ? new UserDto() : MapUser(user, inputAddress);
         }
