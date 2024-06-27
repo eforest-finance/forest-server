@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Nest;
 using Newtonsoft.Json;
 using NFTMarketServer.Chains;
+using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Users.Dto;
@@ -31,6 +32,7 @@ namespace NFTMarketServer.Users
         private readonly IObjectMapper _objectMapper;
         private readonly IUserInformationProvider _userInformationProvider;
         private readonly IChainAppService _chainAppService;
+        private readonly ISymbolIconAppService _symbolIconAppService;
         private const string FullAddressPrefix = "ELF";
         public const char FullAddressSeparator = '_';
         private const string AELF = "AELF";
@@ -43,6 +45,7 @@ namespace NFTMarketServer.Users
             IDistributedEventBus distributedEventBus,
             IClusterClient clusterClient,
             IChainAppService chainAppService,
+            ISymbolIconAppService symbolIconAppService,
             IObjectMapper objectMapper)
 
         {
@@ -54,6 +57,7 @@ namespace NFTMarketServer.Users
             _distributedEventBus = distributedEventBus;
             _chainAppService = chainAppService;
             _objectMapper = objectMapper;
+            _symbolIconAppService = symbolIconAppService;
         }
 
         public async Task<Dictionary<string, AccountDto>> GetAccountsAsync(List<string> addresses,
@@ -148,6 +152,11 @@ namespace NFTMarketServer.Users
                 throw new UserFriendlyException("address is required.");
             }
             var user = await _userInformationProvider.GetByUserAddressAsync(inputAddress);
+            if (user.ProfileImage.IsNullOrEmpty())
+            {
+                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                
+            }
             return user == null ? new UserDto() : MapUser(user, inputAddress);
         }
 
