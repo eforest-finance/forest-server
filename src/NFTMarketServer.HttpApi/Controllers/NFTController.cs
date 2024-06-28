@@ -273,7 +273,7 @@ namespace NFTMarketServer.Controllers
             return _nftAppService.GetMyHoldNFTInfosAsync(input);
         }
         
-        [HttpGet]
+        [HttpPost]
         [Route("nft-infos-user-profile/mycreated")]
         public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyCreateNFTInfosAsync(GetMyCreateNFTInfosInput input)
         {
