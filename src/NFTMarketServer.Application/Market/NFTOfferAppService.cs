@@ -158,13 +158,17 @@ namespace NFTMarketServer.Market
                     return result;
                 }
             }
-
-            var userBalance = await _balanceProvider.GetNFTIdListByUserBalancesAsync(new List<string>(),input.Address,input.ChainList,CommonConstant.IntZero,CommonConstant.IntOneThousand,string.Empty);
-            if (userBalance != null && !userBalance.Item2.IsNullOrEmpty())
+            else
             {
-                nftInfoIds.AddRange(userBalance.Item2.Select(item=>item.NFTInfoId).ToList());
+                var userBalance = await _balanceProvider.GetNFTIdListByUserBalancesAsync(input.CollectionIdList,
+                    input.Address, input.ChainList, CommonConstant.IntZero, CommonConstant.IntOneThousand,
+                    string.Empty);
+                if (userBalance != null && !userBalance.Item2.IsNullOrEmpty())
+                {
+                    nftInfoIds.AddRange(userBalance.Item2.Select(item=>item.NFTInfoId).ToList());
+                }
             }
-            
+
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
                     string.Empty, input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
