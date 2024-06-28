@@ -266,23 +266,20 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         };
         await _nftActivityIndexRepository.AddOrUpdateAsync(nftActivityIndex);
 
-        var collectionRelationIndexList = BuildCollectionRelationIndexList(collectionId, from, to);
-        if (!collectionRelationIndexList.IsNullOrEmpty())
-        {
-            await _collectionRelationIndexRepository.BulkAddOrUpdateAsync(collectionRelationIndexList);
-        }
+        await BuildCollectionRelationIndexListAsync(collectionId, from, to);
     }
 
-    private static List<CollectionRelationIndex> BuildCollectionRelationIndexList(string collectionId,string from,string to)
+    private async Task BuildCollectionRelationIndexListAsync(string collectionId, string from, string to)
     {
-        var collectionRelationList = new List<CollectionRelationIndex>();
+        from = from.Trim();
+        to = to.Trim();
         if (collectionId.IsNullOrEmpty())
         {
-            return collectionRelationList;
+            return;
         }
         if (CollectionUtilities.IsNullOrEmpty(from) && CollectionUtilities.IsNullOrEmpty(to))
         {
-            return collectionRelationList;
+            return;
         }
         
         if (!from.IsNullOrEmpty())
@@ -293,18 +290,18 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
                 CollectionId = collectionId,
                 Address = from
             };
-            collectionRelationList.Add(collectionRelationFrom);
+             await _collectionRelationIndexRepository.AddOrUpdateAsync(collectionRelationFrom);
         }
         
         
         if (to.IsNullOrEmpty())
         {
-            return collectionRelationList;
+            return;
         }
 
         if (!from.IsNullOrEmpty() && from.Equals(to))
         {
-            return collectionRelationList;
+            return;
         }
         
         var collectionRelationTo = new CollectionRelationIndex()
@@ -314,8 +311,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             Address = to,
             
         };
-        collectionRelationList.Add(collectionRelationTo);
-        return collectionRelationList;
+        await _collectionRelationIndexRepository.AddOrUpdateAsync(collectionRelationTo);
     }
 
     public async Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedCollectionActivitiesAsync(
