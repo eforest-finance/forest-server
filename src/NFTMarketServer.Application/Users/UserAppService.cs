@@ -181,6 +181,7 @@ namespace NFTMarketServer.Users
             var user = await _userInformationProvider.GetByUserAddressAsync(inputAddress);
             if (user == null)
             {
+                user = new UserIndex();
                 user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
                 user.BannerImage = CommonConstant.DefaultBannerImage;
                 user.AelfAddress = inputAddress;
