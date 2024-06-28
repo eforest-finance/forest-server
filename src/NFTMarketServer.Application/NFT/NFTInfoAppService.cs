@@ -1763,7 +1763,8 @@ namespace NFTMarketServer.NFT
                 SearchParam = input.KeyWord,
                 IssueAddress = input.Address,
                 PriceLow = input.PriceLow,
-                PriceHigh = input.PriceHigh
+                PriceHigh = input.PriceHigh,
+                CollectionIds = input.CollectionIds
                 
             };
             

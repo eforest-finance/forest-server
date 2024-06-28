@@ -92,6 +92,11 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         {
             mustQuery.Add(q => q.Ids(i => i.Values(dto.NFTIdList)));
         }
+        
+        if (!dto.CollectionIds.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.CollectionId).Terms(dto.CollectionIds)));
+        }
 
         if (!dto.IssueAddress.IsNullOrEmpty())
         {
