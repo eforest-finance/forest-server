@@ -44,7 +44,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
     {
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, new List<string>(), searchName, skipCount,
-                maxResultCount,true);
+                maxResultCount,false);
 
         var seedInfos =
             await QueryCompositeNFTInfoForSeedAsync(searchName, new List<string>(), skipCount, maxResultCount);
@@ -64,7 +64,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         var maxResultCount = nftInfoIdList.Count;
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(new List<string>(), nftInfoIdList, string.Empty,
-                CommonConstant.IntZero, maxResultCount,true
+                CommonConstant.IntZero, maxResultCount,false
             );
 
         var seedInfos =
