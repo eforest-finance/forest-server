@@ -9,6 +9,7 @@ namespace NFTMarketServer.NFT
 {
     public class GetCompositeNFTInfosInput : PagedAndSortedMaxCountResultRequestDto
     {
+        [CanBeNull] public List<string> CollectionIds { get; set; }
         [CanBeNull] public List<string> NFTIdList { get; set; }
         [CanBeNull] public string IssueAddress { get; set; }
 

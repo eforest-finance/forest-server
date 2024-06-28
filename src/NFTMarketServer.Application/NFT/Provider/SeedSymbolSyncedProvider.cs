@@ -50,6 +50,10 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
         var shouldQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
         var shouldQuery2 = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+        if (!dto.CollectionIds.IsNullOrEmpty())
+        {
+            return new Tuple<long, List<SeedSymbolIndex>>(CommonConstant.IntZero, new List<SeedSymbolIndex>());
+        }
 
         if (!dto.SearchParam.IsNullOrWhiteSpace())
         {
