@@ -179,6 +179,13 @@ namespace NFTMarketServer.Users
                 throw new UserFriendlyException("address is required.");
             }
             var user = await _userInformationProvider.GetByUserAddressAsync(inputAddress);
+            if (user == null)
+            {
+                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                user.BannerImage = CommonConstant.DefaultBannerImage;
+                user.AelfAddress = inputAddress;
+            }
+
             if (user.ProfileImage.IsNullOrEmpty())
             {
                 user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
