@@ -251,7 +251,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             NFTName = symbolName,
             From = from,
             FullFromAddress = fullFromAddress,
-            To = to.IsNullOrEmpty()?"*":to,
+            To = to,
             FullToAddress = fullToAddress,
             Amount = activityDto.Amount,
             Price = activityDto.Price,
@@ -259,7 +259,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             Timestamp = activityDto.Timestamp,
             NFTType = SymbolHelper.CheckSymbolIsCommonNFTInfoId(activityDto.NFTInfoId) ? NFTType.NFT : NFTType.Seed,
             NFTImage = image,
-            ToNFTIssueFlag = to.Equals(issuer),
+            ToNFTIssueFlag = !issuer.IsNullOrEmpty() && !to.IsNullOrEmpty() && to.Equals(issuer),
             PriceTokenInfo = _objectMapper.Map<TokenInfoDto, TokenInfoIndex>(activityDto.PriceTokenInfo),
             ChainId = activityDto.ChainId,
             Type = activityDto.Type
