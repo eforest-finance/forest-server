@@ -58,7 +58,7 @@ public class NFTActivityMessageScheduleService : ScheduleSyncDataService
         var activityTypeList = new List<int>
             { EnumHelper.GetIndex(NFTActivityType.Sale), EnumHelper.GetIndex(NFTActivityType.MakeOffer) };
         var changePageInfo = await _nftActivityProvider.GetMessageActivityListAsync(activityTypeList, skipCount,
-            lastEndHeight);
+            lastEndHeight, chainId);
 
         if (changePageInfo == null || changePageInfo.IndexerNftActivity.IsNullOrEmpty())
         {

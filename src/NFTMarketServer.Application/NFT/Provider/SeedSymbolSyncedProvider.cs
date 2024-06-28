@@ -50,6 +50,10 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
         var shouldQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
         var shouldQuery2 = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+        if (!dto.CollectionIds.IsNullOrEmpty())
+        {
+            return new Tuple<long, List<SeedSymbolIndex>>(CommonConstant.IntZero, new List<SeedSymbolIndex>());
+        }
 
         if (!dto.SearchParam.IsNullOrWhiteSpace())
         {
@@ -59,7 +63,16 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
             shouldQuery2.Add(q
                 => q.Term(i => i.Field(f => f.TokenName).Value(dto.SearchParam)));
         }
-
+        if (!dto.NFTIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Ids(i => i.Values(dto.NFTIdList)));
+        }
+        if (!dto.IssueAddress.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Term(i
+                => i.Field(f => f.IssuerTo).Value(dto.IssueAddress)));
+        }
+        
         if (!dto.ChainList.IsNullOrEmpty())
         {
             mustQuery.Add(q => q.Terms(i => i.Field(f => f.ChainId).Terms(dto.ChainList)));

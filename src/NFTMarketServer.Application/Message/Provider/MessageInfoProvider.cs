@@ -15,6 +15,7 @@ using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Seed.Index;
 using Volo.Abp.DependencyInjection;
+using NFTActivityType = NFTMarketServer.NFT.NFTActivityType;
 
 namespace NFTMarketServer.Message.Provider;
 

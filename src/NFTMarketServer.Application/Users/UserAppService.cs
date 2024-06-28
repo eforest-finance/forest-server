@@ -4,9 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Nest;
 using Newtonsoft.Json;
+using NFTMarketServer.Basic;
 using NFTMarketServer.Chains;
+using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Users.Dto;
@@ -26,11 +29,12 @@ namespace NFTMarketServer.Users
         private readonly INESTRepository<UserIndex, Guid> _userIndexRepository;
         private readonly INESTRepository<UserExtraIndex, Guid> _userExtraIndexRepository;
         private readonly IClusterClient _clusterClient;
-        private readonly IDistributedEventBus _distributedEventBus;
         private readonly ILogger<UserAppService> _logger;
         private readonly IObjectMapper _objectMapper;
         private readonly IUserInformationProvider _userInformationProvider;
         private readonly IChainAppService _chainAppService;
+        private readonly ISymbolIconAppService _symbolIconAppService;
+        private readonly INESTRepository<UserIndex, Guid> _userRepository;
         private const string FullAddressPrefix = "ELF";
         public const char FullAddressSeparator = '_';
         private const string AELF = "AELF";
@@ -40,9 +44,10 @@ namespace NFTMarketServer.Users
             INESTRepository<UserIndex, Guid> userIndexRepository,
             INESTRepository<UserExtraIndex, Guid> userExtraIndexRepository,
             ILogger<UserAppService> logger,
-            IDistributedEventBus distributedEventBus,
             IClusterClient clusterClient,
             IChainAppService chainAppService,
+            ISymbolIconAppService symbolIconAppService,
+            INESTRepository<UserIndex, Guid> userRepository,
             IObjectMapper objectMapper)
 
         {
@@ -51,9 +56,10 @@ namespace NFTMarketServer.Users
             _userExtraIndexRepository = userExtraIndexRepository;
             _clusterClient = clusterClient;
             _logger = logger;
-            _distributedEventBus = distributedEventBus;
             _chainAppService = chainAppService;
             _objectMapper = objectMapper;
+            _symbolIconAppService = symbolIconAppService;
+            _userRepository = userRepository;
         }
 
         public async Task<Dictionary<string, AccountDto>> GetAccountsAsync(List<string> addresses,
@@ -128,6 +134,14 @@ namespace NFTMarketServer.Users
             
             var userGrain = _clusterClient.GetGrain<IUserGrain>(CurrentUser.GetId());
             var user = await userGrain.GetUserAsync();
+            if (input.ProfileImage.IsNullOrEmpty())
+            {
+                input.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+            }
+            if (input.BannerImage.IsNullOrEmpty())
+            {
+                input.BannerImage = CommonConstant.DefaultBannerImage;
+            }
             var userWaitUpdatedData = _objectMapper.Map(input, user.Data);
             
             var result = await userGrain.UpdateUserAsync(userWaitUpdatedData);
@@ -136,8 +150,25 @@ namespace NFTMarketServer.Users
                 _logger.LogError("Update user information fail, UserId: {UserId}", CurrentUser.GetId());
                 return;
             }
-            
-            await _distributedEventBus.PublishAsync(_objectMapper.Map<UserGrainDto, UserInformationEto>(result.Data));
+
+            var eventData = _objectMapper.Map<UserGrainDto, UserInformationEto>(result.Data);
+            var userInfo = _objectMapper.Map<UserInformationEto, UserIndex>(eventData);
+            if (eventData.CaAddressSide !=null)
+            {
+                List<UserAddress> userAddresses = new List<UserAddress>();
+                foreach (var addressMap in eventData.CaAddressSide)
+                {
+                    UserAddress userAddress = new UserAddress
+                    {
+                        ChainId = addressMap.Key,
+                        Address = addressMap.Value
+                    };
+                    userAddresses.Add(userAddress);
+                }
+
+                userInfo.CaAddressListSide = userAddresses;
+            }
+            await _userRepository.AddOrUpdateAsync(userInfo);
         }
 
 
@@ -148,6 +179,23 @@ namespace NFTMarketServer.Users
                 throw new UserFriendlyException("address is required.");
             }
             var user = await _userInformationProvider.GetByUserAddressAsync(inputAddress);
+            if (user == null)
+            {
+                user = new UserIndex();
+                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                user.BannerImage = CommonConstant.DefaultBannerImage;
+                user.AelfAddress = inputAddress;
+            }
+
+            if (user.ProfileImage.IsNullOrEmpty())
+            {
+                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+            }
+
+            if (user.BannerImage.IsNullOrEmpty())
+            {
+                user.BannerImage = CommonConstant.DefaultBannerImage;
+            }
             return user == null ? new UserDto() : MapUser(user, inputAddress);
         }
 
