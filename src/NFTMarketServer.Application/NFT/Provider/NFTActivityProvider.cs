@@ -251,7 +251,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             NFTName = symbolName,
             From = from,
             FullFromAddress = fullFromAddress,
-            To = to,
+            To = to.IsNullOrEmpty()?"*":to,
             FullToAddress = fullToAddress,
             Amount = activityDto.Amount,
             Price = activityDto.Price,
