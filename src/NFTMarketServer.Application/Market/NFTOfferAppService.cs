@@ -25,7 +25,7 @@ namespace NFTMarketServer.Market
         private readonly IUserAppService _userAppService;
         private readonly INFTOfferProvider _nftOfferProvider;
         private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
-        private readonly INFTInfoNewSyncedProvider _nftInfoNewSyncedProvider;
+        private readonly IUserBalanceProvider _balanceProvider;
         private readonly ICompositeNFTProvider _compositeNFTProvider;
         
         private readonly IObjectMapper _objectMapper;
@@ -33,7 +33,7 @@ namespace NFTMarketServer.Market
         
         public NFTOfferAppService(IUserAppService userAppService, INFTOfferProvider nftOfferProvider,
         INFTCollectionExtensionProvider nftCollectionExtensionProvider,
-                INFTInfoNewSyncedProvider nftInfoNewSyncedProvider,
+                IUserBalanceProvider balanceProvider,
                 ICompositeNFTProvider compositeNFTProvider,
                 IObjectMapper objectMapper,
                 ILogger<NFTOfferAppService> logger)
@@ -41,7 +41,7 @@ namespace NFTMarketServer.Market
             _userAppService = userAppService;
             _nftOfferProvider = nftOfferProvider;
             _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
-            _nftInfoNewSyncedProvider = nftInfoNewSyncedProvider;
+            _balanceProvider = balanceProvider;
             _compositeNFTProvider = compositeNFTProvider;
             _objectMapper = objectMapper;
             _logger = logger;
@@ -157,7 +157,13 @@ namespace NFTMarketServer.Market
                     return result;
                 }
             }
-                
+
+            var userBalance = await _balanceProvider.GetNFTIdListByUserBalancesAsync(new List<string>(),input.Address,input.ChainList,CommonConstant.IntZero,CommonConstant.IntOneThousand,string.Empty);
+            if (userBalance != null && !userBalance.Item2.IsNullOrEmpty())
+            {
+                nftInfoIds.AddRange(userBalance.Item2.Select(item=>item.NFTInfoId).ToList());
+            }
+            
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
                     string.Empty, input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
