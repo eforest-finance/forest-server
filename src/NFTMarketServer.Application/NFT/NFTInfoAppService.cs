@@ -70,6 +70,7 @@ namespace NFTMarketServer.NFT
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly ISeedAppService _seedAppService;
         private readonly IRarityProvider _rarityProvider;
+        private readonly ICompositeNFTProvider _compositeNFTProvider;
 
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
@@ -86,6 +87,8 @@ namespace NFTMarketServer.NFT
         private readonly IUserBalanceProvider _userBalanceProvider;
         private readonly ISchrodingerInfoProvider _schrodingerInfoProvider;
         private readonly string _defaultMainChain = "AELF";
+        private readonly NFTMarketServer.Users.Provider.IUserBalanceProvider _userBalanceIndexProvider;
+
 
         public NFTInfoAppService(
             ITokenAppService tokenAppService, IUserAppService userAppService,
@@ -117,7 +120,9 @@ namespace NFTMarketServer.NFT
             IOptionsMonitor<ChoiceNFTInfoNewFlagOptions> choiceNFTInfoNewFlagOptionsMonitor,
             ISchrodingerInfoProvider schrodingerInfoProvider,
             IRarityProvider rarityProvider,
-            IOptionsMonitor<ChainOptions> chainOptionsMonitor)
+            IOptionsMonitor<ChainOptions> chainOptionsMonitor,
+            ICompositeNFTProvider compositeNFTProvider,
+            NFTMarketServer.Users.Provider.IUserBalanceProvider userBalanceIndexProvider)
         {
             _tokenAppService = tokenAppService;
             _userAppService = userAppService;
@@ -152,6 +157,8 @@ namespace NFTMarketServer.NFT
             _schrodingerInfoProvider = schrodingerInfoProvider;
             _chainOptionsMonitor = chainOptionsMonitor;
             _rarityProvider = rarityProvider;
+            _userBalanceIndexProvider = userBalanceIndexProvider;
+            _compositeNFTProvider = compositeNFTProvider;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -250,6 +257,9 @@ namespace NFTMarketServer.NFT
                     return await MapForCompositeNftInfoIndexDtoPage(result);
                 }
 
+                _logger.LogDebug("searchNftCollectionsDto.ItemTotal is not equals  result.TotalCount collectionId ={A} ",
+                    input.CollectionId);
+                
                 var resetNFTSyncHeightFlagCacheKey = CommonConstant.ResetNFTNewSyncHeightFlagCacheKey;
 
                 var resetSyncHeightFlag =
@@ -270,12 +280,11 @@ namespace NFTMarketServer.NFT
                         {
                             AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(resetNftSyncHeightExpireMinutes)
                         });
-
-                    await _distributedEventBus.PublishAsync(new NFTResetFlagEto
-                    {
-                        FlagDesc = resetNFTSyncHeightFlagCacheKey,
-                        Minutes = resetNftSyncHeightExpireMinutes
-                    });
+                    // await _distributedEventBus.PublishAsync(new NFTResetFlagEto
+                    // {
+                    //     FlagDesc = resetNFTSyncHeightFlagCacheKey,
+                    //     Minutes = resetNftSyncHeightExpireMinutes
+                    // });
                 }
             }
             catch (Exception e)
@@ -378,6 +387,46 @@ namespace NFTMarketServer.NFT
 
             return result;
 
+        }
+
+        public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
+            GetCollectedCollectionActivitiesInput input)
+        {
+            input.Address = FullAddressHelper.ToShortAddress(input.Address);
+            var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
+
+            var nftActivityDtoPage = new PagedResultDto<CollectedCollectionActivitiesDto>();
+
+            var nftInfoIds = new List<string>();
+            if (!input.SearchParam.IsNullOrEmpty() || !input.CollectionIdList.IsNullOrEmpty())
+            {
+                var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
+                    input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
+                nftInfoIds = compositeNFTDic?.Keys.ToList();
+                if (nftInfoIds.IsNullOrEmpty())
+                {
+                    return result;
+                }
+            }
+
+            nftActivityDtoPage =
+                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
+            
+            if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
+            {
+                return result;
+            }
+
+            var collectionActivitiesDtoList = nftActivityDtoPage.Items.ToList().Select(item =>
+                _objectMapper.Map<NFTActivityDto, CollectedCollectionActivitiesDto>(item)).ToList();
+
+            result = new PagedResultDto<CollectedCollectionActivitiesDto>()
+            {
+                TotalCount = nftActivityDtoPage.TotalCount,
+                Items = collectionActivitiesDtoList
+            };
+
+            return result;
         }
 
         public async Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync()
@@ -1599,7 +1648,7 @@ namespace NFTMarketServer.NFT
                 activity.CollectionSymbol = nftInfoIndexDto.NFTCollection.Symbol;
                 activity.CollectionName = nftInfoIndexDto.NFTCollection.TokenName;
                 activity.TotalPrice=(decimal)activity.Price * activity.Amount;
-                activity.NFTUrl = nftInfoIndexDto.PreviewImage;
+                activity.PreviewImage = nftInfoIndexDto.PreviewImage;
                 if(!activity.Symbol.Contains(input.FilterSymbol)) continue;
                 returnItems.Add(activity);
             }
@@ -1621,6 +1670,145 @@ namespace NFTMarketServer.NFT
             }
 
             return _defaultMainChain;
+        }
+        public async Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyHoldNFTInfosAsync(GetMyHoldNFTInfosInput input)
+        {
+            var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput()
+            {
+                Address = input.Address,
+                QueryType = input.QueryType,
+                SkipCount = CommonConstant.IntZero,
+                CollectionIdList = input.CollectionIds
+            };
+            var userBalanceList = await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+            if (userBalanceList.IsNullOrEmpty())
+            {
+                return new PagedResultDto<CompositeNFTInfoIndexDto>()
+                {
+                    TotalCount = CommonConstant.IntZero,
+                    Items = new List<CompositeNFTInfoIndexDto>()
+                };
+            }
+
+            var nftIds = userBalanceList.Select(i => i.NFTInfoId).Distinct().ToList();
+            var nftSymbols = userBalanceList.Select(i => i.Symbol).Distinct().ToList();
+            var getCompositeNFTInfosInput = new GetCompositeNFTInfosInput()
+            {
+                NFTIdList = nftIds,
+                HasAuctionFlag = input.HasAuctionFlag,
+                HasListingFlag = input.HasListingFlag,
+                HasOfferFlag = input.HasOfferFlag,
+                SkipCount = input.SkipCount,
+                MaxResultCount = input.MaxResultCount,
+                Sorting = input.Sorting,
+                SearchParam = input.KeyWord,
+                PriceLow = input.PriceLow,
+                PriceHigh = input.PriceHigh
+                
+            };
+            var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+            var seedPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+            var nftPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+
+            {
+                var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
+                //to get max offers
+                var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+
+                var accountDtoDict =
+                    await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
+                
+                seedPageResult = new PagedResultDto<CompositeNFTInfoIndexDto>()
+                {
+                    TotalCount = seedResult.Item1,
+                    Items = seedResult.Item2.Select(item => MapForSeedBriefInfoDto(item, maxOfferDict, accountDtoDict))
+                        .ToList()
+                };
+            }
+
+            {
+                var nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(getCompositeNFTInfosInput);
+                
+                var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+                
+                var accountDtoDict = await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
+
+                nftPageResult = new PagedResultDto<CompositeNFTInfoIndexDto>()
+                {
+                    TotalCount = nftResult.Item1,
+                    Items = nftResult.Item2.Select(item => MapForNftBriefInfoDto(item, maxOfferDict, accountDtoDict))
+                        .ToList()
+                };
+            }
+            result = new PagedResultDto<CompositeNFTInfoIndexDto>()
+            {
+                TotalCount = seedPageResult.TotalCount + nftPageResult.TotalCount,
+                Items = seedPageResult.Items.Concat(nftPageResult.Items).ToList()
+            };
+            return await MapForCompositeNftInfoIndexDtoPage(result);
+        }
+        
+        public async Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyCreatedNFTInfosAsync(
+            GetMyCreateNFTInfosInput input)
+        {
+            //query nft infos
+            var getCompositeNFTInfosInput = new GetCompositeNFTInfosInput()
+            {
+                HasAuctionFlag = input.HasAuctionFlag,
+                HasListingFlag = input.HasListingFlag,
+                HasOfferFlag = input.HasOfferFlag,
+                SkipCount = input.SkipCount,
+                MaxResultCount = input.MaxResultCount,
+                Sorting = input.Sorting,
+                SearchParam = input.KeyWord,
+                IssueAddress = input.Address,
+                PriceLow = input.PriceLow,
+                PriceHigh = input.PriceHigh,
+                CollectionIds = input.CollectionIds
+                
+            };
+            
+            var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+            var seedPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+            var nftPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+            
+            {
+                var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
+                //to get max offers
+                var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+
+                var accountDtoDict =
+                    await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
+                
+                seedPageResult = new PagedResultDto<CompositeNFTInfoIndexDto>()
+                {
+                    TotalCount = seedResult.Item1,
+                    Items = seedResult.Item2.Select(item => MapForSeedBriefInfoDto(item, maxOfferDict, accountDtoDict))
+                        .ToList()
+                };
+            }
+
+            {
+                var nftResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(getCompositeNFTInfosInput);
+                
+                var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+                
+                var accountDtoDict = await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
+
+                nftPageResult = new PagedResultDto<CompositeNFTInfoIndexDto>()
+                {
+                    TotalCount = nftResult.Item1,
+                    Items = nftResult.Item2.Select(item => MapForNftBriefInfoDto(item, maxOfferDict, accountDtoDict))
+                        .ToList()
+                };
+            }
+            result = new PagedResultDto<CompositeNFTInfoIndexDto>()
+            {
+                TotalCount = seedPageResult.TotalCount + nftPageResult.TotalCount,
+                Items = seedPageResult.Items.Concat(nftPageResult.Items).ToList()
+            };
+            return await MapForCompositeNftInfoIndexDtoPage(result);
+
         }
     }
 }

@@ -15,6 +15,9 @@ namespace NFTMarketServer.NFT.Provider;
 public interface INFTListingProvider
 {
     Task<PagedResultDto<IndexerNFTListingInfo>> GetNFTListingsAsync(GetNFTListingsDto dto);
+
+    Task<IndexerNFTListingInfos> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount,
+        string owner, List<string> chainIdList, List<string> nftInfoIdList);
     
     Task<IndexerNFTListingInfo> GetMinListingNftAsync(string nftInfoId);
 
@@ -116,7 +119,72 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
             throw;
         }
     }
-    
+
+    public async Task<IndexerNFTListingInfos> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount, string owner, List<string> chainIdList,
+        List<string> nftInfoIdList)
+    {
+        try
+        {
+            var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTListingInfos>(new GraphQLRequest
+            {
+                Query = @"query (
+                    $skipCount:Int!,
+                    $maxResultCount:Int!,
+                    $chainIdList:[String],
+                    $nFTInfoIdList:[String],
+                    $owner:String!,
+                    $expireTimeGt:Long
+                ){
+                  data:collectedNFTListingInfo(
+                    dto:{
+                      skipCount:$skipCount,
+                      maxResultCount:$maxResultCount,
+                      chainIdList:$chainIdList,
+                      nFTInfoIdList:$nFTInfoIdList,
+                      owner:$owner,
+                      expireTimeGt:$expireTimeGt
+                    }
+                  ){
+                    totalRecordCount,
+                    indexerNFTListingInfoList:data{
+                      id,
+                      businessId,
+                      quantity,
+                      realQuantity,
+                      symbol,
+                      owner,
+                      prices,
+                      startTime,
+                      publicTime,
+                      expireTime,
+                      chainId,
+                      purchaseToken {
+      	                chainId,symbol,tokenName,
+                      }
+                    }
+                  }
+                }",
+                Variables = new
+                {
+                    chainIdList = chainIdList, 
+                    nFTInfoIdList = nftInfoIdList,
+                    owner = owner,
+                    skipCount = skipCount, 
+                    maxResultCount = maxResultCount, 
+                    expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
+                }
+            });
+            return indexerCommonResult?.Data;
+            
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "GetCollectedNFTListingsAsync query GraphQL error owner={A} chainIdList={B} nftInfoIdList={C}",
+                owner, JsonConvert.SerializeObject(chainIdList), JsonConvert.SerializeObject(nftInfoIdList));
+            throw;
+        }
+    }
+
     public async Task<IndexerNFTListingInfo> GetMinListingNftAsync(string nftInfoId)
     {
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTListingInfo>(new GraphQLRequest

@@ -17,7 +17,20 @@ namespace NFTMarketServer.Market
         public string FloorPriceSymbol { get; set; }
         public long Quantity { get; set; }
         public long ExpireTime { get; set; }
-        public NFTImmutableInfoDto NftInfo { get; set; }
         public TokenDto PurchaseToken { get; set; }
+    }
+
+    public class CollectedCollectionOffersDto : NFTOfferDto
+    {
+        public string CollectionName { get; set; }
+        public string NFTName { get; set; }
+        
+        public string PreviewImage { get; set; }
+        
+        public int Decimals { get; set; }
+        
+        public string NFTSymbol { get; set; }
+        
+        public string NFTInfoId { get; set; }
     }
 }

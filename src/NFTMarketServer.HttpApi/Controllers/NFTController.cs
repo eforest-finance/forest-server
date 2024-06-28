@@ -126,6 +126,13 @@ namespace NFTMarketServer.Controllers
             return _nftAppService.GetCollectionActivitiesAsync(input);
         }
         
+        [HttpPost]
+        [Route("collected-collection-activities")]
+        public Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(GetCollectedCollectionActivitiesInput input)
+        {
+            return _nftAppService.GetCollectedCollectionActivitiesAsync(input);
+        }
+        
         [HttpGet]
         [Route("hot-nft-infos")]
         public Task<PagedResultDto<HotNFTInfoDto>> GetHotNFTInfosAsync()
@@ -251,5 +258,27 @@ namespace NFTMarketServer.Controllers
         {
             return _aiAppService.GETAIPrompts();
         }
+        
+        [HttpGet]
+        [Route("nft-collections/myhold")]
+        public Task<PagedResultDto<SearchNFTCollectionsDto>> GetMyHoldNFTCollectionsAsync(GetMyHoldNFTCollectionsInput input)
+        {
+            return _nftCollectionAppService.GetMyHoldNFTCollectionsAsync(input);
+        }
+        
+        [HttpPost]
+        [Route("nft-infos-user-profile/myhold")]
+        public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyHoldNFTInfosAsync(GetMyHoldNFTInfosInput input)
+        {
+            return _nftAppService.GetMyHoldNFTInfosAsync(input);
+        }
+        
+        [HttpPost]
+        [Route("nft-infos-user-profile/mycreated")]
+        public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyCreateNFTInfosAsync(GetMyCreateNFTInfosInput input)
+        {
+            return _nftAppService.GetMyCreatedNFTInfosAsync(input);
+        }
+        
     }
 }

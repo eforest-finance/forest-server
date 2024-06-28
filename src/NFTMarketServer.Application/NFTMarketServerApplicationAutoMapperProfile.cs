@@ -52,6 +52,7 @@ using NFTMarketServer.Users.Eto;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.AutoMapper;
 using ExternalInfoDictionary = NFTMarketServer.Entities.ExternalInfoDictionary;
+using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
 
 namespace NFTMarketServer;
 
@@ -84,6 +85,36 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTActivityItem, NFTMessageActivityDto>().ForMember(des => des.PriceTokenInfo,
             opt => opt.MapFrom(source => new NFTMarketServer.NFT.Dtos.TokenInfoDto
                 { Symbol = source.PriceTokenInfo.Symbol }));
+        CreateMap<NFTActivityItem, NFTActivitySyncDto>().ForMember(des => des.PriceTokenInfo,
+            opt => opt.MapFrom(source => new NFTMarketServer.NFT.Dtos.TokenInfoDto
+            {
+                Id = source.PriceTokenInfo.Id,
+                ChainId = source.PriceTokenInfo.ChainId,
+                Symbol = source.PriceTokenInfo.Symbol,
+                Decimals = source.PriceTokenInfo.Decimals
+            }));
+        CreateMap<TokenInfoDto, TokenInfoIndex>();
+        CreateMap<NFTActivityIndex, CollectedCollectionOffersDto>()
+            .ForMember(
+                destination => destination.ExpireTime,
+                opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.Timestamp)))
+            .ForMember(des => des.CollectionName,
+                opt => opt.MapFrom(source => source.CollectionName))
+            .ForMember(des => des.NFTName,
+                opt => opt.MapFrom(source => source.NFTName))
+            .ForMember(des => des.PreviewImage,
+                opt => opt.MapFrom(source => source.NFTImage));
+        CreateMap<NFTActivityIndex, CollectedCollectionActivitiesDto>()
+            .ForMember(
+                destination => destination.Timestamp,
+                opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.Timestamp)))
+            .ForMember(des => des.CollectionName,
+                opt => opt.MapFrom(source => source.CollectionName))
+            .ForMember(des => des.NFTName,
+                opt => opt.MapFrom(source => source.NFTName))
+            .ForMember(des => des.PreviewImage,
+                opt => opt.MapFrom(source => source.NFTImage));
+        CreateMap<NFTActivityDto, CollectedCollectionActivitiesDto>();
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
         CreateMap<NFTInfoIndex, NFTInfoNewIndex>();
@@ -124,6 +155,12 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             ));
 
         CreateMap<IndexerNFTOffer, NFTOfferDto>()
+            .ForMember(des => des.FromAddress, opt => opt.MapFrom(source => source.From))
+            .ForMember(des => des.ToAddress, opt => opt.MapFrom(source => source.To))
+            .ForMember(des => des.ExpireTime, opt
+                => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.ExpireTime)))
+            .ForMember(des => des.Quantity, opt => opt.MapFrom(source => source.RealQuantity));
+        CreateMap<IndexerNFTOffer, CollectedCollectionOffersDto>()
             .ForMember(des => des.FromAddress, opt => opt.MapFrom(source => source.From))
             .ForMember(des => des.ToAddress, opt => opt.MapFrom(source => source.To))
             .ForMember(des => des.ExpireTime, opt
@@ -219,6 +256,19 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.ExpireTime)))
             .ForMember(destination=>destination.Quantity,
             opt => opt.MapFrom(source => source.RealQuantity));
+        
+        CreateMap<IndexerNFTListingInfo, CollectedCollectionListingDto>()
+            .Ignore(o => o.Owner)
+            .ForMember(destination => destination.OwnerAddress,
+                opt => opt.MapFrom(source => source.Owner))
+            .ForMember(destination => destination.StartTime,
+                opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.StartTime)))
+            .ForMember(destination => destination.PublicTime,
+                opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.PublicTime)))
+            .ForMember(destination => destination.EndTime,
+                opt => opt.MapFrom(source => DateTimeHelper.ToUnixTimeMilliseconds(source.ExpireTime)))
+            .ForMember(destination=>destination.Quantity,
+                opt => opt.MapFrom(source => source.RealQuantity));
         
         CreateMap<NFTCollectionExtensionIndex, NFTCollectionIndexDto>();
         CreateMap<NFTInfoExtensionIndex, NFTInfoExtensionIndex>();
@@ -358,5 +408,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(destination => destination.AddressClaimLimit,
                 opt => opt.MapFrom(source => source.ClaimMax));
         CreateMap<MessageInfoIndex, MessageInfoDto>();
+        CreateMap<UserInformationEto, UserIndex>();
     }
 }

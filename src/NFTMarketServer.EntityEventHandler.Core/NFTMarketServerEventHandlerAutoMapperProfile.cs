@@ -24,8 +24,6 @@ public class NFTMarketServerEventHandlerAutoMapperProfile : Profile
         // synchronization
         CreateMap<SynchronizeTransactionInfoEto, SynchronizeTransactionInfoIndex>();
         
-        
-        CreateMap<UserInformationEto, UserIndex>();
         CreateMap<SynchronizeTransactionInfoEto, SynchronizeTransactionInfoIndex>();
         CreateMap<NFT.SocialMedia, SocialMedia>();
         CreateMap<NFTDropExtraEto, NFTDropExtensionIndex>

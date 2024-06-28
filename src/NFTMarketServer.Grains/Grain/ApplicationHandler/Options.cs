@@ -39,6 +39,11 @@ public class HideCollectionInfoOptions
     public List<string> HideCollectionInfoList { get; set; }
 }
 
+public class RandomImageListOptions
+{
+    public List<string> RandomImageList { get; set; }
+}
+
 public class RarityShowWhiteOptions
 {
     public List<string> RarityShowWhiteList { get; set; }

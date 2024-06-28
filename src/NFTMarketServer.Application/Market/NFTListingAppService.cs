@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NFTMarketServer.Basic;
+using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.NFT.Provider;
@@ -21,14 +23,22 @@ namespace NFTMarketServer.Market
         private readonly IUserAppService _userAppService;
         private readonly INFTListingProvider _nftListingProvider;
         private readonly IObjectMapper _objectMapper;
+        private readonly ICompositeNFTProvider _compositeNFTProvider;
+        private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
 
-        public NFTListingAppService(IUserAppService userAppService, INFTListingProvider nftListingProvider,
-            ILogger<NFTListingAppService> logger, IObjectMapper objectMapper)
+        public NFTListingAppService(IUserAppService userAppService,
+            INFTListingProvider nftListingProvider,
+            ILogger<NFTListingAppService> logger, 
+            IObjectMapper objectMapper,
+                ICompositeNFTProvider compositeNFTProvider,
+            INFTCollectionExtensionProvider nftCollectionExtensionProvider)
         {
             _userAppService = userAppService;
             _nftListingProvider = nftListingProvider;
             _logger = logger;
             _objectMapper = objectMapper;
+            _compositeNFTProvider = compositeNFTProvider;
+            _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
         }
 
         public async Task<PagedResultDto<NFTListingIndexDto>> GetNFTListingsAsync(GetNFTListingsInput input)
@@ -83,5 +93,89 @@ namespace NFTMarketServer.Market
                 throw new UserFriendlyException("Internal error, please try again later.");
             }
         }
+
+        public async Task<PagedResultDto<CollectedCollectionListingDto>> GetCollectedCollectionListingAsync(
+            GetCollectedCollectionListingsInput input)
+        {
+            input.Address = FullAddressHelper.ToShortAddress(input.Address);
+            
+            var nftInfoIds = new List<string>();
+            if (!input.SearchParam.IsNullOrEmpty() || !input.CollectionIdList.IsNullOrEmpty())
+            {
+                var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
+                    input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
+                nftInfoIds = compositeNFTDic?.Keys.ToList();
+                if (nftInfoIds.IsNullOrEmpty())
+                {
+                    return new PagedResultDto<CollectedCollectionListingDto>()
+                    {
+                        TotalCount = CommonConstant.IntZero,
+                        Items = new List<CollectedCollectionListingDto>()
+                    };
+                }
+            }
+
+            var collectedNFTListings = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
+                input.MaxResultCount, input.Address, input.ChainList, nftInfoIds);
+
+            if (collectedNFTListings == null || collectedNFTListings.TotalRecordCount == CommonConstant.IntZero)
+            {
+                return new PagedResultDto<CollectedCollectionListingDto>()
+                {
+                    TotalCount = CommonConstant.IntZero,
+                    Items = new List<CollectedCollectionListingDto>()
+                };
+            }
+            
+            var nftInfoIdList = collectedNFTListings.IndexerNFTListingInfoList?.Select(item => item.BusinessId).ToList();
+
+            var nftCollectionExtensionDic =
+                await _nftCollectionExtensionProvider.GetNFTCollectionExtensionsAsync(nftInfoIdList
+                    .Select(item => SymbolHelper.TransferNFTIdToCollectionId(item)).ToList());
+            
+            var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
+            
+            var listingOwner = collectedNFTListings.IndexerNFTListingInfoList?.Select(i => i?.Owner ?? "").ToList();
+            
+            var addresses = listingOwner
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Distinct().ToList();
+            var accountDict = await _userAppService.GetAccountsAsync(addresses);
+
+            var res = collectedNFTListings.IndexerNFTListingInfoList.Select(i =>
+            {
+                var item = _objectMapper.Map<IndexerNFTListingInfo, CollectedCollectionListingDto>(i);
+                item.Owner = accountDict.GetValueOrDefault(i.Owner, new AccountDto(i.Owner))
+                    ?.WithChainIdAddress(item.ChainId);
+                item.PurchaseToken = _objectMapper.Map<IndexerTokenInfo, TokenDto>(i.PurchaseToken);
+                if (compositeNFTInfoDic.ContainsKey(i.BusinessId) && compositeNFTInfoDic[i.BusinessId] != null)
+                {
+                    item.PreviewImage = compositeNFTInfoDic[i.BusinessId].PreviewImage;
+                    item.NFTName = compositeNFTInfoDic[i.BusinessId].NFTName;
+                    item.CollectionName = compositeNFTInfoDic[i.BusinessId].CollectionName;
+                    item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
+                    item.Prices = item.Prices;
+                    item.NFTSymbol = compositeNFTInfoDic[i.BusinessId].Symbol;
+                    item.NFTInfoId = compositeNFTInfoDic[i.BusinessId].NFTInfoId;
+                    item.Price = item.Prices;
+                }
+                var collectionId = SymbolHelper.TransferNFTIdToCollectionId(i.BusinessId);
+                if (nftCollectionExtensionDic.ContainsKey(collectionId) && nftCollectionExtensionDic[collectionId] != null)
+                {
+                    item.FloorPrice = nftCollectionExtensionDic[collectionId] .FloorPrice;
+                    item.FloorPriceSymbol = nftCollectionExtensionDic[collectionId] .FloorPriceSymbol;
+                }
+
+                return item;
+            }).ToList();
+
+            return new PagedResultDto<CollectedCollectionListingDto>
+            {
+                Items = res,
+                TotalCount = collectedNFTListings.TotalRecordCount
+            };
+        }
     }
+    
+    
 }

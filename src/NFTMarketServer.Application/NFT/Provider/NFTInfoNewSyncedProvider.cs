@@ -34,6 +34,8 @@ public interface INFTInfoNewSyncedProvider
     public Task<IndexerNFTInfos> GetNFTInfosUserProfileAsync(GetNFTInfosProfileInput dto);
 
     public Task<long> CalCollectionItemSupplyTotalAsync(string chainId, string collectionId);
+    
+    public Task<List<IndexerNFTInfo>> GetNFTInfosByIdListAsync(List<string> idList);
 }
 
 public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDependency
@@ -86,7 +88,21 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         var shouldQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
 
         mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(dto.CollectionId)));
+        if (!dto.NFTIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Ids(i => i.Values(dto.NFTIdList)));
+        }
         
+        if (!dto.CollectionIds.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.CollectionId).Terms(dto.CollectionIds)));
+        }
+
+        if (!dto.IssueAddress.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.IssueManagerSet).Terms(dto.IssueAddress)));
+        }
+
         if (!dto.SearchParam.IsNullOrEmpty())
         {
             shouldQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(dto.SearchParam)));
@@ -444,7 +460,26 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
 
         return total;
     }
-    
+
+    public async Task<List<IndexerNFTInfo>> GetNFTInfosByIdListAsync(List<string> idList)
+    {
+        if (idList.IsNullOrEmpty())
+        {
+            return new List<IndexerNFTInfo>();
+        }
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
+        
+        mustQuery.Add(q => q.Terms(i => i.Field(f => f.Id).Terms(idList)));
+        
+        QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+        
+        var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter);
+
+        var nftInfoIndexList = _objectMapper.Map<List<NFTInfoNewIndex>, List<IndexerNFTInfo>>(result?.Item2);
+        return nftInfoIndexList;
+    }
+
     private async Task<Tuple<long,List<NFTInfoNewIndex>>> CalCollectionItemSupplyTotalAsync(string chainId, string collectionId, int skipCount)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTInfoNewIndex>, QueryContainer>>();
