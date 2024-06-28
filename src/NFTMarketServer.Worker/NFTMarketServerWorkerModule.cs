@@ -35,6 +35,7 @@ namespace NFTMarketServer.Worker
 			      backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTActivitySyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTActivityTransferSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<UserBalanceSyncWorker>());
+
         }
     }
 }

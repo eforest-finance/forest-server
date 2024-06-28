@@ -452,6 +452,7 @@ namespace NFTMarketServer.NFT
             if (!extensionIndices.IsNullOrEmpty())
             {
                 var extension = extensionIndices.FirstOrDefault(i => i.Id.Equals(nftCollection.Id));
+
                 if (extension != null)
                 {
                     dto.FloorPrice = extension.FloorPrice;
