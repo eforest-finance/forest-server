@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
@@ -241,7 +242,10 @@ namespace NFTMarketServer.Market
 
                 return dto;
             }).ToList();
-            
+            if (result.Items.IsNullOrEmpty())
+            {
+                result.Items = new List<CollectedCollectionOffersDto>();
+            }
             return result;
         }
 
