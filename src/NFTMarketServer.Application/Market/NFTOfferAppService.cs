@@ -54,7 +54,7 @@ namespace NFTMarketServer.Market
 
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    input.ChainId, new List<string>(), input.NFTInfoId, new List<string>(),string.Empty, string.Empty);
+                    input.ChainId, new List<string>(), input.NFTInfoId, new List<string>(),string.Empty, string.Empty,string.Empty);
             if (nftOfferIndexes == null || nftOfferIndexes.TotalRecordCount==0)
                 return buildInitNFTOffersDto();
             
@@ -111,7 +111,7 @@ namespace NFTMarketServer.Market
             
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    string.Empty, input.ChainList, string.Empty, nftInfoIds, input.Address, string.Empty);
+                    string.Empty, input.ChainList, string.Empty, nftInfoIds, input.Address, string.Empty, string.Empty);
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
@@ -160,7 +160,7 @@ namespace NFTMarketServer.Market
                 
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    string.Empty, input.ChainList, string.Empty, nftInfoIds, string.Empty, input.Address);
+                    string.Empty, input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
