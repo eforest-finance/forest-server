@@ -208,6 +208,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             var nftInfoNewIndex = await _nftInfoNewIndexRepository.GetAsync(activityDto.NFTInfoId);
             if (nftInfoNewIndex == null)
             {
+                _logger.LogInformation("SaveOrUpdateNFTActivityInfoAsync nft is null common nftId={A}",activityDto.NFTInfoId);
                 return;
             }
 
@@ -223,6 +224,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             var seedInfoIndex = await _seedSymbolIndexRepository.GetAsync(activityDto.NFTInfoId);
             if (seedInfoIndex == null)
             {
+                _logger.LogInformation("SaveOrUpdateNFTActivityInfoAsync nft is null seed nftId={A}",activityDto.NFTInfoId);
                 return;
             }
 
@@ -238,9 +240,6 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var to = FullAddressHelper.ToShortAddress(activityDto.To);
         var fullFromAddress = FullAddressHelper.ToFullAddress(activityDto.From, activityDto.ChainId);
         var fullToAddress = FullAddressHelper.ToFullAddress(activityDto.To, activityDto.ChainId);
-
-        var collectionRelationIndexList = BuildCollectionRelationIndexList(collectionId, from, to);
-        await _collectionRelationIndexRepository.BulkAddOrUpdateAsync(collectionRelationIndexList);
 
         var nftActivityIndex = new NFTActivityIndex
         {
@@ -267,28 +266,47 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         };
         await _nftActivityIndexRepository.AddOrUpdateAsync(nftActivityIndex);
 
+        var collectionRelationIndexList = BuildCollectionRelationIndexList(collectionId, from, to);
+        if (!collectionRelationIndexList.IsNullOrEmpty())
+        {
+            await _collectionRelationIndexRepository.BulkAddOrUpdateAsync(collectionRelationIndexList);
+        }
     }
 
     private static List<CollectionRelationIndex> BuildCollectionRelationIndexList(string collectionId,string from,string to)
     {
-        if (CollectionUtilities.IsNullOrEmpty(from) || CollectionUtilities.IsNullOrEmpty(to))
-        {
-            return null;
-        }
-        var collectionRelationFrom = new CollectionRelationIndex()
-        {
-            Id = IdGenerateHelper.GetCollectionRelationId(collectionId,from),
-            CollectionId = collectionId,
-            Address = from
-        };
-        var collectionRelationList = new List<CollectionRelationIndex>()
-        {
-            collectionRelationFrom
-        };
-        if (from.Equals(to))
+        var collectionRelationList = new List<CollectionRelationIndex>();
+        if (collectionId.IsNullOrEmpty())
         {
             return collectionRelationList;
         }
+        if (CollectionUtilities.IsNullOrEmpty(from) && CollectionUtilities.IsNullOrEmpty(to))
+        {
+            return collectionRelationList;
+        }
+        
+        if (!from.IsNullOrEmpty())
+        {
+            var collectionRelationFrom = new CollectionRelationIndex()
+            {
+                Id = IdGenerateHelper.GetCollectionRelationId(collectionId,from),
+                CollectionId = collectionId,
+                Address = from
+            };
+            collectionRelationList.Add(collectionRelationFrom);
+        }
+        
+        
+        if (to.IsNullOrEmpty())
+        {
+            return collectionRelationList;
+        }
+
+        if (!from.IsNullOrEmpty() && from.Equals(to))
+        {
+            return collectionRelationList;
+        }
+        
         var collectionRelationTo = new CollectionRelationIndex()
         {
             Id = IdGenerateHelper.GetCollectionRelationId(collectionId,to),
