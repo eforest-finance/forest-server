@@ -34,13 +34,14 @@ public class NFTActivitySyncEventHandler : IDistributedEventHandler<NFTActivityS
             etoData.NFTActivitySyncDto.Id.IsNullOrEmpty()) return;
 
         var dto = etoData.NFTActivitySyncDto;
-        var expireFlag = await _distributedCacheForHeight.GetAsync(dto.Id);
+        var key = dto.Id + dto.Type;
+        var expireFlag = await _distributedCacheForHeight.GetAsync(key);
         if (!expireFlag.IsNullOrEmpty())
         {
             return;
         }
 
-        await _distributedCacheForHeight.SetAsync(dto.Id,
+        await _distributedCacheForHeight.SetAsync(key,
             dto.Id, new DistributedCacheEntryOptions
             {
                 AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(ExpireSeconds)
