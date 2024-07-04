@@ -138,7 +138,7 @@ namespace NFTMarketServer.Users
             {
                 if (input.ProfileImage.IsNullOrEmpty())
                 {
-                    input.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                    input.ProfileImage = await _symbolIconAppService.GetDefaultImageAsync(string.Empty);
                 }
                 if (input.BannerImage.IsNullOrEmpty())
                 {
@@ -202,14 +202,14 @@ namespace NFTMarketServer.Users
             if (user == null)
             {
                 user = new UserIndex();
-                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                user.ProfileImage = await _symbolIconAppService.GetDefaultImageAsync(inputAddress);
                 user.BannerImage = CommonConstant.DefaultBannerImage;
                 user.AelfAddress = inputAddress;
             }
 
             if (user.ProfileImage.IsNullOrEmpty())
             {
-                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                user.ProfileImage = await _symbolIconAppService.GetDefaultImageAsync(inputAddress);
             }
 
             if (user.BannerImage.IsNullOrEmpty())
