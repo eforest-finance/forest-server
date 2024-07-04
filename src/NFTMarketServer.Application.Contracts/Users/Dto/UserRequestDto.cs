@@ -7,8 +7,7 @@ namespace NFTMarketServer.Users.Dto;
 public class UserUpdateDto : IValidatableObject
 {
     public UserUpdateType UserUpdateType { get; set; }
-
-    [Required]
+    
     [MinLength(1), MaxLength(20)]
     public string Name { get; set; }
 
