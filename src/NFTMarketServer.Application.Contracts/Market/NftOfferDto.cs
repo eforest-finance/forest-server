@@ -32,5 +32,7 @@ namespace NFTMarketServer.Market
         public string NFTSymbol { get; set; }
         
         public string NFTInfoId { get; set; }
+        
+        public string CollectionLogoImage { get; set; }
     }
 }
