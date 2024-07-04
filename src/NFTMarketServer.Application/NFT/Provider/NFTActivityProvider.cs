@@ -271,8 +271,6 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 
     private async Task BuildCollectionRelationIndexListAsync(string collectionId, string from, string to)
     {
-        from = from.Trim();
-        to = to.Trim();
         if (collectionId.IsNullOrEmpty())
         {
             return;
