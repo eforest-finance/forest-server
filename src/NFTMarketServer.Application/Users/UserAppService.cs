@@ -127,7 +127,7 @@ namespace NFTMarketServer.Users
 
         public async Task UserUpdateAsync(UserUpdateDto input)
         {
-            if (!await CheckNameAsync(input.Name))
+            if (input.UserUpdateType.Equals(UserUpdateType.All) && !await CheckNameAsync(input.Name))
             {
                 throw new UserFriendlyException(message: "The name already used.");
             }
