@@ -148,10 +148,18 @@ namespace NFTMarketServer.Users
             }
             else if(input.UserUpdateType.Equals(UserUpdateType.BannerImage))
             {
+                if (input.BannerImage.IsNullOrEmpty())
+                {
+                    throw new UserFriendlyException(message: "BannerImage should not be null.");
+                }
                 userWaitUpdatedData = user.Data;
                 userWaitUpdatedData.BannerImage = input.BannerImage;
             }else if (input.UserUpdateType.Equals(UserUpdateType.ProfileImage))
             {
+                if (input.ProfileImage.IsNullOrEmpty())
+                {
+                    throw new UserFriendlyException(message: "ProfileImage should not be null.");
+                }
                 userWaitUpdatedData = user.Data;
                 userWaitUpdatedData.ProfileImage = input.ProfileImage;
             }
