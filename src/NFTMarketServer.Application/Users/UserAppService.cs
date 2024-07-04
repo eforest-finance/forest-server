@@ -131,18 +131,30 @@ namespace NFTMarketServer.Users
             {
                 throw new UserFriendlyException(message: "The name already used.");
             }
-            
             var userGrain = _clusterClient.GetGrain<IUserGrain>(CurrentUser.GetId());
             var user = await userGrain.GetUserAsync();
-            if (input.ProfileImage.IsNullOrEmpty())
+            var userWaitUpdatedData = new UserGrainDto();
+            if (input.UserUpdateType.Equals(UserUpdateType.ALL))
             {
-                input.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                if (input.ProfileImage.IsNullOrEmpty())
+                {
+                    input.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                }
+                if (input.BannerImage.IsNullOrEmpty())
+                {
+                    input.BannerImage = CommonConstant.DefaultBannerImage;
+                }
+                userWaitUpdatedData = _objectMapper.Map(input, user.Data);
             }
-            if (input.BannerImage.IsNullOrEmpty())
+            else if(input.UserUpdateType.Equals(UserUpdateType.BannerImage))
             {
-                input.BannerImage = CommonConstant.DefaultBannerImage;
+                userWaitUpdatedData = user.Data;
+                userWaitUpdatedData.BannerImage = input.BannerImage;
+            }else if (input.UserUpdateType.Equals(UserUpdateType.ProfileImage))
+            {
+                userWaitUpdatedData = user.Data;
+                userWaitUpdatedData.ProfileImage = input.ProfileImage;
             }
-            var userWaitUpdatedData = _objectMapper.Map(input, user.Data);
             
             var result = await userGrain.UpdateUserAsync(userWaitUpdatedData);
             if (!result.Success)
