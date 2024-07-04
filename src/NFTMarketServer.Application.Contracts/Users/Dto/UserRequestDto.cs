@@ -18,31 +18,34 @@ public class UserUpdateDto : IValidatableObject
     public string ProfileImage { get; set; }
     public string ProfileImageOriginal { get; set; }
     public string BannerImage { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (!RegexHelper.IsValid(Name, RegexType.UserName))
+        if (UserUpdateType.Equals(UserUpdateType.All) && !RegexHelper.IsValid(Name, RegexType.UserName))
         {
             yield return new ValidationResult(
                 BasicStatusMessage.IllegalInputData,
                 new[] { "Name" }
             );
         }
-        if (! RegexHelper.IsValid(Email,RegexType.Email))
+
+        if (UserUpdateType.Equals(UserUpdateType.All) && !RegexHelper.IsValid(Email, RegexType.Email))
         {
             yield return new ValidationResult(
                 BasicStatusMessage.IllegalInputData,
                 new[] { "email" }
             );
         }
-        if (! RegexHelper.IsValid(Twitter,RegexType.Twitter))
+
+        if (UserUpdateType.Equals(UserUpdateType.All) && !RegexHelper.IsValid(Twitter, RegexType.Twitter))
         {
             yield return new ValidationResult(
                 BasicStatusMessage.IllegalInputData,
                 new[] { "twitter" }
             );
         }
-        
-        if (! RegexHelper.IsValid(Instagram,RegexType.Instagram))
+
+        if (UserUpdateType.Equals(UserUpdateType.All) && !RegexHelper.IsValid(Instagram, RegexType.Instagram))
         {
             yield return new ValidationResult(
                 BasicStatusMessage.IllegalInputData,
@@ -55,7 +58,7 @@ public class UserUpdateDto : IValidatableObject
 }
 public enum UserUpdateType
 {
-    ALL,
+    All,
     ProfileImage,
     BannerImage
 }
