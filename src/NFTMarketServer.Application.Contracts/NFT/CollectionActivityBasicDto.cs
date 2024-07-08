@@ -7,6 +7,8 @@ public class CollectionActivityBasicDto
     public string NFTTokenName { get; set; }
     public string Image { get; set; }
     
+    public string ChainId { get; set; }
+    
     public int Rank { get; set; }
     public string Level { get; set; }
     public string Grade { get; set; }
