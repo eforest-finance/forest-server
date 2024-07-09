@@ -13,4 +13,5 @@ public interface ISymbolIconAppService
     Task<KeyValuePair<string,string>> UpdateNFTIconWithHashAsync(byte[] utf8Bytes, string symbol);
     
     Task<string> GetRandomImageAsync();
+    Task<string> GetDefaultImageAsync(string address);
 }

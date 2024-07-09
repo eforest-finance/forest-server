@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using NFTMarketServer.AwsS3;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
@@ -113,6 +114,28 @@ public class SymbolIconAppService : NFTMarketServerAppService, ISymbolIconAppSer
             new Random().Next(CommonConstant.IntZero, randomList.Count - CommonConstant.IntOne);
         return randomList[randomNumber];
     }
+    
+    public async Task<string> GetDefaultImageAsync(string address)
+    {
+        var randomList = _randomImageListOptionsMonitor.CurrentValue.RandomImageList;
+        if (randomList.Count == CommonConstant.IntZero)
+        {
+            return "";
+        }
+        if (randomList.Count == CommonConstant.IntOne || address.IsNullOrEmpty())
+        {
+            return randomList[CommonConstant.IntZero];
+        }
+        return randomList[GetArrayIndex(address, randomList.Count)];
+    }
+    
+    private static int GetArrayIndex(string str, int arrayLength)
+    {
+        var hashCode = str.GetHashCode();
+        return Math.Abs(hashCode) % arrayLength;
+    }
+    
+    
 
     private Stream AddWaterMarkByStream(string symbol)
     {

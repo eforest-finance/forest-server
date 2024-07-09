@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Basic;
+using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
@@ -158,12 +159,16 @@ namespace NFTMarketServer.Market
                     item.NFTSymbol = compositeNFTInfoDic[i.BusinessId].Symbol;
                     item.NFTInfoId = compositeNFTInfoDic[i.BusinessId].NFTInfoId;
                     item.Price = item.Prices;
+                    item.Quantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
+                    item.OriginQuantity = i.Quantity;
                 }
                 var collectionId = SymbolHelper.TransferNFTIdToCollectionId(i.BusinessId);
                 if (nftCollectionExtensionDic.ContainsKey(collectionId) && nftCollectionExtensionDic[collectionId] != null)
                 {
                     item.FloorPrice = nftCollectionExtensionDic[collectionId] .FloorPrice;
                     item.FloorPriceSymbol = nftCollectionExtensionDic[collectionId] .FloorPriceSymbol;
+                    item.CollectionLogoImage =
+                        FTHelper.BuildIpfsUrl(nftCollectionExtensionDic[collectionId].LogoImage);
                 }
 
                 return item;
