@@ -35,5 +35,7 @@ namespace NFTMarketServer.Market
         
         public decimal Price { get; set; }
         public string CollectionLogoImage { get; set; }
+        
+        public long OriginQuantity { get; set; }
     }
 }
