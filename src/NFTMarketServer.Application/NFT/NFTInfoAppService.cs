@@ -323,7 +323,8 @@ namespace NFTMarketServer.NFT
                 {
                    NFTInfoId = item.Id,
                    NFTTokenName = item.TokenName,
-                   Image = item.SeedImage
+                   Image = item.SeedImage,
+                   ChainId = item.ChainId
                 }).ToList().ToDictionary(e => e.NFTInfoId, e => e);;
             }
 
@@ -375,6 +376,19 @@ namespace NFTMarketServer.NFT
                 if (collectionActivityBasicDto != null && isInRarityWhiteList)
                 {
                     _objectMapper.Map(collectionActivityBasicDto, itemNew);
+                }
+
+                if (itemNew.PriceToken == null)
+                {
+                    itemNew.PriceToken = new TokenDto()
+                    {
+                        ChainId = collectionActivityBasicDto?.ChainId
+                    };
+                }
+
+                if (itemNew.PriceToken.ChainId.IsNullOrEmpty())
+                {
+                    itemNew.PriceToken.ChainId = collectionActivityBasicDto?.ChainId;
                 }
                 return itemNew;
             }).ToList();

@@ -127,22 +127,42 @@ namespace NFTMarketServer.Users
 
         public async Task UserUpdateAsync(UserUpdateDto input)
         {
-            if (!await CheckNameAsync(input.Name))
+            if (input.UserUpdateType.Equals(UserUpdateType.All) && !await CheckNameAsync(input.Name))
             {
                 throw new UserFriendlyException(message: "The name already used.");
             }
-            
             var userGrain = _clusterClient.GetGrain<IUserGrain>(CurrentUser.GetId());
             var user = await userGrain.GetUserAsync();
-            if (input.ProfileImage.IsNullOrEmpty())
+            var userWaitUpdatedData = new UserGrainDto();
+            if (input.UserUpdateType.Equals(UserUpdateType.All))
             {
-                input.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                if (input.ProfileImage.IsNullOrEmpty())
+                {
+                    input.ProfileImage = await _symbolIconAppService.GetDefaultImageAsync(string.Empty);
+                }
+                if (input.BannerImage.IsNullOrEmpty())
+                {
+                    input.BannerImage = CommonConstant.DefaultBannerImage;
+                }
+                userWaitUpdatedData = _objectMapper.Map(input, user.Data);
             }
-            if (input.BannerImage.IsNullOrEmpty())
+            else if(input.UserUpdateType.Equals(UserUpdateType.BannerImage))
             {
-                input.BannerImage = CommonConstant.DefaultBannerImage;
+                if (input.BannerImage.IsNullOrEmpty())
+                {
+                    throw new UserFriendlyException(message: "BannerImage should not be null.");
+                }
+                userWaitUpdatedData = user.Data;
+                userWaitUpdatedData.BannerImage = input.BannerImage;
+            }else if (input.UserUpdateType.Equals(UserUpdateType.ProfileImage))
+            {
+                if (input.ProfileImage.IsNullOrEmpty())
+                {
+                    throw new UserFriendlyException(message: "ProfileImage should not be null.");
+                }
+                userWaitUpdatedData = user.Data;
+                userWaitUpdatedData.ProfileImage = input.ProfileImage;
             }
-            var userWaitUpdatedData = _objectMapper.Map(input, user.Data);
             
             var result = await userGrain.UpdateUserAsync(userWaitUpdatedData);
             if (!result.Success)
@@ -182,14 +202,14 @@ namespace NFTMarketServer.Users
             if (user == null)
             {
                 user = new UserIndex();
-                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                user.ProfileImage = await _symbolIconAppService.GetDefaultImageAsync(inputAddress);
                 user.BannerImage = CommonConstant.DefaultBannerImage;
                 user.AelfAddress = inputAddress;
             }
 
             if (user.ProfileImage.IsNullOrEmpty())
             {
-                user.ProfileImage = await _symbolIconAppService.GetRandomImageAsync();
+                user.ProfileImage = await _symbolIconAppService.GetDefaultImageAsync(inputAddress);
             }
 
             if (user.BannerImage.IsNullOrEmpty())

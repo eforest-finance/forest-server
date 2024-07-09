@@ -227,6 +227,8 @@ namespace NFTMarketServer.Market
                     dto.FloorPrice = nftCollectionExtensionDic[collectionId] .FloorPrice;
                     dto.FloorPriceSymbol = nftCollectionExtensionDic[collectionId] .FloorPriceSymbol;
                     dto.CollectionName = nftCollectionExtensionDic[collectionId].TokenName;
+                    dto.CollectionLogoImage =
+                        FTHelper.BuildIpfsUrl(nftCollectionExtensionDic[collectionId].LogoImage);
                 }
 
                 if (compositeNFTDic.ContainsKey(index.BizInfoId) && compositeNFTDic[index.BizInfoId]!=null)
