@@ -159,6 +159,7 @@ namespace NFTMarketServer.Market
                     item.NFTSymbol = compositeNFTInfoDic[i.BusinessId].Symbol;
                     item.NFTInfoId = compositeNFTInfoDic[i.BusinessId].NFTInfoId;
                     item.Price = item.Prices;
+                    item.Quantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
                 }
                 var collectionId = SymbolHelper.TransferNFTIdToCollectionId(i.BusinessId);
                 if (nftCollectionExtensionDic.ContainsKey(collectionId) && nftCollectionExtensionDic[collectionId] != null)
