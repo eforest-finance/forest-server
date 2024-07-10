@@ -9,7 +9,7 @@ env:
 
 jobs:
   publish:
-    runs-on: forest-server-runner
+    runs-on: eforest-runner
     strategy:
       matrix:
         servicename: [NFTMarketServer.AuthServer,NFTMarketServer.ContractEventHandler,NFTMarketServer.Dealer,NFTMarketServer.EntityEventHandler,NFTMarketServer.Silo,NFTMarketServer.HttpApi.Host]
@@ -27,7 +27,7 @@ jobs:
           retention-days: 1
   build-and-push-image:
     needs: publish
-    runs-on: forest-server-runner
+    runs-on: eforest-runner
     strategy:
       matrix:
         servicename: [NFTMarketServer.AuthServer,NFTMarketServer.ContractEventHandler,NFTMarketServer.Dealer,NFTMarketServer.EntityEventHandler,NFTMarketServer.Silo,NFTMarketServer.HttpApi.Host]
