@@ -27,7 +27,7 @@ public static class OrleansHostExtensions
             var clusterId = IsRunningInKubernetes ? Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") : configSection.GetValue<string>("ClusterId");
             var serviceId = IsRunningInKubernetes ? Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID") : configSection.GetValue<string>("ServiceId");
             Log.Information("========================================================================================");
-            Log.Information("k8s config advertisedIP:"+"advertisedIP"+",clusterId:"+clusterId+",serviceId:"+serviceId);
+            Log.Information("k8s config advertisedIP:"+"advertisedIP"+",clusterId:"+clusterId+",serviceId:"+serviceId+",IsRunningInKubernetes:"+IsRunningInKubernetes);
             Log.Information("========================================================================================");
 
             siloBuilder
