@@ -55,10 +55,8 @@ public class Program
             {
                 services.AddApplication<NFTMarketServerOrleansSiloModule>();
             })
-        #if !DEBUG
             .ConfigureAppConfiguration((h, c) => c.AddJsonFile("apollosettings.json"))
             .UseApollo()
-        #endif
             .UseOrleansSnapshot()
             .UseAutofac()
             .UseSerilog();
