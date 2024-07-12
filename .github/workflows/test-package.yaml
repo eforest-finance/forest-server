@@ -74,3 +74,22 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+  dispatch:
+    runs-on: eforest-runner
+    needs: build-and-push-image
+    steps:
+      - name: Deploy
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.TOK }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'eforest-finance',
+              repo: 'devops',
+              workflow_id: 'deployment_testnet.yaml',
+              ref: 'main',
+              inputs: {
+                appName: 'forest-backend',
+                commit_sha: 'sha-${{ needs.build-and-push-image.outputs.short_sha }}',
+              }
+            })
