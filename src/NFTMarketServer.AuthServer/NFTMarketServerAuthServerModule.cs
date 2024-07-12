@@ -20,6 +20,7 @@ using NFTMarketServer.Users.Provider;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Providers.MongoDB.Configuration;
+using Serilog;
 using StackExchange.Redis;
 using Volo.Abp;
 using Volo.Abp.Account;
@@ -63,6 +64,9 @@ public class NFTMarketServerAuthServerModule : AbpModule
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
         var configuration = context.Services.GetConfiguration();
+        Log.Information("========================================================================================");
+        Log.Information("k8s config IssuerUri:"+configuration["AuthServer:IssuerUri"]+",ExpirationHour:"+configuration["ExpirationHour"]);
+        Log.Information("========================================================================================");
         PreConfigure<OpenIddictBuilder>(builder =>
         {
             builder.AddServer(options =>
