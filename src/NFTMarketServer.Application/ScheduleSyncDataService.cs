@@ -59,8 +59,8 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
             catch (Exception e)
             {
                 _logger.LogError(e,
-                    "DealDataAsync error businessQueryChainType:{businessQueryChainType} chainId: {chainId}",
-                    businessQueryChainType.ToString(), chainId);
+                    "DealDataAsync error businessQueryChainType:{businessQueryChainType} chainId: {chainId} exceptionMsg:{}",
+                    businessQueryChainType.ToString(), chainId, e.Message.ToString());
             }
         }
     }
