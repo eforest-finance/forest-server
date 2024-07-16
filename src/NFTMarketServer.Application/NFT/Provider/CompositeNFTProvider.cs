@@ -101,12 +101,6 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
             mustQuery.Add(q => q.Term(i => i.Field(f => f.TokenName).Value(searchName)));
         }
 
-        if (countFlagIsTrue)
-        {
-            mustQuery.Add(q =>
-                q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
-        }
-        
         QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
             => f.Bool(b => b.Must(mustQuery));
 
