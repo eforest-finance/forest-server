@@ -332,9 +332,6 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             mustQuery.AddRange(nestedQuery);
             
         }
-       
-        mustQuery.Add(q =>
-            q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
 
         QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
             => f.Bool(b => b.Must(mustQuery));
