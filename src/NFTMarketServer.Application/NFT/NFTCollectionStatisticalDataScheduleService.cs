@@ -50,6 +50,8 @@ public class NFTCollectionStatisticalDataScheduleService : ScheduleSyncDataServi
             }
 
             var count = nftCollectionChanges.IndexerNftCollectionChanges.Count;
+            _logger.LogInformation("GetNFTCollectionChangesByBlockHeightAsync queryList chainId:{chainId} count: {count} ", 
+                 chainId, count);
             _logger.LogInformation("GetNFTCollectionChangesByBlockHeightAsync queryList list:{list} chainId:{chainId} count: {count} ", 
                 JsonConvert.SerializeObject(nftCollectionChanges.IndexerNftCollectionChanges), chainId, count);
 
