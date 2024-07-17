@@ -44,7 +44,7 @@ public class SeedIconScheduleService : ScheduleSyncDataService
 
         foreach (var queryDto in queryList)
         {
-            _logger.LogInformation("SyncSeedIconRecordsAsync queryDto:{}", JsonConvert.SerializeObject(queryDto));
+            _logger.LogInformation("SyncSeedIconRecordsAsync queryDto:{A}", JsonConvert.SerializeObject(queryDto));
 
             blockHeight = Math.Max(blockHeight, queryDto.BlockHeight);
             var imageUrl = queryDto.SeedImage;
