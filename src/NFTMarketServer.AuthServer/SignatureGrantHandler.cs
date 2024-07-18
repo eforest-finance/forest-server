@@ -137,6 +137,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         }
 
         var user = await userManager.FindByNameAsync(userName);
+        _logger.LogDebug("create token user:{A}",JsonConvert.SerializeObject(user));
+
         if (user == null)
         {
             var userId = Guid.NewGuid();
@@ -160,8 +162,11 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 CaAddressSide = caAddressSide
             };
             await _userInformationProvider.SaveUserSourceAsync(userSourceInput);
+            _logger.LogDebug("create token userSourceInput:{A}",JsonConvert.SerializeObject(userSourceInput));
+
         }
 
+        
         var userClaimsPrincipalFactory = context.HttpContext.RequestServices
             .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
         var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
@@ -170,11 +175,14 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         claimsPrincipal.SetScopes("NFTMarketServer");
         claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
         claimsPrincipal.SetAudiences("NFTMarketServer");
-
+        
         await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
             .SetAsync(principal);
 
-        return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
+        var token = new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
+        _logger.LogDebug("create token claimsPrincipal:{A}, token:{B}",JsonConvert.SerializeObject(claimsPrincipal),token);
+
+        return token;
     }
     
     private ForbidResult GetForbidResult(string errorType, string errorDescription)
