@@ -43,6 +43,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
     public async Task<IActionResult> HandleAsync(ExtensionGrantContext context)
     {
+        _logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<SignatureGrantHandler>>();
+
         _logger.LogInformation("create token start");
 
         var publicKeyVal = context.Request.GetParameter("pubkey").ToString();
@@ -127,7 +129,6 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                     $"The time should be {timeRangeConfig.TimeRange} minutes before and after the current time.");
             }
         }
-        _logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<SignatureGrantHandler>>();
         _distributedLock = context.HttpContext.RequestServices.GetRequiredService<IAbpDistributedLock>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<IdentityUserManager>();
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
