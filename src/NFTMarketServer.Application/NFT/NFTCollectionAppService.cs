@@ -157,7 +157,6 @@ namespace NFTMarketServer.NFT
 
         public async Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCollectionsAsync()
         {
-            _logger.LogInformation("GetRecommendedNFTCollectionsAsync  start");
 
             var recommendedCollectionsOptions = _optionsMonitor.CurrentValue;
             if (recommendedCollectionsOptions.RecommendedCollections.IsNullOrEmpty())
