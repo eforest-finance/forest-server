@@ -76,6 +76,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         if (source == _source_portkey)
         {
             _logger.LogInformation("create token user:_source_portkey");
+            _logger.LogInformation("create token user:====");
+
             var accountInfoList = JsonConvert.DeserializeObject<List<GrantAccountInfo>>(accountInfo);
             if(accountInfoList == null || accountInfoList.Count == 0)
             {
