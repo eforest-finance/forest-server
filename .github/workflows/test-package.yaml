@@ -12,7 +12,7 @@ jobs:
     runs-on: eforest-runner
     strategy:
       matrix:
-        servicename: [NFTMarketServer.AuthServer,NFTMarketServer.ContractEventHandler,NFTMarketServer.Dealer,NFTMarketServer.EntityEventHandler,NFTMarketServer.Silo,NFTMarketServer.HttpApi.Host]
+        servicename: [NFTMarketServer.AuthServer,NFTMarketServer.ContractEventHandler,NFTMarketServer.Dealer,NFTMarketServer.EntityEventHandler,NFTMarketServer.Silo,NFTMarketServer.HttpApi.Host,NFTMarketServer.DbMigrator]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -30,7 +30,7 @@ jobs:
     runs-on: eforest-runner
     strategy:
       matrix:
-        servicename: [NFTMarketServer.AuthServer,NFTMarketServer.ContractEventHandler,NFTMarketServer.Dealer,NFTMarketServer.EntityEventHandler,NFTMarketServer.Silo,NFTMarketServer.HttpApi.Host]
+        servicename: [NFTMarketServer.AuthServer,NFTMarketServer.ContractEventHandler,NFTMarketServer.Dealer,NFTMarketServer.EntityEventHandler,NFTMarketServer.Silo,NFTMarketServer.HttpApi.Host,NFTMarketServer.DbMigrator]
     permissions:
       contents: read
     outputs:
