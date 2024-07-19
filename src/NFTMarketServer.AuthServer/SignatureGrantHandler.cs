@@ -206,7 +206,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 .SetAsync(principal);
 
             var token = new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
-            _logger.LogInformation("create token claimsPrincipal:{A}, token:{B}",JsonConvert.SerializeObject(claimsPrincipal),token);
+            //_logger.LogInformation("create token claimsPrincipal:{A}, token:{B}",JsonConvert.SerializeObject(claimsPrincipal),token);
             return token;
         }
         catch (Exception ex)
