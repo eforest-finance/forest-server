@@ -92,8 +92,22 @@ public class SignatureGrantHandler: ITokenExtensionGrant
             {
                 var version = context.Request.GetParameter("version").ToString();
                 var portkeyUrl = version == _V2 ? graphqlConfig.PortkeyV2Url : graphqlConfig.PortkeyUrl;
-                var caHolderInfos = await GetCAHolderInfo(portkeyUrl,
-                    new List<string>(){ account.Address} , account.ChainId);
+                var caHolderInfos = new IndexerCAHolderInfos();
+                try
+                {
+                    _logger.LogInformation("create token portkeyUrl:{A}", JsonConvert.SerializeObject(portkeyUrl));
+                    caHolderInfos = await GetCAHolderInfo(portkeyUrl,
+                        new List<string>(){ account.Address} , account.ChainId);
+                    _logger.LogInformation("create token portkeyUrl:{A} caHolderInfos:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(caHolderInfos));
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "create token portkeyUrl:{A} errMsg:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(ex.Message));
+                    return null;
+                }
+
+  
                 _logger.LogInformation("create token caHolderInfos:{}",JsonConvert.SerializeObject(caHolderInfos));
 
                 if (caHolderInfos == null || caHolderInfos.CaHolderManagerInfo==null || caHolderInfos.CaHolderManagerInfo.Count == 0)
