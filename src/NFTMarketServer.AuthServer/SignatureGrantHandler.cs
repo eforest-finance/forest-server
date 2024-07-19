@@ -188,23 +188,31 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
         }
 
+        try
+        {
+            var userClaimsPrincipalFactory = context.HttpContext.RequestServices
+                .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+            var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
+            var principal = await signInManager.CreateUserPrincipalAsync(user);
+            var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
+            claimsPrincipal.SetScopes("NFTMarketServer");
+            claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
+            claimsPrincipal.SetAudiences("NFTMarketServer");
         
-        var userClaimsPrincipalFactory = context.HttpContext.RequestServices
-            .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
-        var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
-        var principal = await signInManager.CreateUserPrincipalAsync(user);
-        var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
-        claimsPrincipal.SetScopes("NFTMarketServer");
-        claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
-        claimsPrincipal.SetAudiences("NFTMarketServer");
-        
-        await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
-            .SetAsync(principal);
+            await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
+                .SetAsync(principal);
 
-        var token = new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
-        _logger.LogInformation("create token claimsPrincipal:{A}, token:{B}",JsonConvert.SerializeObject(claimsPrincipal),token);
+            var token = new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
+            _logger.LogInformation("create token claimsPrincipal:{A}, token:{B}",JsonConvert.SerializeObject(claimsPrincipal),token);
+            return token;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "create token errMsg:{A}",ex.Message);
+            throw  ex;
+        }
 
-        return token;
+        return null;
     }
     
     private ForbidResult GetForbidResult(string errorType, string errorDescription)
