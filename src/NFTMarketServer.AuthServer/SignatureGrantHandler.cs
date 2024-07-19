@@ -193,8 +193,11 @@ public class SignatureGrantHandler: ITokenExtensionGrant
             var userClaimsPrincipalFactory = context.HttpContext.RequestServices
                 .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
             var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
+
             var principal = await signInManager.CreateUserPrincipalAsync(user);
             var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
+            _logger.LogInformation("create token scopes:{A}",JsonConvert.SerializeObject(principal.GetScopes()));
+
             claimsPrincipal.SetScopes("NFTMarketServer");
             claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
             claimsPrincipal.SetAudiences("NFTMarketServer");
