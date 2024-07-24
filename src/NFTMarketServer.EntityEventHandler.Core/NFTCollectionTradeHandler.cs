@@ -93,7 +93,14 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             temChangeFlag = await SaveCurrentHourRecordAsync(id, chainId, collectionId, currentOrdinal,nftCollectionExtensionIndex);
             
             changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            await SavePreHourRecordAsync(id, chainId, collectionId, currentOrdinal);
+            if (eventData.InitFlag)
+            {
+                await SavePreHourRecordInitAsync(id, chainId, collectionId, currentOrdinal);
+            }
+            else
+            {
+                await SavePreHourRecordAsync(id, chainId, collectionId, currentOrdinal);
+            }
             
             temChangeFlag = await BuildPreDayFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
             changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
@@ -195,7 +202,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
 
         return false;
     }
-    
+
     private async Task SavePreHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal)
     {
         var preHourTimestamp = currentOrdinal;
@@ -208,6 +215,29 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             if (preRecord != null)
             {
                 break;
+            }
+
+            var beginUtcStamp = preHourTimestamp;
+            var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
+            var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId,
+                temId);
+            await _hourlyCollectionTradeRecordRepository.AddAsync(record);
+        }
+
+    }
+    
+    private async Task SavePreHourRecordInitAsync(string id, string chainId, string collectionId, long currentOrdinal)
+    {
+        var preHourTimestamp = currentOrdinal;
+        for (var i = 1; i <= 24 * 30 * 15; i++)
+        {
+            preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
+            var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
+                TimeHelper.GetUnixTimestampSecondsFormatted(preHourTimestamp));
+            var preRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(temId);
+            if (preRecord != null)
+            {
+                continue;
             }
 
             var beginUtcStamp = preHourTimestamp;
