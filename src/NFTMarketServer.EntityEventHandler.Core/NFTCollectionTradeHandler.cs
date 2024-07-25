@@ -95,6 +95,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
             if (eventData.InitFlag)
             {
+                _logger.Debug("SavePreHourRecordInitAsync {A}",collectionId);
                 await SavePreHourRecordInitAsync(id, chainId, collectionId, currentOrdinal);
             }
             else
@@ -245,6 +246,11 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId,
                 temId);
             await _hourlyCollectionTradeRecordRepository.AddAsync(record);
+            if (i % 1000 == 0 && i != 0)
+            {
+                _logger.Debug("SavePreHourRecordInitAsync {A} {B}", collectionId, record.Id);
+            }
+            
         }
 
     }
