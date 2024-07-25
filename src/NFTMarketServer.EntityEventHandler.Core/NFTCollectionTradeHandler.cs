@@ -235,7 +235,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             _logger.Debug("SavePreHourRecordInitAsync {A} {B}", collectionId, i);
             try
             {
-                preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, i);
+                preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
                 var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
                     TimeHelper.GetUnixTimestampSecondsFormatted(preHourTimestamp));
                 var preRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(temId);
