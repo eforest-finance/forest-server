@@ -232,25 +232,29 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var preHourTimestamp = currentOrdinal;
         for (var i = 1; i <= 24 * 30 * 15; i++)
         {
-            preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
-            var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
-                TimeHelper.GetUnixTimestampSecondsFormatted(preHourTimestamp));
-            var preRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(temId);
-            if (preRecord != null)
+            _logger.Debug("SavePreHourRecordInitAsync {A} {B}", collectionId, i);
+            try
             {
-                continue;
+                preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
+                var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
+                    TimeHelper.GetUnixTimestampSecondsFormatted(preHourTimestamp));
+                var preRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(temId);
+                if (preRecord != null)
+                {
+                    continue;
+                }
+
+                var beginUtcStamp = preHourTimestamp;
+                var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
+                var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId,
+                    temId);
+                await _hourlyCollectionTradeRecordRepository.AddAsync(record);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,"SavePreHourRecordInitAsync error {A} {B}", collectionId, i);
             }
 
-            var beginUtcStamp = preHourTimestamp;
-            var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
-            var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId,
-                temId);
-            await _hourlyCollectionTradeRecordRepository.AddAsync(record);
-            if (i % 1000 == 0 && i != 0)
-            {
-                _logger.Debug("SavePreHourRecordInitAsync {A} {B}", collectionId, record.Id);
-            }
-            
         }
 
     }
