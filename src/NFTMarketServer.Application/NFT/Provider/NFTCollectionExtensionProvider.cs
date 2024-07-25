@@ -45,7 +45,7 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
                 { "volumeTotalChangebyday", p => p.CurrentDayVolumeTotalChange },
                 { "volumeTotalChangebyweek", p => p.CurrentWeekVolumeTotalChange },
                 { "volumeTotalChangebymonth", p => p.CurrentMonthVolumeTotalChange },
-                { "volumeTotalChangebyall", p => p.CurrentAllVolumeTotal },
+                { "volumeTotalChangebyall", p => p.CurrentAllFloorChange },
                 { "floorChangebyday", p => p.CurrentDayFloorChange },
                 { "floorChangebyweek", p => p.CurrentWeekFloorChange },
                 { "floorChangebymonth", p => p.CurrentMonthFloorChange },
@@ -214,7 +214,7 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
             sortDescriptor.Descending(a => a.CreateTime);
         }
         
-        if (!sortBy.Equals(OwnerTotalbyday) && !sortBy.Equals(OwnerTotalbyweek))
+        if (!sortBy.Equals(OwnerTotalbyday) && !sortBy.Equals(OwnerTotalbyweek) && !sortBy.Equals(OwnerTotalbymonth) && !sortBy.Equals(OwnerTotalbyall))
         {
             sortDescriptor.Descending(a => a.OwnerTotal);
         }
