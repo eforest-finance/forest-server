@@ -16,6 +16,8 @@ namespace NFTMarketServer.NFT
     public enum DateRangeType
     {
         byday,
-        byweek
+        byweek,
+        bymonth,
+        byall
     }
 }
