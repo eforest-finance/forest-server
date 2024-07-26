@@ -75,6 +75,11 @@ public static class TimeHelper
     {
         return GetBeforeUtcHourStartTimestamp(unixTimestampSeconds, 24 * 7);
     }
+    
+    public static long GetPreMonthUtcHourStartTimestamp(long unixTimestampSeconds)
+    {
+        return GetBeforeUtcHourStartTimestamp(unixTimestampSeconds, 24 * 30);
+    }
 
     public static long GetNextUtcHourStartTimestamp(long unixTimestampSeconds)
     {

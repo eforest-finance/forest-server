@@ -70,6 +70,12 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(des => des.OfferPrice, opt =>
                 opt.MapFrom(source => source.MaxOfferPrice
                 ))
+            .ForMember(des => des.Price, opt =>
+                opt.MapFrom(source =>
+                    source.MinListingPrice > CommonConstant.IntZero
+                        ? source.MinListingPrice
+                        : CommonConstant.IntNegativeOne
+                ))
             .ForMember(des => des.PreviewImage, opt =>
                 opt.MapFrom(source => source.PreviewImage
                 ))

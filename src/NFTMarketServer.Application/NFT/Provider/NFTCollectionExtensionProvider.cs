@@ -18,6 +18,8 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
 
     private const string OwnerTotalbyday = "OwnerTotalbyday";
     private const string OwnerTotalbyweek = "OwnerTotalbyweek";
+    private const string OwnerTotalbymonth = "OwnerTotalbymonth";
+    private const string OwnerTotalbyall = "OwnerTotalbyall";
     
     private static readonly Dictionary<string, Expression<Func<NFTCollectionExtensionIndex, object>>>
         SortingExpressions =
@@ -28,18 +30,34 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
                 { "ItemTotalbyday", p => p.ItemTotal },
                 { OwnerTotalbyday, p => p.OwnerTotal },
                 { "FloorPricebyweek", p => p.FloorPrice },
+                { "FloorPricebymonth", p => p.FloorPrice },
+                { "FloorPricebyall", p => p.FloorPrice },
                 { "ItemTotalbyweek", p => p.ItemTotal },
+                { "ItemTotalbymonth", p => p.ItemTotal },
+                { "ItemTotalbyall", p => p.ItemTotal },
                 { OwnerTotalbyweek, p => p.OwnerTotal },
+                { OwnerTotalbymonth, p => p.OwnerTotal },
+                { OwnerTotalbyall, p => p.OwnerTotal },
                 { "volumeTotalbyday", p => p.CurrentDayVolumeTotal },
                 { "volumeTotalbyweek", p => p.CurrentWeekVolumeTotal },
+                { "volumeTotalbymonth", p => p.CurrentMonthVolumeTotal },
+                { "volumeTotalbyall", p => p.CurrentAllVolumeTotal },
                 { "volumeTotalChangebyday", p => p.CurrentDayVolumeTotalChange },
                 { "volumeTotalChangebyweek", p => p.CurrentWeekVolumeTotalChange },
+                { "volumeTotalChangebymonth", p => p.CurrentMonthVolumeTotalChange },
+                { "volumeTotalChangebyall", p => p.CurrentAllFloorChange },
                 { "floorChangebyday", p => p.CurrentDayFloorChange },
                 { "floorChangebyweek", p => p.CurrentWeekFloorChange },
+                { "floorChangebymonth", p => p.CurrentMonthFloorChange },
+                { "floorChangebyall", p => p.CurrentAllFloorChange },
                 { "salesTotalbyday", p => p.CurrentDaySalesTotal },
                 { "salesTotalbyweek", p => p.CurrentWeekSalesTotal },
+                { "salesTotalbymonth", p => p.CurrentMonthSalesTotal },
+                { "salesTotalbyall", p => p.CurrentAllSalesTotal },
                 { "SupplyTotalbyday", p => p.SupplyTotal },
                 { "SupplyTotalbyweek", p => p.SupplyTotal },
+                { "SupplyTotalbymonth", p => p.SupplyTotal },
+                { "SupplyTotalbyall", p => p.SupplyTotal },
             };
     private readonly INESTRepository<NFTCollectionExtensionIndex, string> _nftCollectionExtensionIndexRepository;
     public NFTCollectionExtensionProvider(
@@ -196,7 +214,7 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
             sortDescriptor.Descending(a => a.CreateTime);
         }
         
-        if (!sortBy.Equals(OwnerTotalbyday) && !sortBy.Equals(OwnerTotalbyweek))
+        if (!sortBy.Equals(OwnerTotalbyday) && !sortBy.Equals(OwnerTotalbyweek) && !sortBy.Equals(OwnerTotalbymonth) && !sortBy.Equals(OwnerTotalbyall))
         {
             sortDescriptor.Descending(a => a.OwnerTotal);
         }

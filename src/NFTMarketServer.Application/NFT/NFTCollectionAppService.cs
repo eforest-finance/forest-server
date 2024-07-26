@@ -255,21 +255,37 @@ namespace NFTMarketServer.NFT
             var searchNftCollectionsDto =
                 _objectMapper.Map<NFTCollectionExtensionIndex, SearchNFTCollectionsDto>(index);
 
-            if (DateRangeType.byday == dateRangeType)
+            switch (dateRangeType)
             {
-                searchNftCollectionsDto.FloorChange = index.CurrentDayFloorChange;
-                searchNftCollectionsDto.VolumeTotal = index.CurrentDayVolumeTotal;
-                searchNftCollectionsDto.VolumeTotalChange = index.CurrentDayVolumeTotalChange;
-                searchNftCollectionsDto.SalesTotal = index.CurrentDaySalesTotal;
+                case DateRangeType.byday:
+
+                    searchNftCollectionsDto.FloorChange = index.CurrentDayFloorChange;
+                    searchNftCollectionsDto.VolumeTotal = index.CurrentDayVolumeTotal;
+                    searchNftCollectionsDto.VolumeTotalChange = index.CurrentDayVolumeTotalChange;
+                    searchNftCollectionsDto.SalesTotal = index.CurrentDaySalesTotal;
+                    break;
+
+                case DateRangeType.byweek:
+                    searchNftCollectionsDto.FloorChange = index.CurrentWeekFloorChange;
+                    searchNftCollectionsDto.VolumeTotal = index.CurrentWeekVolumeTotal;
+                    searchNftCollectionsDto.VolumeTotalChange = index.CurrentWeekVolumeTotalChange;
+                    searchNftCollectionsDto.SalesTotal = index.CurrentWeekSalesTotal;
+                    break;
+                
+                case DateRangeType.bymonth:
+                    searchNftCollectionsDto.FloorChange = index.CurrentMonthFloorChange;
+                    searchNftCollectionsDto.VolumeTotal = index.CurrentMonthVolumeTotal;
+                    searchNftCollectionsDto.VolumeTotalChange = index.CurrentMonthVolumeTotalChange;
+                    searchNftCollectionsDto.SalesTotal = index.CurrentMonthSalesTotal;
+                    break;
+                
+                case DateRangeType.byall:
+                    searchNftCollectionsDto.FloorChange = index.CurrentAllFloorChange;
+                    searchNftCollectionsDto.VolumeTotal = index.CurrentAllVolumeTotal;
+                    searchNftCollectionsDto.VolumeTotalChange = CommonConstant.IntZero;
+                    searchNftCollectionsDto.SalesTotal = index.CurrentAllSalesTotal;
+                    break;
             }
-            else
-            {
-                searchNftCollectionsDto.FloorChange = index.CurrentWeekFloorChange;
-                searchNftCollectionsDto.VolumeTotal = index.CurrentWeekVolumeTotal;
-                searchNftCollectionsDto.VolumeTotalChange = index.CurrentWeekVolumeTotalChange;
-                searchNftCollectionsDto.SalesTotal = index.CurrentWeekSalesTotal;
-            }
-            
             
             if (collectionInfos != null && collectionInfos.TryGetValue(index.Id, out var info))
             { 
