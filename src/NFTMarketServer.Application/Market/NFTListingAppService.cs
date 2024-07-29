@@ -58,7 +58,7 @@ namespace NFTMarketServer.Market
                     .Concat(collectionCreator)
                     .Where(s => !string.IsNullOrEmpty(s))
                     .Distinct().ToList();
-                var accountDict = await _userAppService.GetAccountsAsync(addresses);
+                var accountDict = await _userAppService.GetAccountsAsync(addresses, input.ChainId);
 
                 var res = listingDto.Items.Select(i =>
                 {
