@@ -96,7 +96,7 @@ namespace NFTMarketServer.Users
             {
                 var user = MatchCpUser(users.Item2, addr);
                 if (user != null)
-                    result[addr] = MapAccount(user, addr);
+                    result[addr] = MapAccount(user, addr, defaultChainId);
             }
 
             return result;
