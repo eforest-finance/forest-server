@@ -94,7 +94,7 @@ namespace NFTMarketServer.Users
 
             foreach (var addr in addressSet)
             {
-                var user = MatchCpUser(users.Item2, addr);
+                var user = MatchCpUser(users.Item2, addr, defaultChainId);
                 if (user != null)
                     result[addr] = MapAccount(user, addr, defaultChainId);
             }
@@ -102,7 +102,7 @@ namespace NFTMarketServer.Users
             return result;
         }
 
-        private UserIndex MatchCpUser(List<UserIndex> userIndices, string address)
+        private UserIndex MatchCpUser(List<UserIndex> userIndices, string address, string defaultChainId)
         {
             var user = userIndices.IsNullOrEmpty()
                 ? null
@@ -114,7 +114,7 @@ namespace NFTMarketServer.Users
             if (user == null) return null;
             
             var newUser = _objectMapper.Map<UserIndex, UserIndex>(user);
-            if (newUser.Name.IsNullOrEmpty()) newUser.Name = address;
+            if (newUser.Name.IsNullOrEmpty()) newUser.Name = ToFullAddress(address, newUser, defaultChainId) ;
             
             return newUser;
         }
