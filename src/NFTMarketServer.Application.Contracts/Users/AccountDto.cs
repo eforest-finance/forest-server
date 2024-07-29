@@ -39,7 +39,7 @@ namespace NFTMarketServer.Users
             foreach (var (caChain, caAddr) in CaAddress)
             {
                 if (!cp.Name.Equals(caAddr)) continue;
-                cp.Name = FullAddressHelper.ToFullAddress(cp.Name, caChain);
+                cp.Name = FullAddressHelper.ToFullAddress(cp.Name, chainId);
                 break;
             }
             if (cp.Name.Length <= cp.Address.Length)
