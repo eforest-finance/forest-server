@@ -72,7 +72,7 @@ namespace NFTMarketServer.Market
                     addresses.Add(info.To);
             }
 
-            var accounts = await _userAppService.GetAccountsAsync(addresses.Distinct().ToList());
+            var accounts = await _userAppService.GetAccountsAsync(addresses.Distinct().ToList(), input.ChainId);
 
             var nftCollectionExtensionIndexId = SymbolHelper.TransferNFTIdToCollectionId(input.NFTInfoId);
             NFTCollectionExtensionIndex nftCollectionExtension = null;
