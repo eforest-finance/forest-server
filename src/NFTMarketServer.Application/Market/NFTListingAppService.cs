@@ -1,7 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using AElf;
+using AElf.Client.Service;
+using AElf.Types;
+using Forest;
+using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Ai;
@@ -30,6 +36,9 @@ namespace NFTMarketServer.Market
         private readonly ICompositeNFTProvider _compositeNFTProvider;
         private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
         private readonly IOptionsMonitor<StatisticsUserListRecordOptions> _statisticsOptionsMonitor;
+        private readonly IBlockchainClientFactory<AElfClient> _blockchainClientFactory;
+        private readonly IOptionsMonitor<ChainOptions> _chainOptionsMonitor;
+
 
 
         public NFTListingAppService(IUserAppService userAppService,
@@ -38,7 +47,9 @@ namespace NFTMarketServer.Market
             IObjectMapper objectMapper,
                 ICompositeNFTProvider compositeNFTProvider,
             INFTCollectionExtensionProvider nftCollectionExtensionProvider,
-            IOptionsMonitor<StatisticsUserListRecordOptions> statisticsOptionsMonitor)
+            IOptionsMonitor<StatisticsUserListRecordOptions> statisticsOptionsMonitor,
+            IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+            IOptionsMonitor<ChainOptions> chainOptionsMonitor)
         {
             _userAppService = userAppService;
             _nftListingProvider = nftListingProvider;
@@ -47,6 +58,9 @@ namespace NFTMarketServer.Market
             _compositeNFTProvider = compositeNFTProvider;
             _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
             _statisticsOptionsMonitor = statisticsOptionsMonitor;
+            _blockchainClientFactory = blockchainClientFactory;
+            _chainOptionsMonitor = chainOptionsMonitor;
+
 
         }
 
@@ -239,11 +253,11 @@ namespace NFTMarketServer.Market
 
                 _logger.LogInformation("StatisticsUserListRecord Step2 totalCount:{A} itemCount:{B}", totalCount, allListing.Count);
 
-                //statistics user list records key:address+"-"+collectionSymbol
+                //statistics user list records key:address+":"+collectionSymbol
                 Dictionary<string, long> listDictionary = new Dictionary<string, long>();
                 foreach (var list in allListing)
                 {
-                    var key = list.Owner + NFTSymbolBasicConstants.NFTSymbolSeparator +
+                    var key = list.Owner + NFTSymbolBasicConstants.StatisticsKeySeparator +
                               TransferCollectionSymbol(list.Symbol);
                     if(listDictionary.TryGetValue(key, out var value))
                     {
@@ -262,11 +276,13 @@ namespace NFTMarketServer.Market
                     return new ResultDto<string>() {Success = true, Message = "sendTxSwitch is false"};
  
                 }
-                foreach (var address in listDictionary.Keys)
+                foreach (var key in listDictionary.Keys)
                 {
-                    listDictionary.TryGetValue(address, out var count);
-                    _logger.LogInformation("StatisticsUserListRecord Step4 send tx prepare listDictionary address:{A} count:{B}", address, count);
-
+                    listDictionary.TryGetValue(key, out var count);
+                    _logger.LogInformation("StatisticsUserListRecord Step4 send tx prepare listDictionary address:{A} count:{B}", key, count);
+                    var keySplitArr = key.Split(NFTSymbolBasicConstants.StatisticsKeySeparator);
+                    await SendSetCollectionListTotalCountTxAsync(keySplitArr[0], keySplitArr[1], count, input.ChainId);
+                    Thread.Sleep(1000);
                 }
                 return new ResultDto<string>() {Success = true, Message = "update address count " + listDictionary.Count};
 
@@ -300,6 +316,31 @@ namespace NFTMarketServer.Market
             }
 
             return symbol;
+        }
+
+        public async Task SendSetCollectionListTotalCountTxAsync(string address, string symbol, long count, string chainId)
+        {
+            var setCollectionListTotalCountParam =
+                new SetCollectionListTotalCountInput
+                {
+                    Symbol = symbol,
+                    Address = Address.FromBase58(address),
+                    Count = count
+                };
+            var client = _blockchainClientFactory.GetClient(chainId);
+            var chainInfo = _chainOptionsMonitor.CurrentValue.ChainInfos[chainId];
+
+            var setCollectionListTotalCountParamRaw =
+                await GenerateRawTransaction(client, "SetCollectionListTotalCount", setCollectionListTotalCountParam,
+                    chainInfo.ForestContractAddress, chainInfo.PrivateKey);
+        }
+        
+        private async Task<string> GenerateRawTransaction(AElfClient client, string methodName, IMessage param,
+            string contractAddress, string privateKey)
+        {
+            return client.SignTransaction(privateKey, await client.GenerateTransactionAsync(
+                    client.GetAddressFromPrivateKey(privateKey), contractAddress, methodName, param))
+                .ToByteArray().ToHex();
         }
     }
     
