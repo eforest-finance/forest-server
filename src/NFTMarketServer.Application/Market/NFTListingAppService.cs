@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AElf;
+using AElf.Client.Dto;
 using AElf.Client.Service;
 using AElf.Types;
 using Forest;
@@ -334,6 +335,11 @@ namespace NFTMarketServer.Market
             var setCollectionListTotalCountParamRaw =
                 await GenerateRawTransaction(client, "SetCollectionListTotalCount", setCollectionListTotalCountParam,
                     chainInfo.ForestContractAddress, chainInfo.PrivateKey);
+            
+            var validateTokenInfoExistsResult = await client.SendTransactionAsync(new SendTransactionInput()
+                { RawTransaction = setCollectionListTotalCountParamRaw });
+            _logger.LogInformation("StatisticsUserListRecord Step5 send tx address:{A} count:{B} symbol:{C} txId:{D}", address, count, symbol, validateTokenInfoExistsResult.TransactionId);
+
         }
         
         private async Task<string> GenerateRawTransaction(AElfClient client, string methodName, IMessage param,
