@@ -23,8 +23,7 @@ namespace NFTMarketServer.Market
         {
             if (ChainId.IsNullOrEmpty() || !ChainId.MatchesChainId())
                 yield return new ValidationResult($"ChainId invalid.");
-            if (Symbol.IsNullOrEmpty() || !Symbol.MatchesNftSymbol())
-                yield return new ValidationResult($"Symbol invalid.");
+            
         }
         
     }

@@ -48,6 +48,10 @@ namespace NFTMarketServer.Market
         {
             try
             {
+                if (input.Symbol.IsNullOrEmpty() || !input.Symbol.MatchesNftSymbol())
+                {
+                    throw new UserFriendlyException("Symbol invalid..");
+                }
                 var getNftListingsDto = _objectMapper.Map<GetNFTListingsInput, GetNFTListingsDto>(input);
                 var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
 
