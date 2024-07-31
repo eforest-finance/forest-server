@@ -371,7 +371,6 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 Variables = new
                 {
                     chainId = dto.ChainId, 
-                    symbol = dto.Symbol,
                     skipCount = dto.SkipCount, 
                     maxResultCount = dto.MaxResultCount, 
                     expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow),
