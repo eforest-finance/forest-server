@@ -337,7 +337,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                       maxResultCount:$maxResultCount,
                       chainId:$chainId,          
                       expireTimeGt:$expireTimeGt,
-                      blockHeight::$blockHeight,
+                      blockHeight:$blockHeight,
                     }
                   ){
                     TotalCount: totalRecordCount,
