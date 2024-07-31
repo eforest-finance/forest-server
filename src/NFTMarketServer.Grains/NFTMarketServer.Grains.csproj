@@ -8,7 +8,7 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="AElf.AElfNode.EventHandler.BackgroundJob" Version="1.1.9" />
+        <PackageReference Include="AElf.AElfNode.EventHandler.BackgroundJob" Version="1.2.1-19314" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
         <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="3.6.5">
             <PrivateAssets>all</PrivateAssets>
