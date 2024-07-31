@@ -321,23 +321,30 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
     {
         try
         {
-
             var res = await _graphQlHelper.QueryAsync<NFTListingPage>(new GraphQLRequest
             {
                 Query = @"query (
                     $skipCount:Int!,
                     $maxResultCount:Int!,
                     $chainId:String,
+                    $symbol:String,
+                    $owner: String,
+                    $address: String,
+                    $excludedAddress: String,
                     $expireTimeGt:Long,
-                    $blockHeight:Long,
+                    $blockHeight:Long
                 ){
                   nftListingInfoAll(
                     input:{
                       skipCount:$skipCount,
                       maxResultCount:$maxResultCount,
-                      chainId:$chainId,          
+                      chainId:$chainId,
+                      symbol:$symbol,
+                      owner:$owner,
+                      address:$address,
+                      excludedAddress:$excludedAddress,
                       expireTimeGt:$expireTimeGt,
-                      blockHeight:$blockHeight,
+                      blockHeight:$blockHeight
                     }
                   ){
                     TotalCount: totalRecordCount,
