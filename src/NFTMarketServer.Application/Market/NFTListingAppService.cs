@@ -283,6 +283,7 @@ namespace NFTMarketServer.Market
                     var keySplitArr = key.Split(NFTSymbolBasicConstants.StatisticsKeySeparator);
                     await SendSetCollectionListTotalCountTxAsync(keySplitArr[0], keySplitArr[1], count, input.ChainId);
                     Thread.Sleep(1000);
+                    break;
                 }
                 return new ResultDto<string>() {Success = true, Message = "update address count " + listDictionary.Count};
 
