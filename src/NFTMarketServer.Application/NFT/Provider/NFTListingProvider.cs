@@ -16,6 +16,8 @@ public interface INFTListingProvider
 {
     Task<PagedResultDto<IndexerNFTListingInfo>> GetNFTListingsAsync(GetNFTListingsDto dto);
 
+    Task<PagedResultDto<IndexerNFTListingInfo>> GetAllNFTListingsByHeightAsync(GetNFTListingsDto dto);
+
     Task<IndexerNFTListingInfos> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount,
         string owner, List<string> chainIdList, List<string> nftInfoIdList);
     
@@ -313,5 +315,68 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 }
             });
         return indexerCommonResult?.Data;
+    }
+    
+    public async Task<PagedResultDto<IndexerNFTListingInfo>> GetAllNFTListingsByHeightAsync(GetNFTListingsDto dto)
+    {
+        try
+        {
+
+            var res = await _graphQlHelper.QueryAsync<NFTListingPage>(new GraphQLRequest
+            {
+                Query = @"query (
+                    $skipCount:Int!,
+                    $maxResultCount:Int!,
+                    $chainId:String,
+                    $expireTimeGt:Long,
+                    $blockHeight:Long,
+                ){
+                  nftListingInfoAll(
+                    input:{
+                      skipCount:$skipCount,
+                      maxResultCount:$maxResultCount,
+                      chainId:$chainId,          
+                      expireTimeGt:$expireTimeGt,
+                      blockHeight::$blockHeight,
+                    }
+                  ){
+                    TotalCount: totalRecordCount,
+                    Message: message,
+                    Items: data{
+                      id,
+                      quantity,
+                      realQuantity,
+                      symbol,
+                      owner,
+                      prices,
+                      whitelistPrices,
+                      whitelistId,
+                      startTime,
+                      publicTime,
+                      expireTime,
+                      chainId,
+                      purchaseToken {
+      	                chainId,symbol,tokenName,
+                      }
+                    }
+                  }
+                }",
+                Variables = new
+                {
+                    chainId = dto.ChainId, 
+                    symbol = dto.Symbol,
+                    skipCount = dto.SkipCount, 
+                    maxResultCount = dto.MaxResultCount, 
+                    expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow),
+                    blockHeight = dto.BlockHeight
+                }
+            });
+            return res?.nftListingInfo;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "GetAllNFTListingsByHeightAsync query GraphQL error dto={DTO}", JsonConvert.SerializeObject(dto));
+            throw;
+        }
     }
 }

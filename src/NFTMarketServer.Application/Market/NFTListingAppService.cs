@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf.Types;
 using Microsoft.Extensions.Logging;
+using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
@@ -179,6 +181,74 @@ namespace NFTMarketServer.Market
                 Items = res,
                 TotalCount = collectedNFTListings.TotalRecordCount
             };
+        }
+        
+        public async Task<ResultDto<string>> StatisticsUserListRecord(GetNFTListingsInput input)
+        {
+            try
+            {
+                var maxQueryCount = 10;
+                var queryCount = 0;
+                var getNftListingsDto = _objectMapper.Map<GetNFTListingsInput, GetNFTListingsDto>(input);
+                var allListing = new List<IndexerNFTListingInfo>();
+                
+                var skipCount = 0;
+                var maxPageCount = 10000;
+                var totalCount = 0l;
+                
+                //query list records
+                while (queryCount < maxQueryCount)
+                {
+                    getNftListingsDto.SkipCount = skipCount;
+                    getNftListingsDto.MaxResultCount = maxPageCount;
+                    getNftListingsDto.BlockHeight = 0;
+                    
+                    var listingDto = await _nftListingProvider.GetAllNFTListingsByHeightAsync(getNftListingsDto);
+                    totalCount = (totalCount==0) ? listingDto.TotalCount : totalCount;
+                    var itemCount = listingDto.Items.Count;
+                    allListing.AddRange(listingDto.Items);
+                    if (itemCount < maxPageCount)
+                    {
+                        break;
+                    }
+                    _logger.LogInformation("StatisticsUserListRecord Step1 queryCount:{A} totalCount:{B} itemCount:{C}", queryCount, totalCount, itemCount);
+
+                    skipCount += maxPageCount;
+                    queryCount++;
+                }
+
+                _logger.LogInformation("StatisticsUserListRecord Step2 totalCount:{A} itemCount:{B}", totalCount, allListing.Count);
+
+                //statistics user list records
+                Dictionary<string, long> listDictionary = new Dictionary<string, long>();
+                foreach (var list in allListing)
+                {
+                    if(listDictionary.TryGetValue(list.Owner, out var value))
+                    {
+                        listDictionary[list.Owner] = value + list.Quantity;
+                    }
+                    else
+                    {
+                        listDictionary.Add(list.Owner, list.Quantity);
+                    }
+                }
+                _logger.LogInformation("StatisticsUserListRecord Step3 listDictionary size:{A}", listDictionary.Count);
+
+                //send tx
+                foreach (var address in listDictionary.Keys)
+                {
+                    listDictionary.TryGetValue(address, out var count);
+                    _logger.LogInformation("StatisticsUserListRecord Step4 send tx prepare listDictionary address:{A} count:{B}", address, count);
+
+                }
+                return new ResultDto<string>() {Success = true, Message = "update address count " + listDictionary.Count};
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "StatisticsUserListRecord ERROR");
+                return new ResultDto<string>() {Success = false, Message = e.Message};
+            }
         }
     }
     
