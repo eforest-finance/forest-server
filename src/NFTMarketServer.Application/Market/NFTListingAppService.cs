@@ -223,17 +223,19 @@ namespace NFTMarketServer.Market
 
                 _logger.LogInformation("StatisticsUserListRecord Step2 totalCount:{A} itemCount:{B}", totalCount, allListing.Count);
 
-                //statistics user list records
+                //statistics user list records key:address+"-"+collectionSymbol
                 Dictionary<string, long> listDictionary = new Dictionary<string, long>();
                 foreach (var list in allListing)
                 {
-                    if(listDictionary.TryGetValue(list.Owner, out var value))
+                    var key = list.Owner + NFTSymbolBasicConstants.NFTSymbolSeparator +
+                              TransferCollectionSymbol(list.Symbol);
+                    if(listDictionary.TryGetValue(key, out var value))
                     {
-                        listDictionary[list.Owner] = value + list.Quantity;
+                        listDictionary[key] = value + list.Quantity;
                     }
                     else
                     {
-                        listDictionary.Add(list.Owner, list.Quantity);
+                        listDictionary.Add(key, list.Quantity);
                     }
                 }
                 _logger.LogInformation("StatisticsUserListRecord Step3 listDictionary size:{A}", listDictionary.Count);
@@ -253,6 +255,30 @@ namespace NFTMarketServer.Market
                 _logger.LogError(e, "StatisticsUserListRecord ERROR");
                 return new ResultDto<string>() {Success = false, Message = e.Message};
             }
+        }
+        
+        public static string TransferCollectionSymbol(string symbol)
+        {
+            if (string.IsNullOrEmpty(symbol))
+                return symbol;
+
+            var parts = symbol.Split(NFTSymbolBasicConstants.NFTSymbolSeparator);
+
+            if (parts.Length == 1)
+            {
+                return parts[0];
+            }
+
+            if (parts.Length == 2)
+            {
+                var baseString = parts[0];
+                if (int.TryParse(parts[1], out int number))
+                {
+                    return $"{baseString}{NFTSymbolBasicConstants.NFTSymbolSeparator}{NFTSymbolBasicConstants.CollectionSymbolSuffix}";
+                }
+            }
+
+            return symbol;
         }
     }
     
