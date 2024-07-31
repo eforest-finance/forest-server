@@ -77,9 +77,9 @@ public class SeedController : AbpController
     
     [HttpGet]
     [Route("transaction-fee")]
-    public async Task<TransactionFeeDto> GetTransactionFeeAsync()
+    public async Task<TransactionFeeDto> GetTransactionFeeAsync(QueryTransactionFeeInput input)
     {
-        return await _seedAppService.GetTransactionFeeAsync();
+        return await _seedAppService.GetTransactionFeeAsync(input.Symbol);
     }
     
     [HttpPut]
