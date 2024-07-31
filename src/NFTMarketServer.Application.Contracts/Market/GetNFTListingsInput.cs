@@ -10,7 +10,7 @@ namespace NFTMarketServer.Market
     public class GetNFTListingsInput : PagedAndSortedResultRequestDto, IValidatableObject
     {
         [Required] public string ChainId { get; set; }
-        [Required] public string Symbol { get; set; }
+        public string Symbol { get; set; }
         
         public string Address { get; set; }
         
