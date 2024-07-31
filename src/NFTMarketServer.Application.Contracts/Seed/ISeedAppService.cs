@@ -25,7 +25,7 @@ public interface ISeedAppService
     Task<SeedDto> GetSeedInfoAsync(QuerySeedInput input);
     Task<PagedResultDto<SeedDto>> MySeedAsync(MySeedInput input);
     
-    Task<TransactionFeeDto> GetTransactionFeeAsync();
+    Task<TransactionFeeDto> GetTransactionFeeAsync(string symbol);
     
     Task AddOrUpdateTsmSeedInfoAsync(SeedDto seedDto);
     
