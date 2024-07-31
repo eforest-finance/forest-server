@@ -743,7 +743,7 @@ namespace Forest {
     #endregion
 
     /// <summary>Base class for the contract of ForestContract</summary>
-    public abstract partial class ForestContractBase : AElf.Sdk.CSharp.CSharpSmartContract<Forest.ForestContractState>
+    public abstract partial class ForestContractBase : AElf.Sdk.CSharp.CSharpSmartContract
     {
       public virtual global::Google.Protobuf.WellKnownTypes.Empty Initialize(global::Forest.InitializeInput input)
       {
