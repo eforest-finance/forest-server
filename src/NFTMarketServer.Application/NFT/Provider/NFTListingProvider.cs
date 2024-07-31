@@ -38,6 +38,12 @@ public class NFTListingPage : IndexerCommonResult<NFTListingPage>
     
 }
 
+public class NFTListingAllPage : IndexerCommonResult<NFTListingPage>
+{
+    public PagedResultDto<IndexerNFTListingInfo> nftListingInfoAll { get; set; }
+    
+}
+
 public class NFTListingProvider : INFTListingProvider, ISingletonDependency
 {
     private readonly IGraphQLHelper _graphQlHelper;
@@ -321,7 +327,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
     {
         try
         {
-            var res = await _graphQlHelper.QueryAsync<NFTListingPage>(new GraphQLRequest
+            var res = await _graphQlHelper.QueryAsync<NFTListingAllPage>(new GraphQLRequest
             {
                 Query = @"query (
                     $skipCount:Int!,
@@ -377,7 +383,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     blockHeight = dto.BlockHeight
                 }
             });
-            return res?.nftListingInfo;
+            return res?.nftListingInfoAll;
         }
         catch (Exception e)
         {
