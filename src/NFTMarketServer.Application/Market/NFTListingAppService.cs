@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AElf.Types;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
@@ -28,13 +29,16 @@ namespace NFTMarketServer.Market
         private readonly IObjectMapper _objectMapper;
         private readonly ICompositeNFTProvider _compositeNFTProvider;
         private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
+        private readonly IOptionsMonitor<StatisticsUserListRecordOptions> _statisticsOptionsMonitor;
+
 
         public NFTListingAppService(IUserAppService userAppService,
             INFTListingProvider nftListingProvider,
             ILogger<NFTListingAppService> logger, 
             IObjectMapper objectMapper,
                 ICompositeNFTProvider compositeNFTProvider,
-            INFTCollectionExtensionProvider nftCollectionExtensionProvider)
+            INFTCollectionExtensionProvider nftCollectionExtensionProvider,
+            IOptionsMonitor<StatisticsUserListRecordOptions> statisticsOptionsMonitor)
         {
             _userAppService = userAppService;
             _nftListingProvider = nftListingProvider;
@@ -42,6 +46,8 @@ namespace NFTMarketServer.Market
             _objectMapper = objectMapper;
             _compositeNFTProvider = compositeNFTProvider;
             _nftCollectionExtensionProvider = nftCollectionExtensionProvider;
+            _statisticsOptionsMonitor = statisticsOptionsMonitor;
+
         }
 
         public async Task<PagedResultDto<NFTListingIndexDto>> GetNFTListingsAsync(GetNFTListingsInput input)
@@ -191,6 +197,16 @@ namespace NFTMarketServer.Market
         {
             try
             {
+                var statisticsSwitch = _statisticsOptionsMonitor.CurrentValue.StatisticsSwitch;
+                var sendTxSwitch = _statisticsOptionsMonitor.CurrentValue.SendTxSwitch;
+                _logger.LogInformation("StatisticsUserListRecord Step0 statisticsSwitch:{A} sendTxSwitch:{B}", statisticsSwitch, sendTxSwitch);
+
+                if (!statisticsSwitch)
+                {
+                    return new ResultDto<string>() {Success = true, Message = "statisticsSwitch is false"};
+ 
+                }
+
                 var maxQueryCount = 10;
                 var queryCount = 0;
                 var getNftListingsDto = _objectMapper.Map<GetNFTListingsInput, GetNFTListingsDto>(input);
@@ -241,6 +257,11 @@ namespace NFTMarketServer.Market
                 _logger.LogInformation("StatisticsUserListRecord Step3 listDictionary size:{A}", listDictionary.Count);
 
                 //send tx
+                if (!sendTxSwitch)
+                {
+                    return new ResultDto<string>() {Success = true, Message = "sendTxSwitch is false"};
+ 
+                }
                 foreach (var address in listDictionary.Keys)
                 {
                     listDictionary.TryGetValue(address, out var count);
