@@ -7,6 +7,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NFTMarketServer.NFT.Dtos;
+using NFTMarketServer.NFT.Provider;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -86,5 +87,64 @@ public class UserBalanceProviderTest : NFTMarketServerApplicationTestBase
         catch (Exception e)
         {
         }
+    }
+    
+    [Fact]
+    public async Task GetAllNFTListingsByHeightAsync_Test()
+    {
+        var input = new QueryUserBalanceInput()
+        {
+            SkipCount = 0, 
+            BlockHeight = 10l
+        };
+        var client = new GraphQLHttpClient("https://test-indexer.eforest.finance/AElfIndexer_Forest/ForestIndexerPluginSchema/graphql",
+            new NewtonsoftJsonSerializer());
+        var listingDto = await client.SendQueryAsync<NFTListingAllPage>(new GraphQLRequest
+        {
+            Query = @"query (
+                    $skipCount:Int!,
+                    $maxResultCount:Int!,
+                    $chainId:String,
+                    $symbol:String,
+                    $owner: String,
+                    $address: String,
+                    $excludedAddress: String,
+                    $expireTimeGt:Long,
+                    $blockHeight:Long
+                ){
+                  nftListingInfoAll(
+                    input:{
+                      skipCount:$skipCount,
+                      maxResultCount:$maxResultCount,
+                      chainId:$chainId,
+                      symbol:$symbol,
+                      owner:$owner,
+                      address:$address,
+                      excludedAddress:$excludedAddress,
+                      expireTimeGt:$expireTimeGt,
+                      blockHeight:$blockHeight
+                    }
+                  ){
+                    TotalCount: totalRecordCount,
+                    Items: data{
+                      symbol,
+                      quantity,
+                      expireTime 
+                    }
+                  }
+                }",
+            Variables = new
+            {
+                chainId = "tDVW", 
+                skipCount = 0, 
+                maxResultCount = 10, 
+                expireTimeGt = 1738141200000,
+                blockHeight = 0
+            }
+        });
+        var totalCount = listingDto.Data.nftListingInfoAll.TotalCount;
+        var itemCount = listingDto.Data.nftListingInfoAll.Items.Count;
+        totalCount.ShouldBeGreaterThan(0);
+        itemCount.ShouldBeGreaterThan(0);
     }
 }

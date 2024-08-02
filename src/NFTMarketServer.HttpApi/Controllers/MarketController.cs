@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using NFTMarketServer.Ai;
 using NFTMarketServer.Market;
 using NFTMarketServer.NFT;
 using Volo.Abp;
@@ -74,6 +75,13 @@ namespace NFTMarketServer.Controllers
         public Task<SymbolInfoDto> GetSymbolInfoAsync(GetSymbolInfoInput input )
         {
             return _nftInfoAppService.GetSymbolInfoAsync(input);
+        }
+        
+        [HttpGet]
+        [Route("nft-listings-statistics")]
+        public Task<ResultDto<string>> StatisticsUserListRecord(GetNFTListingsInput input)
+        {
+            return _nftListingAppService.StatisticsUserListRecord(input);
         }
     }
 }
