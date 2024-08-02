@@ -123,6 +123,8 @@ namespace NFTMarketServer
             Configure<ChainOption>(configuration.GetSection("ChainOption"));
             Configure<SynchronizeTransactionJobOptions>(configuration.GetSection("Synchronize"));
             Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
+            Configure<StatisticsUserListRecordOptions>(configuration.GetSection("StatisticsUserListRecordOptions"));
+
             
             ConfigureTokenBucketService(context, configuration);
             ConfigureDistributedLocking(context, configuration);
