@@ -9,6 +9,9 @@ namespace NFTMarketServer.NFT.Index;
 
 public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
 {
+    [Wildcard] public string FuzzySymbol { get; set; }
+    [Wildcard] public string FuzzyTokenName { get; set; }
+    
     public bool CountedFlag { get; set; } = false;
     public int Generation { get; set; } = 0;
     [Nested]
