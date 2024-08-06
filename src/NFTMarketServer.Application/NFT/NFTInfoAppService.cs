@@ -409,6 +409,7 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
             GetCollectedCollectionActivitiesInput input)
         {
+            var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
             input.Address = FullAddressHelper.ToShortAddress(input.Address);
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
 
@@ -987,7 +988,7 @@ namespace NFTMarketServer.NFT
 
             info.NFTSymbol = index.Symbol;
             info.NFTTokenId = SymbolHelper.SubHyphenNumber(index.Symbol);
-            info.TotalQuantity = index.Supply / (long)Math.Pow(10, index.Decimals);
+            info.TotalQuantity = index.Supply;
             if (index.ExternalInfoDictionary != null)
             {
                 info.Metadata = index.ExternalInfoDictionary
@@ -1771,6 +1772,8 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyCreatedNFTInfosAsync(
             GetMyCreateNFTInfosInput input)
         {
+            var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
+
             //query nft infos
             var getCompositeNFTInfosInput = new GetCompositeNFTInfosInput()
             {
@@ -1784,7 +1787,8 @@ namespace NFTMarketServer.NFT
                 IssueAddress = input.Address,
                 PriceLow = input.PriceLow,
                 PriceHigh = input.PriceHigh,
-                CollectionIds = input.CollectionIds
+                CollectionIds = input.CollectionIds,
+                fuzzySearchSwitch = fuzzySearchSwitch
                 
             };
             

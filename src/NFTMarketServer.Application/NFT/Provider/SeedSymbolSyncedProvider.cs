@@ -67,9 +67,9 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
         if (!dto.SearchParam.IsNullOrWhiteSpace() && dto.fuzzySearchSwitch)
         {
             shouldQuery2.Add(q => q.Wildcard(i
-                => i.Field(f => f.TokenName).Value("*"+ dto.SearchParam + "*")));
+                => i.Field(f => f.FuzzyTokenName).Value("*"+ dto.SearchParam + "*")));
             shouldQuery2.Add(q
-                => q.Wildcard(i => i.Field(f => f.TokenName).Value("*" + dto.SearchParam + "*" )));
+                => q.Wildcard(i => i.Field(f => f.FuzzySymbol).Value("*" + dto.SearchParam + "*" )));
         }
         
         if (!dto.NFTIdList.IsNullOrEmpty())
