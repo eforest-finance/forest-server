@@ -80,6 +80,8 @@ public class IndexerNFTInfo : IndexerCommonResult<IndexerNFTInfo>
     public string Star{ get; set; }
     public string Rarity { get; set; }
     public string Describe { get; set; }
+    
+    public long Supply { get; set; }
     public void OfListingPrice(Boolean hasListingFlag, decimal minListingPrice, IndexerTokenInfo listingToken)
     {
         ListingPrice = hasListingFlag ? minListingPrice : 0;

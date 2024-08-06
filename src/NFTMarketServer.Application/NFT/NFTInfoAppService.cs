@@ -987,7 +987,7 @@ namespace NFTMarketServer.NFT
 
             info.NFTSymbol = index.Symbol;
             info.NFTTokenId = SymbolHelper.SubHyphenNumber(index.Symbol);
-            info.TotalQuantity = index.TotalSupply;
+            info.TotalQuantity = index.Supply / (long)Math.Pow(10, index.Decimals);
             if (index.ExternalInfoDictionary != null)
             {
                 info.Metadata = index.ExternalInfoDictionary
@@ -1709,6 +1709,8 @@ namespace NFTMarketServer.NFT
 
             var nftIds = userBalanceList.Select(i => i.NFTInfoId).Distinct().ToList();
             var nftSymbols = userBalanceList.Select(i => i.Symbol).Distinct().ToList();
+            var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
+            
             var getCompositeNFTInfosInput = new GetCompositeNFTInfosInput()
             {
                 NFTIdList = nftIds,
@@ -1720,21 +1722,13 @@ namespace NFTMarketServer.NFT
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 PriceLow = input.PriceLow,
-                PriceHigh = input.PriceHigh
+                PriceHigh = input.PriceHigh,
+                fuzzySearchSwitch = fuzzySearchSwitch
                 
             };
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var seedPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var nftPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
-            var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
-            if (fuzzySearchSwitch)
-            {
-                return new PagedResultDto<CompositeNFTInfoIndexDto>()
-                {
-                    TotalCount = CommonConstant.IntZero,
-                    Items = new List<CompositeNFTInfoIndexDto>()
-                };
-            }
 
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
