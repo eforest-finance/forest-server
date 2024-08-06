@@ -125,7 +125,8 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
         CreateMap<NFTInfoIndex, NFTInfoNewIndex>()
             .ForMember(des => des.FuzzyTokenName, opt => opt.MapFrom(source => source.TokenName))
-            .ForMember(des => des.FuzzySymbol, opt => opt.MapFrom(source => source.Symbol));
+            .ForMember(des => des.FuzzySymbol, opt => opt.MapFrom(source => source.Symbol))
+            .ForMember(des => des.FuzzyTokenId, opt => opt.MapFrom(source => SymbolHelper.GetTrailingNumber(source.Symbol)));
         CreateMap<AiCreateIndex, AiArtFailDto>().ForMember(des => des.AiPaintingStyleType,
                 opt => opt.MapFrom(source => source.PaintingStyle.ToEnumString()))
             .ForMember(des => des.NegativePrompt, opt => opt.MapFrom(source => source.NegativePrompt))

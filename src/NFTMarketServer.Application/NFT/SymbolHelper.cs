@@ -68,6 +68,24 @@ public class SymbolHelper
         return number;
     }
 
+    public static string GetTrailingNumber(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return "";
+
+        int index = input.LastIndexOf(HYPHEN);
+
+        if (index == -1)
+            return "";
+
+        var numericPart = input.Substring(index + 1);
+
+        if (int.TryParse(numericPart, out _))
+            return numericPart;
+        else
+            return "";
+    }
+    
     public static bool CheckIsSeedCollection(string symbol)
     {
         return symbol.Equals(SEED_COLLECTION);
