@@ -55,7 +55,7 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
             return new Tuple<long, List<SeedSymbolIndex>>(CommonConstant.IntZero, new List<SeedSymbolIndex>());
         }
 
-        if (!dto.SearchParam.IsNullOrWhiteSpace() && !dto.fuzzySearchSwitch)
+        if (!dto.SearchParam.IsNullOrWhiteSpace() && !dto.FuzzySearchSwitch)
         {
             shouldQuery2.Add(q => q.Term(i
                 => i.Field(f => f.TokenName).Value(NFTSymbolBasicConstants.SeedNamePrefix +
@@ -64,7 +64,7 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
                 => q.Term(i => i.Field(f => f.TokenName).Value(dto.SearchParam)));
         }
         
-        if (!dto.SearchParam.IsNullOrWhiteSpace() && dto.fuzzySearchSwitch)
+        if (!dto.SearchParam.IsNullOrWhiteSpace() && dto.FuzzySearchSwitch)
         {
             shouldQuery2.Add(q => q.Wildcard(i
                 => i.Field(f => f.FuzzyTokenName).Value("*"+ dto.SearchParam + "*")));

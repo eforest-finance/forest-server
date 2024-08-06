@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using AutoMapper.Internal;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nest;
 using NFTMarketServer.Basic;
 using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
+using NFTMarketServer.Options;
 using NFTMarketServer.Seed.Index;
 using Volo.Abp.DependencyInjection;
 
@@ -27,21 +29,26 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
     private readonly ILogger<CompositeNFTProvider> _logger;
     private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
-
+    private readonly IOptionsMonitor<FuzzySearchOptions>
+        _fuzzySearchOptionsMonitor;
     public CompositeNFTProvider(
         ILogger<CompositeNFTProvider> logger,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
-        INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository
+        INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
+        IOptionsMonitor<FuzzySearchOptions> fuzzySearchOptionsMonitor
     )
     {
         _logger = logger;
         _nftInfoNewIndexRepository = nftInfoNewIndexRepository;
         _seedSymbolIndexRepository = seedSymbolIndexRepository;
+        _fuzzySearchOptionsMonitor = fuzzySearchOptionsMonitor;
+
     }
 
     public async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoAsync(List<string> collectionIdList,
         string searchName, int skipCount, int maxResultCount)
     {
+        var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, new List<string>(), searchName, skipCount,
                 maxResultCount,false);
@@ -78,7 +85,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
 
     private async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoForCommonNFTAsync(
         List<string> collectionIdList, List<string> nftInfoIdList, string
-            searchName, int skipCount, int maxResultCount, bool countFlagIsTrue)
+            searchName, int skipCount, int maxResultCount, bool countFlagIsTrue, bool fuzzySearchSwitch = false)
     {
         if (collectionIdList.IsNullOrEmpty() && searchName.IsNullOrEmpty() && nftInfoIdList.IsNullOrEmpty())
         {
@@ -96,9 +103,13 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
             mustQuery.Add(q => q.Terms(i => i.Field(f => f.Id).Terms(nftInfoIdList)));
         }
 
-        if (!searchName.IsNullOrEmpty())
+        if (!searchName.IsNullOrEmpty() && !fuzzySearchSwitch)
         {
             mustQuery.Add(q => q.Term(i => i.Field(f => f.TokenName).Value(searchName)));
+        }
+        if (!searchName.IsNullOrEmpty() && fuzzySearchSwitch)
+        {
+            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + searchName + "*")));
         }
 
         QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)

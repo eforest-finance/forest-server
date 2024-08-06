@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using JetBrains.Annotations;
+using Nest;
 using NFTMarketServer.Basic;
 using NFTMarketServer.NFT.Index;
 
@@ -31,7 +32,9 @@ namespace NFTMarketServer.NFT
         public List<string> ChainList { get; set; }
         public List<TokenType> SymbolTypeList { get; set; }
         public List<string> RarityList { get; set; }
-        public bool fuzzySearchSwitch { get; set; }
+        public bool FuzzySearchSwitch { get; set; }
+
+        public PageFromEnum PageFrom { get; set; }
 
         public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -60,6 +63,12 @@ namespace NFTMarketServer.NFT
             }
 
         }
+    }
+    
+    public enum PageFromEnum
+    {
+        NFTLIST = 0,
+        OTHER = 1
     }
 }
     

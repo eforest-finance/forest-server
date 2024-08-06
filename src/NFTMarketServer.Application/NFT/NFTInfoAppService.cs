@@ -204,6 +204,9 @@ namespace NFTMarketServer.NFT
             GetCompositeNFTInfosInput input)
         {
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+            var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
+            input.FuzzySearchSwitch = fuzzySearchSwitch;
+            input.PageFrom = PageFromEnum.NFTLIST;
 
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
             {
@@ -409,7 +412,6 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<CollectedCollectionActivitiesDto>> GetCollectedCollectionActivitiesAsync(
             GetCollectedCollectionActivitiesInput input)
         {
-            var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
             input.Address = FullAddressHelper.ToShortAddress(input.Address);
             var result = PagedResultWrapper<CollectedCollectionActivitiesDto>.Initialize();
 
@@ -1724,7 +1726,7 @@ namespace NFTMarketServer.NFT
                 SearchParam = input.KeyWord,
                 PriceLow = input.PriceLow,
                 PriceHigh = input.PriceHigh,
-                fuzzySearchSwitch = fuzzySearchSwitch
+                FuzzySearchSwitch = fuzzySearchSwitch
                 
             };
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
@@ -1788,7 +1790,7 @@ namespace NFTMarketServer.NFT
                 PriceLow = input.PriceLow,
                 PriceHigh = input.PriceHigh,
                 CollectionIds = input.CollectionIds,
-                fuzzySearchSwitch = fuzzySearchSwitch
+                FuzzySearchSwitch = fuzzySearchSwitch
                 
             };
             
