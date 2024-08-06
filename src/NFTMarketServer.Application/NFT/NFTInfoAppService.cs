@@ -88,7 +88,8 @@ namespace NFTMarketServer.NFT
         private readonly ISchrodingerInfoProvider _schrodingerInfoProvider;
         private readonly string _defaultMainChain = "AELF";
         private readonly NFTMarketServer.Users.Provider.IUserBalanceProvider _userBalanceIndexProvider;
-
+        private readonly IOptionsMonitor<FuzzySearchOptions>
+            _fuzzySearchOptionsMonitor;
 
         public NFTInfoAppService(
             ITokenAppService tokenAppService, IUserAppService userAppService,
@@ -122,7 +123,8 @@ namespace NFTMarketServer.NFT
             IRarityProvider rarityProvider,
             IOptionsMonitor<ChainOptions> chainOptionsMonitor,
             ICompositeNFTProvider compositeNFTProvider,
-            NFTMarketServer.Users.Provider.IUserBalanceProvider userBalanceIndexProvider)
+            NFTMarketServer.Users.Provider.IUserBalanceProvider userBalanceIndexProvider,
+            IOptionsMonitor<FuzzySearchOptions> fuzzySearchOptionsMonitor)
         {
             _tokenAppService = tokenAppService;
             _userAppService = userAppService;
@@ -159,6 +161,7 @@ namespace NFTMarketServer.NFT
             _rarityProvider = rarityProvider;
             _userBalanceIndexProvider = userBalanceIndexProvider;
             _compositeNFTProvider = compositeNFTProvider;
+            _fuzzySearchOptionsMonitor = fuzzySearchOptionsMonitor;
         }
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
             GetNFTInfosProfileInput input)
@@ -1723,6 +1726,15 @@ namespace NFTMarketServer.NFT
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var seedPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var nftPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
+            var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
+            if (fuzzySearchSwitch)
+            {
+                return new PagedResultDto<CompositeNFTInfoIndexDto>()
+                {
+                    TotalCount = CommonConstant.IntZero,
+                    Items = new List<CompositeNFTInfoIndexDto>()
+                };
+            }
 
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);

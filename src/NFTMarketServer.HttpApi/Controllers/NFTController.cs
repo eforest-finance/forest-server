@@ -280,12 +280,5 @@ namespace NFTMarketServer.Controllers
         {
             return _nftAppService.GetMyCreatedNFTInfosAsync(input);
         }
-        [HttpGet]
-        [Route("nft-infos-user-profile/fuzzySwitch")]
-        public async Task<ResultDto<string>> GetFuzzySearchOptions()
-        {
-            return new ResultDto<string>() {Success = true, Message =  OptionSwitchHelper.GetFuzzySearchOptions().ToString()};
-        }
-        
     }
 }
