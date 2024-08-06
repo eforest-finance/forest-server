@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Ai;
+using NFTMarketServer.Helper;
 using NFTMarketServer.Models;
 using NFTMarketServer.NFT;
 using Volo.Abp;
@@ -278,6 +279,12 @@ namespace NFTMarketServer.Controllers
         public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyCreateNFTInfosAsync(GetMyCreateNFTInfosInput input)
         {
             return _nftAppService.GetMyCreatedNFTInfosAsync(input);
+        }
+        [HttpGet]
+        [Route("nft-infos-user-profile/fuzzySwitch")]
+        public async Task<ResultDto<string>> GetFuzzySearchOptions()
+        {
+            return new ResultDto<string>() {Success = true, Message =  OptionSwitchHelper.GetFuzzySearchOptions().ToString()};
         }
         
     }
