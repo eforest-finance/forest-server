@@ -10,6 +10,7 @@ namespace NFTMarketServer.Seed.Index;
 
 public class SeedSymbolIndex: TokenInfoBase, IIndexBuild
 {
+    [Wildcard] public string FuzzyTokenId { get; set; }
     [Wildcard] public string FuzzySymbol { get; set; }
     [Wildcard] public string FuzzyTokenName { get; set; }
     

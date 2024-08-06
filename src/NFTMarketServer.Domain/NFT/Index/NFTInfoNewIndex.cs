@@ -9,6 +9,7 @@ namespace NFTMarketServer.NFT.Index;
 
 public class NFTInfoNewIndex : TokenInfoBase, IIndexBuild
 {
+    [Wildcard] public string FuzzyTokenId { get; set; }
     [Wildcard] public string FuzzySymbol { get; set; }
     [Wildcard] public string FuzzyTokenName { get; set; }
     
