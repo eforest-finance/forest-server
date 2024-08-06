@@ -664,6 +664,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     {
         seedSymbol.FuzzySymbol = seedSymbol.Symbol;
         seedSymbol.FuzzyTokenName = seedSymbol.FuzzyTokenName;
+        seedSymbol.FuzzyTokenId = SymbolHelper.GetTrailingNumber(seedSymbol.Symbol);
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbol);
     }
     
