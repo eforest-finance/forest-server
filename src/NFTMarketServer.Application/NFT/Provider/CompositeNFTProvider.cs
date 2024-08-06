@@ -51,10 +51,10 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, new List<string>(), searchName, skipCount,
-                maxResultCount,false);
+                maxResultCount,false, fuzzySearchSwitch);
 
         var seedInfos =
-            await QueryCompositeNFTInfoForSeedAsync(searchName, new List<string>(), skipCount, maxResultCount);
+            await QueryCompositeNFTInfoForSeedAsync(searchName, new List<string>(), skipCount, maxResultCount, fuzzySearchSwitch);
 
         var mergedDict = commonNFTInfos.Concat(seedInfos).ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -143,7 +143,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
     }
     
     private async Task<Dictionary<string, CompositeNFTDto>> QueryCompositeNFTInfoForSeedAsync(string
-        searchName, List<string> nftInfoIdList, int skipCount, int maxResultCount)
+        searchName, List<string> nftInfoIdList, int skipCount, int maxResultCount, bool fuzzySearchSwitch = false)
     {
         if (searchName.IsNullOrEmpty() && nftInfoIdList.IsNullOrEmpty())
         {
@@ -152,9 +152,13 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
 
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
 
-        if (!searchName.IsNullOrEmpty())
+        if (!searchName.IsNullOrEmpty() && !fuzzySearchSwitch)
         {
             mustQuery.Add(q => q.Term(i => i.Field(f => f.TokenName).Value(searchName)));
+        }
+        if (!searchName.IsNullOrEmpty() && fuzzySearchSwitch)
+        {
+            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.TokenName).Value("*" + searchName + "*")));
         }
         if (!nftInfoIdList.IsNullOrEmpty())
         {
