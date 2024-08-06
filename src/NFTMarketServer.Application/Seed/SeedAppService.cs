@@ -662,6 +662,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
     {
+        seedSymbol.FuzzySymbol = seedSymbol.Symbol;
+        seedSymbol.FuzzyTokenName = seedSymbol.FuzzyTokenName;
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbol);
     }
     
