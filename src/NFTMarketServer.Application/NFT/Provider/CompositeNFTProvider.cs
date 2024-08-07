@@ -158,7 +158,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         }
         if (!searchName.IsNullOrEmpty() && fuzzySearchSwitch)
         {
-            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.TokenName).Value("*" + searchName + "*")));
+            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + searchName + "*")));
         }
         if (!nftInfoIdList.IsNullOrEmpty())
         {
