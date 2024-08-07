@@ -53,12 +53,13 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, new List<string>(), searchName, skipCount,
                 maxResultCount,false, fuzzySearchSwitch);
-        _logger.LogInformation("QueryCompositeNFTInfoAsync commonNFTInfos{A}", JsonConvert.SerializeObject(commonNFTInfos));
+        _logger.LogInformation("QueryCompositeNFTInfoAsync commonNFTInfos{A}", commonNFTInfos.Count);
         var seedInfos =
             await QueryCompositeNFTInfoForSeedAsync(searchName, new List<string>(), skipCount, maxResultCount, fuzzySearchSwitch);
-        _logger.LogInformation("QueryCompositeNFTInfoAsync commonNFTInfos{A}", JsonConvert.SerializeObject(seedInfos));
+        _logger.LogInformation("QueryCompositeNFTInfoAsync seedInfos{A}", seedInfos.Count);
 
         var mergedDict = commonNFTInfos.Concat(seedInfos).ToDictionary(pair => pair.Key, pair => pair.Value);
+        _logger.LogInformation("QueryCompositeNFTInfoAsync mergedDict{A}", mergedDict.Count);
 
         return mergedDict;
     }
