@@ -741,6 +741,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             seedSymbolIndex.LatestDealPrice = CommonConstant.DefaultValueNone;
         }
+        seedSymbolIndex.FuzzySymbol = seedSymbolIndex.Symbol;
+        seedSymbolIndex.FuzzyTokenName = seedSymbolIndex.TokenName;
+        seedSymbolIndex.FuzzyTokenId = SymbolHelper.GetTrailingNumber(seedSymbolIndex.Symbol);
             
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbolIndex);
     } 
