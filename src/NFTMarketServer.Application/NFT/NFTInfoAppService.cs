@@ -211,6 +211,8 @@ namespace NFTMarketServer.NFT
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input);
+                _logger.LogInformation("GetCompositeNFTInfosAsync input:{A} seedResult:{}",JsonConvert.SerializeObject(input),JsonConvert.SerializeObject(seedResult));
+
                 //to get max offers
                 var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
 
