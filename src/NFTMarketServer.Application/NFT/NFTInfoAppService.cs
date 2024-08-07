@@ -430,7 +430,7 @@ namespace NFTMarketServer.NFT
             }
 
             var newNftIds = nftInfoIds.GetRange(0, nftInfoIds.Count / 2);
-            _logger.LogInformation("QueryCompositeNFTInfoAsync nftInfoIds{A} newNftIds:{B}", nftInfoIds.Count, newNftIds.Count);
+            _logger.LogInformation("QueryCompositeNFTInfoAsync nftInfoIds{A} newNftIds:{B} newNftIds:{C} input:{D}", nftInfoIds.Count, newNftIds.Count, JsonConvert.SerializeObject(newNftIds),JsonConvert.SerializeObject(input));
 
             nftActivityDtoPage =
                 await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, newNftIds);
