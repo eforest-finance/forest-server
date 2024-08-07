@@ -211,8 +211,6 @@ namespace NFTMarketServer.NFT
             if (input.CollectionType.Equals(CommonConstant.CollectionTypeSeed))
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(input);
-                _logger.LogInformation("GetCompositeNFTInfosAsync input:{A} seedResult:{}",JsonConvert.SerializeObject(input),JsonConvert.SerializeObject(seedResult));
-
                 //to get max offers
                 var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
 
@@ -425,16 +423,17 @@ namespace NFTMarketServer.NFT
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
-                _logger.LogInformation("QueryCompositeNFTInfoAsync nftInfoIds{A}", nftInfoIds.Count);
-
                 if (nftInfoIds.IsNullOrEmpty())
                 {
                     return result;
                 }
             }
 
+            var newNftIds = nftInfoIds.GetRange(0, nftInfoIds.Count / 2);
+            _logger.LogInformation("QueryCompositeNFTInfoAsync nftInfoIds{A} newNftIds:{B}", nftInfoIds.Count, newNftIds.Count);
+
             nftActivityDtoPage =
-                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIds.GetRange(0,100));
+                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
             _logger.LogInformation("QueryCompositeNFTInfoAsync nftActivityDtoPage TotalCount {A} itemsCount:{B}", nftActivityDtoPage.TotalCount, nftActivityDtoPage.Items.Count);
 
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
