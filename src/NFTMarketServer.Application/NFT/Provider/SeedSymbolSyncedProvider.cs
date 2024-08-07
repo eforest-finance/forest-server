@@ -69,7 +69,7 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
             shouldQuery2.Add(q => q.Wildcard(i
                 => i.Field(f => f.FuzzyTokenName).Value("*"+ dto.SearchParam + "*")));
             shouldQuery2.Add(q
-                => q.Wildcard(i => i.Field(f => f.FuzzySymbol).Value("*" + dto.SearchParam + "*" )));
+                => q.Wildcard(i => i.Field(f => f.SeedOwnedSymbol).Value("*" + dto.SearchParam + "*" )));
         }
         
         if (!dto.NFTIdList.IsNullOrEmpty())
