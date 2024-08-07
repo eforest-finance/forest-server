@@ -420,20 +420,33 @@ namespace NFTMarketServer.NFT
             var nftInfoIds = new List<string>();
             if (!input.SearchParam.IsNullOrEmpty() || !input.CollectionIdList.IsNullOrEmpty())
             {
+                int skip = CommonConstant.IntZero;
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
-                    input.SearchParam, CommonConstant.IntZero, CommonConstant.IntOneThousand);
+                    input.SearchParam, skip, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
+                while (nftInfoIds.Count == CommonConstant.IntOneThousand)
+                {
+                    skip += CommonConstant.IntOneThousand;
+                    compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
+                        input.SearchParam, skip, CommonConstant.IntOneThousand);
+                    var infoIds = compositeNFTDic?.Keys.ToList();
+                    if (infoIds.IsNullOrEmpty())
+                    {
+                        break;
+                    }
+                    nftInfoIds.AddRange(infoIds);
+                }
+
                 if (nftInfoIds.IsNullOrEmpty())
                 {
                     return result;
                 }
             }
 
-            var newNftIds = nftInfoIds.GetRange(0, nftInfoIds.Count / 2);
-            _logger.LogInformation("QueryCompositeNFTInfoAsync nftInfoIds{A} newNftIds:{B} newNftIds:{C} input:{D}", nftInfoIds.Count, newNftIds.Count, JsonConvert.SerializeObject(newNftIds),JsonConvert.SerializeObject(input));
+            _logger.LogInformation("QueryCompositeNFTInfoAsync nftInfoIds{A} ", nftInfoIds.Count);
 
             nftActivityDtoPage =
-                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, newNftIds);
+                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
             _logger.LogInformation("QueryCompositeNFTInfoAsync nftActivityDtoPage TotalCount {A} itemsCount:{B}", nftActivityDtoPage.TotalCount, nftActivityDtoPage.Items.Count);
 
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
