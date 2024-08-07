@@ -433,7 +433,7 @@ namespace NFTMarketServer.NFT
             _logger.LogInformation("QueryCompositeNFTInfoAsync nftInfoIds{A} newNftIds:{B}", nftInfoIds.Count, newNftIds.Count);
 
             nftActivityDtoPage =
-                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
+                await _nftActivityAppService.GetCollectedCollectionActivitiesAsync(input, newNftIds);
             _logger.LogInformation("QueryCompositeNFTInfoAsync nftActivityDtoPage TotalCount {A} itemsCount:{B}", nftActivityDtoPage.TotalCount, nftActivityDtoPage.Items.Count);
 
             if (nftActivityDtoPage == null || nftActivityDtoPage.Items.IsNullOrEmpty())
