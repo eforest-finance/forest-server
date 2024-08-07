@@ -7,6 +7,7 @@ using AutoMapper.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Nest;
+using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Etos;
@@ -52,9 +53,10 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         var commonNFTInfos =
             await QueryCompositeNFTInfoForCommonNFTAsync(collectionIdList, new List<string>(), searchName, skipCount,
                 maxResultCount,false, fuzzySearchSwitch);
-
+        _logger.LogInformation("QueryCompositeNFTInfoAsync commonNFTInfos{A}", JsonConvert.SerializeObject(commonNFTInfos));
         var seedInfos =
             await QueryCompositeNFTInfoForSeedAsync(searchName, new List<string>(), skipCount, maxResultCount, fuzzySearchSwitch);
+        _logger.LogInformation("QueryCompositeNFTInfoAsync commonNFTInfos{A}", JsonConvert.SerializeObject(seedInfos));
 
         var mergedDict = commonNFTInfos.Concat(seedInfos).ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -158,7 +160,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         }
         if (!searchName.IsNullOrEmpty() && fuzzySearchSwitch)
         {
-            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.TokenName).Value("*" + searchName + "*")));
+            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + searchName + "*")));
         }
         if (!nftInfoIdList.IsNullOrEmpty())
         {
