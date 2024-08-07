@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT.Dto;
 using NFTMarketServer.NFT.Index;
@@ -113,6 +114,9 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
         GetCollectedCollectionActivitiesInput input, List<string> nftInfoIds)
     {
         var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
+        
+        Logger.LogInformation("QueryCompositeNFTInfoAsync nftActivityIndexTuple TotalCount {A} itemsCount:{B}", nftActivityIndexTuple.Item1, nftActivityIndexTuple.Item2.Count);
+
         var list = nftActivityIndexTuple?.Item2;
         if (list.IsNullOrEmpty())
         {
