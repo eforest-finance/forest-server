@@ -115,8 +115,6 @@ public class NFTActivityAppService : NFTMarketServerAppService, INFTActivityAppS
     {
         var nftActivityIndexTuple = await _nftActivityProvider.GetCollectedCollectionActivitiesAsync(input, nftInfoIds);
         
-        Logger.LogInformation("QueryCompositeNFTInfoAsync nftActivityIndexTuple TotalCount {A} itemsCount:{B}", nftActivityIndexTuple.Item1, nftActivityIndexTuple.Item2.Count);
-
         var list = nftActivityIndexTuple?.Item2;
         if (list.IsNullOrEmpty())
         {

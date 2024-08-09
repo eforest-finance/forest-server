@@ -59,7 +59,6 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         _logger.LogInformation("QueryCompositeNFTInfoAsync seedInfos{A}", seedInfos.Count);
 
         var mergedDict = commonNFTInfos.Concat(seedInfos).ToDictionary(pair => pair.Key, pair => pair.Value);
-        _logger.LogInformation("QueryCompositeNFTInfoAsync mergedDict{A}", mergedDict.Count);
 
         return mergedDict;
     }
