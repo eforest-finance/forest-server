@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using AElf.Whitelist;
-using Castle.Core.Configuration;
 using Elasticsearch.Net;
 using Medallion.Threading;
 using Medallion.Threading.Redis;
@@ -124,8 +123,8 @@ namespace NFTMarketServer
             Configure<SynchronizeTransactionJobOptions>(configuration.GetSection("Synchronize"));
             Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
             Configure<StatisticsUserListRecordOptions>(configuration.GetSection("StatisticsUserListRecordOptions"));
+            Configure<FuzzySearchOptions>(configuration.GetSection("FuzzySearchOptions"));
 
-            
             ConfigureTokenBucketService(context, configuration);
             ConfigureDistributedLocking(context, configuration);
             ConfigureElasticsearch(context, configuration);
