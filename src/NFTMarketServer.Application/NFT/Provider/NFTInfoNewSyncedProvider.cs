@@ -103,10 +103,24 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             mustQuery.Add(q => q.Terms(i => i.Field(f => f.IssueManagerSet).Terms(dto.IssueAddress)));
         }
 
-        if (!dto.SearchParam.IsNullOrEmpty())
+        if (!dto.SearchParam.IsNullOrEmpty() && !dto.FuzzySearchSwitch)
         {
             shouldQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(dto.SearchParam)));
             shouldQuery.Add(q => q.Term(i => i.Field(f => f.TokenName).Value(dto.SearchParam)));
+        }
+        
+        if (!dto.SearchParam.IsNullOrEmpty() && dto.FuzzySearchSwitch)
+        {
+            if (dto.PageFrom == PageFromEnum.NFTLIST)
+            {
+                shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenId).Value("*" + dto.SearchParam+ "*")));
+            }
+            else
+            {
+                shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzySymbol).Value("*" + dto.SearchParam+ "*")));
+
+            }
+            shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + dto.SearchParam+ "*")));
         }
 
         if (!dto.ChainList.IsNullOrEmpty())
