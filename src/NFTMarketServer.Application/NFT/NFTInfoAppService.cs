@@ -1743,8 +1743,9 @@ namespace NFTMarketServer.NFT
                 SearchParam = input.KeyWord,
                 PriceLow = input.PriceLow,
                 PriceHigh = input.PriceHigh,
-                FuzzySearchSwitch = fuzzySearchSwitch
-                
+                FuzzySearchSwitch = fuzzySearchSwitch,
+                PageFrom = PageFromEnum.OTHER
+
             };
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var seedPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
@@ -1807,7 +1808,8 @@ namespace NFTMarketServer.NFT
                 PriceLow = input.PriceLow,
                 PriceHigh = input.PriceHigh,
                 CollectionIds = input.CollectionIds,
-                FuzzySearchSwitch = fuzzySearchSwitch
+                FuzzySearchSwitch = fuzzySearchSwitch,
+                PageFrom = PageFromEnum.OTHER
                 
             };
             
