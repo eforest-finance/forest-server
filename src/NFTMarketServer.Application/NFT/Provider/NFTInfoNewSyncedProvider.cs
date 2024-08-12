@@ -117,7 +117,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             }
             else
             {
-                shouldQuery.Add(q => q.Match(i => i.Field(f => f.FuzzySymbol).Query("*" + dto.SearchParam+ "*").Analyzer("standard")));
+                shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzySymbol).Value("*" + dto.SearchParam+ "*").CaseInsensitive(true)));
 
             }
             shouldQuery.Add(q => q.Match(i => i.Field(f => f.FuzzyTokenName).Query("*" + dto.SearchParam+ "*").Analyzer("standard")));
