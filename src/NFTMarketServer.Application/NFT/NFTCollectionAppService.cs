@@ -155,6 +155,11 @@ namespace NFTMarketServer.NFT
             };
         }
 
+        public async Task<PagedResultDto<TrendingCollectionsDto>> TrendingCollectionsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCollectionsAsync()
         {
             var recommendedCollectionsOptions = _optionsMonitor.CurrentValue;
