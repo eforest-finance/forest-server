@@ -75,7 +75,6 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
             _logger.LogInformation("ExpiredNftMaxOfferSync no data, duration: {Duration}", option.Duration);
             return 0;
         }
-        _logger.LogInformation("ExpiredNftMaxOfferSync have data, duration: {Duration}, originList:{originList}", option.Duration, JsonConvert.SerializeObject(originList));
 
         var list = originList
             .Where(dto => dto.Value != null)

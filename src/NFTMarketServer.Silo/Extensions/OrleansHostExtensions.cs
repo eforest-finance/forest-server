@@ -20,15 +20,10 @@ public static class OrleansHostExtensions
         {
             //Configure OrleansSnapshot
             var configSection = context.Configuration.GetSection("Orleans");
-            //增加配置，判断服务是否在k8s中启动，实现方式很多，大家随意发挥
             var IsRunningInKubernetes = configSection.GetValue<bool>("IsRunningInKubernetes");
-            //从环境变量中读取advertisedIP，clusterId、serviceId配置
             var advertisedIP = IsRunningInKubernetes ?  Environment.GetEnvironmentVariable("POD_IP") :configSection.GetValue<string>("AdvertisedIP");
             var clusterId = IsRunningInKubernetes ? Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") : configSection.GetValue<string>("ClusterId");
             var serviceId = IsRunningInKubernetes ? Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID") : configSection.GetValue<string>("ServiceId");
-            Log.Information("========================================================================================");
-            Log.Information("k8s config advertisedIP:"+"advertisedIP"+",clusterId:"+clusterId+",serviceId:"+serviceId+",IsRunningInKubernetes:"+IsRunningInKubernetes);
-            Log.Information("========================================================================================");
 
             siloBuilder
                 .ConfigureEndpoints(advertisedIP: IPAddress.Parse(advertisedIP),siloPort: configSection.GetValue<int>("SiloPort"), gatewayPort: configSection.GetValue<int>("GatewayPort"), listenOnAnyHostAddress: true)

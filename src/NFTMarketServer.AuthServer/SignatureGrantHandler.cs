@@ -75,9 +75,6 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         
         if (source == _source_portkey)
         {
-            _logger.LogInformation("create token user:_source_portkey");
-            _logger.LogInformation("create token user:====");
-
             var accountInfoList = JsonConvert.DeserializeObject<List<GrantAccountInfo>>(accountInfo);
             if(accountInfoList == null || accountInfoList.Count == 0)
             {
@@ -95,10 +92,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 var caHolderInfos = new IndexerCAHolderInfos();
                 try
                 {
-                    _logger.LogInformation("create token portkeyUrl:{A}", JsonConvert.SerializeObject(portkeyUrl));
                     caHolderInfos = await GetCAHolderInfo(portkeyUrl,
                         new List<string>(){ account.Address} , account.ChainId);
-                    _logger.LogInformation("create token portkeyUrl:{A} caHolderInfos:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(caHolderInfos));
 
                 }
                 catch (Exception ex)
@@ -106,9 +101,6 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                     _logger.LogError(ex, "create token portkeyUrl:{A} errMsg:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(ex.Message));
                     return null;
                 }
-
-  
-                _logger.LogInformation("create token caHolderInfos:{A}",JsonConvert.SerializeObject(caHolderInfos));
 
                 if (caHolderInfos == null || caHolderInfos.CaHolderManagerInfo==null || caHolderInfos.CaHolderManagerInfo.Count == 0)
                 {
@@ -135,8 +127,6 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         }
         else
         {
-            _logger.LogInformation("create token user:not _source_portkey");
-
             var time = DateTime.UnixEpoch.AddMilliseconds(timestamp);
             var timeRangeConfig = context.HttpContext.RequestServices.GetRequiredService<IOptionsSnapshot<TimeRangeOption>>()
                 .Value;
@@ -184,7 +174,6 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 CaAddressSide = caAddressSide
             };
             await _userInformationProvider.SaveUserSourceAsync(userSourceInput);
-            _logger.LogInformation("create token userSourceInput:{A}",JsonConvert.SerializeObject(userSourceInput));
 
         }
 
@@ -206,7 +195,6 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 .SetAsync(principal);
 
             var token = new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
-            //_logger.LogInformation("create token claimsPrincipal:{A}, token:{B}",JsonConvert.SerializeObject(claimsPrincipal),token);
             return token;
         }
         catch (Exception ex)

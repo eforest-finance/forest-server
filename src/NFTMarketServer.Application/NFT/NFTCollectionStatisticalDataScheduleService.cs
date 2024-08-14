@@ -61,9 +61,7 @@ public class NFTCollectionStatisticalDataScheduleService : ScheduleSyncDataServi
             var blockHeight = await _nftCollectionChangeService.HandleItemsChangesAsync(chainId, processCollectionChanges);
             
             maxProcessedBlockHeight = Math.Max(maxProcessedBlockHeight, blockHeight);
-            _logger.LogInformation("GetNFTCollectionChangesByBlockHeightAsync maxProcessedBlockHeight :{list} blockHeight:{chainId}  "
-                , maxProcessedBlockHeight, blockHeight);
-            
+
         } while (!processCollectionChanges.IsNullOrEmpty());
 
         return maxProcessedBlockHeight;

@@ -35,7 +35,6 @@ public class SeedIconScheduleService : ScheduleSyncDataService
     public override async Task<long> SyncIndexerRecordsAsync(string chainId,long lastEndHeight, long newIndexHeight)
     {
         var queryList = await _graphQlProvider.GetSyncTsmSeedRecordsAsync(chainId, lastEndHeight, newIndexHeight);
-        _logger.LogInformation("SyncSeedIconRecordsAsync queryList count: {count} queryList:{A}", queryList.Count, JsonConvert.SerializeObject(queryList));
         long blockHeight = -1;
         if (CollectionUtilities.IsNullOrEmpty(queryList))
         {
@@ -44,7 +43,6 @@ public class SeedIconScheduleService : ScheduleSyncDataService
 
         foreach (var queryDto in queryList)
         {
-            _logger.LogInformation("SyncSeedIconRecordsAsync queryDto:{A}", JsonConvert.SerializeObject(queryDto));
             blockHeight = Math.Max(blockHeight, queryDto.BlockHeight);
             var imageUrl = queryDto.SeedImage;
             if (imageUrl.IsNullOrEmpty())
