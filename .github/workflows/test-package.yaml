@@ -3,7 +3,7 @@ name: Build and Package
 on:
   push:
     branches:
-      - 'release/*'
+      - 'release/2.7.2'
 env:
   DOTNET_INSTALL_DIR: "./.dotnet"
 
