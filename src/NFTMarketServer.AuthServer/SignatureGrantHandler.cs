@@ -151,7 +151,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
         var user = await userManager.FindByNameAsync(userName);
         int count = 1;
-        while (user == null && count >=20)
+        while (user == null && count <=20)
         {
             Thread.Sleep(1000);
             _logger.LogInformation("create token userName:{A} count:{B} user:{C} ",userName, count ,JsonConvert.SerializeObject(user));
