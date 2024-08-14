@@ -54,6 +54,7 @@ namespace NFTMarketServer.NFT
             INFTCollectionChangeService nftCollectionChangeService,
             IOptionsMonitor<RecommendedCollectionsOptions> optionsMonitor, 
             IOptionsMonitor<NFTImageUrlOptions> nftImageUrlOptionsMonitor,
+            INFTActivityProvider nftActivityProvider,
             NFTMarketServer.Users.Provider.IUserBalanceProvider userBalanceProvider)
         {
             _userAppService = userAppService;
@@ -67,6 +68,7 @@ namespace NFTMarketServer.NFT
             _optionsMonitor = optionsMonitor;
             _nftImageUrlOptionsMonitor = nftImageUrlOptionsMonitor;
             _userBalanceProvider = userBalanceProvider;
+            _nftActivityProvider = nftActivityProvider;
         }
 
         public async Task<PagedResultDto<NFTCollectionIndexDto>> GetNFTCollectionsAsync(GetNFTCollectionsInput input)
