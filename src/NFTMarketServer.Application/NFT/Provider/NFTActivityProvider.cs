@@ -460,10 +460,11 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             var task = _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending, sortExp: item => item.Timestamp);
             tasks.Add(task.ContinueWith(result =>
             {
-                if (result.Result.Item2.IsNullOrEmpty())
+                if (result == null || result.Result == null || result.Result.Item2.IsNullOrEmpty())
                 {
                     return string.Empty;
                 }
+
                 return result.Result.Item2.First().NFTImage;
             }));
         }
