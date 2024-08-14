@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic;
 using Nest;
 using Newtonsoft.Json;
 using NFTMarketServer.Basic;
@@ -568,18 +570,27 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         return mySeedDto;
     }
 
-    public async Task<TransactionFeeDto> GetTransactionFeeAsync()
+    public async Task<TransactionFeeDto> GetTransactionFeeAsync(string symbol)
     {
         var transactionFeeOption = _optionsMonitor.CurrentValue;
         var marketData = await _tokenAppService.GetTokenMarketDataAsync(SymbolHelper.CoinGeckoELF(), null);
         var result = decimal.Multiply(transactionFeeOption.TransactionFee, marketData.Price);
         var roundedResult = Math.Round(result, transactionFeeOption.Decimals);
+
+        var collectionLoyaltyRates = transactionFeeOption.CollectionLoyaltyRates;
+        decimal creatorLoyaltyRate = 0;
+        if (!collectionLoyaltyRates.IsNullOrEmpty()  && collectionLoyaltyRates.FirstOrDefault(x=>x.Symbol == symbol) != null)
+        {
+            creatorLoyaltyRate = collectionLoyaltyRates.FirstOrDefault(x => x.Symbol == symbol).Rate;
+        }
+       
+
         return new TransactionFeeDto
         {
             TransactionFee = transactionFeeOption.TransactionFee,
             TransactionFeeOfUsd = roundedResult,
             ForestServiceRate = transactionFeeOption.ForestServiceRate,
-            CreatorLoyaltyRate = transactionFeeOption.CreatorLoyaltyRate,
+            CreatorLoyaltyRate = creatorLoyaltyRate,
             AIImageFee = transactionFeeOption.AIImageFee
         };
     }
@@ -651,6 +662,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
     {
+        seedSymbol.FuzzySymbol = seedSymbol.Symbol;
+        seedSymbol.FuzzyTokenName = seedSymbol.TokenName;
+        seedSymbol.FuzzyTokenId = SymbolHelper.GetTrailingNumber(seedSymbol.Symbol);
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbol);
     }
     
@@ -727,6 +741,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             seedSymbolIndex.LatestDealPrice = CommonConstant.DefaultValueNone;
         }
+        seedSymbolIndex.FuzzySymbol = seedSymbolIndex.Symbol;
+        seedSymbolIndex.FuzzyTokenName = seedSymbolIndex.TokenName;
+        seedSymbolIndex.FuzzyTokenId = SymbolHelper.GetTrailingNumber(seedSymbolIndex.Symbol);
             
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbolIndex);
     } 

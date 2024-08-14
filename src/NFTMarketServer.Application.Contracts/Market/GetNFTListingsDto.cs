@@ -13,4 +13,7 @@ public class GetNFTListingsDto
     public int SkipCount { get; set; }
     
     public int MaxResultCount { get; set; }
+    
+    public int BlockHeight { get; set; }
+
 }

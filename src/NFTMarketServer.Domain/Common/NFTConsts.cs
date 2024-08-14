@@ -31,4 +31,6 @@ public static class NFTSymbolBasicConstants
     public const string  BurnedAllNftScript = "doc['supply'].value == 0 && doc['issued'].value == doc['totalSupply'].value";
     public const string IssuedLessThenOneGetThenZeroANftScript = "((doc['supply'].value / Math.pow(10, doc['decimals'].value)) < 1) && ((doc['supply'].value / Math.pow(10, doc['decimals'].value)) > 0)";
     public const string  CreateFailedANftScript = "doc['supply'].value == 0 && doc['issued'].value == 0";
+    public const char StatisticsKeySeparator = ':';
+
 }
