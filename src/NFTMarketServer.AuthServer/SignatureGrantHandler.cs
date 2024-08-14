@@ -160,6 +160,10 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         }
 
         _logger.LogInformation("create token user:{A} userName:{B} address:{C} caHash:{D}",JsonConvert.SerializeObject(user), userName, address, caHash);
+        if (user == null)
+        {
+            throw  new SystemException("user is null");
+        }
 
         if (user == null)
         {
