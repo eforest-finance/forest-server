@@ -149,7 +149,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         }
 
         var user = await userManager.FindByNameAsync(userName);
-        _logger.LogInformation("create token user:{A} userName:{B}",JsonConvert.SerializeObject(user), userName);
+        _logger.LogInformation("create token user:{A} userName:{B} address:{C} caHash:{D}",JsonConvert.SerializeObject(user), userName, address, caHash);
 
         if (user == null)
         {
