@@ -12,6 +12,7 @@ public class TrendingCollectionsDto : EntityDto<string>
     public string TokenName { get; set; }
     
     public string LogoImage { get; set; }
+    public string PreviewImage { get; set; }
 
     public long ItemTotal { get; set; }
     
@@ -24,7 +25,5 @@ public class TrendingCollectionsDto : EntityDto<string>
     public decimal VolumeTotal { get; set; } = 0;
     public decimal VolumeTotalChange { get; set; } = 0;
     public decimal FloorChange { get; set; } = 0;
-    public long SalesTotal { get; set; } = 0;
-    public long SupplyTotal { get; set; } = 0;
 
 }
