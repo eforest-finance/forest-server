@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Nest;
 using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
@@ -131,7 +132,7 @@ namespace NFTMarketServer.NFT
         {
             if (input.SkipCount < 0)
             {
-                return buildInitSearchNFTCollectionsDto();
+                return BuildInitSearchNFTCollectionsDto();
             }
 
             var tuple = await _collectionExtensionProvider.GetNFTCollectionExtensionAsync(input);
@@ -139,7 +140,7 @@ namespace NFTMarketServer.NFT
             var extensionList = tuple.Item2;
             if (extensionList.IsNullOrEmpty())
             {
-                return buildInitSearchNFTCollectionsDto();
+                return BuildInitSearchNFTCollectionsDto();
             }
 
             var ids = extensionList.Select(r => r.Id).ToList();
@@ -153,6 +154,37 @@ namespace NFTMarketServer.NFT
                 Items = resultList,
                 TotalCount = tuple.Item1
             };
+        }
+
+        public async Task<PagedResultDto<TrendingCollectionsDto>> TrendingCollectionsAsync()
+        {
+            var input = new SearchNFTCollectionsInput
+            {
+                SkipCount = 0,
+                MaxResultCount = 5,
+                DateRangeType = DateRangeType.bymonth,
+                Sort = "volumeTotal",
+                SortType = SortOrder.Descending
+            };
+            var tuple = await _collectionExtensionProvider.GetNFTCollectionExtensionAsync(input);
+            
+            var extensionList = tuple.Item2;
+            if (extensionList.IsNullOrEmpty())
+            {
+                return BuildInitTrendingCollectionsDto();
+            }
+            var ids = extensionList.Select(r => r.Id).ToList();
+            var collectionDictionary = await _nftCollectionProvider.GetNFTCollectionIndexByIdsAsync(ids);
+
+            var resultList = extensionList
+                .Select(index => MapForTrendingCollectionsDto(index, collectionDictionary))
+                .ToList();
+            return new PagedResultDto<TrendingCollectionsDto>
+            {
+                Items = resultList,
+                TotalCount = tuple.Item1
+            };
+            
         }
 
         public async Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCollectionsAsync()
@@ -193,11 +225,19 @@ namespace NFTMarketServer.NFT
             };
         }
         
-        private PagedResultDto<SearchNFTCollectionsDto> buildInitSearchNFTCollectionsDto()
+        private PagedResultDto<SearchNFTCollectionsDto> BuildInitSearchNFTCollectionsDto()
         {
             return new PagedResultDto<SearchNFTCollectionsDto>
             {
                 Items = new List<SearchNFTCollectionsDto>(),
+                TotalCount = 0
+            };
+        }
+        private PagedResultDto<TrendingCollectionsDto> BuildInitTrendingCollectionsDto()
+        {
+            return new PagedResultDto<TrendingCollectionsDto>
+            {
+                Items = new List<TrendingCollectionsDto>(),
                 TotalCount = 0
             };
         }
@@ -295,6 +335,26 @@ namespace NFTMarketServer.NFT
             }
             
             return searchNftCollectionsDto;
+        }
+        
+        private TrendingCollectionsDto MapForTrendingCollectionsDto(NFTCollectionExtensionIndex index, 
+            Dictionary<string, IndexerNFTCollection> collectionInfos)
+        {
+            var trendingCollectionsDto =
+                _objectMapper.Map<NFTCollectionExtensionIndex, TrendingCollectionsDto>(index);
+            
+            trendingCollectionsDto.FloorChange = index.CurrentDayFloorChange;
+            trendingCollectionsDto.VolumeTotal = index.CurrentMonthVolumeTotal;
+            trendingCollectionsDto.VolumeTotalChange = index.CurrentMonthVolumeTotalChange;
+
+            if (collectionInfos != null && collectionInfos.TryGetValue(index.Id, out var info))
+            { 
+                trendingCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
+                trendingCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
+                trendingCollectionsDto.PreviewImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
+            }
+            
+            return trendingCollectionsDto;
         }
         
         private SearchCollectionsFloorPriceDto MapForSearchNftCollectionsFloorPriceDto(NFTCollectionExtensionIndex index)
