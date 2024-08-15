@@ -150,20 +150,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         }
 
         var user = await userManager.FindByNameAsync(userName);
-        int count = 1;
-        while (user == null && count <=20)
-        {
-            Thread.Sleep(1000);
-            _logger.LogInformation("create token userName:{A} count:{B} user:{C} ",userName, count ,JsonConvert.SerializeObject(user));
-            count++;
-            user = await userManager.FindByNameAsync(userName);
-        }
-
         _logger.LogInformation("create token user:{A} userName:{B} address:{C} caHash:{D}",JsonConvert.SerializeObject(user), userName, address, caHash);
-        if (user == null)
-        {
-            throw  new SystemException("user is null");
-        }
 
         if (user == null)
         {
