@@ -45,7 +45,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
     public async Task<IActionResult> HandleAsync(ExtensionGrantContext context)
     {
         _logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<SignatureGrantHandler>>();
-        _logger.LogInformation("create token start auth");
+        _logger.LogInformation("create token start");
         var publicKeyVal = context.Request.GetParameter("pubkey").ToString();
         var signatureVal = context.Request.GetParameter("signature").ToString();
         var timestampVal = context.Request.GetParameter("timestamp").ToString();
