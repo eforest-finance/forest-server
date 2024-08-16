@@ -93,6 +93,13 @@ namespace NFTMarketServer.Controllers
         }
         
         [HttpGet]
+        [Route("trending-collections")]
+        public Task<PagedResultDto<TrendingCollectionsDto>> GetTrendingCollectionsAsync()
+        {
+            return _nftCollectionAppService.TrendingCollectionsAsync();
+        }
+        
+        [HttpGet]
         [Route("recommended-collections")]
         public Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCcollectionsAsync()
         {

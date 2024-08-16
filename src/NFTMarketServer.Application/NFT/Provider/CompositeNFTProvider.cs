@@ -111,7 +111,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         }
         if (!searchName.IsNullOrEmpty() && fuzzySearchSwitch)
         {
-            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + searchName + "*")));
+            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + searchName + "*").CaseInsensitive(true)));
         }
 
         QueryContainer Filter(QueryContainerDescriptor<NFTInfoNewIndex> f)
@@ -160,7 +160,7 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         }
         if (!searchName.IsNullOrEmpty() && fuzzySearchSwitch)
         {
-            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + searchName + "*")));
+            mustQuery.Add(q => q.Wildcard(i => i.Field(f => f.FuzzyTokenName).Value("*" + searchName + "*").CaseInsensitive(true)));
         }
         if (!nftInfoIdList.IsNullOrEmpty())
         {

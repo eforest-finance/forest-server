@@ -10,7 +10,6 @@ using Nest;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Helper;
-using NFTMarketServer.Market;
 using NFTMarketServer.NFT.Dto;
 using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Etos;
@@ -40,6 +39,8 @@ public partial interface INFTActivityProvider
     Task<Tuple<long, List<NFTActivityIndex>>> GetCollectedActivityListAsync(GetCollectedActivityListDto dto);
     
     Task<Tuple<long, List<NFTActivityIndex>>> GetActivityByIdListAsync(List<string> idList);
+
+    Task<Dictionary<string, string>> GetRecentNFTImageByCollectionIdList(List<string> collectionIds);
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
@@ -51,12 +52,14 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
     private readonly INESTRepository<CollectionRelationIndex, string> _collectionRelationIndexRepository;
     private readonly INESTRepository<NFTActivityIndex, string> _nftActivityIndexRepository;
     private readonly IObjectMapper _objectMapper;
+    private readonly IElasticClient _elasticClient;
 
     public NFTActivityProvider(IGraphQLHelper graphQlHelper,
         INESTRepository<NFTInfoNewIndex, string> nftInfoNewIndexRepository,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
         INESTRepository<CollectionRelationIndex, string> collectionRelationIndexRepository,
         INESTRepository<NFTActivityIndex, string> nftActivityIndexRepository,
+        IElasticClient elasticClient,
         ILogger<NFTActivityProvider> logger,
         IObjectMapper objectMapper)
     {
@@ -67,6 +70,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         _collectionRelationIndexRepository = collectionRelationIndexRepository;
         _nftActivityIndexRepository = nftActivityIndexRepository;
         _objectMapper = objectMapper;
+        _elasticClient = elasticClient;
     }
     
     public async Task<IndexerNFTActivityPage> GetNFTActivityListAsync(string NFtInfoId, List<int> types, long timestampMin,
@@ -437,5 +441,41 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             sortExp: item => item.Timestamp);
 
         return result;
+    }
+
+    public async Task<Dictionary<string, string>> GetRecentNFTImageByCollectionIdList(List<string> collectionIds)
+    {
+        var resultDic = new Dictionary<string, string>();
+        var tasks = new List<Task<string>>();
+
+        foreach (var collectionId in collectionIds)
+        {
+            var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.CollectionId).Value(collectionId)));
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.Type).Value(NFTActivityType.ListWithFixedPrice)));
+
+            QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f)
+                => f.Bool(b => b.Must(mustQuery));
+
+            var task = _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending, sortExp: item => item.Timestamp);
+            tasks.Add(task.ContinueWith(result =>
+            {
+                if (result == null || result.Result == null || result.Result.Item2.IsNullOrEmpty())
+                {
+                    return string.Empty;
+                }
+
+                return result.Result.Item2.First().NFTImage;
+            }));
+        }
+
+        await Task.WhenAll(tasks);
+
+        for (int i = 0; i < collectionIds.Count; i++)
+        {
+            resultDic[collectionIds[i]] = tasks[i].Result;
+        }
+
+        return resultDic;
     }
 }
