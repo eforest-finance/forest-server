@@ -33,6 +33,8 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
 
     public async Task<long> GetListAsync(GetNewUserInput input)
     {
+        _logger.LogInformation("StatisticsAppService.GetListAsync start min:{min}, max:{max}", input.TimestampMin, input.TimestampMax);
+
         var initStartTime = 1640966400;
         var types = new List<int>()
         {

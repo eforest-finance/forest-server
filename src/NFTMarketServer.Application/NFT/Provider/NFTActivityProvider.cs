@@ -497,7 +497,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
                 q.Terms(i => i.Field(f => f.Type).Terms(types)));
         }
 
-        if (startTime is > 0)
+        if (startTime is >= 0)
         {
             mustQuery.Add(q => q.DateRange(i =>
                 i.Field(f => f.Timestamp)
