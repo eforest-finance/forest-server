@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Users;
 using Volo.Abp;
@@ -16,15 +17,18 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
     private readonly IUserAppService _userAppService;
     private readonly INFTActivityProvider _nftActivityProvider;
     private readonly IObjectMapper _objectMapper;
+    private readonly ILogger<StatisticsAppService> _logger;
 
     public StatisticsAppService(
         IUserAppService userAppService,
         INFTActivityProvider nftActivityProvider,
-        IObjectMapper objectMapper)
+        IObjectMapper objectMapper,
+        ILogger<StatisticsAppService> logger)
     {
         _userAppService = userAppService;
         _nftActivityProvider = nftActivityProvider;
         _objectMapper = objectMapper;
+        _logger = logger;
     }
 
     public async Task<long> GetListAsync(GetNewUserInput input)
@@ -46,6 +50,7 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
         }
 
         var currentAddresses = currentActivityTuple.Item2.Select(x => x.From).Distinct().ToList();
+        _logger.LogInformation("StatisticsAppService.GetListAsync  , currentAddresses: {currentAddresses}", currentAddresses);
 
         var lastDayTime = input.TimestampMax - 3600 * 24;
         var activityHistoryTuples = await _nftActivityProvider.GetActivityListAsync(currentAddresses, types, initStartTime, lastDayTime);
@@ -54,6 +59,7 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
             return currentAddresses.Count;
         }
         var historyAddresses = activityHistoryTuples.Item2.Select(x => x.From).Distinct().ToList();
+        _logger.LogInformation("StatisticsAppService.GetListAsync  , historyAddresses: {historyAddresses}", historyAddresses);
         var newUserCount = historyAddresses.IsNullOrEmpty()
             ? currentAddresses.Count
             : (currentAddresses.Count - historyAddresses.Count);
