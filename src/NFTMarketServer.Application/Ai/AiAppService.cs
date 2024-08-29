@@ -526,7 +526,6 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     private async Task<string> SendTransactionAsync(string chainId, Transaction transaction)
     {
         var transactionOutput = await _contractProvider.SendTransactionAsync(chainId, transaction);
-
         var transactionId = transactionOutput.TransactionId;
 
         if (!_openAiOptionsMonitor.CurrentValue.RepeatRequestIsOn)
