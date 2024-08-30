@@ -33,7 +33,7 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
     {
         _logger.LogInformation("StatisticsAppService.GetListAsync start min:{min}, max:{max}", input.TimestampMin, input.TimestampMax);
 
-        var initStartTime = 1640966400;
+        var initStartTime = 1640966400000;
         var types = new List<int>()
         {
             EnumHelper.GetIndex(NFTActivityType.Sale),
@@ -52,7 +52,7 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
         var currentAddresses = currentActivityTuple.Item2.Select(x => x.From).Distinct().ToList();
         _logger.LogInformation("StatisticsAppService.GetListAsync  , currentAddresses: {currentAddresses} count:{count}, min:{min}, max:{max}", currentAddresses,currentAddresses.Count, input.TimestampMin, input.TimestampMax);
 
-        var lastDayTime = input.TimestampMax - 3600 * 24;
+        var lastDayTime = input.TimestampMax - 3600 * 24 * 1000;
         var activityHistoryTuples = await _nftActivityProvider.GetActivityListAsync(currentAddresses, types, initStartTime, lastDayTime);
         if (activityHistoryTuples == null || activityHistoryTuples.Item1 == 0)
         {
