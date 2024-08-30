@@ -50,7 +50,7 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
         }
 
         var currentAddresses = currentActivityTuple.Item2.Select(x => x.From).Distinct().ToList();
-        _logger.LogInformation("StatisticsAppService.GetListAsync  , currentAddresses: {currentAddresses} min:{min}, max:{max}", currentAddresses,input.TimestampMin, input.TimestampMax);
+        _logger.LogInformation("StatisticsAppService.GetListAsync  , currentAddresses: {currentAddresses} count:{count}, min:{min}, max:{max}", currentAddresses,currentAddresses.Count, input.TimestampMin, input.TimestampMax);
 
         var lastDayTime = input.TimestampMax - 3600 * 24;
         var activityHistoryTuples = await _nftActivityProvider.GetActivityListAsync(currentAddresses, types, initStartTime, lastDayTime);
@@ -59,7 +59,7 @@ public class StatisticsAppService : NFTMarketServerAppService, IStatisticsAppSer
             return currentAddresses.Count;
         }
         var historyAddresses = activityHistoryTuples.Item2.Select(x => x.From).Distinct().ToList();
-        _logger.LogInformation("StatisticsAppService.GetListAsync  , historyAddresses: {historyAddresses} min:{min}, max:{max}", historyAddresses,input.TimestampMin, input.TimestampMax);
+        _logger.LogInformation("StatisticsAppService.GetListAsync  , historyAddresses: {historyAddresses} count:{count}, min:{min}, max:{max}", historyAddresses,historyAddresses.Count,input.TimestampMin, input.TimestampMax);
         var newUserCount = historyAddresses.IsNullOrEmpty()
             ? currentAddresses.Count
             : (currentAddresses.Count - historyAddresses.Count);
