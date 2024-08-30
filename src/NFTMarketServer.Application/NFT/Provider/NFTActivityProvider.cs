@@ -41,6 +41,9 @@ public partial interface INFTActivityProvider
     Task<Tuple<long, List<NFTActivityIndex>>> GetActivityByIdListAsync(List<string> idList);
 
     Task<Dictionary<string, string>> GetRecentNFTImageByCollectionIdList(List<string> collectionIds);
+
+    Task<Tuple<long, List<NFTActivityIndex>>> GetActivityListAsync(List<string> addresses, List<int> types, long startTime,long endTime);
+
 }
 
 public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
@@ -477,5 +480,42 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         }
 
         return resultDic;
+    }
+    
+    public async Task<Tuple<long, List<NFTActivityIndex>>> GetActivityListAsync(List<string> addresses, List<int> types, long startTime, long endTime)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+        if (addresses?.Count > 0)
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.From).Terms(addresses)));
+        }
+        
+        if (types?.Count > 0)
+        {
+            mustQuery.Add(q => 
+                q.Terms(i => i.Field(f => f.Type).Terms(types)));
+        }
+
+        if (startTime is >= 0)
+        {
+            mustQuery.Add(q => q.DateRange(i =>
+                i.Field(f => f.Timestamp)
+                    .GreaterThanOrEquals(DateTime.UnixEpoch.AddMilliseconds((double)startTime))));
+        }
+
+        if (endTime is > 0)
+        {
+            mustQuery.Add(q => q.DateRange(i =>
+                i.Field(f => f.Timestamp)
+                    .LessThanOrEquals(DateTime.UnixEpoch.AddMilliseconds((double)endTime))));
+        }
+
+        QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var result = await _nftActivityIndexRepository.GetListAsync(Filter);
+
+        return result;
     }
 }
