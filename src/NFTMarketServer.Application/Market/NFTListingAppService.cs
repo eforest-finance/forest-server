@@ -101,7 +101,7 @@ namespace NFTMarketServer.Market
                     if (compositeNFTInfoDic == null || compositeNFTInfoDic.Count == 0) return item;
                     _logger.LogInformation("GetNFTListingsAsync step1 compositeNFTInfoDic:{A}",JsonConvert.SerializeObject(compositeNFTInfoDic));
 
-                    item.Decimals = (int)compositeNFTInfoDic[i.BusinessId]?.Decimals;
+                    item.Decimals = compositeNFTInfoDic[input.ChainId+"-"+input.Symbol].Decimals;
                     item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
                     item.OriginQuantity = i.Quantity;   
                     if (item.NFTInfo == null) return item;
