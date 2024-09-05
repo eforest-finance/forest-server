@@ -103,7 +103,7 @@ namespace NFTMarketServer.Market
 
                     item.Decimals = (int)compositeNFTInfoDic[i.BusinessId]?.Decimals;
                     item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
-                    item.OriginQuantity = i.RealQuantity;   
+                    item.OriginQuantity = i.Quantity;   
                     if (item.NFTInfo == null) return item;
                     
                     item.NFTInfo.NftCollection =
