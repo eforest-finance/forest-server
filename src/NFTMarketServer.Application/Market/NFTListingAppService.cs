@@ -87,7 +87,7 @@ namespace NFTMarketServer.Market
                     .Where(s => !string.IsNullOrEmpty(s))
                     .Distinct().ToList();
                 var accountDict = await _userAppService.GetAccountsAsync(addresses);
-                var nftInfoIdList = new List<string>() {input.ChainId+"_"+input.Symbol};
+                var nftInfoIdList = new List<string>() {input.ChainId+"-"+input.Symbol};
                 var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
 
                 var res = listingDto.Items.Select(i =>
