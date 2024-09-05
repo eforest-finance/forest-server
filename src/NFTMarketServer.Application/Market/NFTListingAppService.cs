@@ -99,8 +99,9 @@ namespace NFTMarketServer.Market
                     item.PurchaseToken = _objectMapper.Map<IndexerTokenInfo, TokenDto>(i.PurchaseToken);
                     //item.NFTInfo = _objectMapper.Map<IndexerNFTInfo, NFTImmutableInfoDto>(i.NftInfo);
                     if (compositeNFTInfoDic == null || compositeNFTInfoDic.Count == 0) return item;
-                    
-                    item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
+                    _logger.LogInformation("GetNFTListingsAsync step1 compositeNFTInfoDic:{A}",JsonConvert.SerializeObject(compositeNFTInfoDic));
+
+                    item.Decimals = (int)compositeNFTInfoDic[i.BusinessId]?.Decimals;
                     item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
                     item.OriginQuantity = i.RealQuantity;   
                     if (item.NFTInfo == null) return item;
