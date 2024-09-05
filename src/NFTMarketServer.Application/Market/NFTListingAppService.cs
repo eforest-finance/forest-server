@@ -109,8 +109,8 @@ namespace NFTMarketServer.Market
                     }
                     item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
 
-                    item.Quantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
-                    item.OriginQuantity = i.Quantity;
+                    item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
+                    item.OriginQuantity = i.Quantity;   
 
                     return item;
                 }).ToList();

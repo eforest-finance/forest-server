@@ -20,6 +20,8 @@ namespace NFTMarketServer.Market
         public string WhitelistId { get; set; }
         public NFTImmutableInfoDto NFTInfo { get; set; }
         public TokenDto PurchaseToken { get; set; }
+        public long RealQuantity { get; set; }
+
         public long OriginQuantity { get; set; }
         public int Decimals { get; set; }
 
