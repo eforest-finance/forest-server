@@ -86,6 +86,8 @@ namespace NFTMarketServer.Market
                     .Where(s => !string.IsNullOrEmpty(s))
                     .Distinct().ToList();
                 var accountDict = await _userAppService.GetAccountsAsync(addresses);
+                var nftInfoIdList = new List<string>() {input.ChainId+"_"+input.Symbol};
+                var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
 
                 var res = listingDto.Items.Select(i =>
                 {
@@ -105,6 +107,10 @@ namespace NFTMarketServer.Market
                             new AccountDto(i.NftCollectionDto.CreatorAddress))?
                             .WithChainIdAddress(i.NftCollectionDto.ChainId);
                     }
+                    item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
+
+                    item.Quantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
+                    item.OriginQuantity = i.Quantity;
 
                     return item;
                 }).ToList();
