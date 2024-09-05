@@ -113,7 +113,7 @@ namespace NFTMarketServer.Market
                     _logger.LogInformation("GetNFTListingsAsync step2 listInfo:{A}",JsonConvert.SerializeObject(i));
 
                     item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
-                    item.OriginQuantity = i.Quantity;   
+                    item.OriginQuantity = i.RealQuantity;   
                     _logger.LogInformation("GetNFTListingsAsync step2 item:{A}",JsonConvert.SerializeObject(item));
 
                     return item;
