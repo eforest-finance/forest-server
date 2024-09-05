@@ -11,6 +11,7 @@ using Forest;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
@@ -91,6 +92,7 @@ namespace NFTMarketServer.Market
 
                 var res = listingDto.Items.Select(i =>
                 {
+                    _logger.LogInformation("GetNFTListingsAsync step1 listInfo:{A}",JsonConvert.SerializeObject(i));
                     i.WhitelistId = i.WhitelistId;
                     var item = _objectMapper.Map<IndexerNFTListingInfo, NFTListingIndexDto>(i);
                     item.Owner = accountDict.GetValueOrDefault(i.Owner, new AccountDto(i.Owner))?.WithChainIdAddress(item.ChainId);
@@ -108,9 +110,11 @@ namespace NFTMarketServer.Market
                             .WithChainIdAddress(i.NftCollectionDto.ChainId);
                     }
                     item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
+                    _logger.LogInformation("GetNFTListingsAsync step2 listInfo:{A}",JsonConvert.SerializeObject(i));
 
                     item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
                     item.OriginQuantity = i.Quantity;   
+                    _logger.LogInformation("GetNFTListingsAsync step2 item:{A}",JsonConvert.SerializeObject(item));
 
                     return item;
                 }).ToList();
