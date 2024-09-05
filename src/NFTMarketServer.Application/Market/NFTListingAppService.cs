@@ -98,6 +98,10 @@ namespace NFTMarketServer.Market
                     item.Owner = accountDict.GetValueOrDefault(i.Owner, new AccountDto(i.Owner))?.WithChainIdAddress(item.ChainId);
                     item.PurchaseToken = _objectMapper.Map<IndexerTokenInfo, TokenDto>(i.PurchaseToken);
                     //item.NFTInfo = _objectMapper.Map<IndexerNFTInfo, NFTImmutableInfoDto>(i.NftInfo);
+                    
+                    item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
+                    item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
+                    item.OriginQuantity = i.RealQuantity;   
                     if (item.NFTInfo == null) return item;
                     
                     item.NFTInfo.NftCollection =
@@ -109,13 +113,6 @@ namespace NFTMarketServer.Market
                             new AccountDto(i.NftCollectionDto.CreatorAddress))?
                             .WithChainIdAddress(i.NftCollectionDto.ChainId);
                     }
-                    item.Decimals = compositeNFTInfoDic[i.BusinessId].Decimals;
-                    _logger.LogInformation("GetNFTListingsAsync step2 listInfo:{A}",JsonConvert.SerializeObject(i));
-
-                    item.RealQuantity = FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
-                    item.OriginQuantity = i.RealQuantity;   
-                    _logger.LogInformation("GetNFTListingsAsync step2 item:{A}",JsonConvert.SerializeObject(item));
-
                     return item;
                 }).ToList();
 
