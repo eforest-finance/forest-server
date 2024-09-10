@@ -124,6 +124,7 @@ namespace NFTMarketServer
             Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
             Configure<StatisticsUserListRecordOptions>(configuration.GetSection("StatisticsUserListRecordOptions"));
             Configure<FuzzySearchOptions>(configuration.GetSection("FuzzySearchOptions"));
+            Configure<PlatformNFTOptions>(configuration.GetSection("PlatformNFT"));
 
             ConfigureTokenBucketService(context, configuration);
             ConfigureDistributedLocking(context, configuration);
