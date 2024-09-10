@@ -93,7 +93,7 @@ public class PlatformNFTOptions
     public string PrivateKey { get; set; }
     public string CollectionOwnerProxyAccountHash { get; set; }
     public int UserCreateLimit { get; set; } = 1;
-    public int ProxyContractMainChainAddress { get; set; }
-    public int ProxyContractSideChainAddress { get; set; }
+    public string ProxyContractMainChainAddress { get; set; }
+    public string ProxyContractSideChainAddress { get; set; }
 
 }
