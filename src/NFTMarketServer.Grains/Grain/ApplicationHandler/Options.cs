@@ -81,3 +81,19 @@ public class StatisticsUserListRecordOptions
     public bool SendTxSwitch { get; set; } = false;
 
 }
+
+public class PlatformNFTOptions
+{
+    public bool CreateSwitch { get; set; }
+    public string CollectionSymbol { get; set; }
+    
+    public string SymbolPrefix { get; set; }
+    public string CreateChainId { get; set; }
+    public string CollectionOwnerAddress { get; set; }
+    public string PrivateKey { get; set; }
+    public string CollectionOwnerProxyAccountHash { get; set; }
+    public int UserCreateLimit { get; set; } = 1;
+    public int ProxyContractMainChainAddress { get; set; }
+    public int ProxyContractSideChainAddress { get; set; }
+
+}
