@@ -1,36 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using AElf.Indexing.Elasticsearch;
-using AElf.Types;
-using Forest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using NFTMarketServer.Ai;
-using NFTMarketServer.Ai.Index;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common.AElfSdk;
-using NFTMarketServer.Common.Http;
-using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.NFTInfo;
-using NFTMarketServer.NFT;
-using NFTMarketServer.NFT.Provider;
-using NFTMarketServer.Redis;
 using NFTMarketServer.Users;
-using Org.BouncyCastle.Security;
 using Orleans;
-using Orleans.Runtime;
-using Portkey.Contracts.CA;
 using Volo.Abp;
-using Volo.Abp.Application.Dtos;
-using Volo.Abp.DistributedLocking;
 using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.Platform;
@@ -42,18 +22,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
     private readonly IOptionsMonitor<PlatformNFTOptions> _platformOptionsMonitor;
     private readonly ILogger<PlatformNFTAppService> _logger;
     private readonly IContractProvider _contractProvider;
-    private readonly ISymbolIconAppService _symbolIconAppService;
     private readonly IUserAppService _userAppService;
-    private readonly INESTRepository<AiCreateIndex, string> _aiCreateIndexRepository;
-    private readonly INESTRepository<AIImageIndex, string> _aIImageIndexRepository;
-    private readonly IAIArtProvider _aiArtProvider;
-    private readonly IHttpService _httpService;
-    private readonly IOpenAiRedisTokenBucket _openAiRedisTokenBucket;
-    private readonly IOptionsMonitor<AIPromptsOptions> _aiPromptsOptions;
     private readonly IObjectMapper _objectMapper;
-    private readonly IAbpDistributedLock _distributedLock;
-    private const int PromotMaxLength = 500;
-    private const int NegativePromotMaxLength = 400;
     private readonly IClusterClient _clusterClient;
 
 
@@ -61,16 +31,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         IOptionsMonitor<PlatformNFTOptions> platformOptionsMonitor,
         ILogger<PlatformNFTAppService> logger,
         IContractProvider contractProvider,
-        ISymbolIconAppService symbolIconAppService,
         IUserAppService userAppService,
-        INESTRepository<AiCreateIndex, string> aiCreateIndexRepository,
-        INESTRepository<AIImageIndex, string> aIImageIndexRepository,
-        IAIArtProvider aiArtProvider,
-        IHttpService httpService,
         IObjectMapper objectMapper,
-        IAbpDistributedLock distributedLock,
-        IOpenAiRedisTokenBucket openAiRedisTokenBucket,
-        IOptionsMonitor<AIPromptsOptions> aiPromptsOptions,
         IClusterClient clusterClient
     )
     {
@@ -78,16 +40,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         _platformOptionsMonitor = platformOptionsMonitor;
         _logger = logger;
         _contractProvider = contractProvider;
-        _symbolIconAppService = symbolIconAppService;
         _userAppService = userAppService;
-        _aiCreateIndexRepository = aiCreateIndexRepository;
-        _aIImageIndexRepository = aIImageIndexRepository;
-        _aiArtProvider = aiArtProvider;
-        _openAiRedisTokenBucket = openAiRedisTokenBucket;
-        _aiPromptsOptions = aiPromptsOptions;
-        _httpService = httpService;
         _objectMapper = objectMapper;
-        _distributedLock = distributedLock;
         _clusterClient = clusterClient;
 
     }
@@ -129,13 +83,13 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             var tokenIdGrain = _clusterClient.GetGrain<IPlatformNFTTokenIdGrain>(collectionSymbol);
             var tokenIdGrainDto = (await tokenIdGrain.GetPlatformNFTCurrentTokenIdAsync()).Data;
 
-            if (tokenIdGrainDto != null && tokenIdGrainDto.TokenId.IsNullOrEmpty())
+            if (tokenIdGrainDto == null)
             {
                 return new ResultDto<CreatePlatformNFTOutput>() {Success = false, Message = "No token ID information available"};
             }
 
-            var currentTokenId = tokenIdGrainDto.TokenId;
-            var nextTokenId = currentTokenId + 1;
+            var currentTokenId = tokenIdGrainDto.TokenId.IsNullOrEmpty()?"0":tokenIdGrainDto.TokenId;
+            var nextTokenId = int.Parse(currentTokenId) + 1;
             nftSymbol = string.Concat(_platformOptionsMonitor.CurrentValue.SymbolPrefix,
                 NFTSymbolBasicConstants.NFTSymbolSeparator, nextTokenId);
             
