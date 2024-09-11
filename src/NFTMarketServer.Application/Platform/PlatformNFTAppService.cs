@@ -155,7 +155,6 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
 
             if (!createSwitch)
             {
-                throw new Exception("You have exceeded the NFT creation limit for this event");
                 throw new Exception("The NFT creation activity has ended");
             }
            
