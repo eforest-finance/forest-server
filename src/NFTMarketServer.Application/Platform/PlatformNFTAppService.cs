@@ -149,7 +149,14 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("The NFT creation activity has ended");
             }
-
+            var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(currentUserAddress);
+            //update user create record:Prevent duplicate submissions
+            await createPlatformNFTGrain.SaveCreatePlatformNFTAsync(new CreatePlatformNFTGrainInput()
+            {
+                Address = currentUserAddress,
+                IsBack = false
+            });
+            
             var collectionIcon = _platformOptionsMonitor.CurrentValue.CollectionIcon;
             var collectionName = _platformOptionsMonitor.CurrentValue.CollectionName;
             currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
@@ -162,19 +169,12 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 currentUserAddress, JsonConvert.SerializeObject(input));
 
             var createLimit = _platformOptionsMonitor.CurrentValue.UserCreateLimit;
-            var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(currentUserAddress);
             var grainDto = (await createPlatformNFTGrain.GetCreatePlatformNFTAsync()).Data;
-            if (grainDto != null && grainDto.Count >= createLimit)
+            if (grainDto != null && grainDto.Count > createLimit)
             {
                 throw new Exception("You have exceeded the NFT creation limit for this event");
             }
-            //update user create record:Prevent duplicate submissions
-            await createPlatformNFTGrain.SaveCreatePlatformNFTAsync(new CreatePlatformNFTGrainInput()
-            {
-                Address = currentUserAddress,
-                IsBack = false
-            });
-            
+
             var collectionSymbol = _platformOptionsMonitor.CurrentValue.CollectionSymbol;
             var nftSymbol = "";
             //get current token Id
