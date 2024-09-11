@@ -110,7 +110,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             };
     }
 
-    private void IssueNFT()
+    private void IssueNft()
     {
     }
 
@@ -125,6 +125,10 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("The NFT creation activity has ended");
             }
+
+            var collectionIcon = _platformOptionsMonitor.CurrentValue.CollectionIcon;
+            var collectionName = _platformOptionsMonitor.CurrentValue.CollectionName;
+
 
             currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
             if (currentUserAddress.IsNullOrEmpty())
@@ -172,7 +176,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 CollectionId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator,collectionSymbol),
                 NFTSymbol = nftSymbol,
                 NFTId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator, nftSymbol),
-                CollectionIcon = ""
+                CollectionIcon = collectionIcon,
+                CollectionName = collectionName
             };
         }
         catch (Exception e)

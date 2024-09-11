@@ -10,5 +10,6 @@ public class CreatePlatformNFTOutput
     public string NFTId { get; set; }
     
     public string CollectionIcon{ get; set; }
+    public string CollectionName{ get; set; }
 
 }
