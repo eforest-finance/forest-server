@@ -336,10 +336,15 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             var createLimit = _platformOptionsMonitor.CurrentValue.UserCreateLimit;
             var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(address);
             var grainDto = (await createPlatformNFTGrain.GetCreatePlatformNFTAsync()).Data;
+            var createChainId = _platformOptionsMonitor.CurrentValue.CreateChainId;
+            var collectionSymbol = _platformOptionsMonitor.CurrentValue.CollectionSymbol;
+
             var result = new CreatePlatformNFTRecordInfo()
             {
                 NFTCount = 0,
-                IsDone = false
+                IsDone = false,
+                CollectionId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator,collectionSymbol)
+
             };
             if (grainDto == null || grainDto.Count == 0) return result;
 
