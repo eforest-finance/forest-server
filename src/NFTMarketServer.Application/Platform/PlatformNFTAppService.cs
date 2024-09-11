@@ -226,7 +226,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                     await tokenIdGrain.SavePlatformNFTTokenIdAsync(new PlatformNFTTokenIdGrainInput()
                     {
                         CollectionSymbol = collectionSymbol,
-                        TokenId = (nextTokenId+1).ToString()
+                        TokenId = (nextTokenId).ToString()
                     });
                 }
 

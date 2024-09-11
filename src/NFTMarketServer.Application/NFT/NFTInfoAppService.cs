@@ -1090,31 +1090,38 @@ namespace NFTMarketServer.NFT
         public async Task CreateNFTInfoExtensionAsync(CreateNFTExtensionInput input)
         {
             string id = IdGenerateHelper.GetNftExtensionId(input.ChainId, input.Symbol);
-            _logger.LogInformation("CreateNFTInfoExtensionAsync , id: {id}", id);
-            var fileExtension = string.IsNullOrEmpty(input.File) ? null : input.File.Split(".").Last().ToLower();
-            var extension = new NftInfoExtensionGrainDto()
+            try
             {
-                Id = id,
-                ChainId = input.ChainId,
-                Description = input.Description,
-                NFTSymbol = input.Symbol,
-                TransactionId = input.TransactionId,
-                ExternalLink = input.ExternalLink,
-                PreviewImage = input.PreviewImage,
-                File = input.File,
-                FileExtension = fileExtension,
-                CoverImageUrl = input.CoverImageUrl
-            };
-            var userGrain = _clusterClient.GetGrain<INftInfoExtensionGrain>(extension.Id);
-            var result = await userGrain.CreateNftInfoExtensionAsync(extension);
-            if (!result.Success)
-            {
-                _logger.LogError("Create NftInfoExtension fail, NftInfoExtension id: {id}.", extension.Id);
-                return;
-            }
+                _logger.LogInformation("CreateNFTInfoExtensionAsync , id: {id}", id);
+                var fileExtension = string.IsNullOrEmpty(input.File) ? null : input.File.Split(".").Last().ToLower();
+                var extension = new NftInfoExtensionGrainDto()
+                {
+                    Id = id,
+                    ChainId = input.ChainId,
+                    Description = input.Description,
+                    NFTSymbol = input.Symbol,
+                    TransactionId = input.TransactionId,
+                    ExternalLink = input.ExternalLink,
+                    PreviewImage = input.PreviewImage,
+                    File = input.File,
+                    FileExtension = fileExtension,
+                    CoverImageUrl = input.CoverImageUrl
+                };
+                var userGrain = _clusterClient.GetGrain<INftInfoExtensionGrain>(extension.Id);
+                var result = await userGrain.CreateNftInfoExtensionAsync(extension);
+                if (!result.Success)
+                {
+                    _logger.LogError("Create NftInfoExtension fail, NftInfoExtension id: {id}.", extension.Id);
+                    return;
+                }
 
-            await _distributedEventBus.PublishAsync(
-                _objectMapper.Map<NftInfoExtensionGrainDto, NFTInfoExtraEto>(result.Data));
+                await _distributedEventBus.PublishAsync(
+                    _objectMapper.Map<NftInfoExtensionGrainDto, NFTInfoExtraEto>(result.Data));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,"Create NftInfoExtension exception, NftInfoExtension id: {id} errMsg:{B}.", id, e.Message);
+            }
         }
 
         public async Task AddOrUpdateNftInfoAsync(NFTInfoIndex nftInfo)
