@@ -270,7 +270,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             });
             _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}", currentUserAddress,
                 JsonConvert.SerializeObject(input), e.Message);
-            throw new Exception("Service exception");
+            throw new Exception(e.Message);
         }
     }
     public async Task<CreatePlatformNFTOutput> CreatePlatformNFTV1Async(CreatePlatformNFTInput input)
