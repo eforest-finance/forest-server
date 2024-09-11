@@ -1,5 +1,3 @@
-using JetBrains.Annotations;
-
 namespace NFTMarketServer.Grains.Grain.ApplicationHandler;
 
 public class OpenAiOptions
