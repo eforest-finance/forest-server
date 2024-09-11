@@ -8,5 +8,7 @@ public class CreatePlatformNFTOutput
     public string CollectionId { get; set; }
     public string NFTSymbol { get; set; }
     public string NFTId { get; set; }
+    
+    public string CollectionIcon{ get; set; }
 
 }
