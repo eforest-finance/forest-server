@@ -7,6 +7,7 @@ using AElf.Contracts.ProxyAccountContract;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common.AElfSdk;
@@ -176,6 +177,14 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
 
             var currentTokenId = tokenIdGrainDto.TokenId.IsNullOrEmpty() ? "0" : tokenIdGrainDto.TokenId;
             var nextTokenId = int.Parse(currentTokenId) + 1;
+            //check tokenId 
+            var excludeTokenIds = _platformOptionsMonitor.CurrentValue.ExcludeTokenIds;
+            while (!excludeTokenIds.IsNullOrEmpty() && excludeTokenIds.Contains(nextTokenId))
+            {
+                nextTokenId++;
+            }
+
+
             nftSymbol = string.Concat(_platformOptionsMonitor.CurrentValue.SymbolPrefix,
                 NFTSymbolBasicConstants.NFTSymbolSeparator, nextTokenId);
 

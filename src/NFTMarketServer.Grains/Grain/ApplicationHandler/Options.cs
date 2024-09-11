@@ -101,4 +101,6 @@ public class PlatformNFTOptions
     public string CollectionName{ get; set; }
     
     public int IssueChainId{ get; set; }
+    
+    public List<int> ExcludeTokenIds{ get; set; }
 }
