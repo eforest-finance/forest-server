@@ -151,6 +151,11 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("The NFT creation activity has ended");
             }
+            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
+            if (currentUserAddress.IsNullOrEmpty())
+            {
+                throw new Exception("Please log out and log in again");
+            }
             var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(currentUserAddress);
             //update user create record:Prevent duplicate submissions
             await createPlatformNFTGrain.SaveCreatePlatformNFTAsync(new CreatePlatformNFTGrainInput()
@@ -161,11 +166,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             
             var collectionIcon = _platformOptionsMonitor.CurrentValue.CollectionIcon;
             var collectionName = _platformOptionsMonitor.CurrentValue.CollectionName;
-            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
-            if (currentUserAddress.IsNullOrEmpty())
-            {
-                throw new Exception("Please log out and log in again");
-            }
+ 
 
             _logger.LogInformation("CreatePlatformNFTAsync request currentUserAddress:{A} input:{B}",
                 currentUserAddress, JsonConvert.SerializeObject(input));
