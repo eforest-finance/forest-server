@@ -81,7 +81,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                             Symbol = nftSymbol,
                             TokenName = tokenName,
                             TotalSupply = 10,
-                            Decimals = 8,
+                            Decimals = 0,
                             Owner = AElf.Types.Address.FromBase58(ownerVirtualAddress),
                             Issuer = AElf.Types.Address.FromBase58(ownerVirtualAddress),
                             IsBurnable = true,
@@ -97,7 +97,9 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                                     { "__nft_fileType", "image" },
                                     { "__nft_image_url", imageUrl }
                                 }
-                            }
+                            },
+                            Amount = 10,
+                            To = AElf.Types.Address.FromBase58(userAddress)
                         }
                     }
                 };
@@ -324,7 +326,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         {
             _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}", currentUserAddress,
                 JsonConvert.SerializeObject(input), e.Message);
-            throw new Exception("Service exception");
+            throw e;
         }
     }
     public async Task<CreatePlatformNFTRecordInfo> GetPlatformNFTInfoAsync(string address)
@@ -352,7 +354,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         {
             _logger.LogError(e, "GetPlatformNFTInfoAsync Exception address:{A} errMsg:{C}", address,
                 e.Message);
-            throw new Exception("Service exception"); 
+            throw e;
         }
     }
 }
