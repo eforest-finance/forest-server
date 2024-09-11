@@ -1,7 +1,4 @@
 using System.Threading.Tasks;
-using NFTMarketServer.Ai;
-using NFTMarketServer.NFT;
-using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Platform
 {
@@ -10,6 +7,7 @@ namespace NFTMarketServer.Platform
         Task<CreatePlatformNFTOutput> CreatePlatformNFTV1Async(CreatePlatformNFTInput input);
         
         Task<CreatePlatformNFTOutput> CreatePlatformNFTAsync(CreatePlatformNFTInput input);
+        Task<CreatePlatformNFTRecordInfo> GetPlatformNFTInfoAsync(string address);
 
     }
 }

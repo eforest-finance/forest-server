@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Ai;
-using NFTMarketServer.Helper;
 using NFTMarketServer.Models;
 using NFTMarketServer.NFT;
 using NFTMarketServer.Platform;
@@ -305,6 +304,13 @@ namespace NFTMarketServer.Controllers
         public async Task<CreatePlatformNFTOutput> CreatePlatformNFTV2Async(CreatePlatformNFTInput input)
         {
             return await _platformNftAppService.CreatePlatformNFTAsync(input);
+        }
+        
+        [HttpGet]
+        [Route("create-platform-nft/info")]
+        public async Task<CreatePlatformNFTRecordInfo> GetUserPlatformNFTInfoAsync(string address)
+        {
+            return await _platformNftAppService.GetPlatformNFTInfoAsync(address);
         }
     }
 }
