@@ -308,7 +308,6 @@ namespace NFTMarketServer.Controllers
         
         [HttpGet]
         [Route("create-platform-nft/info")]
-        [Authorize]
         public async Task<CreatePlatformNFTRecordInfo> GetUserPlatformNFTInfoAsync(string address)
         {
             return await _platformNftAppService.GetPlatformNFTInfoAsync(address);
