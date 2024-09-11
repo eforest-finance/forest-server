@@ -45,6 +45,10 @@ public class CreatePlatformNFTGrain : Grain<CreatePlatformNFTState>, ICreatePlat
                     Count = 1
                 };
             }
+            else if(createPlatformNFTGrainInput.IsBack)
+            {
+                State.Count -= 1;
+            }
             else
             {
                 State.Count += 1;

@@ -128,7 +128,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "CreatePlatformNFT Exception nftSymbol:{A} imageUrl:{B} userAddress:{C} errMsg:{D}",
+            _logger.LogError(e, "CreateAndIssuePlatformNFT Exception nftSymbol:{A} imageUrl:{B} userAddress:{C} errMsg:{D}",
                 nftSymbol, imageUrl, userAddress, e.Message);
         }
         return new TransactionResultDto();
@@ -164,7 +164,13 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("You have exceeded the NFT creation limit for this event");
             }
-
+            //update user create record:Prevent duplicate submissions
+            await createPlatformNFTGrain.SaveCreatePlatformNFTAsync(new CreatePlatformNFTGrainInput()
+            {
+                Address = currentUserAddress,
+                IsBack = false
+            });
+            
             var collectionSymbol = _platformOptionsMonitor.CurrentValue.CollectionSymbol;
             var nftSymbol = "";
             //get current token Id
@@ -229,7 +235,6 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                         TokenId = (nextTokenId).ToString()
                     });
                 }
-
                 throw new Exception("chain create nft fail,errMsg:"+transactionResultDto.Error);
             }
 
@@ -240,11 +245,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 CollectionSymbol = collectionSymbol,
                 TokenId = nextTokenId.ToString()
             });
-            //update user create record
-            await createPlatformNFTGrain.SaveCreatePlatformNFTAsync(new CreatePlatformNFTGrainInput()
-            {
-                Address = currentUserAddress
-            });
+            
             // extension write
             
             return new CreatePlatformNFTOutput()
@@ -261,6 +262,12 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         }
         catch (Exception e)
         {
+            var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(currentUserAddress);
+            await createPlatformNFTGrain.SaveCreatePlatformNFTAsync(new CreatePlatformNFTGrainInput()
+            {
+                Address = currentUserAddress,
+                IsBack = true
+            });
             _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}", currentUserAddress,
                 JsonConvert.SerializeObject(input), e.Message);
             throw new Exception("Service exception");
