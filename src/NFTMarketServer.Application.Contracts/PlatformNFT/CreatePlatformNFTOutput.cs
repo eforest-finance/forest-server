@@ -11,5 +11,7 @@ public class CreatePlatformNFTOutput
     
     public string CollectionIcon{ get; set; }
     public string CollectionName{ get; set; }
+    
+    public string TransactionId{ get; set; }
 
 }
