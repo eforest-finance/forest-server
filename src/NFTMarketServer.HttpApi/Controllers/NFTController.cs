@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Ai;
-using NFTMarketServer.Helper;
 using NFTMarketServer.Models;
 using NFTMarketServer.NFT;
 using NFTMarketServer.Platform;

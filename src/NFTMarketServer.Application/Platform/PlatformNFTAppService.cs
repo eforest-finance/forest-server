@@ -2,15 +2,12 @@ using System;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Client.Dto;
-using AElf.Client.Proto;
 using AElf.Client.Service;
 using AElf.Contracts.ProxyAccountContract;
-using Forest;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common.AElfSdk;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
@@ -37,7 +34,6 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
     private readonly IBlockchainClientFactory<AElfClient> _blockchainClientFactory;
 
 
-
     public PlatformNFTAppService(IOptionsMonitor<ChainOptions> chainOptionsMonitor,
         IOptionsMonitor<PlatformNFTOptions> platformOptionsMonitor,
         ILogger<PlatformNFTAppService> logger,
@@ -56,9 +52,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         _objectMapper = objectMapper;
         _clusterClient = clusterClient;
         _blockchainClientFactory = blockchainClientFactory;
-
     }
-        
+
     private async Task<string> GenerateRawTransaction(AElfClient client, string methodName, IMessage param,
         string contractAddress, string privateKey)
     {
@@ -66,67 +61,74 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 client.GetAddressFromPrivateKey(privateKey), contractAddress, methodName, param))
             .ToByteArray().ToHex();
     }
-    private async Task<string> CreateAndIssuePlatformNFT(string chainId, string ownerHash, string issuerHash, string nftSymbol, string ownerVirtualAddress, string issuerVirtualAddress, int issueChainId, string imageUrl, string fileHash, string proxyContrctAddressSide, string privateKey, string userAddress, string tokenName)
+
+    private async Task<string> CreateAndIssuePlatformNFT(string chainId, string ownerHash, string issuerHash,
+        string nftSymbol, string ownerVirtualAddress, string issuerVirtualAddress, int issueChainId, string imageUrl,
+        string fileHash, string proxyContrctAddressSide, string privateKey, string userAddress, string tokenName)
     {
         try
         {
-             var client = _blockchainClientFactory.GetClient(chainId);
-        var createNFTInputParam =
-            new BatchCreateTokenInput
-            {
-                OwnerProxyAccountHash = Hash.LoadFromHex(ownerHash),
-                IssuerProxyAccountHash = Hash.LoadFromHex(issuerHash),
-                TokenInfos =
+            var client = _blockchainClientFactory.GetClient(chainId);
+            var createNFTInputParam =
+                new BatchCreateTokenInput
                 {
-                    new TokenInfo()
+                    OwnerProxyAccountHash = Hash.LoadFromHex(ownerHash),
+                    IssuerProxyAccountHash = Hash.LoadFromHex(issuerHash),
+                    TokenInfos =
                     {
-                        Symbol = nftSymbol,
-                        TokenName = tokenName,
-                        TotalSupply = 10,
-                        Decimals = 8,
-                        Owner = AElf.Types.Address.FromBase58(ownerVirtualAddress),
-                        Issuer = AElf.Types.Address.FromBase58(ownerVirtualAddress),
-                        IsBurnable = true,
-                        IssueChainId = issueChainId,//1866392,
-                        //LockWhiteList = {}
-                        ExternalInfo = new ExternalInfo()
+                        new TokenInfo()
                         {
-                            Value =
+                            Symbol = nftSymbol,
+                            TokenName = tokenName,
+                            TotalSupply = 10,
+                            Decimals = 8,
+                            Owner = AElf.Types.Address.FromBase58(ownerVirtualAddress),
+                            Issuer = AElf.Types.Address.FromBase58(ownerVirtualAddress),
+                            IsBurnable = true,
+                            IssueChainId = issueChainId, //1866392,
+                            //LockWhiteList = {}
+                            ExternalInfo = new ExternalInfo()
                             {
-                                { "__nft_file_hash", fileHash },
-                                { "__nft_metadata", "[]" },
+                                Value =
+                                {
+                                    { "__nft_file_hash", fileHash },
+                                    { "__nft_metadata", "[]" },
 
-                                { "__nft_fileType", "image" },
-                                { "__nft_image_url", imageUrl }
+                                    { "__nft_fileType", "image" },
+                                    { "__nft_image_url", imageUrl }
+                                }
                             }
                         }
                     }
-                }
-            };
-        var batchCreateTokenRaw =
-            await GenerateRawTransaction(client, "BatchCreateToken", createNFTInputParam,
-                proxyContrctAddressSide, privateKey);
-        _logger.LogInformation("CreatePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} batchCreateTokenRaw:{D}", nftSymbol, imageUrl, userAddress, batchCreateTokenRaw);
+                };
+            var batchCreateTokenRaw =
+                await GenerateRawTransaction(client, "BatchCreateToken", createNFTInputParam,
+                    proxyContrctAddressSide, privateKey);
+            _logger.LogInformation(
+                "CreatePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} batchCreateTokenRaw:{D}", nftSymbol,
+                imageUrl, userAddress, batchCreateTokenRaw);
 
-        var result = await client.SendTransactionAsync(new SendTransactionInput()
-            { RawTransaction = batchCreateTokenRaw });
-        
-        /*transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
+            var result = await client.SendTransactionAsync(new SendTransactionInput()
+                { RawTransaction = batchCreateTokenRaw });
 
-        var times = 0;
-        while ((transactionResult.Status is "PENDING" or "NOTEXISTED") && times < 30)
-        {
-            times++;
-            await Task.Delay(1000);
-            transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
-        }*/
-        var transactionId = result == null ? "" : result.TransactionId;
-        _logger.LogInformation("CreatePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} transactionId:{D}", nftSymbol, imageUrl, userAddress, transactionId);
-        return transactionId;
+            /*transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
+    
+            var times = 0;
+            while ((transactionResult.Status is "PENDING" or "NOTEXISTED") && times < 30)
+            {
+                times++;
+                await Task.Delay(1000);
+                transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
+            }*/
+            var transactionId = result == null ? "" : result.TransactionId;
+            _logger.LogInformation("CreatePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} transactionId:{D}",
+                nftSymbol, imageUrl, userAddress, transactionId);
+            return transactionId;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "CreatePlatformNFT Exception nftSymbol:{A} imageUrl:{B} userAddress:{C} errMsg:{D}", nftSymbol, imageUrl, userAddress,e.Message);
+            _logger.LogError(e, "CreatePlatformNFT Exception nftSymbol:{A} imageUrl:{B} userAddress:{C} errMsg:{D}",
+                nftSymbol, imageUrl, userAddress, e.Message);
         }
 
         return "";
@@ -145,12 +147,14 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
 
             var collectionIcon = _platformOptionsMonitor.CurrentValue.CollectionIcon;
             var collectionName = _platformOptionsMonitor.CurrentValue.CollectionName;
-            currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
             if (currentUserAddress.IsNullOrEmpty())
             {
                 throw new Exception("Please log out and log in again");
             }
-            _logger.LogInformation("CreatePlatformNFTAsync request currentUserAddress:{A} input:{B}", currentUserAddress, JsonConvert.SerializeObject(input));
+
+            _logger.LogInformation("CreatePlatformNFTAsync request currentUserAddress:{A} input:{B}",
+                currentUserAddress, JsonConvert.SerializeObject(input));
 
             var createLimit = _platformOptionsMonitor.CurrentValue.UserCreateLimit;
             var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(currentUserAddress);
@@ -159,7 +163,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("You have exceeded the NFT creation limit for this event");
             }
-           
+
             var collectionSymbol = _platformOptionsMonitor.CurrentValue.CollectionSymbol;
             var nftSymbol = "";
             //get current token Id
@@ -170,23 +174,25 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("No token ID information available");
             }
-            var currentTokenId = tokenIdGrainDto.TokenId.IsNullOrEmpty()?"0":tokenIdGrainDto.TokenId;
+
+            var currentTokenId = tokenIdGrainDto.TokenId.IsNullOrEmpty() ? "0" : tokenIdGrainDto.TokenId;
             var nextTokenId = int.Parse(currentTokenId) + 1;
             nftSymbol = string.Concat(_platformOptionsMonitor.CurrentValue.SymbolPrefix,
                 NFTSymbolBasicConstants.NFTSymbolSeparator, nextTokenId);
-            
+
             //create nft
             var createChainId = _platformOptionsMonitor.CurrentValue.CreateChainId;
             var issueChainId = _platformOptionsMonitor.CurrentValue.IssueChainId;
 
             var collectionOwnerProxyAccountHash = _platformOptionsMonitor.CurrentValue.CollectionOwnerProxyAccountHash;
-            var collectionIssuerProxyAccountHash = _platformOptionsMonitor.CurrentValue.CollectionIssuerProxyAccountHash;
+            var collectionIssuerProxyAccountHash =
+                _platformOptionsMonitor.CurrentValue.CollectionIssuerProxyAccountHash;
             var collectionOwnerProxyAddress = _platformOptionsMonitor.CurrentValue.CollectionOwnerProxyAddress;
             var collectionIssuerProxyAddress = _platformOptionsMonitor.CurrentValue.CollectionIssuerProxyAddress;
             var proxyContractSideChainAddress = _platformOptionsMonitor.CurrentValue.ProxyContractSideChainAddress;
             var privateKey = _platformOptionsMonitor.CurrentValue.PrivateKey;
             var txId = await CreateAndIssuePlatformNFT(
-                createChainId, 
+                createChainId,
                 collectionOwnerProxyAccountHash,
                 collectionIssuerProxyAccountHash,
                 nftSymbol,
@@ -199,7 +205,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 privateKey,
                 currentUserAddress,
                 input.NFTName);
-            
+
             //get transaction result;
             if (txId.IsNullOrEmpty())
             {
@@ -221,7 +227,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             return new CreatePlatformNFTOutput()
             {
                 CollectionSymbol = collectionSymbol,
-                CollectionId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator,collectionSymbol),
+                CollectionId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator,
+                    collectionSymbol),
                 NFTSymbol = nftSymbol,
                 NFTId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator, nftSymbol),
                 CollectionIcon = collectionIcon,
@@ -231,11 +238,12 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}",currentUserAddress, JsonConvert.SerializeObject(input), e.Message);
+            _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}", currentUserAddress,
+                JsonConvert.SerializeObject(input), e.Message);
             throw new Exception("Service exception");
         }
     }
-    
+
     public async Task<CreatePlatformNFTOutput> CreatePlatformNFTV1Async(CreatePlatformNFTInput input)
     {
         var currentUserAddress = "";
@@ -249,12 +257,14 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
 
             var collectionIcon = _platformOptionsMonitor.CurrentValue.CollectionIcon;
             var collectionName = _platformOptionsMonitor.CurrentValue.CollectionName;
-            currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+            currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
             if (currentUserAddress.IsNullOrEmpty())
             {
                 throw new Exception("Please log out and log in again");
             }
-            _logger.LogInformation("CreatePlatformNFTAsync request currentUserAddress:{A} input:{B}", currentUserAddress, JsonConvert.SerializeObject(input));
+
+            _logger.LogInformation("CreatePlatformNFTAsync request currentUserAddress:{A} input:{B}",
+                currentUserAddress, JsonConvert.SerializeObject(input));
 
             var createLimit = _platformOptionsMonitor.CurrentValue.UserCreateLimit;
             var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(currentUserAddress);
@@ -263,7 +273,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("You have exceeded the NFT creation limit for this event");
             }
-           
+
             var collectionSymbol = _platformOptionsMonitor.CurrentValue.CollectionSymbol;
             var nftSymbol = "";
             //get current token Id
@@ -274,23 +284,25 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 throw new Exception("No token ID information available");
             }
-            var currentTokenId = tokenIdGrainDto.TokenId.IsNullOrEmpty()?"0":tokenIdGrainDto.TokenId;
+
+            var currentTokenId = tokenIdGrainDto.TokenId.IsNullOrEmpty() ? "0" : tokenIdGrainDto.TokenId;
             var nextTokenId = int.Parse(currentTokenId) + 1;
             nftSymbol = string.Concat(_platformOptionsMonitor.CurrentValue.SymbolPrefix,
                 NFTSymbolBasicConstants.NFTSymbolSeparator, nextTokenId);
-            
+
             //create nft
             var createChainId = _platformOptionsMonitor.CurrentValue.CreateChainId;
             var issueChainId = _platformOptionsMonitor.CurrentValue.IssueChainId;
 
             var collectionOwnerProxyAccountHash = _platformOptionsMonitor.CurrentValue.CollectionOwnerProxyAccountHash;
-            var collectionIssuerProxyAccountHash = _platformOptionsMonitor.CurrentValue.CollectionIssuerProxyAccountHash;
+            var collectionIssuerProxyAccountHash =
+                _platformOptionsMonitor.CurrentValue.CollectionIssuerProxyAccountHash;
             var collectionOwnerProxyAddress = _platformOptionsMonitor.CurrentValue.CollectionOwnerProxyAddress;
             var collectionIssuerProxyAddress = _platformOptionsMonitor.CurrentValue.CollectionIssuerProxyAddress;
             var proxyContractSideChainAddress = _platformOptionsMonitor.CurrentValue.ProxyContractSideChainAddress;
             var privateKey = _platformOptionsMonitor.CurrentValue.PrivateKey;
             var txId = "12345";
-            
+
             //get transaction result;
             if (txId.IsNullOrEmpty())
             {
@@ -300,7 +312,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             return new CreatePlatformNFTOutput()
             {
                 CollectionSymbol = collectionSymbol,
-                CollectionId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator,collectionSymbol),
+                CollectionId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator,
+                    collectionSymbol),
                 NFTSymbol = nftSymbol,
                 NFTId = string.Concat(createChainId, NFTSymbolBasicConstants.NFTSymbolSeparator, nftSymbol),
                 CollectionIcon = collectionIcon,
@@ -310,7 +323,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}",currentUserAddress, JsonConvert.SerializeObject(input), e.Message);
+            _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}", currentUserAddress,
+                JsonConvert.SerializeObject(input), e.Message);
             throw new Exception("Service exception");
         }
     }
