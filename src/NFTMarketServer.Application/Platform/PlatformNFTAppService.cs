@@ -108,7 +108,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 await GenerateRawTransaction(client, "BatchCreateToken", createNFTInputParam,
                     proxyContrctAddressSide, privateKey);
             _logger.LogInformation(
-                "CreatePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} batchCreateTokenRaw:{D}", nftSymbol,
+                "CreateAndIssuePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} batchCreateTokenRaw:{D}", nftSymbol,
                 imageUrl, userAddress, batchCreateTokenRaw);
 
             var result = await client.SendTransactionAsync(new SendTransactionInput()
@@ -122,7 +122,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 await Task.Delay(1000);
                 transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
             }
-            _logger.LogInformation("CreatePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} transactionResult:{D}",
+            _logger.LogInformation("CreateAndIssuePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} transactionResult:{D}",
                 nftSymbol, imageUrl, userAddress, JsonConvert.SerializeObject(transactionResult));
             return transactionResult;
         }
@@ -136,6 +136,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
 
     public async Task<CreatePlatformNFTOutput> CreatePlatformNFTAsync(CreatePlatformNFTInput input)
     {
+        _logger.LogInformation("CreatePlatformNFTAsync start input:{A} ", JsonConvert.SerializeObject(input));
         var currentUserAddress = "";
         try
         {
@@ -219,7 +220,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 _logger.LogError("CreatePlatformNFTAsync Fail address:{A} input:{B} transactionResultDto:{C}", currentUserAddress,
                     JsonConvert.SerializeObject(input), JsonConvert.SerializeObject(transactionResultDto));
-                if (transactionResultDto.Error.Contains("Token already exists"))
+                
+                if (transactionResultDto.Status == "PENDING" || (!transactionResultDto.Error.IsNullOrEmpty() && transactionResultDto.Error.Contains("Token already exists")))
                 {
                     await tokenIdGrain.SavePlatformNFTTokenIdAsync(new PlatformNFTTokenIdGrainInput()
                     {
