@@ -243,7 +243,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             {
                 Address = currentUserAddress
             });
-
+            // extension write
+            
             return new CreatePlatformNFTOutput()
             {
                 CollectionSymbol = collectionSymbol,
