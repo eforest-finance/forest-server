@@ -7,6 +7,6 @@ namespace NFTMarketServer.Platform
 {
     public interface IPlatformNFTAppService
     {
-        Task<ResultDto<CreatePlatformNFTOutput>> CreatePlatformNFTAsync(CreatePlatformNFTInput input);
+        Task<CreatePlatformNFTOutput> CreatePlatformNFTAsync(CreatePlatformNFTInput input);
     }
 }

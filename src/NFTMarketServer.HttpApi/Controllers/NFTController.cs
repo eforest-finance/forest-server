@@ -295,7 +295,7 @@ namespace NFTMarketServer.Controllers
         [HttpPost]
         [Route("create-platform-nft")]
         [Authorize]
-        public async Task<ResultDto<CreatePlatformNFTOutput>> CreatePlatformNFTAsync(CreatePlatformNFTInput input)
+        public async Task<CreatePlatformNFTOutput> CreatePlatformNFTAsync(CreatePlatformNFTInput input)
         {
             return await _platformNftAppService.CreatePlatformNFTAsync(input);
         }
