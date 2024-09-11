@@ -99,4 +99,6 @@ public class PlatformNFTOptions
     public string ProxyContractSideChainAddress { get; set; }
     public string CollectionIcon{ get; set; }
     public string CollectionName{ get; set; }
+    
+    public int IssueChainId{ get; set; }
 }
