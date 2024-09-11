@@ -243,7 +243,6 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             throw new Exception("Service exception");
         }
     }
-
     public async Task<CreatePlatformNFTOutput> CreatePlatformNFTV1Async(CreatePlatformNFTInput input)
     {
         var currentUserAddress = "";
@@ -326,6 +325,34 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
             _logger.LogError(e, "CreatePlatformNFTAsync Exception address:{A} input:{B} errMsg:{C}", currentUserAddress,
                 JsonConvert.SerializeObject(input), e.Message);
             throw new Exception("Service exception");
+        }
+    }
+    public async Task<CreatePlatformNFTRecordInfo> GetPlatformNFTInfoAsync(string address)
+    {
+        try
+        {
+            var createLimit = _platformOptionsMonitor.CurrentValue.UserCreateLimit;
+            var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(address);
+            var grainDto = (await createPlatformNFTGrain.GetCreatePlatformNFTAsync()).Data;
+            var result = new CreatePlatformNFTRecordInfo()
+            {
+                NFTCount = 0,
+                IsDone = false
+            };
+            if (grainDto == null || grainDto.Count == 0) return result;
+
+            result.NFTCount = grainDto.Count;
+            if (grainDto.Count >= createLimit)
+            {
+                result.IsDone = true;
+            }
+            return result;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "GetPlatformNFTInfoAsync Exception address:{A} errMsg:{C}", address,
+                e.Message);
+            throw new Exception("Service exception"); 
         }
     }
 }

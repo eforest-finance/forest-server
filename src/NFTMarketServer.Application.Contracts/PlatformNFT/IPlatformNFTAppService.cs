@@ -7,6 +7,7 @@ namespace NFTMarketServer.Platform
         Task<CreatePlatformNFTOutput> CreatePlatformNFTV1Async(CreatePlatformNFTInput input);
         
         Task<CreatePlatformNFTOutput> CreatePlatformNFTAsync(CreatePlatformNFTInput input);
+        Task<CreatePlatformNFTRecordInfo> GetPlatformNFTInfoAsync(string address);
 
     }
 }
