@@ -144,18 +144,21 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         var currentUserAddress = "";
         try
         {
-            var createSwitch = _platformOptionsMonitor.CurrentValue.CreateSwitch;
-            _logger.LogInformation("CreatePlatformNFTAsync log createSwitch:{createSwitch} ", createSwitch);
-
-            if (!createSwitch)
-            {
-                throw new Exception("The NFT creation activity has ended");
-            }
             currentUserAddress = await _userAppService.GetCurrentUserAddressAsync();
             if (currentUserAddress.IsNullOrEmpty())
             {
                 throw new Exception("Please log out and log in again");
             }
+            
+            var createSwitch = _platformOptionsMonitor.CurrentValue.CreateSwitch;
+            _logger.LogInformation("CreatePlatformNFTAsync log createSwitch:{createSwitch} ", createSwitch);
+
+            if (!createSwitch)
+            {
+                throw new Exception("You have exceeded the NFT creation limit for this event");
+                throw new Exception("The NFT creation activity has ended");
+            }
+           
             var createPlatformNFTGrain = _clusterClient.GetGrain<ICreatePlatformNFTGrain>(currentUserAddress);
             //update user create record:Prevent duplicate submissions
             await createPlatformNFTGrain.SaveCreatePlatformNFTAsync(new CreatePlatformNFTGrainInput()
