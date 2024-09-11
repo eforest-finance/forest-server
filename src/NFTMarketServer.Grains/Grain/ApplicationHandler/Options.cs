@@ -99,5 +99,6 @@ public class PlatformNFTOptions
     public int UserCreateLimit { get; set; } = 1;
     public string ProxyContractMainChainAddress { get; set; }
     public string ProxyContractSideChainAddress { get; set; }
-
+    public string CollectionIcon{ get; set; }
+    public string CollectionName{ get; set; }
 }
