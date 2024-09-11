@@ -145,6 +145,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
         try
         {
             var createSwitch = _platformOptionsMonitor.CurrentValue.CreateSwitch;
+            _logger.LogInformation("CreatePlatformNFTAsync log createSwitch:{createSwitch} ", createSwitch);
+
             if (!createSwitch)
             {
                 throw new Exception("The NFT creation activity has ended");
@@ -169,7 +171,11 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                 currentUserAddress, JsonConvert.SerializeObject(input));
 
             var createLimit = _platformOptionsMonitor.CurrentValue.UserCreateLimit;
+            _logger.LogInformation("CreatePlatformNFTAsync log createLimit:{createLimit} ", createLimit);
+
             var grainDto = (await createPlatformNFTGrain.GetCreatePlatformNFTAsync()).Data;
+            _logger.LogInformation("CreatePlatformNFTAsync log grainDtoCount:{count} ", grainDto.Count);
+
             if (grainDto != null && grainDto.Count > createLimit)
             {
                 throw new Exception("You have exceeded the NFT creation limit for this event");
