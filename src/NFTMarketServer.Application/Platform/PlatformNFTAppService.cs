@@ -117,15 +117,15 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
 
             var result = await client.SendTransactionAsync(new SendTransactionInput()
                 { RawTransaction = batchCreateTokenRaw });
-            //await Task.Delay(3000);
+            await Task.Delay(3000);
             TransactionResultDto transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
-            /*var times = 0;
+            var times = 0;
             while ((transactionResult.Status is "PENDING" or "NOTEXISTED") && times < 60)
             {
                 times++;
                 await Task.Delay(1000);
                 transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
-            }*/
+            }
             _logger.LogInformation("CreateAndIssuePlatformNFT nftSymbol:{A} imageUrl:{B} userAddress:{C} transactionResult:{D}",
                 nftSymbol, imageUrl, userAddress, JsonConvert.SerializeObject(transactionResult));
             return transactionResult;
