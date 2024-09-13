@@ -90,8 +90,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                             Owner = AElf.Types.Address.FromBase58(ownerVirtualAddress),
                             Issuer = AElf.Types.Address.FromBase58(issuerVirtualAddress),
                             IsBurnable = true,
-                            IssueChainId = issueChainId, //1866392,
-                            //LockWhiteList = {}
+                            IssueChainId = issueChainId, 
                             ExternalInfo = new ExternalInfo()
                             {
                                 Value =
