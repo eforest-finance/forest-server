@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Ai;
-using NFTMarketServer.Helper;
 using NFTMarketServer.Models;
 using NFTMarketServer.NFT;
+using NFTMarketServer.Platform;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 
@@ -23,6 +23,7 @@ namespace NFTMarketServer.Controllers
         private readonly INFTActivityAppService _nftActivityAppService;
         private readonly ISeedOwnedSymbolAppService _seedOwnedSymbolAppService;
         private readonly IAiAppService _aiAppService;
+        private readonly IPlatformNFTAppService _platformNftAppService;
 
 
         public NFTController(
@@ -30,13 +31,15 @@ namespace NFTMarketServer.Controllers
             INFTInfoAppService nftAppService,
             INFTCollectionAppService nftCollectionAppService,
             INFTActivityAppService nftActivityAppService, 
-            ISeedOwnedSymbolAppService seedOwnedSymbolAppService)
+            ISeedOwnedSymbolAppService seedOwnedSymbolAppService,
+            IPlatformNFTAppService platformNftAppService)
         {
             _nftAppService = nftAppService;
             _nftCollectionAppService = nftCollectionAppService;
             _nftActivityAppService = nftActivityAppService;
             _seedOwnedSymbolAppService = seedOwnedSymbolAppService;
             _aiAppService = aiAppService;
+            _platformNftAppService = platformNftAppService;
         }
 
         [HttpPost]
@@ -286,6 +289,21 @@ namespace NFTMarketServer.Controllers
         public Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyCreateNFTInfosAsync(GetMyCreateNFTInfosInput input)
         {
             return _nftAppService.GetMyCreatedNFTInfosAsync(input);
+        }
+        
+        [HttpPost]
+        [Route("create-platform-nft")]
+        [Authorize]
+        public async Task<CreatePlatformNFTOutput> CreatePlatformNFTV2Async(CreatePlatformNFTInput input)
+        {
+            return await _platformNftAppService.CreatePlatformNFTAsync(input);
+        }
+        
+        [HttpGet]
+        [Route("create-platform-nft/info")]
+        public async Task<CreatePlatformNFTRecordInfo> GetUserPlatformNFTInfoAsync(string address)
+        {
+            return await _platformNftAppService.GetPlatformNFTInfoAsync(address);
         }
     }
 }
