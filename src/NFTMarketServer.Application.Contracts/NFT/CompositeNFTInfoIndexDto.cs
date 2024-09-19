@@ -41,5 +41,6 @@ namespace NFTMarketServer.NFT
         public string Star { get; set; }
         public string Rarity { get; set; }
         public string Describe { get; set; }
+        public ProfileInfo ProfileInfo{ get; set; }
     }
 }
