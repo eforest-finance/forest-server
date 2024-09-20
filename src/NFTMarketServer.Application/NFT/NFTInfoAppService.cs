@@ -30,6 +30,7 @@ using NFTMarketServer.Seed;
 using NFTMarketServer.Seed.Index;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
+using NFTMarketServer.Users.Index;
 using Orleans;
 using Orleans.Runtime;
 using Serilog;
@@ -1595,11 +1596,14 @@ namespace NFTMarketServer.NFT
         }
         
         private static CompositeNFTInfoIndexDto MapForNftBriefInfoDtoV2(IndexerNFTInfo nftInfoIndex,
-            Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict, Dictionary<string, IndexerNFTListingInfo> listDtoDict)
+            Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict, Dictionary<string, IndexerNFTListingInfo> listDtoDict, Dictionary<string, int> nftDecimalDict,
+            List<UserBalanceIndex> balanceList)
         {
             var accountDto = new AccountDto();
             maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
             listDtoDict.TryGetValue(nftInfoIndex.Id, out var minList);
+            nftDecimalDict.TryGetValue(nftInfoIndex.Id, out var nftDecimals);
+            var balance = balanceList.FirstOrDefault(x => x.NFTInfoId == nftInfoIndex.Id);
             if (!nftInfoIndex.RealOwner.IsNullOrEmpty())
             {
                 accountDtoDict.TryGetValue(nftInfoIndex.RealOwner, out var temAccountDto);
@@ -1621,8 +1625,8 @@ namespace NFTMarketServer.NFT
                 MinListingPrice = minList?.Prices,
                 BestOfferPrice = maxOffer?.Price,
                 ShowPrice = showPrice,
-                Decimal = 0,
-                Balance = 0
+                Decimal = nftDecimals,
+                Balance = (decimal)balance?.Amount
             };
 
             var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
@@ -2026,14 +2030,23 @@ namespace NFTMarketServer.NFT
 
             {
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
-
+                var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
+                    .ToDictionary(info => info.Id, info => info.Decimals);
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(), input.Address, input.ChainList.FirstOrDefault());
 
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
-
-                nftPageResult = PageCompositeNFTInfoIndexDto(input, nftResult.Item2, maxOfferDict, accountDtoDict, minListDict);
+                var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput()
+                {
+                    Address = input.Address,
+                    QueryType = input.QueryType,
+                    SkipCount = CommonConstant.IntZero,
+                    CollectionIdList = input.CollectionIds
+                };
+                var userBalanceList =
+                    await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+                nftPageResult = PageCompositeNFTInfoIndexDto(input, nftResult.Item2, maxOfferDict, accountDtoDict, minListDict, nftDecimalDict, userBalanceList);
 
             }
             result = new PagedResultDto<CompositeNFTInfoIndexDto>()
@@ -2044,9 +2057,9 @@ namespace NFTMarketServer.NFT
             return await MapForCompositeNftInfoIndexDtoPage(result);
         }
 
-        private PagedResultDto<CompositeNFTInfoIndexDto> PageCompositeNFTInfoIndexDto(GetMyCreateNFTInfosInput input, List<IndexerNFTInfo> nftResult,Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict, Dictionary<string, IndexerNFTListingInfo> listDtoDict)
+        private PagedResultDto<CompositeNFTInfoIndexDto> PageCompositeNFTInfoIndexDto(GetMyCreateNFTInfosInput input, List<IndexerNFTInfo> nftResult,Dictionary<string, IndexerNFTOffer> maxOfferDict, Dictionary<string, AccountDto> accountDtoDict, Dictionary<string, IndexerNFTListingInfo> listDtoDict, Dictionary<string, int> nftDecimalDict, List<UserBalanceIndex> balanceList)
         {
-            var compositeNFTInfoIndexDtoList =  nftResult.Select(item => MapForNftBriefInfoDtoV2(item, maxOfferDict, accountDtoDict, listDtoDict))
+            var compositeNFTInfoIndexDtoList =  nftResult.Select(item => MapForNftBriefInfoDtoV2(item, maxOfferDict, accountDtoDict, listDtoDict, nftDecimalDict, balanceList))
                 .ToList();
             if (input.HasListingFlag)
             {
