@@ -1588,11 +1588,12 @@ namespace NFTMarketServer.NFT
             {
                 showPrice = maxOffer.Price.ToString();
             }
-
+            decimal minListPrice = minList==null?-1:minList.Prices;
+            decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
             var profileInfo = new ProfileInfo()
             {
-                MinListingPrice = minList?.Prices,
-                BestOfferPrice = maxOffer?.Price,
+                MinListingPrice = minListPrice,
+                BestOfferPrice = maxOfferPrice,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
                 Balance = (decimal)balance?.Amount
@@ -1690,19 +1691,20 @@ namespace NFTMarketServer.NFT
 
             var showPrice = "--";
             var hasOwnerListingFlag = false;
+            decimal minListPrice = minList==null?-1:minList.Prices;
+            decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
             if (minList != null && minList.Prices > 0)
             {
                 showPrice = minList.Prices.ToString();
-            }
-            else if (maxOffer != null && maxOffer.Price > 0)
+            }else if (maxOffer != null && maxOffer.Price > 0)
             {
                 showPrice = maxOffer.Price.ToString();
             }
 
             var profileInfo = new ProfileInfo()
             {
-                MinListingPrice = minList?.Prices,
-                BestOfferPrice = maxOffer?.Price,
+                MinListingPrice = minListPrice,
+                BestOfferPrice = maxOfferPrice,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
                 Balance = (decimal)balance?.Amount
@@ -1752,7 +1754,7 @@ namespace NFTMarketServer.NFT
         }
 
         private async Task<Dictionary<string, IndexerNFTListingInfo>> GetMyMinListInfosAsync(List<string> symbols,
-            string address, string chainId)
+            string address, string chainId, string from)
         {
             var tasks = new List<Task<PagedResultDto<IndexerNFTListingInfo>>>();
             foreach (var symbol in symbols)
@@ -1771,7 +1773,9 @@ namespace NFTMarketServer.NFT
             }
 
             var minListResults = await Task.WhenAll(tasks);
-            _logger.LogInformation("GetMyMinListInfosAsync minListResults:{minListResults}", JsonConvert.SerializeObject(minListResults));
+            _logger.LogInformation("GetMyMinListInfosAsync from:{from} minListResultsCount:{minListResults}",from, minListResults.Length);
+
+            _logger.LogInformation("GetMyMinListInfosAsync from:{from} minListResults:{minListResults}",from, JsonConvert.SerializeObject(minListResults));
             var minListDict = minListResults.Where(result =>
                     result != null && result.TotalCount != 0 && result.Items.Count != 0 &&
                     !result.Items.FirstOrDefault().BusinessId.IsNullOrEmpty())
@@ -2052,7 +2056,7 @@ namespace NFTMarketServer.NFT
                 //to get max offers
                 var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
                 var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault());
+                    input.Address, input.ChainList.FirstOrDefault(), "Hold-Seed");
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
                 var request = new GetMyCreateNFTInfosInput()
@@ -2074,7 +2078,7 @@ namespace NFTMarketServer.NFT
                     .ToDictionary(info => info.Id, info => info.Decimals);
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault());
+                    input.Address, input.ChainList.FirstOrDefault(), "Hold-NFT");
 
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
@@ -2202,7 +2206,7 @@ namespace NFTMarketServer.NFT
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed maxOfferDict:{maxOfferDict}", JsonConvert.SerializeObject(maxOfferDict));
 
                 var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault());
+                    input.Address, input.ChainList.FirstOrDefault(),"Create-Seed");
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed minListDict:{minListDict}", JsonConvert.SerializeObject(minListDict));
 
                 var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput()
@@ -2233,7 +2237,7 @@ namespace NFTMarketServer.NFT
             try
             {
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
-                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftResult:{nftResult}", JsonConvert.SerializeObject(nftResult));
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftResultCount:{nftResult}", nftResult.Item1);
                 var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
                     .ToDictionary(info => info.Id, info => info.Decimals);
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftDecimalDict:{nftDecimalDict}", JsonConvert.SerializeObject(nftDecimalDict));
@@ -2242,7 +2246,7 @@ namespace NFTMarketServer.NFT
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT maxOfferDict:{maxOfferDict}", JsonConvert.SerializeObject(maxOfferDict));
 
                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault());
+                    input.Address, input.ChainList.FirstOrDefault(),"Create-NFT");
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT minListDict:{minListDict}", JsonConvert.SerializeObject(minListDict));
 
                 var accountDtoDict =
