@@ -171,7 +171,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             {
                 return userBalanceList;
             }
-            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{} input:{C}", result.Item1, result.Item2.Count, JsonConvert.SerializeObject(queryUserBalanceIndexInput));
+            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{size} input:{C}", result.Item1, result.Item2.Count, JsonConvert.SerializeObject(queryUserBalanceIndexInput));
 
             if (queryCount == CommonConstant.IntOne)
             {
