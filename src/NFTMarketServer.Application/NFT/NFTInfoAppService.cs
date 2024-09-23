@@ -1559,7 +1559,7 @@ namespace NFTMarketServer.NFT
             maxOfferDict.TryGetValue(seedSymbolIndex.Id, out var maxOffer);
             listDtoDict.TryGetValue(seedSymbolIndex.Id, out var minList);
             var nftDecimals = 0;
-            var balance = balanceList.FirstOrDefault(x => x.NFTInfoId == seedSymbolIndex.Id);
+            var balance = balanceList.IsNullOrEmpty()?null:balanceList.FirstOrDefault(x => x.NFTInfoId == seedSymbolIndex.Id);
 
             var accountDto = new AccountDto();
             if (!seedSymbolIndex.RealOwner.IsNullOrEmpty())
@@ -1597,7 +1597,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOfferPrice,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = (decimal)balance?.Amount
+                Balance = balance?.Amount ?? 0
             };
 
 
@@ -1683,7 +1683,7 @@ namespace NFTMarketServer.NFT
             maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
             listDtoDict.TryGetValue(nftInfoIndex.Id, out var minList);
             nftDecimalDict.TryGetValue(nftInfoIndex.Id, out var nftDecimals);
-            var balance = balanceList.FirstOrDefault(x => x.NFTInfoId == nftInfoIndex.Id);
+            var balance = balanceList.IsNullOrEmpty()?null:balanceList.FirstOrDefault(x => x.NFTInfoId == nftInfoIndex.Id);
             if (!nftInfoIndex.RealOwner.IsNullOrEmpty())
             {
                 accountDtoDict.TryGetValue(nftInfoIndex.RealOwner, out var temAccountDto);
@@ -1709,7 +1709,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOfferPrice,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = (decimal)balance?.Amount
+                Balance = balance==null?0:(decimal)balance.Amount
             };
 
             var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
