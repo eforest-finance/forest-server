@@ -200,7 +200,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         }
         _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query returnUserBalances count:{A}", returnUserBalances.Count);
 
-        return userBalanceList;
+        return returnUserBalances;
     }
 
 }
