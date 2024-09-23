@@ -2032,12 +2032,12 @@ namespace NFTMarketServer.NFT
                 HasAuctionFlag = input.HasAuctionFlag,
                 HasListingFlag = input.HasListingFlag,
                 HasOfferFlag = input.HasOfferFlag,
-               // SkipCount = input.SkipCount,
-                //MaxResultCount = input.MaxResultCount,
+                SkipCount = 0,
+                MaxResultCount = 10000,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 PriceLow = input.PriceLow,
-               // PriceHigh = input.PriceHigh,
+                // PriceHigh = input.PriceHigh,
                 FuzzySearchSwitch = fuzzySearchSwitch,
                 PageFrom = PageFromEnum.OTHER
             };
@@ -2174,8 +2174,8 @@ namespace NFTMarketServer.NFT
                 HasAuctionFlag = input.HasAuctionFlag,
                 HasListingFlag = input.HasListingFlag,
                 HasOfferFlag = input.HasOfferFlag,
-                //SkipCount = input.SkipCount,
-                //MaxResultCount = input.MaxResultCount,
+                SkipCount = 0,
+                MaxResultCount = 10000,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 IssueAddress = input.Address,
@@ -2184,13 +2184,13 @@ namespace NFTMarketServer.NFT
                 CollectionIds = input.CollectionIds,
                 FuzzySearchSwitch = fuzzySearchSwitch,
                 PageFrom = PageFromEnum.OTHER,
-                MaxResultCount = 1000,
             };
 
             var result = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var seedPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var nftPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
 
+            try
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
                 //to get max offers
@@ -2202,7 +2202,8 @@ namespace NFTMarketServer.NFT
                     Address = input.Address,
                     QueryType = input.QueryType,
                     SkipCount = CommonConstant.IntZero,
-                    CollectionIdList = input.CollectionIds
+                    CollectionIdList = input.CollectionIds,
+                    MaxResultCount = 10000
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
@@ -2213,7 +2214,12 @@ namespace NFTMarketServer.NFT
                 seedPageResult = PageSeedBriefInfoIndexDto(input, seedResult.Item2, maxOfferDict, accountDtoDict,
                     minListDict, userBalanceList);
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "GetMyCreatedNFTInfosAsyncV2 Seed Excepton msg:{msg}", e.Message);
+            }
 
+            try
             {
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
                 var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
@@ -2229,13 +2235,19 @@ namespace NFTMarketServer.NFT
                     Address = input.Address,
                     QueryType = input.QueryType,
                     SkipCount = CommonConstant.IntZero,
-                    CollectionIdList = input.CollectionIds
+                    CollectionIdList = input.CollectionIds,
+                    MaxResultCount = 10000
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
                 nftPageResult = PageCompositeNFTInfoIndexDto(input, nftResult.Item2, maxOfferDict, accountDtoDict,
                     minListDict, nftDecimalDict, userBalanceList);
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "GetMyCreatedNFTInfosAsyncV2 NFT Excepton msg:{msg}", e.Message);
+            }
+
             result = new PagedResultDto<CompositeNFTInfoIndexDto>()
             {
                 TotalCount = seedPageResult.TotalCount + nftPageResult.TotalCount,
