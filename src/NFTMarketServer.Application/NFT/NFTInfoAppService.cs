@@ -1771,7 +1771,7 @@ namespace NFTMarketServer.NFT
             }
 
             var minListResults = await Task.WhenAll(tasks);
-
+            _logger.LogInformation("GetMyMinListInfosAsync minListResults:{minListResults}", JsonConvert.SerializeObject(minListResults));
             var minListDict = minListResults.Where(result =>
                     result != null && result.TotalCount != 0 && result.Items.Count != 0 &&
                     !result.Items.FirstOrDefault().BusinessId.IsNullOrEmpty())
@@ -2215,7 +2215,7 @@ namespace NFTMarketServer.NFT
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
-                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed userBalanceList:{userBalanceList}", JsonConvert.SerializeObject(userBalanceList));
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed userBalanceListCount:{userBalanceList}", userBalanceList.Count);
 
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
@@ -2258,7 +2258,7 @@ namespace NFTMarketServer.NFT
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
-                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT minListDict:{userBalanceList}", JsonConvert.SerializeObject(userBalanceList));
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT userBalanceListCount:{userBalanceList}", userBalanceList.Count);
 
                 nftPageResult = PageCompositeNFTInfoIndexDto(input, nftResult.Item2, maxOfferDict, accountDtoDict,
                     minListDict, nftDecimalDict, userBalanceList);
@@ -2350,10 +2350,21 @@ namespace NFTMarketServer.NFT
             Dictionary<string, AccountDto> accountDtoDict, Dictionary<string, IndexerNFTListingInfo> listDtoDict,
             Dictionary<string, int> nftDecimalDict, List<UserBalanceIndex> balanceList)
         {
-            var compositeNFTInfoIndexDtoList = nftResult.Select(item =>
-                    MapForNftBriefInfoDtoV2(item, maxOfferDict, accountDtoDict, listDtoDict, nftDecimalDict,
-                        balanceList))
-                .ToList();
+            List<CompositeNFTInfoIndexDto> compositeNFTInfoIndexDtoList = null;
+            try
+            {
+                compositeNFTInfoIndexDtoList = nftResult.Select(item =>
+                        MapForNftBriefInfoDtoV2(item, maxOfferDict, accountDtoDict, listDtoDict, nftDecimalDict,
+                            balanceList))
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,"PageCompositeNFTInfoIndexDto Exception msg:{msg}",JsonConvert.SerializeObject(ex));
+                throw ex;
+            }
+
+
             if (input.HasListingFlag)
             {
                 compositeNFTInfoIndexDtoList = compositeNFTInfoIndexDtoList
