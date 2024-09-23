@@ -1763,7 +1763,9 @@ namespace NFTMarketServer.NFT
                     Symbol = symbol,
                     Address = address,
                     SkipCount = 0,
-                    MaxResultCount = 1
+                    MaxResultCount = 1,
+                    ExcludedAddress = "",
+                    BlockHeight = 0
                 };
                 tasks.Add(_nftListingProvider.GetNFTListingsAsync(input));
             }
@@ -2194,9 +2196,15 @@ namespace NFTMarketServer.NFT
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
                 //to get max offers
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed seedResult:{seedResult}", JsonConvert.SerializeObject(seedResult));
+
                 var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed maxOfferDict:{maxOfferDict}", JsonConvert.SerializeObject(maxOfferDict));
+
                 var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
                     input.Address, input.ChainList.FirstOrDefault());
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed minListDict:{minListDict}", JsonConvert.SerializeObject(minListDict));
+
                 var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput()
                 {
                     Address = input.Address,
@@ -2207,12 +2215,15 @@ namespace NFTMarketServer.NFT
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed userBalanceList:{userBalanceList}", JsonConvert.SerializeObject(userBalanceList));
 
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
 
                 seedPageResult = PageSeedBriefInfoIndexDto(input, seedResult.Item2, maxOfferDict, accountDtoDict,
                     minListDict, userBalanceList);
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed seedPageResult:{seedPageResult}", JsonConvert.SerializeObject(seedPageResult));
+
             }
             catch (Exception e)
             {
@@ -2222,11 +2233,17 @@ namespace NFTMarketServer.NFT
             try
             {
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftResult:{nftResult}", JsonConvert.SerializeObject(nftResult));
                 var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
                     .ToDictionary(info => info.Id, info => info.Decimals);
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftDecimalDict:{nftDecimalDict}", JsonConvert.SerializeObject(nftDecimalDict));
+
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT maxOfferDict:{maxOfferDict}", JsonConvert.SerializeObject(maxOfferDict));
+
                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
                     input.Address, input.ChainList.FirstOrDefault());
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT minListDict:{minListDict}", JsonConvert.SerializeObject(minListDict));
 
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
@@ -2236,12 +2253,17 @@ namespace NFTMarketServer.NFT
                     QueryType = input.QueryType,
                     SkipCount = CommonConstant.IntZero,
                     CollectionIdList = input.CollectionIds,
-                    MaxResultCount = 10000
+                    MaxResultCount = 10000,
+                    KeyWord = ""
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT minListDict:{userBalanceList}", JsonConvert.SerializeObject(userBalanceList));
+
                 nftPageResult = PageCompositeNFTInfoIndexDto(input, nftResult.Item2, maxOfferDict, accountDtoDict,
                     minListDict, nftDecimalDict, userBalanceList);
+                _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftPageResult:{nftPageResult}", JsonConvert.SerializeObject(nftPageResult));
+
             }
             catch (Exception e)
             {
