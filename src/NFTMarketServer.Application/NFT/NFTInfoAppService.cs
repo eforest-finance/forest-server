@@ -1777,9 +1777,8 @@ namespace NFTMarketServer.NFT
 
             _logger.LogInformation("GetMyMinListInfosAsync from:{from} minListResults:{minListResults}",from, JsonConvert.SerializeObject(minListResults));
             var minListDict = minListResults.Where(result =>
-                    result != null && result.TotalCount != 0 && result.Items.Count != 0 &&
-                    !result.Items.FirstOrDefault().BusinessId.IsNullOrEmpty())
-                .ToDictionary(result => result.Items.FirstOrDefault().BusinessId,
+                    result != null && result.TotalCount != 0 && result.Items.Count != 0)
+                .ToDictionary(result => (result.Items.FirstOrDefault().ChainId+"-"+result.Items.FirstOrDefault().Symbol),
                     result => result.Items.FirstOrDefault());
             return minListDict;
         }
