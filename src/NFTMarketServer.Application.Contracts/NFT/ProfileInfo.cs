@@ -2,7 +2,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.NFT
 {
-    public class ProfileInfo : EntityDto<string>
+    public class ProfileInfo
     {
         public decimal Balance { get; set; }
         public long Decimal { get; set; }
