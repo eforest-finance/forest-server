@@ -15,7 +15,7 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
 {
     
     private readonly IOptionsMonitor<HideCollectionInfoOptions> _hideCollectionInfoOptionsMonitor;
-
+    
     private const string OwnerTotalbyday = "OwnerTotalbyday";
     private const string OwnerTotalbyweek = "OwnerTotalbyweek";
     private const string OwnerTotalbymonth = "OwnerTotalbymonth";

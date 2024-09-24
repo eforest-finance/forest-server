@@ -16,6 +16,7 @@ using NFTMarketServer.Grains.State.Order;
 using NFTMarketServer.Grains.State.Synchronize;
 using NFTMarketServer.Grains.State.Users;
 using NFTMarketServer.Grains.State.Verify;
+using NFTMarketServer.Users.Dto;
 
 namespace NFTMarketServer.Grains;
 
@@ -26,6 +27,10 @@ public class NFTMarketServerGrainsAutoMapperProfile : Profile
         // User AutoMap
         CreateMap<UserGrainDto, UserState>();
         CreateMap<UserState, UserGrainDto>();
+        CreateMap<PlatformNFTTokenIdGrainDto, PlatformNFTTokenIdState>();
+        CreateMap<PlatformNFTTokenIdState, PlatformNFTTokenIdGrainDto>();
+        CreateMap<CreatePlatformNFTState, CreatePlatformNFTGrainDto>();
+        CreateMap<CreatePlatformNFTGrainDto, CreatePlatformNFTState>();
         CreateMap<NftInfoExtensionState, NftInfoExtensionGrainDto>();
         CreateMap<NftInfoExtensionGrainDto, NftInfoExtensionState>();
         // verify

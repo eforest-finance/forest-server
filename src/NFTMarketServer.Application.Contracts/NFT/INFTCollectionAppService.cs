@@ -12,6 +12,8 @@ namespace NFTMarketServer.NFT
         
         Task<PagedResultDto<SearchNFTCollectionsDto>> SearchNFTCollectionsAsync(SearchNFTCollectionsInput input);
         
+        Task<PagedResultDto<TrendingCollectionsDto>> TrendingCollectionsAsync();
+        
         Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCollectionsAsync();
 
         Task<NFTCollectionIndexDto> GetNFTCollectionAsync(string id);
