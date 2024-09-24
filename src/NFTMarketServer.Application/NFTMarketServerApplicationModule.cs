@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using AElf.Whitelist;
-using Castle.Core.Configuration;
+using Elasticsearch.Net;
 using Medallion.Threading;
 using Medallion.Threading.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Nest;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Dealer.ContractInvoker;
 using NFTMarketServer.Dealer.ContractInvoker.Inscription;
@@ -120,9 +122,13 @@ namespace NFTMarketServer
             Configure<ChainOption>(configuration.GetSection("ChainOption"));
             Configure<SynchronizeTransactionJobOptions>(configuration.GetSection("Synchronize"));
             Configure<OpenAiOptions>(configuration.GetSection("OpenAi"));
-            
+            Configure<StatisticsUserListRecordOptions>(configuration.GetSection("StatisticsUserListRecordOptions"));
+            Configure<FuzzySearchOptions>(configuration.GetSection("FuzzySearchOptions"));
+            Configure<PlatformNFTOptions>(configuration.GetSection("PlatformNFT"));
+
             ConfigureTokenBucketService(context, configuration);
             ConfigureDistributedLocking(context, configuration);
+            ConfigureElasticsearch(context, configuration);
         }
         
         private static void ConfigureTokenBucketService(
@@ -149,5 +155,24 @@ namespace NFTMarketServer
                 return new RedisDistributedSynchronizationProvider(connection.GetDatabase());
             });
         }
+        
+        private static void ConfigureElasticsearch(
+            ServiceConfigurationContext context,
+            IConfiguration configuration)
+        {
+            context.Services.AddSingleton<IElasticClient>(sp =>
+            {
+                var uris = configuration.GetSection("ElasticUris:Uris").Get<string[]>();
+                if (uris == null || uris.Length == 0)
+                {
+                    throw new ArgumentNullException("ElasticUris:Uris", "Elasticsearch URIs cannot be null or empty.");
+                }
+
+                var settings = new ConnectionSettings(new StaticConnectionPool(uris.Select(uri => new Uri(uri)).ToArray()));
+
+                return new ElasticClient(settings);
+            });
+    
+        } 
     }
 }

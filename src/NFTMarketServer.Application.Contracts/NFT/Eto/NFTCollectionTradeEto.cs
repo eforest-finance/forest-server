@@ -10,7 +10,9 @@ public class NFTCollectionTradeEto : MultiChainEntity<string>
     public override string Id { get; set; }
     public string CollectionId { get; set; }
     public new string ChainId { get; set; }
-    
+
     public long CurrentOrdinal { get; set; }
     public string CurrentOrdinalStr { get; set; }
+
+    public bool InitFlag { get; set; }
 }

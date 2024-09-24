@@ -70,6 +70,12 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(des => des.OfferPrice, opt =>
                 opt.MapFrom(source => source.MaxOfferPrice
                 ))
+            .ForMember(des => des.Price, opt =>
+                opt.MapFrom(source =>
+                    source.MinListingPrice > CommonConstant.IntZero
+                        ? source.MinListingPrice
+                        : CommonConstant.IntNegativeOne
+                ))
             .ForMember(des => des.PreviewImage, opt =>
                 opt.MapFrom(source => source.PreviewImage
                 ))
@@ -117,7 +123,10 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTActivityDto, CollectedCollectionActivitiesDto>();
         CreateMap<IndexerNFTBriefInfo, CompositeNFTInfoIndexDto>();
         CreateMap<NFTActivityDto, CollectionActivitiesDto>();
-        CreateMap<NFTInfoIndex, NFTInfoNewIndex>();
+        CreateMap<NFTInfoIndex, NFTInfoNewIndex>()
+            .ForMember(des => des.FuzzyTokenName, opt => opt.MapFrom(source => source.TokenName))
+            .ForMember(des => des.FuzzySymbol, opt => opt.MapFrom(source => source.Symbol))
+            .ForMember(des => des.FuzzyTokenId, opt => opt.MapFrom(source => SymbolHelper.GetTrailingNumber(source.Symbol)));
         CreateMap<AiCreateIndex, AiArtFailDto>().ForMember(des => des.AiPaintingStyleType,
                 opt => opt.MapFrom(source => source.PaintingStyle.ToEnumString()))
             .ForMember(des => des.NegativePrompt, opt => opt.MapFrom(source => source.NegativePrompt))
@@ -206,6 +215,9 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(des => des.IssueChainId, opt
                 => opt.MapFrom(source => ChainHelper.ConvertChainIdToBase58(source.IssueChainId)));
         CreateMap<NFTCollectionExtensionIndex, SearchNFTCollectionsDto>()
+            .ForMember(des => des.Symbol, opt
+                => opt.MapFrom(source => source.NFTSymbol));
+        CreateMap<NFTCollectionExtensionIndex, TrendingCollectionsDto>()
             .ForMember(des => des.Symbol, opt
                 => opt.MapFrom(source => source.NFTSymbol));
         CreateMap<NFTCollectionExtensionIndex, SearchCollectionsFloorPriceDto>()

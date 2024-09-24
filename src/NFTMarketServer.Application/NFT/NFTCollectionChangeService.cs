@@ -178,7 +178,8 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
                 CollectionId = collectionId,
                 ChainId = collection.ChainId,
                 CurrentOrdinal = utcHourStartTimestamp,
-                CurrentOrdinalStr = utcHourStartStr
+                CurrentOrdinalStr = utcHourStartStr,
+                InitFlag = true
             });
         }
     }

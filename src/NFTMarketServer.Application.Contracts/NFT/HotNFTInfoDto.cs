@@ -18,6 +18,7 @@ public class HotNFTInfoDto: EntityDto<string>
     public string NFTId { get; set; }
     public decimal LatestDealPrice { get; set; }
     public decimal OfferPrice { get; set; }
+    public decimal Price { get; set; }
     public string Link { get; set; }
     
     public string ChainId { get; set; }
