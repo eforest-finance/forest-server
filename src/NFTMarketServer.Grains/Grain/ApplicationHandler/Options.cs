@@ -1,5 +1,3 @@
-using JetBrains.Annotations;
-
 namespace NFTMarketServer.Grains.Grain.ApplicationHandler;
 
 public class OpenAiOptions
@@ -80,4 +78,29 @@ public class StatisticsUserListRecordOptions
     public bool StatisticsSwitch { get; set; } = false;
     public bool SendTxSwitch { get; set; } = false;
 
+}
+
+public class PlatformNFTOptions
+{
+    public bool CreateSwitch { get; set; }
+    public string CollectionSymbol { get; set; }
+    
+    public string SymbolPrefix { get; set; }
+    public string CreateChainId { get; set; }
+    public string CollectionOwnerAddress { get; set; }
+    public string PrivateKey { get; set; }
+    public string CollectionOwnerProxyAccountHash { get; set; }
+    public string CollectionOwnerProxyAddress { get; set; }
+    public string CollectionIssuerProxyAccountHash { get; set; }
+    public string CollectionIssuerProxyAddress { get; set; }
+
+    public int UserCreateLimit { get; set; } = 1;
+    public string ProxyContractMainChainAddress { get; set; }
+    public string ProxyContractSideChainAddress { get; set; }
+    public string CollectionIcon{ get; set; }
+    public string CollectionName{ get; set; }
+    
+    public int IssueChainId{ get; set; }
+    
+    public List<int> ExcludeTokenIds{ get; set; }
 }

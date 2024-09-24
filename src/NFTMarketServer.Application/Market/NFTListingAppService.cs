@@ -11,6 +11,7 @@ using Forest;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
@@ -86,14 +87,22 @@ namespace NFTMarketServer.Market
                     .Where(s => !string.IsNullOrEmpty(s))
                     .Distinct().ToList();
                 var accountDict = await _userAppService.GetAccountsAsync(addresses);
+                var nftInfoIdList = new List<string>() {input.ChainId+"-"+input.Symbol};
+                var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
 
                 var res = listingDto.Items.Select(i =>
                 {
+                    _logger.LogInformation("GetNFTListingsAsync step1 listInfo:{A}",JsonConvert.SerializeObject(i));
                     i.WhitelistId = i.WhitelistId;
                     var item = _objectMapper.Map<IndexerNFTListingInfo, NFTListingIndexDto>(i);
                     item.Owner = accountDict.GetValueOrDefault(i.Owner, new AccountDto(i.Owner))?.WithChainIdAddress(item.ChainId);
                     item.PurchaseToken = _objectMapper.Map<IndexerTokenInfo, TokenDto>(i.PurchaseToken);
-                    //item.NFTInfo = _objectMapper.Map<IndexerNFTInfo, NFTImmutableInfoDto>(i.NftInfo);
+                    if (compositeNFTInfoDic == null || compositeNFTInfoDic.Count == 0) return item;
+                    _logger.LogInformation("GetNFTListingsAsync step1 compositeNFTInfoDic:{A}",JsonConvert.SerializeObject(compositeNFTInfoDic));
+
+                    item.Decimals = compositeNFTInfoDic[input.ChainId+"-"+input.Symbol].Decimals;
+                    item.RealQuantity = i.RealQuantity;//FTHelper.GetIntegerDivision(i.RealQuantity, item.Decimals);
+                    item.OriginQuantity = i.Quantity;   
                     if (item.NFTInfo == null) return item;
                     
                     item.NFTInfo.NftCollection =
@@ -105,7 +114,6 @@ namespace NFTMarketServer.Market
                             new AccountDto(i.NftCollectionDto.CreatorAddress))?
                             .WithChainIdAddress(i.NftCollectionDto.ChainId);
                     }
-
                     return item;
                 }).ToList();
 
