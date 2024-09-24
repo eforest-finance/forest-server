@@ -1589,12 +1589,12 @@ namespace NFTMarketServer.NFT
                 showPrice = maxOffer.Price.ToString();
             }
 
-            decimal minListPrice = minList == null ? -1 : minList.Prices;
-            decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
+           // decimal minListPrice = minList == null ? -1 : minList.Prices;
+           // decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
             var profileInfo = new ProfileInfo()
             {
-                MinListingPrice = minListPrice,
-                BestOfferPrice = maxOfferPrice,
+                MinListingPrice = minList == null ? null : minList.Prices,
+                BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
                 Balance = balance?.Amount ?? 0
@@ -1692,8 +1692,8 @@ namespace NFTMarketServer.NFT
 
             var showPrice = "--";
             var hasOwnerListingFlag = false;
-            decimal minListPrice = minList == null ? -1 : minList.Prices;
-            decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
+           // decimal minListPrice = minList == null ? -1 : minList.Prices;
+           // decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
             if (minList != null && minList.Prices > 0)
             {
                 showPrice = minList.Prices.ToString();
@@ -1705,8 +1705,8 @@ namespace NFTMarketServer.NFT
 
             var profileInfo = new ProfileInfo()
             {
-                MinListingPrice = minListPrice,
-                BestOfferPrice = maxOfferPrice,
+                MinListingPrice = minList == null ? null : minList.Prices,
+                BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
                 Balance = balance==null?0:(decimal)balance.Amount
@@ -2343,7 +2343,7 @@ namespace NFTMarketServer.NFT
                         break;
                     case "High":
                         compositeNFTInfoIndexDtoList = compositeNFTInfoIndexDtoList
-                            .OrderByDescending(i => i.ProfileInfo?.MinListingPrice ?? decimal.MaxValue).ToList();
+                            .OrderByDescending(i => i.ProfileInfo?.MinListingPrice ?? decimal.MinValue).ToList();
                         break;
                     case "Recently":
                         compositeNFTInfoIndexDtoList = compositeNFTInfoIndexDtoList
@@ -2423,7 +2423,7 @@ namespace NFTMarketServer.NFT
                         break;
                     case "High":
                         compositeNFTInfoIndexDtoList = compositeNFTInfoIndexDtoList
-                            .OrderByDescending(i => i.ProfileInfo?.MinListingPrice ?? decimal.MaxValue).ToList();
+                            .OrderByDescending(i => i.ProfileInfo?.MinListingPrice ?? decimal.MinValue).ToList();
                         break;
                     case "Recently":
                         compositeNFTInfoIndexDtoList = compositeNFTInfoIndexDtoList
