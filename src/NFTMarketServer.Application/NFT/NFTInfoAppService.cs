@@ -1597,7 +1597,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = balance?.Amount ?? 0
+                Balance = balance?.Amount/(decimal)Math.Pow(10, balance.Decimals) ?? 0
             };
 
 
@@ -1709,7 +1709,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = balance==null?0:(decimal)balance.Amount
+                Balance = balance==null?0:(decimal)balance.Amount/(decimal)Math.Pow(10, balance.Decimals)
             };
 
             var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
