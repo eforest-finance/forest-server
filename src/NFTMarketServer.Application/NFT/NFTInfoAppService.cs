@@ -849,6 +849,8 @@ namespace NFTMarketServer.NFT
             };
             var allMinListingPage = await _nftListingProvider.GetNFTListingsAsync(getMyNftListingsDto);
             IndexerNFTListingInfo allMinListingDto = null;
+            nftInfoIndexDto.ListingPrice = -1;
+            nftInfoIndexDto.MaxOfferPrice = -1;
             if (allMinListingPage != null && allMinListingPage.TotalCount > 0)
             {
                 allMinListingDto = allMinListingPage.Items[0];
@@ -862,6 +864,11 @@ namespace NFTMarketServer.NFT
                     ChainId = indexerNFTInfo.ChainId,
                     NFTType = NFTType.NFT
                 });
+            }
+            var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoIndexDto.Id);
+            if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
+            {
+                nftInfoIndexDto.MaxOfferPrice = indexerNFTOffer.Price;
             }
 
             //otherMinListing
@@ -894,8 +901,6 @@ namespace NFTMarketServer.NFT
 
             //maxOffer
             {
-                var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoIndexDto.Id);
-
                 if (indexerNFTInfo?.OfferPrice != indexerNFTOffer?.Price)
                 {
                     await _distributedEventBus.PublishAsync(new NFTInfoResetEto
