@@ -73,6 +73,7 @@ namespace NFTMarketServer.NFT
         private readonly ISeedAppService _seedAppService;
         private readonly IRarityProvider _rarityProvider;
         private readonly ICompositeNFTProvider _compositeNFTProvider;
+        private readonly INFTOfferAppService _nftOfferAppService;
 
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
@@ -127,7 +128,8 @@ namespace NFTMarketServer.NFT
             IOptionsMonitor<ChainOptions> chainOptionsMonitor,
             ICompositeNFTProvider compositeNFTProvider,
             NFTMarketServer.Users.Provider.IUserBalanceProvider userBalanceIndexProvider,
-            IOptionsMonitor<FuzzySearchOptions> fuzzySearchOptionsMonitor)
+            IOptionsMonitor<FuzzySearchOptions> fuzzySearchOptionsMonitor,            
+            INFTOfferAppService nftOfferAppService)
         {
             _tokenAppService = tokenAppService;
             _userAppService = userAppService;
@@ -165,6 +167,7 @@ namespace NFTMarketServer.NFT
             _userBalanceIndexProvider = userBalanceIndexProvider;
             _compositeNFTProvider = compositeNFTProvider;
             _fuzzySearchOptionsMonitor = fuzzySearchOptionsMonitor;
+            _nftOfferAppService = nftOfferAppService;
         }
 
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
@@ -748,6 +751,7 @@ namespace NFTMarketServer.NFT
                 canBuyFlag = await GetCanBuyFlagAsync(nftInfoIndex.ChainId, nftInfoIndex.Symbol, input.Address);
             }
 
+            nftInfoIndexDto.BestOffer = await GetBestOfferAsync(nftInfoIndex.ChainId, input.Id, loginAddress);
             nftInfoIndexDto.NFTBalance = nftBalance;
             nftInfoIndexDto.CanBuyFlag = canBuyFlag;
 
@@ -824,6 +828,26 @@ namespace NFTMarketServer.NFT
             }
 
             return nftInfoIndexDto;
+        }
+
+        private async Task<NFTOfferDto> GetBestOfferAsync(string chainId, string nftInfoId, string address)
+        {
+            var query = new GetNFTOffersInput()
+            {
+                SkipCount = 0,
+                MaxResultCount = 1,
+                NFTInfoId = nftInfoId,
+                ChainId = chainId,
+                ExcludeAddress = address
+            };
+            //PagedResultDto<NFTOfferDto>
+            var result = await _nftOfferAppService.GetNFTOffersAsync(query);
+            if (result == null || result.TotalCount == 0 || result.Items.IsNullOrEmpty())
+            {
+                return null;
+            }
+
+            return result.Items.FirstOrDefault();
         }
 
         private async Task<decimal> GetNFTBalanceAsync(string address, string nftInfoId)

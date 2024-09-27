@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NFTMarketServer.Market;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Users;
 using Volo.Abp.Application.Dtos;
@@ -74,6 +75,7 @@ namespace NFTMarketServer.NFT
         public string Describe { get; set; }
         
         public decimal NFTBalance{ get; set; }
+        public NFTOfferDto BestOffer{ get; set; }
     }
 
     public class CreateTokenInformation
