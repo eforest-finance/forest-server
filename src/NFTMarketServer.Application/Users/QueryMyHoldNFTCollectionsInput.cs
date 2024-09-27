@@ -10,6 +10,8 @@ namespace NFTMarketServer.Users
         public QueryType  QueryType{ get; set; }
         
         public List<string> CollectionIdList{ get; set; }
+        
+        public string NFTInfoId{ get; set; }
     }
 
 

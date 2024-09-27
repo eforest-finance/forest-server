@@ -72,6 +72,8 @@ namespace NFTMarketServer.NFT
         public string Star{ get; set; }
         public string Rarity { get; set; }
         public string Describe { get; set; }
+        
+        public decimal NFTBalance{ get; set; }
     }
 
     public class CreateTokenInformation

@@ -736,7 +736,8 @@ namespace NFTMarketServer.NFT
                 new List<string> { nftInfoIndex.CollectionId });
 
             var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
-            _logger.LogDebug("nftinfo TryGetCurrentUserAddressAsync {A}", loginAddress);
+            var nftBalance = await GetNFTBalanceAsync(loginAddress, nftInfoIndex.Id);
+            _logger.LogDebug("nftinfo TryGetCurrentUserAddressAsync {A} nftBalance:{B}", loginAddress, nftBalance);
             var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
             var nftInfoIndexDto =
                 MapForIndexerNFTInfos(nftInfoIndex, accounts, nftExtensions, collectionInfos, isInRarityWhiteList);
@@ -747,6 +748,7 @@ namespace NFTMarketServer.NFT
                 canBuyFlag = await GetCanBuyFlagAsync(nftInfoIndex.ChainId, nftInfoIndex.Symbol, input.Address);
             }
 
+            nftInfoIndexDto.NFTBalance = nftBalance;
             nftInfoIndexDto.CanBuyFlag = canBuyFlag;
 
             // seed create token info
@@ -822,6 +824,33 @@ namespace NFTMarketServer.NFT
             }
 
             return nftInfoIndexDto;
+        }
+
+        private async Task<decimal> GetNFTBalanceAsync(string address, string nftInfoId)
+        {
+            if (address.IsNullOrEmpty())
+            {
+                return 0;
+            }
+
+            var input = new QueryUserBalanceIndexInput()
+            {
+                Address = address,
+                SkipCount = 0,
+                MaxResultCount = 1,
+                QueryType = QueryType.HOLDING,
+                NFTInfoId = nftInfoId
+            };
+            var userBalanceList =
+                await _userBalanceIndexProvider.GetUserBalancesByNFTInfoIdAsync(input);
+            if (userBalanceList == null || userBalanceList.Item1 == 0 || userBalanceList.Item2.IsNullOrEmpty())
+            {
+                return 0;
+            }
+
+            var balance = userBalanceList.Item2.FirstOrDefault();
+            var amount = balance == null ? 0 : (decimal)balance.Amount / (decimal)Math.Pow(10, balance.Decimals);
+            return amount;
         }
 
         private NFTInfoIndexDto MapMinListingInfo(NFTInfoIndexDto nftInfoIndexDto, IndexerNFTListingInfo listingDto)
