@@ -203,4 +203,47 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         return returnUserBalances;
     }
 
+    public async Task<Tuple<long, List<UserBalanceIndex>>> GetUserBalancesByNFTInfoIdAsync(QueryUserBalanceIndexInput input)
+    {
+        input.SkipCount = 0;
+        input.MaxResultCount = 1;
+        _logger.LogInformation("GetUserBalancesByNFTInfoIdAsync debug query input:{A}",JsonConvert.SerializeObject(input));
+        var mustQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
+        if (!input.Address.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Term(i =>
+                i.Field(f => f.Address).Value(input.Address)));
+        }
+        if (!input.NFTInfoId.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Term(i =>
+                i.Field(f => f.NFTInfoId).Value(input.NFTInfoId)));
+        }
+
+        if (input.QueryType == QueryType.HOLDING)
+        {
+            mustQuery.Add(q => q.TermRange(i => i.Field(index => index.Amount).GreaterThanOrEquals(1.ToString())));
+        } 
+        if (!input.CollectionIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q =>
+                q.Terms(i => i.Field(f => f.CollectionId).Terms(input.CollectionIdList)));
+        }
+        if (!input.KeyWord.IsNullOrEmpty())
+        {        
+            var shouldQuery = new List<Func<QueryContainerDescriptor<UserBalanceIndex>, QueryContainer>>();
+            shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionName).Value("*" + input.KeyWord + "*")));
+            shouldQuery.Add(q => q.Wildcard(i => i.Field(f => f.CollectionSymbol).Value("*" + input.KeyWord + "*")));
+            mustQuery.Add(q => q.Bool(b => b.Should(shouldQuery)));
+        }
+        
+        QueryContainer Filter(QueryContainerDescriptor<UserBalanceIndex> f) =>
+            f.Bool(b => b.Must(mustQuery));
+
+        var sorting = new Func<SortDescriptor<UserBalanceIndex>, IPromise<IList<ISort>>>(s =>
+            s.Descending(t => t.ChangeTime));
+        var tuple =  await _userBalanceIndexRepository.GetSortListAsync(Filter, skip: input.SkipCount,
+            sortFunc: sorting);
+        return tuple;
+    }
 }
