@@ -176,10 +176,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
         mustQuery.Add(q =>
             q.Term(i => i.Field(f => f.CountedFlag).Value(true)));
 
-        if (!dto.HasListingFlag && !dto.HasOfferFlag)
-        {
-            AddQueryForMinListingPrice(mustQuery, dto);
-        }
+        AddQueryForMinListingPrice(mustQuery, dto);
         if (dto.HasListingFlag)
         {
             AddQueryForMinListingPrice(mustQuery, dto);
