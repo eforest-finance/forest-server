@@ -55,7 +55,7 @@ namespace NFTMarketServer.Market
 
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    input.ChainId, new List<string>(), input.NFTInfoId, new List<string>(),string.Empty, string.Empty,string.Empty);
+                    input.ChainId, new List<string>(), input.NFTInfoId, new List<string>(),string.Empty, string.Empty,input.ExcludeAddress);
             if (nftOfferIndexes == null || nftOfferIndexes.TotalRecordCount==0)
                 return buildInitNFTOffersDto();
             
