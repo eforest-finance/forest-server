@@ -1647,8 +1647,6 @@ namespace NFTMarketServer.NFT
                 showPrice = maxOffer.Price.ToString();
             }
 
-           // decimal minListPrice = minList == null ? -1 : minList.Prices;
-           // decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
             var profileInfo = new ProfileInfo()
             {
                 MinListingPrice = minList == null ? null : minList.Prices,
@@ -1668,9 +1666,7 @@ namespace NFTMarketServer.NFT
                 Price = temPrice,
                 Id = seedSymbolIndex.Id,
                 TokenName = seedSymbolIndex.TokenName,
-                //IssueChainId = seedSymbolIndex.IssueChainId,
                 IssueChainIdStr = ChainHelper.ConvertChainIdToBase58(seedSymbolIndex.IssueChainId),
-                //ChainId = ChainHelper.ConvertBase58ToChainId(seedSymbolIndex.ChainId),
                 ChainIdStr = seedSymbolIndex.ChainId,
                 ListingPrice = seedSymbolIndex.HasAuctionFlag
                     ? seedSymbolIndex.MaxAuctionPrice
@@ -1710,9 +1706,7 @@ namespace NFTMarketServer.NFT
                 Price = temPrice,
                 Id = nftInfoIndex.Id,
                 TokenName = nftInfoIndex.TokenName,
-                //IssueChainId = nftInfoIndex.IssueChainId,
                 IssueChainIdStr = ChainHelper.ConvertChainIdToBase58(nftInfoIndex.IssueChainId),
-                //ChainId = ChainHelper.ConvertBase58ToChainId(nftInfoIndex.ChainId),
                 ChainIdStr = nftInfoIndex.ChainId,
                 TraitPairsDictionary = nftInfoIndex.TraitPairsDictionary
                     .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList(),
@@ -1750,8 +1744,6 @@ namespace NFTMarketServer.NFT
 
             var showPrice = "--";
             var hasOwnerListingFlag = false;
-           // decimal minListPrice = minList == null ? -1 : minList.Prices;
-           // decimal maxOfferPrice = maxOffer == null ? -1 : maxOffer.Price;
             if (minList != null && minList.Prices > 0)
             {
                 showPrice = minList.Prices.ToString();
@@ -1781,9 +1773,7 @@ namespace NFTMarketServer.NFT
                 Price = temPrice,
                 Id = nftInfoIndex.Id,
                 TokenName = nftInfoIndex.TokenName,
-                //IssueChainId = nftInfoIndex.IssueChainId,
                 IssueChainIdStr = ChainHelper.ConvertChainIdToBase58(nftInfoIndex.IssueChainId),
-                //ChainId = ChainHelper.ConvertBase58ToChainId(nftInfoIndex.ChainId),
                 ChainIdStr = nftInfoIndex.ChainId,
                 TraitPairsDictionary = nftInfoIndex.TraitPairsDictionary
                     .Select(item => new MetadataDto { Key = item.Key, Value = item.Value }).ToList(),
@@ -1836,8 +1826,6 @@ namespace NFTMarketServer.NFT
             _logger.LogInformation("GetMyMinListInfosAsync from:{from} minListResultsCount:{minListResults}", from,
                 minListResults.Length);
 
-            _logger.LogInformation("GetMyMinListInfosAsync from:{from} minListResults:{minListResults}", from,
-                JsonConvert.SerializeObject(minListResults));
             var minListDict = minListResults.Where(result =>
                     result != null && result.TotalCount != 0 && result.Items.Count != 0)
                 .ToDictionary(
