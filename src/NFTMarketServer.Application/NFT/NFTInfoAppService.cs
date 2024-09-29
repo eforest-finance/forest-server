@@ -2258,7 +2258,6 @@ namespace NFTMarketServer.NFT
             var seedPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
             var nftPageResult = PagedResultWrapper<CompositeNFTInfoIndexDto>.Initialize();
 
-            try
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
                 //to get max offers
@@ -2295,12 +2294,7 @@ namespace NFTMarketServer.NFT
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 Seed seedPageResult:{seedPageResult}",
                     JsonConvert.SerializeObject(seedPageResult));
             }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "GetMyCreatedNFTInfosAsyncV2 Seed Excepton msg:{msg}", e.Message);
-            }
 
-            try
             {
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftResultCount:{nftResult}", nftResult.Item1);
@@ -2338,10 +2332,6 @@ namespace NFTMarketServer.NFT
                     minListDict, nftDecimalDict, userBalanceList);
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT nftPageResult:{nftPageResult}",
                     JsonConvert.SerializeObject(nftPageResult));
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "GetMyCreatedNFTInfosAsyncV2 NFT Excepton msg:{msg}", e.Message);
             }
 
             result = new PagedResultDto<CompositeNFTInfoIndexDto>()
