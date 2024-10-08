@@ -99,7 +99,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "create token portkeyUrl:{A} errMsg:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(ex.Message));
+                    _logger.LogError(ex, "create token exception portkeyUrl:{A} errMsg:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(ex.Message));
                     return null;
                 }
 
