@@ -8,5 +8,7 @@ namespace NFTMarketServer.Market
         [Required]
         public string ChainId { get; set; }
         public string NFTInfoId { get; set; }
+        
+        public string ExcludeAddress{ get; set; }
     }
 }

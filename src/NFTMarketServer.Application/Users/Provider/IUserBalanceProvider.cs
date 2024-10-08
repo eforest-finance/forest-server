@@ -18,5 +18,6 @@ public interface IUserBalanceProvider
 
     public Task<List<UserBalanceIndex>> GetValidUserBalanceInfosAsync(QueryUserBalanceIndexInput input);
 
+    public Task<Tuple<long, List<UserBalanceIndex>>> GetUserBalancesByNFTInfoIdAsync(QueryUserBalanceIndexInput input);
 
 }

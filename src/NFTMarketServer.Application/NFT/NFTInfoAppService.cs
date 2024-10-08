@@ -73,6 +73,7 @@ namespace NFTMarketServer.NFT
         private readonly ISeedAppService _seedAppService;
         private readonly IRarityProvider _rarityProvider;
         private readonly ICompositeNFTProvider _compositeNFTProvider;
+        private readonly INFTOfferAppService _nftOfferAppService;
 
         private readonly IOptionsMonitor<ResetNFTSyncHeightExpireMinutesOptions>
             _resetNFTSyncHeightExpireMinutesOptionsMonitor;
@@ -127,7 +128,8 @@ namespace NFTMarketServer.NFT
             IOptionsMonitor<ChainOptions> chainOptionsMonitor,
             ICompositeNFTProvider compositeNFTProvider,
             NFTMarketServer.Users.Provider.IUserBalanceProvider userBalanceIndexProvider,
-            IOptionsMonitor<FuzzySearchOptions> fuzzySearchOptionsMonitor)
+            IOptionsMonitor<FuzzySearchOptions> fuzzySearchOptionsMonitor,            
+            INFTOfferAppService nftOfferAppService)
         {
             _tokenAppService = tokenAppService;
             _userAppService = userAppService;
@@ -165,6 +167,7 @@ namespace NFTMarketServer.NFT
             _userBalanceIndexProvider = userBalanceIndexProvider;
             _compositeNFTProvider = compositeNFTProvider;
             _fuzzySearchOptionsMonitor = fuzzySearchOptionsMonitor;
+            _nftOfferAppService = nftOfferAppService;
         }
 
         public async Task<PagedResultDto<UserProfileNFTInfoIndexDto>> GetNFTInfosForUserProfileAsync(
@@ -736,7 +739,8 @@ namespace NFTMarketServer.NFT
                 new List<string> { nftInfoIndex.CollectionId });
 
             var loginAddress = await _userAppService.TryGetCurrentUserAddressAsync();
-            _logger.LogDebug("nftinfo TryGetCurrentUserAddressAsync {A}", loginAddress);
+            var nftBalance = await GetNFTBalanceAsync(loginAddress, nftInfoIndex.Id);
+            _logger.LogDebug("nftinfo TryGetCurrentUserAddressAsync {A} nftBalance:{B}", loginAddress, nftBalance);
             var isInRarityWhiteList = await _rarityProvider.CheckAddressIsInWhiteListAsync(loginAddress);
             var nftInfoIndexDto =
                 MapForIndexerNFTInfos(nftInfoIndex, accounts, nftExtensions, collectionInfos, isInRarityWhiteList);
@@ -747,6 +751,8 @@ namespace NFTMarketServer.NFT
                 canBuyFlag = await GetCanBuyFlagAsync(nftInfoIndex.ChainId, nftInfoIndex.Symbol, input.Address);
             }
 
+            nftInfoIndexDto.BestOffer = await GetBestOfferAsync(nftInfoIndex.ChainId, input.Id, loginAddress);
+            nftInfoIndexDto.NFTBalance = nftBalance;
             nftInfoIndexDto.CanBuyFlag = canBuyFlag;
 
             // seed create token info
@@ -824,6 +830,53 @@ namespace NFTMarketServer.NFT
             return nftInfoIndexDto;
         }
 
+        private async Task<NFTOfferDto> GetBestOfferAsync(string chainId, string nftInfoId, string address)
+        {
+            var query = new GetNFTOffersInput()
+            {
+                SkipCount = 0,
+                MaxResultCount = 1,
+                NFTInfoId = nftInfoId,
+                ChainId = chainId,
+                ExcludeAddress = address
+            };
+            //PagedResultDto<NFTOfferDto>
+            var result = await _nftOfferAppService.GetNFTOffersAsync(query);
+            if (result == null || result.TotalCount == 0 || result.Items.IsNullOrEmpty())
+            {
+                return null;
+            }
+
+            return result.Items.FirstOrDefault();
+        }
+
+        private async Task<decimal> GetNFTBalanceAsync(string address, string nftInfoId)
+        {
+            if (address.IsNullOrEmpty())
+            {
+                return 0;
+            }
+
+            var input = new QueryUserBalanceIndexInput()
+            {
+                Address = address,
+                SkipCount = 0,
+                MaxResultCount = 1,
+                QueryType = QueryType.HOLDING,
+                NFTInfoId = nftInfoId
+            };
+            var userBalanceList =
+                await _userBalanceIndexProvider.GetUserBalancesByNFTInfoIdAsync(input);
+            if (userBalanceList == null || userBalanceList.Item1 == 0 || userBalanceList.Item2.IsNullOrEmpty())
+            {
+                return 0;
+            }
+
+            var balance = userBalanceList.Item2.FirstOrDefault();
+            var amount = balance == null ? 0 : (decimal)balance.Amount / (decimal)Math.Pow(10, balance.Decimals);
+            return amount;
+        }
+
         private NFTInfoIndexDto MapMinListingInfo(NFTInfoIndexDto nftInfoIndexDto, IndexerNFTListingInfo listingDto)
         {
             nftInfoIndexDto.ListingId = listingDto.Id;
@@ -849,6 +902,8 @@ namespace NFTMarketServer.NFT
             };
             var allMinListingPage = await _nftListingProvider.GetNFTListingsAsync(getMyNftListingsDto);
             IndexerNFTListingInfo allMinListingDto = null;
+            nftInfoIndexDto.ListingPrice = -1;
+            nftInfoIndexDto.MaxOfferPrice = -1;
             if (allMinListingPage != null && allMinListingPage.TotalCount > 0)
             {
                 allMinListingDto = allMinListingPage.Items[0];
@@ -862,6 +917,11 @@ namespace NFTMarketServer.NFT
                     ChainId = indexerNFTInfo.ChainId,
                     NFTType = NFTType.NFT
                 });
+            }
+            var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoIndexDto.Id);
+            if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
+            {
+                nftInfoIndexDto.MaxOfferPrice = indexerNFTOffer.Price;
             }
 
             //otherMinListing
@@ -894,8 +954,6 @@ namespace NFTMarketServer.NFT
 
             //maxOffer
             {
-                var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoIndexDto.Id);
-
                 if (indexerNFTInfo?.OfferPrice != indexerNFTOffer?.Price)
                 {
                     await _distributedEventBus.PublishAsync(new NFTInfoResetEto
@@ -1597,7 +1655,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = balance?.Amount ?? 0
+                Balance = balance?.Amount/(decimal)Math.Pow(10, balance.Decimals) ?? 0
             };
 
 
@@ -1709,7 +1767,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = balance==null?0:(decimal)balance.Amount
+                Balance = balance==null?0:(decimal)balance.Amount/(decimal)Math.Pow(10, balance.Decimals)
             };
 
             var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
