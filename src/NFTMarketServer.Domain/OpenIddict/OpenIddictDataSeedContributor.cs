@@ -258,7 +258,7 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
             var application = new AbpApplicationDescriptor
             {
                 ClientId = name,
-                Type = type,
+                //Type = type,
                 ClientSecret = secret,
                 ConsentType = consentType,
                 DisplayName = displayName,
