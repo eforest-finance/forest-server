@@ -3,7 +3,7 @@
   <Import Project="..\..\common.props" />
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <RootNamespace>NFTMarketServer</RootNamespace>
     <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
@@ -36,12 +36,12 @@
     <PackageReference Include="AElf.Types" Version="1.5.0" />
     <PackageReference Include="GraphQL.Client" Version="5.1.0" />
     <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="5.1.0" />
-    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.6.5" />
+    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="7.0.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="6.0.7" />
     <PackageReference Include="DistributedLock.Redis" Version="1.0.2" />
-    <PackageReference Include="Volo.Abp.EventBus.RabbitMQ" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.EventBus.RabbitMQ" Version="8.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,13 +50,13 @@
 
   <ItemGroup>
     <PackageReference Include="Com.Ctrip.Framework.Apollo.Configuration" Version="2.10.1" />
-    <PackageReference Include="Volo.Abp.Autofac" Version="7.0.0" />
-    <PackageReference Include="Volo.Abp.Caching.StackExchangeRedis" Version="7.0.0" />
-    <PackageReference Include="Volo.Abp.DistributedLocking" Version="7.0.0" />
-    <PackageReference Include="Volo.Abp.AspNetCore.Serilog" Version="7.0.0" />
-    <PackageReference Include="Volo.Abp.Account.Web.OpenIddict" Version="7.0.0" />
-    <PackageReference Include="Volo.Abp.Account.Application" Version="7.0.0" />
-    <PackageReference Include="Volo.Abp.Account.HttpApi" Version="7.0.0" />
+    <PackageReference Include="Volo.Abp.Autofac" Version="8.2.0" />
+    <PackageReference Include="Volo.Abp.Caching.StackExchangeRedis" Version="8.2.0" />
+    <PackageReference Include="Volo.Abp.DistributedLocking" Version="8.2.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Serilog" Version="8.2.0" />
+    <PackageReference Include="Volo.Abp.Account.Web.OpenIddict" Version="8.2.0" />
+    <PackageReference Include="Volo.Abp.Account.Application" Version="8.2.0" />
+    <PackageReference Include="Volo.Abp.Account.HttpApi" Version="8.2.0" />
     <ProjectReference Include="..\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
     <ProjectReference Include="..\NFTMarketServer.MongoDB\NFTMarketServer.MongoDB.csproj" />
   </ItemGroup>
