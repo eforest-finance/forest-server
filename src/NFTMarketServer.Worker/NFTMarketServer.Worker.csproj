@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
@@ -9,7 +9,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Volo.Abp.BackgroundWorkers.Quartz" Version="7.0.0" />
+      <PackageReference Include="Volo.Abp.BackgroundWorkers.Quartz" Version="8.2.0" />
     </ItemGroup>
 
 </Project>

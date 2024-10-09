@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>NFTMarketServer.Grains</RootNamespace>
         <PackageId>NFTMarketServer.Grains</PackageId>
@@ -9,12 +9,12 @@
     
     <ItemGroup>
         <PackageReference Include="AElf.AElfNode.EventHandler.BackgroundJob" Version="1.2.1-19314" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.2.0" />
         <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="3.6.5">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.6.5" />
+        <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="7.0.0" />
         <PackageReference Include="MongoDB.Bson" Version="2.17.1" />
         <PackageReference Include="AElf.Sdk.CSharp" Version="1.5.0" />
         <PackageReference Include="AElf.Core" Version="1.5.0" />
@@ -23,9 +23,9 @@
         <PackageReference Include="AElf.Types" Version="1.5.0" />
         <PackageReference Include="AElf.Contracts.TokenConverter" Version="1.5.0" />
         <PackageReference Include="AElf.Contracts.MultiToken" Version="1.5.0" />
-        <PackageReference Include="Volo.Abp.Autofac" Version="7.0.0" />
-        <PackageReference Include="Volo.Abp.BackgroundJobs.Domain" Version="7.0.0" />
-        <PackageReference Include="Volo.Abp.Caching" Version="7.0.0" />
+        <PackageReference Include="Volo.Abp.Autofac" Version="8.2.0" />
+        <PackageReference Include="Volo.Abp.BackgroundJobs.Domain" Version="8.2.0" />
+        <PackageReference Include="Volo.Abp.Caching" Version="8.2.0" />
         <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="5.1.0" />
         <PackageReference Include="GraphQL.Client" Version="5.1.0" />
     </ItemGroup>
