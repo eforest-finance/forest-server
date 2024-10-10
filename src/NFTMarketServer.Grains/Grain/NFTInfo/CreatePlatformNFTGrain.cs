@@ -20,16 +20,18 @@ public class CreatePlatformNFTGrain : Grain<CreatePlatformNFTState>, ICreatePlat
 
     }
     
-    public override async Task OnActivateAsync()
+    public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("OnActivateAsync()");
         await ReadStateAsync();
-        await base.OnActivateAsync();
+        await base.OnActivateAsync(cancellationToken);
     }
 
-    public override async Task OnDeactivateAsync()
+    public override async Task OnDeactivateAsync(DeactivationReason reason, CancellationToken token)
     {
+        _logger.LogInformation("OnDeactivateAsync({Reason})", reason);
         await WriteStateAsync();
-        await base.OnDeactivateAsync();
+        await base.OnDeactivateAsync(reason, token);
     }
 
     public async Task<GrainResultDto<CreatePlatformNFTGrainDto>> SaveCreatePlatformNFTAsync(CreatePlatformNFTGrainInput createPlatformNFTGrainInput)

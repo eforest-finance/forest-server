@@ -82,7 +82,7 @@ public class ExpiredListingNftHandleService : ScheduleSyncDataService
         {
             if (data == null || data.NftInfoId.IsNullOrEmpty() || data?.ExpireTime == null)
             {
-                _logger.Debug("ExpiredListingForCollectionUpdate null check {Data}", JsonConvert.SerializeObject(data));
+                _logger.LogDebug("ExpiredListingForCollectionUpdate null check {Data}", JsonConvert.SerializeObject(data));
                 continue;
             }
             
@@ -91,7 +91,7 @@ public class ExpiredListingNftHandleService : ScheduleSyncDataService
 
             if (!nftInfoIdWithTimeList.IsNullOrEmpty() && nftInfoIdWithTimeList.Contains(nftInfoIdWithTime))
             {
-                _logger.Debug($"ExpiredListingForCollectionUpdate duplicated nftInfoIdWithTime: {nftInfoIdWithTime}",
+                _logger.LogDebug($"ExpiredListingForCollectionUpdate duplicated nftInfoIdWithTime: {nftInfoIdWithTime}",
                     nftInfoIdWithTime);
                 continue;
             }

@@ -44,7 +44,7 @@ namespace NFTMarketServer
         typeof(AbpFeatureManagementApplicationModule),
         typeof(AbpSettingManagementApplicationModule),
         typeof(NFTMarketServerGrainsModule),
-        typeof(AElfWhitelistApplicationModule),
+       // typeof(AElfWhitelistApplicationModule),
         typeof(AbpEventBusRabbitMqModule) 
     )]
     public class NFTMarketServerApplicationModule : AbpModule

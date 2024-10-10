@@ -280,7 +280,7 @@ namespace NFTMarketServer.NFT
 
                 var resetSyncHeightFlag =
                     await _distributedCacheForHeight.GetAsync(resetNFTSyncHeightFlagCacheKey);
-                _logger.Debug(
+                _logger.LogDebug(
                     "GetCompositeNFTInfosAsync origin {ResetSyncHeightFlag} {resetNftSyncHeightExpireMinutes}",
                     resetSyncHeightFlag,
                     _resetNFTSyncHeightExpireMinutesOptionsMonitor?.CurrentValue.ResetNFTSyncHeightExpireMinutes);
@@ -1209,7 +1209,7 @@ namespace NFTMarketServer.NFT
 
         public async Task AddOrUpdateNftInfoNewByIdAsync(string nftInfoId, string chainId)
         {
-            _logger.Debug("AddOrUpdateNftInfoNewByIdAsync nftInfoId={A} chainId={B}", nftInfoId, chainId);
+            _logger.LogDebug("AddOrUpdateNftInfoNewByIdAsync nftInfoId={A} chainId={B}", nftInfoId, chainId);
             if (string.IsNullOrEmpty(nftInfoId) || string.IsNullOrEmpty(chainId))
             {
                 return;
@@ -1317,7 +1317,7 @@ namespace NFTMarketServer.NFT
 
         private async Task BuildRarityInfo(NFTInfoNewIndex nftInfo)
         {
-            _logger.Info("BuildRarityInfo symbol ={A} gen={B}",
+            _logger.LogInformation("BuildRarityInfo symbol ={A} gen={B}",
                 nftInfo.Symbol, nftInfo.Generation);
             if (nftInfo.Generation == CommonConstant.Gen9)
             {
@@ -1330,7 +1330,7 @@ namespace NFTMarketServer.NFT
                     Keyword = nftInfo.Symbol
                 };
                 var schrodingerInfo = await _schrodingerInfoProvider.GetSchrodingerInfoAsync(input);
-                _logger.Info("BuildRarityInfo symbol ={A} gen={B} query:{C} input:{D}",
+                _logger.LogInformation("BuildRarityInfo symbol ={A} gen={B} query:{C} input:{D}",
                     nftInfo.Symbol, nftInfo.Generation, JsonConvert.SerializeObject(schrodingerInfo),
                     JsonConvert.SerializeObject(input));
                 if (schrodingerInfo.TotalCount != 0 && !schrodingerInfo.Data.IsNullOrEmpty())
@@ -1375,7 +1375,7 @@ namespace NFTMarketServer.NFT
             }
 
             var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(nftInfoNewIndex.Id);
-            _logger.Debug("UpdateNFTOtherInfoAsync nftInfoNewIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull={C}",
+            _logger.LogDebug("UpdateNFTOtherInfoAsync nftInfoNewIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull={C}",
                 nftInfoNewIndex.Id,
                 indexerNFTOffer?.Id, indexerNFTOffer == null);
             if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
@@ -1414,7 +1414,7 @@ namespace NFTMarketServer.NFT
 
         private bool UpdateMinListingInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTListingInfo listingDto)
         {
-            _logger.Debug("UpdateMinListingInfo nftInfoIndexId={A} listingDto={B}", nftInfoIndex.Id,
+            _logger.LogDebug("UpdateMinListingInfo nftInfoIndexId={A} listingDto={B}", nftInfoIndex.Id,
                 JsonConvert.SerializeObject(listingDto));
             if (listingDto == null && nftInfoIndex.ListingId.IsNullOrEmpty())
             {

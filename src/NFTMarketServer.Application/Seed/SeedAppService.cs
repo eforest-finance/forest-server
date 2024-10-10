@@ -655,7 +655,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             return;
         }
 
-        _logger.Debug("AddOrUpdateSeedSymbolAsync seedSymbolIndexId={A} chainId={B}", seedSymbolIndexId, chainId);
+        _logger.LogDebug("AddOrUpdateSeedSymbolAsync seedSymbolIndexId={A} chainId={B}", seedSymbolIndexId, chainId);
 
         await UpdateSeedSymbolOtherInfoAsync(seedSymbol);
     }
@@ -693,7 +693,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
         
         var indexerNFTOffer = await _nftOfferProvider.GetMaxOfferInfoAsync(seedSymbolIndex.Id);
-        _logger.Debug("UpdateSeedSymbolOtherInfoAsync seedSymbolIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull={C}", seedSymbolIndex.Id,
+        _logger.LogDebug("UpdateSeedSymbolOtherInfoAsync seedSymbolIndex.Id={A} indexerNFTOffer.Id={B} offerIsNull={C}", seedSymbolIndex.Id,
             indexerNFTOffer?.Id, indexerNFTOffer == null);
         if (indexerNFTOffer != null && !indexerNFTOffer.Id.IsNullOrEmpty())
         {
@@ -750,7 +750,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     
     private bool UpdateMinListingInfo(SeedSymbolIndex seedSymbolIndex, IndexerNFTListingInfo listingDto)
         {
-            _logger.Debug("Seed UpdateMinListingInfo nftInfoIndexId={A} listingDto={B}", seedSymbolIndex.Id,
+            _logger.LogDebug("Seed UpdateMinListingInfo nftInfoIndexId={A} listingDto={B}", seedSymbolIndex.Id,
                 JsonConvert.SerializeObject(listingDto));
             if (listingDto == null && seedSymbolIndex.ListingId.IsNullOrEmpty())
             {
