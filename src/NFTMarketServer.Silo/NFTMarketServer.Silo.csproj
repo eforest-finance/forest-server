@@ -35,7 +35,7 @@
         <Content Update="appsettings.Development.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <None Update="apollosettings.json">
+        <None Update="apollo.appsettings.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
