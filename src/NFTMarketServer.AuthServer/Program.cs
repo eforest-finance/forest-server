@@ -68,8 +68,8 @@ public class Program
     {
         return Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
             .UseOrleansClient()
-            .UseAutofac()
-            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+            //.UseAutofac()
+            //.ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
             .UseSerilog();
     }
 }
