@@ -49,9 +49,9 @@ namespace NFTMarketServer
                     .UseSerilog();
                 await builder.AddApplicationAsync<NFTMarketServerHttpApiHostModule>();
                 var app = builder.Build();
+                CreateHostBuilder(args).Build().Run();
                 await app.InitializeApplicationAsync();
                 await app.RunAsync();
-                CreateHostBuilder(args).Build().Run();
                 return 0;
             }
             catch (Exception ex)

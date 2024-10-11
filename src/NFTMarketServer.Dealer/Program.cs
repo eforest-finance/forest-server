@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -36,12 +37,14 @@ namespace NFTMarketServer.ContractEventHandler
                 builder.Configuration.AddJsonFile("apollosettings.json");
                 builder.Host.AddAppSettingsSecretsJson()
                     .UseAutofac()
+                    .UseOrleansClient()
                 #if !DEBUG
                     .UseApollo() 
                 #endif
                     .UseSerilog();
                 await builder.AddApplicationAsync<NFTMarketServerDealerModule>();
                 var app = builder.Build();
+                CreateHostBuilder(args).Build().Run();
                 await app.InitializeApplicationAsync();
                 await app.RunAsync();
                 return 0;
@@ -55,6 +58,15 @@ namespace NFTMarketServer.ContractEventHandler
             {
                 Log.CloseAndFlush();
             }
+        }
+        
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
+                .UseOrleansClient()
+                .UseAutofac()
+                .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+                .UseSerilog();
         }
     }
 }

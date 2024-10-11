@@ -47,7 +47,7 @@ public class NFTMarketServerEntityEventHandlerModule : AbpModule
         Configure<CollectionTradeInfoOptions>(configuration.GetSection("CollectionTradeInfo"));
 
         context.Services.AddHostedService<NFTMarketServerHostedService>();
-        context.Services.AddSingleton<IClusterClient>(o =>
+        /*context.Services.AddSingleton<IClusterClient>(o =>
         {
             return new ClientBuilder()
                 .ConfigureDefaults()
@@ -67,22 +67,22 @@ public class NFTMarketServerEntityEventHandlerModule : AbpModule
                 //.AddSimpleMessageStreamProvider(AElfIndexerApplicationConsts.MessageStreamName)
                 .ConfigureLogging(builder => builder.AddProvider(o.GetService<ILoggerProvider>()))
                 .Build();
-        });
+        });*/
         ConfigureEsIndexCreation();
         ConfigureMassTransit(context);
         ConfigureGraphQl(context, configuration);
     }
-    public override void OnApplicationInitialization(ApplicationInitializationContext context)
+    /*public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         var client = context.ServiceProvider.GetRequiredService<IClusterClient>();
         AsyncHelper.RunSync(async ()=> await client.Connect());
-    }
+    }*/
 
-    public override void OnApplicationShutdown(ApplicationShutdownContext context)
+    /*public override void OnApplicationShutdown(ApplicationShutdownContext context)
     {
         var client = context.ServiceProvider.GetRequiredService<IClusterClient>();
         AsyncHelper.RunSync(client.Close);
-    }
+    }*/
 
     //Create the ElasticSearch Index based on Domain Entity
     private void ConfigureEsIndexCreation()

@@ -94,24 +94,24 @@ namespace NFTMarketServer.Dealer
             {
                 // IsReadOnlyFunc = (DashboardContext context) => true
             });
-            StartOrleans(context.ServiceProvider);
+          //  StartOrleans(context.ServiceProvider);
         }
         
-        private static void StartOrleans(IServiceProvider serviceProvider)
+        /*private static void StartOrleans(IServiceProvider serviceProvider)
         {
             var client = serviceProvider.GetRequiredService<IClusterClient>();
             if(!client.IsInitialized) 
             {
                 AsyncHelper.RunSync(async () => await client.Connect());
             }
-        }
+        }*/
 
 
-        public override void OnApplicationShutdown(ApplicationShutdownContext context)
+        /*public override void OnApplicationShutdown(ApplicationShutdownContext context)
         {
             var client = context.ServiceProvider.GetRequiredService<IClusterClient>();
             AsyncHelper.RunSync(client.Close);
-        }
+        }*/
         
         
         //Create the ElasticSearch Index based on Domain Entity
@@ -215,7 +215,7 @@ namespace NFTMarketServer.Dealer
         private static void ConfigOrleans(ServiceConfigurationContext context,
             IConfiguration configuration)
         {
-            context.Services.AddSingleton<IClusterClient>(o =>
+            /*context.Services.AddSingleton<IClusterClient>(o =>
             {
                 return new ClientBuilder()
                     .ConfigureDefaults()
@@ -234,7 +234,7 @@ namespace NFTMarketServer.Dealer
                         parts.AddApplicationPart(typeof(NFTMarketServerGrainsModule).Assembly).WithReferences())
                     .ConfigureLogging(builder => builder.AddProvider(o.GetService<ILoggerProvider>()))
                     .Build();
-            });
+            });*/
         }
 
         private static void ConfigureGraphQl(ServiceConfigurationContext context,
