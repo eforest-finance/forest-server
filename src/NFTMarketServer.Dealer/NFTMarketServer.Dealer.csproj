@@ -41,7 +41,6 @@
         <ProjectReference Include="..\NFTMarketServer.Grains\NFTMarketServer.Grains.csproj" />
         <ProjectReference Include="..\NFTMarketServer.Application.Contracts\NFTMarketServer.Application.Contracts.csproj" />
         <ProjectReference Include="..\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
-        <ProjectReference Include="..\NFTMarketServer.HttpApi.Host\NFTMarketServer.HttpApi.Host.csproj" />
     </ItemGroup>
 
 
