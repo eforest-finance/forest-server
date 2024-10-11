@@ -184,6 +184,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
             var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
 
+        /*await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
+            .SetAsync(principal);*/
             var principal = await signInManager.CreateUserPrincipalAsync(user);
             var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
             _logger.LogInformation("create token scopes:{A}",JsonConvert.SerializeObject(principal.GetScopes()));

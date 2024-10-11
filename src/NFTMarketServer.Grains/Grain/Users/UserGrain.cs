@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using NFTMarketServer.Grains.State.Users;
 using NFTMarketServer.Users.Dto;
 using Orleans;
@@ -8,22 +9,26 @@ namespace NFTMarketServer.Grains.Grain.Users;
 public class UserGrain : Grain<UserState>, IUserGrain
 {
     private readonly IObjectMapper _objectMapper;
+    private readonly ILogger<UserGrain> _logger;
 
-    public UserGrain(IObjectMapper objectMapper)
+    public UserGrain(IObjectMapper objectMapper,ILogger<UserGrain> logger)
     {
         _objectMapper = objectMapper;
+        _logger = logger;
     }
     
-    public override async Task OnActivateAsync()
+    public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("OnActivateAsync()");
         await ReadStateAsync();
-        await base.OnActivateAsync();
+        await base.OnActivateAsync(cancellationToken);
     }
 
-    public override async Task OnDeactivateAsync()
+    public override async Task OnDeactivateAsync(DeactivationReason reason, CancellationToken token)
     {
+        _logger.LogInformation("OnDeactivateAsync({Reason})", reason);
         await WriteStateAsync();
-        await base.OnDeactivateAsync();
+        await base.OnDeactivateAsync(reason, token);
     }
     public async Task<GrainResultDto<UserGrainDto>> UpdateUserAsync(UserGrainDto input)
     {

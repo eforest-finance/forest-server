@@ -44,7 +44,7 @@ public class NFTListingChangeHandler : IConsumer<NewIndexEvent<NFTListingChangeE
 
             if (!SymbolHelper.CheckSymbolIsNFTInfoId(nftListingChange.NftId))
             {
-                _logger.Debug("NFTListingChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftListingChange.NftId);
+                _logger.LogDebug("NFTListingChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftListingChange.NftId);
                 return;
             }
             

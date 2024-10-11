@@ -71,7 +71,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             {
                 if (!collectionTradeInfoOptions.CollectionIdList.Contains(collectionId))
                 {
-                    _logger.Debug("NFTCollectionTradeEto Gray mode. not contain this   collectionId={A}",
+                    _logger.LogDebug("NFTCollectionTradeEto Gray mode. not contain this   collectionId={A}",
                         collectionId);
                     return;
                 }
@@ -95,7 +95,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
             if (eventData.InitFlag)
             {
-                _logger.Debug("SavePreHourRecordInitAsync {A}",collectionId);
+                _logger.LogDebug("SavePreHourRecordInitAsync {A}",collectionId);
                 await SavePreHourRecordInitAsync(id, chainId, collectionId, currentOrdinal);
             }
             else
@@ -232,7 +232,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var preHourTimestamp = currentOrdinal;
         for (var i = 1; i <= 24 * 30 * 15; i++)
         {
-            _logger.Debug("SavePreHourRecordInitAsync {A} {B}", collectionId, i);
+            _logger.LogDebug("SavePreHourRecordInitAsync {A} {B}", collectionId, i);
             try
             {
                 preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);

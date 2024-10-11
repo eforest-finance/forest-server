@@ -51,7 +51,7 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
         {
             var resetSyncHeightFlagMinutesStr = await _distributedCacheForHeight.GetAsync(CommonConstant.ResetNFTSyncHeightFlagCacheKey);
             var seedResetHeightFlagCacheValue = await _distributedCacheForHeight.GetAsync(CommonConstant.SeedResetHeightFlagCacheKey+chainId);
-            _logger.Debug("GetCompositeNFTInfosAsync seed {ResetSyncHeightFlag} {SeedSyncHeightFlag} {SeedSyncHeightFlagMinuteStr}",
+            _logger.LogDebug("GetCompositeNFTInfosAsync seed {ResetSyncHeightFlag} {SeedSyncHeightFlag} {SeedSyncHeightFlagMinuteStr}",
                 resetSyncHeightFlagMinutesStr, seedResetHeightFlagCacheValue,
                 resetSyncHeightFlagMinutesStr);
             if (!resetSyncHeightFlagMinutesStr.IsNullOrEmpty())
@@ -73,7 +73,7 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
         }
         catch (Exception e)
         {
-            _logger.Error(CommonConstant.IntError, "Something is wrong for SyncIndexerRecordsAsync reset height", e);
+            _logger.LogError(CommonConstant.IntError, "Something is wrong for SyncIndexerRecordsAsync reset height", e);
         }
         
         var queryList = await _graphQlProvider.GetSyncSeedSymbolRecordsAsync(chainId, lastEndHeight, 0);
@@ -93,7 +93,7 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
             var innerKey = seedSymbol.Symbol + seedSymbol.BlockHeight;
             if (symbolList != null && symbolList.Contains(innerKey))
             {
-                _logger.Debug("GetSyncSeedSymbolRecordsAsync duplicated symbol: {symbol}", seedSymbol.Symbol);
+                _logger.LogDebug("GetSyncSeedSymbolRecordsAsync duplicated symbol: {symbol}", seedSymbol.Symbol);
                 continue;
             }
             blockHeight = Math.Max(blockHeight, seedSymbol.BlockHeight);

@@ -90,7 +90,7 @@ public class NFTListingChangeScheduleService : ScheduleSyncDataService
             var innerKey = nftListingChange.Symbol + nftListingChange.BlockHeight;
             if (symbolList != null && symbolList.Contains(innerKey))
             {
-                _logger.Debug("HandleNFTListingChangeAsync duplicated symbol: {symbol}", nftListingChange.Symbol);
+                _logger.LogDebug("HandleNFTListingChangeAsync duplicated symbol: {symbol}", nftListingChange.Symbol);
                 continue;
             }
             //mark maxProcessedBlockHeight

@@ -50,6 +50,7 @@ namespace NFTMarketServer.EntityEventHandler
 
         internal static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseOrleansClient()
                 .ConfigureAppConfiguration(build => { build.AddJsonFile("appsettings.secrets.json", optional: true); })
                 .ConfigureServices((hostContext, services) =>
                 {

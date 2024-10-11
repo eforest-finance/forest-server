@@ -48,7 +48,7 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
                 await _distributedCacheForHeight.GetAsync(CommonConstant.ResetNFTNewSyncHeightFlagCacheKey);
             var nftResetHeightFlagCacheValue =
                 await _distributedCacheForHeight.GetAsync(CommonConstant.NFTNewResetHeightFlagCacheKey + chainId);
-            _logger.Debug(
+            _logger.LogDebug(
                 "GetCompositeNFTInfosAsync nftNew {ResetSyncHeightFlag} {NFTSyncHeightFlag} {nftSyncHeightFlagMinuteStr}",
                 resetSyncHeightFlagMinutesStr, CommonConstant.NFTNewResetHeightFlagCacheKey,
                 resetSyncHeightFlagMinutesStr);
@@ -73,7 +73,7 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
         }
         catch (Exception e)
         {
-            _logger.Error(CommonConstant.IntError, "Something is wrong for SyncIndexerRecordsAsync nftNew reset height", e);
+            _logger.LogError(CommonConstant.IntError, "Something is wrong for SyncIndexerRecordsAsync nftNew reset height", e);
         }
 
         var queryList = await _graphQlProvider.GetSyncNftInfoRecordsAsync(chainId, lastEndHeight, 0);
@@ -94,11 +94,11 @@ public class NftInfoNewSyncDataService : ScheduleSyncDataService
             var innerKey = nftInfo.Symbol + nftInfo.BlockHeight;
             if (symbolList != null && symbolList.Contains(innerKey))
             {
-                _logger.Debug("GetSyncNftInfoNewRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
+                _logger.LogDebug("GetSyncNftInfoNewRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
                 continue;
             }
             
-            _logger.Debug("GetSyncNftInfoNewRecordsAsync NFTInfoSymbol {NFTInfoSymbol}",nftInfo.Symbol);
+            _logger.LogDebug("GetSyncNftInfoNewRecordsAsync NFTInfoSymbol {NFTInfoSymbol}",nftInfo.Symbol);
             
 
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);

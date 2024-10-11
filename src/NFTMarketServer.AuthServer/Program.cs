@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-
+using NFTMarketServer.Auth;
 namespace NFTMarketServer;
 
 public class Program
@@ -45,6 +46,7 @@ public class Program
             var app = builder.Build();
             await app.InitializeApplicationAsync();
             await app.RunAsync();
+            CreateHostBuilder(args).Build().Run();
             return 0;
         }
         catch (Exception ex)
@@ -61,5 +63,13 @@ public class Program
         {
             Log.CloseAndFlush();
         }
+    }
+    private static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        return Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
+            .UseOrleansClient()
+            .UseAutofac()
+            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+            .UseSerilog();
     }
 }

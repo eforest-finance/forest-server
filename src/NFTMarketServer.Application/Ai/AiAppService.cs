@@ -22,7 +22,6 @@ using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Redis;
 using NFTMarketServer.Users;
 using Org.BouncyCastle.Security;
-using Orleans.Runtime;
 using Portkey.Contracts.CA;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -383,7 +382,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var chainInfo = _chainOptionsMonitor.CurrentValue.ChainInfos[chainId];
         var forestContractAddress = chainInfo?.ForestContractAddress;
         var caContractAddress = chainInfo?.CaContractAddress;
-        _logger.Debug("forestContractAddress = {A}, transaction.To = {B}, transaction.MethodName = {C}",
+        _logger.LogDebug("forestContractAddress = {A}, transaction.To = {B}, transaction.MethodName = {C}",
             chainInfo?.ForestContractAddress, transaction.To, transaction.MethodName);
 
         CreateArtInput createArtInput;

@@ -10,11 +10,7 @@
     <ItemGroup>
         <PackageReference Include="AElf.AElfNode.EventHandler.BackgroundJob" Version="1.2.1-19314" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="3.7.2">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="7.0.0" />
+       <!--<PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="7.0.0" />-->
         <PackageReference Include="MongoDB.Bson" Version="2.18.0" />
         <PackageReference Include="AElf.Sdk.CSharp" Version="1.5.0" />
         <PackageReference Include="AElf.Core" Version="1.5.0" />
@@ -28,6 +24,9 @@
         <PackageReference Include="Volo.Abp.Caching" Version="8.2.0" />
         <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="5.1.0" />
         <PackageReference Include="GraphQL.Client" Version="5.1.0" />
+        <PackageReference Include="Microsoft.Orleans.Reminders" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Orleans.Streaming" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>

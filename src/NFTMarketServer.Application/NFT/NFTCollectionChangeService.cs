@@ -99,7 +99,7 @@ public class NFTCollectionChangeService : NFTMarketServerAppService, INFTCollect
                 var innerKey = collectionChange.Symbol + collectionChange.BlockHeight;
                 if (symbolList != null && symbolList.Contains(innerKey))
                 {
-                    _logger.Debug("GetNFTCollectionPriceAsync duplicated symbol: {symbol}", collectionChange.Symbol);
+                    _logger.LogDebug("GetNFTCollectionPriceAsync duplicated symbol: {symbol}", collectionChange.Symbol);
                     continue;
                 }
 
