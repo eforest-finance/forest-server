@@ -173,7 +173,10 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
         /*await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
             .SetAsync(principal);*/
+        var abpOpenIddictClaimDestinationsManager = context.HttpContext.RequestServices
+            .GetRequiredService<AbpOpenIddictClaimsPrincipalManager>();
 
+        await abpOpenIddictClaimDestinationsManager.HandleAsync(context.Request, principal);
         return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
     }
     

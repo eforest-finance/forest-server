@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.0.0" />
     <ProjectReference Include="..\..\src\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
     <ProjectReference Include="..\..\src\NFTMarketServer.AuthServer\NFTMarketServer.AuthServer.csproj" />
     <ProjectReference Include="..\..\src\NFTMarketServer.CoinGeckoApi\NFTMarketServer.CoinGeckoApi.csproj" />

@@ -40,7 +40,7 @@ public class Program
             builder.Configuration.AddJsonFile("apollosettings.json");
             builder.Host.AddAppSettingsSecretsJson()
                 .UseAutofac()
-                //.UseOrleansClient()
+                .UseOrleansClient()
                 #if !DEBUG
                 .UseApollo()
                 #endif
@@ -49,7 +49,7 @@ public class Program
             var app = builder.Build();
             await app.InitializeApplicationAsync();
             await app.RunAsync();
-            CreateHostBuilder(args).Build().Run();
+            //CreateHostBuilder(args).Build().Run();
             return 0;
         }
         catch (Exception ex)
@@ -71,7 +71,7 @@ public class Program
     {
         return Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
             .UseOrleansClient()
-            //.UseAutofac()
+            .UseAutofac()
             //.ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
             .UseSerilog();
     }
