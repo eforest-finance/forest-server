@@ -72,6 +72,8 @@
     <ProjectReference Include="..\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
     <ProjectReference Include="..\NFTMarketServer.HttpApi.Host\NFTMarketServer.HttpApi.Host.csproj" />
     <ProjectReference Include="..\NFTMarketServer.MongoDB\NFTMarketServer.MongoDB.csproj" />
+    <PackageReference Include="OpenIddict" Version="5.5.0"/>
+    <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy" Version="8.2.0" />
   </ItemGroup>
 
 </Project>
