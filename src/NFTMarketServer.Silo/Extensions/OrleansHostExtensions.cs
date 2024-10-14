@@ -21,6 +21,9 @@ public static class OrleansHostExtensions
             try
             {
                 Log.Information("Silo start OrleansConfigSection:{config}",JsonConvert.SerializeObject(configSection));
+                var database = configSection.GetValue<string>("DataBase");
+                Log.Information("Silo start database:{config}",JsonConvert.SerializeObject(database));
+
             }
             catch (Exception e)
             {

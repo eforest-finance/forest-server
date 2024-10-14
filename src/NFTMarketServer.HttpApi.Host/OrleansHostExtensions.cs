@@ -21,6 +21,9 @@ public static class OrleansHostExtensions
             try
             {
                 Log.Information("Host start OrleansConfigSection:{config}",JsonConvert.SerializeObject(configSection));
+                var database = configSection.GetValue<string>("DataBase");
+                Log.Information("Host start database:{config}",JsonConvert.SerializeObject(database));
+
             }
             catch (Exception e)
             {
