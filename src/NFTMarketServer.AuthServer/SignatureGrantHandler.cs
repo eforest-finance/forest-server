@@ -167,9 +167,9 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
         var principal = await signInManager.CreateUserPrincipalAsync(user);
         var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
-        claimsPrincipal.SetScopes("NFTMarketServer");
-        claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
-        claimsPrincipal.SetAudiences("NFTMarketServer");
+        principal.SetScopes("NFTMarketServer");
+        principal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
+        principal.SetAudiences("NFTMarketServer");
 
         /*await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
             .SetAsync(principal);*/
@@ -177,7 +177,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
             .GetRequiredService<AbpOpenIddictClaimsPrincipalManager>();
 
         await abpOpenIddictClaimDestinationsManager.HandleAsync(context.Request, principal);
-        return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
+        return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, principal);
     }
     
     private ForbidResult GetForbidResult(string errorType, string errorDescription)
