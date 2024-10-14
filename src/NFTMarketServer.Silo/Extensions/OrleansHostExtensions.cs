@@ -18,6 +18,14 @@ public static class OrleansHostExtensions
         {
             //Configure OrleansSnapshot
             var configSection = context.Configuration.GetSection("Orleans");
+            try
+            {
+                Log.Information("Silo start OrleansConfigSection:{config}",JsonConvert.SerializeObject(configSection));
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Silo start Error OrleansConfigSection:{config} ,error:{error}",JsonConvert.SerializeObject(configSection),e.Message);
+            }
             var IsRunningInKubernetes = configSection.GetValue<bool>("IsRunningInKubernetes");
             var advertisedIP = IsRunningInKubernetes ?  Environment.GetEnvironmentVariable("POD_IP") :configSection.GetValue<string>("AdvertisedIP");
             var clusterId = IsRunningInKubernetes ? Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") : configSection.GetValue<string>("ClusterId");
