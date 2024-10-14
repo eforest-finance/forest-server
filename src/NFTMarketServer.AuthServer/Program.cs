@@ -40,13 +40,14 @@ public class Program
             builder.Configuration.AddJsonFile("apollo.appsettings.json");
             builder.Host.AddAppSettingsSecretsJson()
                 .UseAutofac()
+                .UseOrleansClient()
                 .UseApollo()
                 .UseSerilog();
             await builder.AddApplicationAsync<NFTMarketServerAuthServerModule>();
             var app = builder.Build();
             await app.InitializeApplicationAsync();
             await app.RunAsync();
-            CreateHostBuilder(args).Build().Run();
+            //CreateHostBuilder(args).Build().Run();
             return 0;
         }
         catch (Exception ex)
@@ -68,7 +69,7 @@ public class Program
     {
         return Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
             .UseOrleansClient()
-            //.UseAutofac()
+            .UseAutofac()
             //.ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
             .UseSerilog();
     }

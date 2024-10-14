@@ -34,6 +34,10 @@ public static class OrleansHostExtensions
                 {
                     options.SupportedNamespacePrefixes.Add("Volo.Abp");
                     options.SupportedNamespacePrefixes.Add("Newtonsoft.Json");
+                }).Services.AddSerializer(serializerBuilder =>
+                {
+                    serializerBuilder.AddNewtonsoftJsonSerializer(
+                        isSupported: type => type.Namespace.StartsWith("NFTMarketServer"));
                 });
         });
     }
