@@ -40,11 +40,11 @@ public class Program
             builder.Configuration.AddJsonFile("apollosettings.json");
             builder.Host.AddAppSettingsSecretsJson()
                 .UseAutofac()
-                .UseOrleansClient()
                 #if !DEBUG
                 .UseApollo()
                 #endif
-                .UseSerilog();
+                .UseSerilog()
+                .UseOrleansClient();
             await builder.AddApplicationAsync<NFTMarketServerAuthServerModule>();
             var app = builder.Build();
             await app.InitializeApplicationAsync();
