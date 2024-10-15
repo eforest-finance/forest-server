@@ -20,9 +20,9 @@ public static class OrleansHostExtensions
             var configSection = context.Configuration.GetSection("Orleans");
             try
             {
-                Log.Information("Auth start OrleansConfigSection:{config}",JsonConvert.SerializeObject(configSection));
+                Log.Information("Contract start OrleansConfigSection:{config}",JsonConvert.SerializeObject(configSection));
                 var database = configSection.GetValue<string>("DataBase");
-                Log.Information("Auth start database:{config}",JsonConvert.SerializeObject(database));
+                Log.Information("Contract start database:{config}",JsonConvert.SerializeObject(database));
 
             }
             catch (Exception e)
