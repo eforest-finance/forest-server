@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="AElf.CSharp.Core" Version="1.5.0" />
+    <PackageReference Include="AElf.ExceptionHandler.ABP" Version="8.2.0" />
     <PackageReference Include="AElf.Sdk.CSharp" Version="1.5.0" />
     <PackageReference Include="FluentAssertions" Version="6.11.0" />
     <PackageReference Include="Microsoft.Orleans.CodeGenerator" Version="7.0.0">

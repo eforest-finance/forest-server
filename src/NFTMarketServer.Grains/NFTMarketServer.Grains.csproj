@@ -9,6 +9,7 @@
     
     <ItemGroup>
         <PackageReference Include="AElf.AElfNode.EventHandler.BackgroundJob" Version="1.2.1-19314" />
+        <PackageReference Include="AElf.ExceptionHandler.ABP" Version="8.2.0" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
         <PackageReference Include="Microsoft.Orleans.CodeGenerator" Version="7.0.0">
             <PrivateAssets>all</PrivateAssets>

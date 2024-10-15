@@ -1,6 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 using AElf;
+using AElf.ExceptionHandler;
 
 namespace NFTMarketServer.Helper;
 

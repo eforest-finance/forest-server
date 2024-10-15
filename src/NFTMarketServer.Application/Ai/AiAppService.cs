@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using AElf.Types;
 using Forest;
@@ -17,6 +18,7 @@ using NFTMarketServer.Common.AElfSdk;
 using NFTMarketServer.Common.Http;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Redis;
@@ -82,7 +84,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _objectMapper = objectMapper;
         _distributedLock = distributedLock;
     }
-
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "AiAppService.SendAITransactionAsync", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"input"})]
     public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
     {
         var chainId = input.ChainId;
@@ -91,26 +97,17 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         CreateArtInput createArtInput;
         Transaction transaction;
         AiCreateIndex aiCreateIndex;
-        try
-        {
-            transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
-            createArtInput = TransferToCreateArtInput(transaction, chainId);
+        transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
+        createArtInput = TransferToCreateArtInput(transaction, chainId);
             
-            transactionId = await SendTransactionAsync(chainId, transaction);
-            _logger.LogInformation("CreateAiArtAsync chainId={A} transactionId={B} fromAddress={C} createArtInput={D}",
-                chainId,
-                transactionId, transaction.From.ToBase58(),
-                JsonConvert.SerializeObject(createArtInput));
-            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction.From.ToBase58(), createArtInput,
-                currentUserAddress);
-            await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "SendTransactionAsync error transactionId={A} request={B} rawTransaction={C}",
-                transactionId, JsonConvert.SerializeObject(input), input?.RawTransaction);
-            throw new SystemException(e.Message);
-        }
+        transactionId = await SendTransactionAsync(chainId, transaction);
+        _logger.LogInformation("CreateAiArtAsync chainId={A} transactionId={B} fromAddress={C} createArtInput={D}",
+            chainId,
+            transactionId, transaction.From.ToBase58(),
+            JsonConvert.SerializeObject(createArtInput));
+        aiCreateIndex = BuildAiCreateIndex(transactionId, transaction.From.ToBase58(), createArtInput,
+            currentUserAddress);
+        await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
 
         var s3UrlDic = await GenerateImageAsync(transaction.From.ToBase58(), transactionId,
             aiCreateIndex, currentUserAddress);
@@ -123,6 +120,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 .ToList()
         };
     }
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "AiAppService.CreateAiArtAsyncV2", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"input"})]
     public async Task<CreateAiResultDto> CreateAiArtAsyncV2(CreateAiArtInput input)
     {
         var chainId = input.ChainId;
@@ -133,52 +135,37 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         Transaction transaction;
         AiCreateIndex aiCreateIndex;
         Dictionary<string, string> s3UrlDic;
-        try
+        transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
+        createArtInput = TransferToCreateArtInput(transaction, chainId);
+        //Sensitive words check
+        var wordCheckRes = await SensitiveWordCheckAsync(createArtInput.Promt, createArtInput.NegativePrompt);
+        if (!wordCheckRes.Success)
         {
-            transaction = TransferHelper.TransferToTransaction(input.RawTransaction);
-            createArtInput = TransferToCreateArtInput(transaction, chainId);
-            //Sensitive words check
-            var wordCheckRes = await SensitiveWordCheckAsync(createArtInput.Promt, createArtInput.NegativePrompt);
-            if (!wordCheckRes.Success)
-            {
-                return new CreateAiResultDto()
-                {
-                    IsSensitive = true,
-                    CanRetry = isCanRetry,
-                    TransactionId = transactionId,
-                    Success = false, ErrorMsg = wordCheckRes.Message
-                };
-            }
-            //send transaction
-            transactionId = await SendTransactionAsync(chainId, transaction);
-            _logger.LogInformation("CreateAiArtAsyncV2 chainId={A} transactionId={B} fromAddress={C} createArtInput={D}",
-                chainId,
-                transactionId, transaction.From.ToBase58(),
-                JsonConvert.SerializeObject(createArtInput));
-            if (!transactionId.IsNullOrEmpty())
-            {
-                isCanRetry = true;
-            }
-            //add record
-            aiCreateIndex = BuildAiCreateIndex(transactionId, transaction.From.ToBase58(), createArtInput,
-                currentUserAddress);
-            await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
-            //create image
-            s3UrlDic = await GenerateImageAsync(transaction.From.ToBase58(), transactionId,
-                aiCreateIndex, currentUserAddress);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "CreateAiArtAsyncV2 error transactionId={A} request={B} rawTransaction={C}",
-                transactionId, JsonConvert.SerializeObject(input), input?.RawTransaction);
-
             return new CreateAiResultDto()
             {
+                IsSensitive = true,
                 CanRetry = isCanRetry,
                 TransactionId = transactionId,
-                Success = false, ErrorMsg = e.Message,
+                Success = false, ErrorMsg = wordCheckRes.Message
             };
         }
+        //send transaction
+        transactionId = await SendTransactionAsync(chainId, transaction);
+        _logger.LogInformation("CreateAiArtAsyncV2 chainId={A} transactionId={B} fromAddress={C} createArtInput={D}",
+            chainId,
+            transactionId, transaction.From.ToBase58(),
+            JsonConvert.SerializeObject(createArtInput));
+        if (!transactionId.IsNullOrEmpty())
+        {
+            isCanRetry = true;
+        }
+        //add record
+        aiCreateIndex = BuildAiCreateIndex(transactionId, transaction.From.ToBase58(), createArtInput,
+            currentUserAddress);
+        await _aiCreateIndexRepository.AddAsync(aiCreateIndex);
+        //create image
+        s3UrlDic = await GenerateImageAsync(transaction.From.ToBase58(), transactionId,
+            aiCreateIndex, currentUserAddress);
 
         return new CreateAiResultDto()
         {
@@ -191,7 +178,12 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 .ToList()
         };
     }
-
+    
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "AiAppService.SensitiveWordCheckAsync", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"promot", "negativePromot"})]
     private async Task<ResultDto<string>> SensitiveWordCheckAsync(string promot, string negativePromot)
     {
         if (promot.Length > PromotMaxLength)
@@ -223,18 +215,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         };
 
         var result = new OpenAiWordCheckResponse();
-        try
-        {
-            var openAiResult =
-                await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
-            result = JsonConvert.DeserializeObject<OpenAiWordCheckResponse>(openAiResult);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e,
-                "SensitiveWordCheckAsync Promt {A} NegativePrompt={B}", promot, negativePromot);
-            throw new SystemException($"Network error, please try again. {e.Message}");
-        }
+        var openAiResult =
+            await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
+        result = JsonConvert.DeserializeObject<OpenAiWordCheckResponse>(openAiResult);
 
         if (result == null || result.Results == null)
         {
@@ -410,6 +393,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return createArtInput;
     }
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "AiAppService.GenerateImageAsync", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"fromAddress", "transactionId", "aiCreateIndex", "currentUserAddress"})]
     private async Task<Dictionary<string,string>> GenerateImageAsync(string fromAddress,
         string transactionId, AiCreateIndex aiCreateIndex, string currentUserAddress)
     {
@@ -432,20 +420,9 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         var openAiMsg = "";
         for (; retryCount <= CommonConstant.IntThree; retryCount++)
         {
-            var openAiResult = "";
-            try
-            {
-                openAiResult =
-                    await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
-                result = JsonConvert.DeserializeObject<OpenAiImageGenerationResponse>(openAiResult);
-            }
-            catch (Exception e)
-            {
-                openAiMsg = "Url=" + openAiUrl + " .openAiRequestBody=" + openAiRequestBody + " .aiCreateIndex=" +
-                            JsonConvert.SerializeObject(aiCreateIndex) + e.Message;
-                _logger.LogError(e,
-                    "OpenAiImageGeneration Error {A} retryCount={B}", openAiMsg, retryCount);
-            }
+            var openAiResult =
+                await _httpService.SendPostRequest(openAiUrl, openAiRequestBody, openAiHeader, CommonConstant.IntOne);
+            result = JsonConvert.DeserializeObject<OpenAiImageGenerationResponse>(openAiResult);
 
             if (result != null && result.Data?.Count > 0) break;
         }
