@@ -50,7 +50,6 @@ namespace NFTMarketServer.EntityEventHandler
 
         internal static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseOrleansClient()
                 .ConfigureAppConfiguration(build => { build.AddJsonFile("appsettings.secrets.json", optional: true); })
                 .ConfigureServices((hostContext, services) =>
                 {
@@ -58,6 +57,7 @@ namespace NFTMarketServer.EntityEventHandler
                 })
                 .ConfigureAppConfiguration((h, c) => c.AddJsonFile("apollo.appsettings.json"))
                 .UseApollo() 
+                .UseOrleansClient()
                 .UseAutofac()
                 .UseSerilog();
     }

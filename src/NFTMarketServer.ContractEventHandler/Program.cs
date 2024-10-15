@@ -49,13 +49,13 @@ namespace NFTMarketServer.ContractEventHandler
 
         internal static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseOrleansClient()
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddApplication<NFTMarketServerContractEventHandlerModule>();
                 })
                 .ConfigureAppConfiguration((h, c) => c.AddJsonFile("apollo.appsettings.json"))
                 .UseApollo() 
+                .UseOrleansClient()
                 .UseAutofac()
                 .UseSerilog();
     }
