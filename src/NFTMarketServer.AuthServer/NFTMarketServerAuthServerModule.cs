@@ -89,7 +89,7 @@ public class NFTMarketServerAuthServerModule : AbpModule
         PreConfigure<OpenIddictServerBuilder>(builder =>
         {
             
-            builder.Configure(openIddictServerOptions => { openIddictServerOptions.GrantTypes.Add("login_credentials"); });
+            builder.Configure(openIddictServerOptions => { openIddictServerOptions.GrantTypes.Add("signature"); });
 
             //builder.Configure(openIddictServerOptions => { openIddictServerOptions.GrantTypes.Add("signature"); });
         });
