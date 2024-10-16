@@ -27,7 +27,6 @@ public static class ValidHelper
     {
         return symbol.MatchesPattern(UppercaseNumericHyphen);
     }
-    
     public static bool MatchesAddress(this string address)
     {
         try

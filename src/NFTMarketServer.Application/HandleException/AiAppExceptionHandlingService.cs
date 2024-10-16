@@ -5,7 +5,7 @@ using NFTMarketServer.Ai;
 
 namespace NFTMarketServer.HandleException;
 
-public class ExceptionHandlingService
+public class AiAppExceptionHandlingService
 {
     public static async Task<FlowBehavior> HandleExceptionRetrun(Exception ex)
     {

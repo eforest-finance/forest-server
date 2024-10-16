@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Basic;
+using NFTMarketServer.HandleException;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.AwsS3;
@@ -93,16 +95,8 @@ public class AwsS3Client : ISingletonDependency
         var msg = "";
         for (var i = 0; i < CommonConstant.IntThree; i++)
         {
-            try
-            {
-                putObjectResponse = await _amazonS3Client.PutObjectAsync(putObjectRequest);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "UpLoadFileForNFTWithHashAsync e");
-                msg = e.Message;
-            }
-            if (putObjectResponse.HttpStatusCode == HttpStatusCode.OK)
+            putObjectResponse = await UploadS3Async(putObjectRequest);
+            if (putObjectResponse != null && putObjectResponse.HttpStatusCode == HttpStatusCode.OK)
             {
                 break;
             }
@@ -124,6 +118,16 @@ public class AwsS3Client : ISingletonDependency
         {
             throw new SystemException(msg);
         }
+    }
+
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "AwsS3Client.UploadS3Async", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"putObjectRequest"})]
+    public virtual async Task<PutObjectResponse> UploadS3Async(PutObjectRequest putObjectRequest)
+    {
+        return await _amazonS3Client.PutObjectAsync(putObjectRequest);
     }
 
     public async Task<string> GetSpecialSymbolUrl(string fileName)

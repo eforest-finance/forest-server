@@ -5,7 +5,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using Newtonsoft.Json;
+using NFTMarketServer.HandleException;
 
 namespace NFTMarketServer.Common;
 
@@ -65,118 +67,73 @@ public class HttpUtil
     private static async Task<byte[]> SendRequestWithRetry(Func<Task<byte[]>> requestAction,int maxRetryCount = MaxRetryCount)
     {
         var currentRetry = 0;
-
-        while (true)
-        {
-            try
-            {
-                return await requestAction();
-            }
-            catch (Exception ex)
-            {
-                if (currentRetry >= maxRetryCount)
-                {
-                    throw new SystemException("Maximum retry count reached. Request failed. currentRetry=" +
-                                              currentRetry + " Exception= " + ex);
-                }
-
-                await Task.Delay(RetryDelay);
-
-                currentRetry++;
-            }
-        }
+        return await requestAction();
     }
     
+
     private static async Task<string> SendRequestWithRetry(Func<Task<string>> requestAction,int maxRetryCount = MaxRetryCount)
     {
         var currentRetry = 0;
 
-        while (true)
-        {
-            try
-            {
-                return await requestAction();
-            }
-            catch (Exception ex)
-            {
-                if (currentRetry >= maxRetryCount)
-                {
-                    throw new SystemException("Maximum retry count reached. Request failed. currentRetry=" +
-                                              currentRetry + " Exception= " + ex);
-                }
-
-                await Task.Delay(RetryDelay);
-
-                currentRetry++;
-            }
-        }
+        return await requestAction();
     }
-
-    private static async Task<string> PostRequest(string apiUrl, string requestBody,
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "HttpUtils.PostRequest PostRequest is fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"apiUrl", "requestBody", "header", "mediaType"})]
+    public static async Task<string> PostRequest(string apiUrl, string requestBody,
         Dictionary<string, string> header, string mediaType = "application/json")
     {
-        try
+        var client = CreateHttpClient(header);
         {
-            var client = CreateHttpClient(header);
+            client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
+            var content = new StringContent(requestBody, Encoding.UTF8, mediaType);
+            var response = await client.PostAsync(apiUrl, content);
+            if (response != null && response.IsSuccessStatusCode)
             {
-                client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
-                var content = new StringContent(requestBody, Encoding.UTF8, mediaType);
-                var response = await client.PostAsync(apiUrl, content);
-                if (response != null && response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadAsStringAsync();
-                }
-                
                 return await response.Content.ReadAsStringAsync();
             }
-        }
-        catch (Exception ex)
-        {
-            throw new SystemException(" PostRequest is fail " + ex);
+                
+            return await response.Content.ReadAsStringAsync();
         }
     }
-
-    private static async Task<string> PostRequest(string apiUrl, Dictionary<string, string> parameters,
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "HttpUtils.PostRequest HTTP POST Exception is fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"apiUrl", "parameters", "header"})]
+    public static async Task<string> PostRequest(string apiUrl, Dictionary<string, string> parameters,
         Dictionary<string, string> header)
     {
-        try
-        {
-            var client = CreateHttpClient(header);
-            client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
+        var client = CreateHttpClient(header);
+        client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
 
-            var content = new FormUrlEncodedContent(parameters);
+        var content = new FormUrlEncodedContent(parameters);
 
-            var response = await client.PostAsync(apiUrl, content);
+        var response = await client.PostAsync(apiUrl, content);
 
-            return await response?.Content?.ReadAsStringAsync();
-        }
-        catch (Exception ex)
-        {
-            return JsonConvert.SerializeObject("HTTP POST Exception: " + ex);
-        }
+        return await response?.Content?.ReadAsStringAsync();
     }
-
-    private static async Task<string> GetRequest(string apiUrl, Dictionary<string, string> header)
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "HttpUtils.GetRequest", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"apiUrl"})]
+    public static async Task<string> GetRequest(string apiUrl, Dictionary<string, string> header)
     {
-        try
+        var client = CreateHttpClient(header);
         {
-            var client = CreateHttpClient(header);
+            client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
+            HttpResponseMessage response = await client.GetAsync(apiUrl);
+
+            if (response != null && response.IsSuccessStatusCode)
             {
-                client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
-                HttpResponseMessage response = await client.GetAsync(apiUrl);
-
-                if (response != null && response.IsSuccessStatusCode)
-                {
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    return responseBody;
-                }
-
-                return JsonConvert.SerializeObject(response);
+                string responseBody = await response.Content.ReadAsStringAsync();
+                return responseBody;
             }
-        }
-        catch (Exception ex)
-        {
-            return JsonConvert.SerializeObject(ex);
+
+            return JsonConvert.SerializeObject(response);
         }
     }
 

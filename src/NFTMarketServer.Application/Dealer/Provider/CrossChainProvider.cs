@@ -3,11 +3,13 @@ using System.Threading.Tasks;
 using AElf;
 using AElf.Client.Dto;
 using AElf.Client.Service;
+using AElf.ExceptionHandler;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.HandleException;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.Dealer.Provider;
@@ -33,80 +35,62 @@ public class CrossChainProvider : ISingletonDependency
 
     public async Task WaitingHeightAsync(long expectHeight)
     {
-        var indexHeight = await GetIndexHeightAsync(GetDefaultSideChainId());
+        var indexHeight = await GetIndexHeightAsync(GetDefaultSideChainId(),_optionsMonitor.CurrentValue.CrossChainDelay);
         while (indexHeight <= expectHeight)
         {
             await Task.Delay(_optionsMonitor.CurrentValue.CrossChainDelay);
-            indexHeight = await GetIndexHeightAsync(GetDefaultSideChainId());
+            indexHeight = await GetIndexHeightAsync(GetDefaultSideChainId(), _optionsMonitor.CurrentValue.CrossChainDelay);
         }
     }
-
-    private async Task<long> GetIndexHeightAsync(string chainId)
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "CrossChainProvider.GetIndexBlockHeight on chain", 
+        TargetType = typeof(CrossChainExceptionHandlingService), 
+        MethodName = nameof(CrossChainExceptionHandlingService.HandleExceptionDelayReturn),
+        LogTargets = new []{"chainId", "delayTime"})]
+    public virtual async Task<long> GetIndexHeightAsync(string chainId, int delayTime)
     {
         var chainInfo = _chainOptionsMonitor.CurrentValue.ChainInfos[chainId];
 
         var client = _blockchainClientFactory.GetClient(chainId);
-        try
-        {
-            var transaction = await client.GenerateTransactionAsync(
-                client.GetAddressFromPrivateKey(chainInfo.PrivateKey),
-                chainInfo.CrossChainContractAddress, MethodName.GetParentChainHeight, new Empty());
-            var txWithSign = client.SignTransaction(chainInfo.PrivateKey, transaction);
+        var transaction = await client.GenerateTransactionAsync(
+            client.GetAddressFromPrivateKey(chainInfo.PrivateKey),
+            chainInfo.CrossChainContractAddress, MethodName.GetParentChainHeight, new Empty());
+        var txWithSign = client.SignTransaction(chainInfo.PrivateKey, transaction);
 
-            var transactionGetTokenResult = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
-            {
-                RawTransaction = txWithSign.ToByteArray().ToHex()
-            });
-
-            var result = Int64Value.Parser.ParseFrom(ByteArrayHelper.HexStringToByteArray(transactionGetTokenResult));
-            return result.Value;
-        }
-        catch (Exception e)
+        var transactionGetTokenResult = await client.ExecuteTransactionAsync(new ExecuteTransactionDto
         {
-            _logger.LogError(e, "GetIndexBlockHeight on chain {Id} error", chainId);
+            RawTransaction = txWithSign.ToByteArray().ToHex()
+        });
+
+        var result = Int64Value.Parser.ParseFrom(ByteArrayHelper.HexStringToByteArray(transactionGetTokenResult));
+        return result.Value;
+    }
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "CrossChainProvider.GetMerklePathDtoAsync on TransactionId", 
+        TargetType = typeof(CrossChainExceptionHandlingService), 
+        MethodName = nameof(CrossChainExceptionHandlingService.HandleExceptionDelayDefaultReturn),
+        LogTargets = new []{"chainId", "transactionId"})]
+    public virtual async Task<MerklePathDto> GetMerklePathDtoAsync(string chainId, string transactionId)
+    {
+        for (int i = 0; i < 3; i++)
+        {
             await Task.Delay(_optionsMonitor.CurrentValue.CrossChainDelay);
+            return await _blockchainClientFactory.GetClient(chainId)
+                .GetMerklePathByTransactionIdAsync(transactionId);
         }
-
-        return 0;
-    }
-
-    public async Task<MerklePathDto> GetMerklePathDtoAsync(string chainId, string transactionId)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            try
-            {
-                await Task.Delay(_optionsMonitor.CurrentValue.CrossChainDelay);
-                return await _blockchainClientFactory.GetClient(chainId)
-                    .GetMerklePathByTransactionIdAsync(transactionId);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "GetMerklePathDtoAsync on TransactionId {TransactionId} count {i} error",
-                    transactionId, i);
-                await Task.Delay(_optionsMonitor.CurrentValue.CrossChainDelay);
-            }
-        }
-
         return null;
-
     }
-
-    public async Task<TransactionResultDto> GetTransactionResultAsync(string chainId, string transactionId)
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "CrossChainProvider.GetTransactionResultAsync on TransactionId", 
+        TargetType = typeof(CrossChainExceptionHandlingService), 
+        MethodName = nameof(CrossChainExceptionHandlingService.HandleExceptionDelayDefaultReturn),
+        LogTargets = new []{"chainId", "transactionId"})]
+    public virtual async Task<TransactionResultDto> GetTransactionResultAsync(string chainId, string transactionId)
     {
         for (int i = 0; i < 3; i++)
         {
-            try
-            {
-                return await _blockchainClientFactory.GetClient(chainId)
-                    .GetTransactionResultAsync(transactionId);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "GetTransactionResultAsync on TransactionId {TransactionId} error {i}",
-                    transactionId, i);
-                await Task.Delay(_optionsMonitor.CurrentValue.CrossChainDelay);
-            }
+            return await _blockchainClientFactory.GetClient(chainId)
+                .GetTransactionResultAsync(transactionId);
         }
 
         return null;

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AElf;
 using AElf.Client.Dto;
 using AElf.Client.Service;
+using AElf.ExceptionHandler;
 using AElf.Types;
 using Forest;
 using Google.Protobuf;
@@ -16,6 +17,7 @@ using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Common;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Index;
@@ -65,12 +67,14 @@ namespace NFTMarketServer.Market
 
 
         }
-
-        public async Task<PagedResultDto<NFTListingIndexDto>> GetNFTListingsAsync(GetNFTListingsInput input)
+        [ExceptionHandler(typeof(Exception), LogOnly = true,
+            Message = "NFTListingAppService.GetNFTListingsAsync", 
+            TargetType = typeof(ExceptionHandlingService), 
+            MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+            LogTargets = new []{"input"})]
+        public virtual async Task<PagedResultDto<NFTListingIndexDto>> GetNFTListingsAsync(GetNFTListingsInput input)
         {
-            try
-            {
-                if (input.Symbol.IsNullOrEmpty() || !input.Symbol.MatchesNftSymbol())
+            if (input.Symbol.IsNullOrEmpty() || !input.Symbol.MatchesNftSymbol())
                 {
                     throw new UserFriendlyException("Symbol invalid..");
                 }
@@ -122,12 +126,6 @@ namespace NFTMarketServer.Market
                     Items = res,
                     TotalCount = listingDto.TotalCount
                 };
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "GetNFTListingsAsync ERROR");
-                throw new UserFriendlyException("Internal error, please try again later.");
-            }
         }
 
         public async Task<PagedResultDto<CollectedCollectionListingDto>> GetCollectedCollectionListingAsync(

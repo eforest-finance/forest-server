@@ -85,11 +85,11 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _distributedLock = distributedLock;
     }
     [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "AiAppService.SendAITransactionAsync", 
-        TargetType = typeof(ExceptionHandlingService), 
-        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        Message = "AiAppService.CreateAiArtAsync", 
+        TargetType = typeof(AiAppExceptionHandlingService), 
+        MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"input"})]
-    public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
+    public virtual async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtAsync(CreateAiArtInput input)
     {
         var chainId = input.ChainId;
         var transactionId = "";
@@ -122,10 +122,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     }
     [ExceptionHandler(typeof(Exception), LogOnly = true,
         Message = "AiAppService.CreateAiArtAsyncV2", 
-        TargetType = typeof(ExceptionHandlingService), 
-        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        TargetType = typeof(AiAppExceptionHandlingService), 
+        MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"input"})]
-    public async Task<CreateAiResultDto> CreateAiArtAsyncV2(CreateAiArtInput input)
+    public virtual async Task<CreateAiResultDto> CreateAiArtAsyncV2(CreateAiArtInput input)
     {
         var chainId = input.ChainId;
         string transactionId = null;
@@ -181,10 +181,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     
     [ExceptionHandler(typeof(Exception), LogOnly = true,
         Message = "AiAppService.SensitiveWordCheckAsync", 
-        TargetType = typeof(ExceptionHandlingService), 
-        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        TargetType = typeof(AiAppExceptionHandlingService), 
+        MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"promot", "negativePromot"})]
-    private async Task<ResultDto<string>> SensitiveWordCheckAsync(string promot, string negativePromot)
+    public virtual async Task<ResultDto<string>> SensitiveWordCheckAsync(string promot, string negativePromot)
     {
         if (promot.Length > PromotMaxLength)
         {
@@ -395,10 +395,10 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
     }
     [ExceptionHandler(typeof(Exception), LogOnly = true,
         Message = "AiAppService.GenerateImageAsync", 
-        TargetType = typeof(ExceptionHandlingService), 
-        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        TargetType = typeof(AiAppExceptionHandlingService), 
+        MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"fromAddress", "transactionId", "aiCreateIndex", "currentUserAddress"})]
-    private async Task<Dictionary<string,string>> GenerateImageAsync(string fromAddress,
+    public virtual async Task<Dictionary<string,string>> GenerateImageAsync(string fromAddress,
         string transactionId, AiCreateIndex aiCreateIndex, string currentUserAddress)
     {
         var openAiUrl = _openAiOptionsMonitor.CurrentValue.ImagesUrlV1;
@@ -552,108 +552,102 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return transactionId;
     }
-    public async Task<PagedResultDto<CreateAiArtDto>> GetAiArtsAsync(GetAIArtsInput input)
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "AiAppService.GetAiArtsAsync", 
+        TargetType = typeof(AiAppExceptionHandlingService), 
+        MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"input"})]
+    public virtual async Task<PagedResultDto<CreateAiArtDto>> GetAiArtsAsync(GetAIArtsInput input)
     {
-        try
-        {
-            if (input.Address.IsNullOrEmpty())
-            {
-                input.Address = await _userAppService.GetCurrentUserAddressAsync();
-            }
-            if (input.Address.IsNullOrEmpty())
-            {
-                _logger.LogError("invalid address");
-                throw new UserFriendlyException("invalid address.");
-            }
-            var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
-            {
-                Address = input.Address,
-                SkipCount = input.SkipCount,
-                MaxResultCount = input.MaxResultCount,
-                Status = input.Status
-            });
+        _logger.LogInformation("GetAiArtsAsync input:{input}",JsonConvert.SerializeObject(input));
 
-            if (tuple == null || tuple.Item1 == 0)
-            {
-                return new PagedResultDto<CreateAiArtDto>();
-            }
-
-            var artList = tuple.Item2;
-            return new PagedResultDto<CreateAiArtDto>()
-            {
-                TotalCount = tuple.Item1,
-                Items = artList.Select(x => new CreateAiArtDto  
-                {  
-                    Url = x.S3Url,
-                    Hash = x.Hash  
-                }).ToList()
-            };
-        }
-        catch (Exception e)
+        if (input.Address.IsNullOrEmpty())
         {
-            _logger.LogError(e,"GetAiArtsAsync Exception: user:{address}",input.Address);
-            throw new UserFriendlyException("GetAiArtsAsync Exception: user:{address} e:{error}",input.Address, e.Message);
+            input.Address = await _userAppService.GetCurrentUserAddressAsync();
         }
+        if (input.Address.IsNullOrEmpty())
+        {
+            _logger.LogError("invalid address");
+            throw new UserFriendlyException("invalid address.");
+        }
+        var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
+        {
+            Address = input.Address,
+            SkipCount = input.SkipCount,
+            MaxResultCount = input.MaxResultCount,
+            Status = input.Status
+        });
+
+        if (tuple == null || tuple.Item1 == 0)
+        {
+            return new PagedResultDto<CreateAiArtDto>();
+        }
+
+        var artList = tuple.Item2;
+        return new PagedResultDto<CreateAiArtDto>()
+        {
+            TotalCount = tuple.Item1,
+            Items = artList.Select(x => new CreateAiArtDto  
+            {  
+                Url = x.S3Url,
+                Hash = x.Hash  
+            }).ToList()
+        };
     }
-
-    public async Task<ResultDto<string>> UseAIArtsAsync(UseAIArtsInput input)
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "AiAppService.UseAIArtsAsync", 
+        TargetType = typeof(AiAppExceptionHandlingService), 
+        MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"input"})]
+    public virtual async Task<ResultDto<string>> UseAIArtsAsync(UseAIArtsInput input)
     {
         var currentAddress = "";
-        try
+        if (input.ImageList.IsNullOrEmpty())
         {
-            if (input.ImageList.IsNullOrEmpty())
-            {
-                _logger.LogError("invalid imageIds");
-                throw new UserFriendlyException("invalid imageIds");
-            }
-            currentAddress =  await _userAppService.GetCurrentUserAddressAsync();
-            _logger.LogInformation("UseAIArtsAsync request, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
-            if (currentAddress.IsNullOrEmpty())
-            {
-                _logger.LogError("please login");
-                throw new UserFriendlyException("please login");
-            }
+            _logger.LogError("invalid imageIds");
+            throw new UserFriendlyException("invalid imageIds");
+        }
+        currentAddress =  await _userAppService.GetCurrentUserAddressAsync();
+        _logger.LogInformation("UseAIArtsAsync request, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
+        if (currentAddress.IsNullOrEmpty())
+        {
+            _logger.LogError("please login");
+            throw new UserFriendlyException("please login");
+        }
 
-            var status = (int)AiImageUseStatus.USE;
-            if (input.Status.Equals((int)AiImageUseStatus.ABANDONED))
-            {
-                status = (int)AiImageUseStatus.ABANDONED;
-            }
+        var status = (int)AiImageUseStatus.USE;
+        if (input.Status.Equals((int)AiImageUseStatus.ABANDONED))
+        {
+            status = (int)AiImageUseStatus.ABANDONED;
+        }
 
-            var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
-            {
-                Address = currentAddress,
-                SkipCount = 0,
-                MaxResultCount = input.ImageList.Count,
-                Status =  (int)AiImageUseStatus.UNUSE,
-                ImageHash = input.ImageList,
-            });
+        var tuple = await _aiArtProvider.GetAIImageListAsync(new SearchAIArtsInput()
+        {
+            Address = currentAddress,
+            SkipCount = 0,
+            MaxResultCount = input.ImageList.Count,
+            Status =  (int)AiImageUseStatus.UNUSE,
+            ImageHash = input.ImageList,
+        });
             
-            if (tuple == null || tuple.Item1 == 0)
-            {
-                _logger.LogInformation("UseAIArtsAsync Image not found, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
-                var result = new ResultDto<string>()
-                {
-                    Success = false,
-                    Message = "Please enter your correct imageId"
-                };
-                return result;
-            }
-
-            var images = tuple.Item2;
-            foreach (var imageIndex in images)
-            {
-                imageIndex.status = status;
-            }
-            var artList = tuple.Item2;
-            await _aIImageIndexRepository.BulkAddOrUpdateAsync(images);
-        }
-        catch (Exception e)
+        if (tuple == null || tuple.Item1 == 0)
         {
-            _logger.LogError(e,"UseAIArtsAsync Exception address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
-            return new ResultDto<string>() {Success = false, Message = e.Message };
-
+            _logger.LogInformation("UseAIArtsAsync Image not found, address:{address}, input:{input}",currentAddress,JsonConvert.SerializeObject(input));
+            var result = new ResultDto<string>()
+            {
+                Success = false,
+                Message = "Please enter your correct imageId"
+            };
+            return result;
         }
+
+        var images = tuple.Item2;
+        foreach (var imageIndex in images)
+        {
+            imageIndex.status = status;
+        }
+        var artList = tuple.Item2;
+        await _aIImageIndexRepository.BulkAddOrUpdateAsync(images);
         return new ResultDto<string>() {Success = true, Message = "" };
     }
 
@@ -672,8 +666,12 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         return new ResultDto<string>() {Success = true, Message = "", Data = result};
 
     }
-
-    public async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtRetryAsync(CreateAiArtRetryInput input)
+    [ExceptionHandler(typeof(Exception), LogOnly = true,
+        Message = "CreateAiArtRetryAsync something is wrong", 
+        TargetType = typeof(AiAppExceptionHandlingService), 
+        MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"input"})]
+    public virtual async Task<PagedResultDto<CreateAiArtDto>> CreateAiArtRetryAsync(CreateAiArtRetryInput input)
     {
         if (input == null || input.TransactionId.IsNullOrEmpty())
         {
@@ -691,52 +689,38 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             throw new SystemException("Another request is running. Please do not initiate duplicate requests");
         }
 
-        try
+        await Task.Delay(CommonConstant.IntOneThousand);
+
+        var aiCreateIndex =
+            await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
+        if (aiCreateIndex == null)
         {
-            await Task.Delay(CommonConstant.IntOneThousand);
+            _logger.LogError(
+                "CreateAiArtRetryAsync The request parameter does not exist. TransactionId={A} address={B}",
+                input.TransactionId, address);
+            throw new InvalidParameterException("The request parameter does not exist. TransactionId=" +
+                                                input.TransactionId);
+        }
 
-            var aiCreateIndex =
-                await _aiArtProvider.GetAiCreateIndexByTransactionId(input.TransactionId, address);
-            if (aiCreateIndex == null)
-            {
-                _logger.LogError(
-                    "CreateAiArtRetryAsync The request parameter does not exist. TransactionId={A} address={B}",
-                    input.TransactionId, address);
-                throw new InvalidParameterException("The request parameter does not exist. TransactionId=" +
-                                                    input.TransactionId);
-            }
+        if (aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
+        {
+            _logger.LogError(
+                "CreateAiArtRetryAsync Request has succeeded. Please do not initiate duplicate requests. TransactionId={A} address={B}",
+                input.TransactionId, address);
+            throw new InvalidParameterException(
+                "Request has succeeded. Please do not initiate duplicate requests.");
+        }
 
-            if (aiCreateIndex.Status == AiCreateStatus.UPLOADS3)
-            {
-                _logger.LogError(
-                    "CreateAiArtRetryAsync Request has succeeded. Please do not initiate duplicate requests. TransactionId={A} address={B}",
-                    input.TransactionId, address);
-                throw new InvalidParameterException(
-                    "Request has succeeded. Please do not initiate duplicate requests.");
-            }
+        var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
+            aiCreateIndex, address);
 
-            var s3UrlDic = await GenerateImageAsync(address, input.TransactionId,
-                aiCreateIndex, address);
-
-            return new PagedResultDto<CreateAiArtDto>()
+        return new PagedResultDto<CreateAiArtDto>()
             {
                 TotalCount = s3UrlDic.Count,
                 Items = s3UrlDic
                     .Select(kvp => new CreateAiArtDto { Url = kvp.Key, Hash = kvp.Value.Replace("\"", "") })
                     .ToList()
             };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "CreateAiArtRetryAsync something is wrong. TransactionId={A} address={B}",
-                input.TransactionId, address);
-            throw new SystemException("Something is wrong : "+ex.Message);
-        }
-        finally
-        {
-            _logger.LogInformation("CreateAiArtRetryAsync Lock released. lockName = {A}",lockName);
-        }
     }
 
     public async Task<PagedResultDto<AiArtFailDto>> QueryAiArtFailAsync(QueryAiArtFailInput input)
