@@ -259,6 +259,7 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
             {
                 ClientId = name,
                 //Type = type,
+                ClientType = type,
                 ClientSecret = secret,
                 ConsentType = consentType,
                 DisplayName = displayName,
