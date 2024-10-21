@@ -70,6 +70,8 @@ public static class CommonConstant
     public const int MessageUnReadStatus = 0;
     public const int MessageReadStatus = 1;
     public const int MessageAllStatus = -1;
+    public const string SortTypeNumber = "number";
+    public const string SortScriptSourceValueLength = "doc['seedOwnedSymbol'].value.length()";
 
 
 
