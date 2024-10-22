@@ -10,6 +10,7 @@ public class GraphQLOptions
     public string DropConfiguration { get; set; }
     
     public string SchrodingerConfiguration { get; set; }
+    public string BasicConfiguration { get; set; }
 
 }
 
