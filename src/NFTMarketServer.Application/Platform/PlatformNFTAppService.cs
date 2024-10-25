@@ -73,6 +73,8 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
     {
         try
         {
+            var issueAmount = _platformOptionsMonitor.CurrentValue.IssueCount;
+
             var client = _blockchainClientFactory.GetClient(chainId);
             var createNFTInputParam =
                 new BatchCreateTokenInput
@@ -85,7 +87,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                         {
                             Symbol = nftSymbol,
                             TokenName = tokenName,
-                            TotalSupply = 10,
+                            TotalSupply = issueAmount,
                             Decimals = 0,
                             Owner = AElf.Types.Address.FromBase58(ownerVirtualAddress),
                             Issuer = AElf.Types.Address.FromBase58(issuerVirtualAddress),
@@ -102,7 +104,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                                     { "__nft_image_url", imageUrl }
                                 }
                             },
-                            Amount = 10,
+                            Amount = issueAmount,
                             To = AElf.Types.Address.FromBase58(userAddress)
                         }
                     }
