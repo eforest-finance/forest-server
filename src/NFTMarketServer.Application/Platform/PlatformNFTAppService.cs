@@ -85,7 +85,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                         {
                             Symbol = nftSymbol,
                             TokenName = tokenName,
-                            TotalSupply = 10,
+                            TotalSupply = 1,
                             Decimals = 0,
                             Owner = AElf.Types.Address.FromBase58(ownerVirtualAddress),
                             Issuer = AElf.Types.Address.FromBase58(issuerVirtualAddress),
@@ -102,7 +102,7 @@ public class PlatformNFTAppService : NFTMarketServerAppService, IPlatformNFTAppS
                                     { "__nft_image_url", imageUrl }
                                 }
                             },
-                            Amount = 10,
+                            Amount = 1,
                             To = AElf.Types.Address.FromBase58(userAddress)
                         }
                     }
