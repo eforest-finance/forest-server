@@ -1,18 +1,15 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NFTMarketServer.NFT;
 using NFTMarketServer.Tree;
 using Volo.Abp;
-using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Controllers;
 
 [RemoteService]
 [Area("app")]
 [ControllerName("TreeActive")]
-[Route("api/app/tree/activety")]
+[Route("api/app/tree")]
 public class TreeActivityController : NFTMarketServerController
 {
     private readonly ITreeService _treeService;
@@ -33,7 +30,7 @@ public class TreeActivityController : NFTMarketServerController
 
     [HttpPost]
     [Authorize]
-    [Route("create")]
+    [Route("activity-create")]
     public async Task CreateTreeActivityAsync(CreateTreeActivityRequest request
     )
     {
@@ -42,7 +39,7 @@ public class TreeActivityController : NFTMarketServerController
 
     [HttpGet]
     [Authorize]
-    [Route("modify-hide-flag")]
+    [Route("activity-modify-hide-flag")]
     public async Task ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request
     )
     {
@@ -51,7 +48,7 @@ public class TreeActivityController : NFTMarketServerController
     
     [HttpGet]
     [Authorize]
-    [Route("modify-status")]
+    [Route("activity-modify-status")]
     public async Task ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request
     )
     {
