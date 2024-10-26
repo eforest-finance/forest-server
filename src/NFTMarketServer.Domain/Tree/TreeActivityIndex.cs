@@ -8,6 +8,7 @@ namespace NFTMarketServer.Tree;
 public class TreeActivityIndex : NFTMarketEntity<string>, IIndexBuild
 {
     [Keyword] public override string Id { get; set; }
+    [Keyword] public string OriginId { get; set; }
     [Text(Index = false)] public string ImageUrl { get; set; }
     [Keyword] public string ActivityName { get; set; }
     [Text(Index = false)] public string ActivityDesc { get; set; }

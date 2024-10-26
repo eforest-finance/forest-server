@@ -27,7 +27,8 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
     {
         var treeActivityIndex = _objectMapper.Map<CreateTreeActivicyRequest, TreeActivityIndex>(request);
 
-        treeActivityIndex.Id = IdGenerateHelper.ToSha256Hash(request.ActivityName);
+        treeActivityIndex.Id = IdGenerateHelper.ToSha256Hash(request.OriginId);
+        treeActivityIndex.OriginId = request.OriginId;
         treeActivityIndex.CreateTime = DateTime.UtcNow;
         treeActivityIndex.LastModifyTime = DateTime.UtcNow;
         treeActivityIndex.TreeActivityStatus = TreeActivityStatus.NotStart;
