@@ -10,6 +10,7 @@ public interface ITreeService
     Task<string> GenerateId();
     Task CreateTreeActivityAsync(CreateTreeActivityRequest request);
     Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
+    Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request);
 }
 
 public class TreeService : ITreeService, ISingletonDependency
@@ -34,5 +35,10 @@ public class TreeService : ITreeService, ISingletonDependency
     public async Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request)
     {
         return await _treeActivityProvider.ModifyTreeActivityHideFlagAsync(request);
+    }
+
+    public async Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request)
+    {
+        return await _treeActivityProvider.ModifyTreeActivityStatusAsync(request);
     }
 }
