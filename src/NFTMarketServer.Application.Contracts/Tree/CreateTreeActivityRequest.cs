@@ -10,7 +10,7 @@ public class CreateTreeActivityRequest
     public string Condition { get; set; }
     public decimal TotalReward { get; set; }
     public decimal LeftReward { get; set; }
-    public decimal RewardLogo { get; set; }
+    public string RewardLogo { get; set; }
     public RewardType RewardType { get; set; }
     public long BeginDateTimeMilliseconds { get; set; }
 }

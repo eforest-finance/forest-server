@@ -37,7 +37,7 @@ public class TreeActivityController : NFTMarketServerController
         await _treeService.CreateTreeActivityAsync(request);
     }
 
-    [HttpGet]
+    [HttpPost]
     [Authorize]
     [Route("activity-modify-hide-flag")]
     public async Task ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request
@@ -46,7 +46,7 @@ public class TreeActivityController : NFTMarketServerController
         await _treeService.ModifyTreeActivityHideFlagAsync(request);
     }
     
-    [HttpGet]
+    [HttpPost]
     [Authorize]
     [Route("activity-modify-status")]
     public async Task ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request
