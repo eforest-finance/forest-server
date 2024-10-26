@@ -22,10 +22,10 @@ public class TreeActivityController : NFTMarketServerController
     [HttpGet]
     [Authorize]
     [Route("generate-id")]
-    public async Task GetIdAsync(
+    public async Task<string> GetIdAsync(
     )
     {
-        await _treeService.GenerateId();
+        return await _treeService.GenerateId();
     }
 
     [HttpPost]
