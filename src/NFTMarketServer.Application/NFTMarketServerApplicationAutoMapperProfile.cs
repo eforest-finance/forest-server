@@ -46,6 +46,7 @@ using NFTMarketServer.Synchronize.Dto;
 using NFTMarketServer.Synchronize.Eto;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Trait;
+using NFTMarketServer.Tree;
 using NFTMarketServer.Users;
 using NFTMarketServer.Users.Dto;
 using NFTMarketServer.Users.Eto;
@@ -423,6 +424,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<UserInformationEto, UserIndex>();
         CreateMap<TreeGameUserInfoDto, TreeGameUserInfoIndex>();
         CreateMap<TreeGameUserInfoIndex, TreeGameUserInfoDto>();
+        CreateMap<CreateTreeActivicyRequest, TreeActivityIndex>();
 
     }
 }
