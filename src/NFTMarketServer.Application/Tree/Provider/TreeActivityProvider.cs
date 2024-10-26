@@ -8,7 +8,8 @@ namespace NFTMarketServer.Tree.Provider;
 
 public interface ITreeActivityProvider
 {
-    Task CreateTreeActivityAsync(CreateTreeActivicyRequest request);
+    Task CreateTreeActivityAsync(CreateTreeActivityRequest request);
+    Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
 }
 
 public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
@@ -23,9 +24,9 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
         _treeActivityIndexRepository = treeActivityIndexRepository;
     }
 
-    public async Task CreateTreeActivityAsync(CreateTreeActivicyRequest request)
+    public async Task CreateTreeActivityAsync(CreateTreeActivityRequest request)
     {
-        var treeActivityIndex = _objectMapper.Map<CreateTreeActivicyRequest, TreeActivityIndex>(request);
+        var treeActivityIndex = _objectMapper.Map<CreateTreeActivityRequest, TreeActivityIndex>(request);
 
         treeActivityIndex.Id = IdGenerateHelper.ToSha256Hash(request.OriginId);
         treeActivityIndex.OriginId = request.OriginId;
@@ -35,5 +36,16 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
         treeActivityIndex.HideFlag = true;
         treeActivityIndex.BeginDateTime = DateTimeHelper.FromUnixTimeMilliseconds(request.BeginDateTimeMilliseconds);
         await _treeActivityIndexRepository.AddOrUpdateAsync(treeActivityIndex);
+    }
+
+    public async Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request)
+    {
+        var treeActivityIndex = await _treeActivityIndexRepository.GetAsync(request.Id);
+        if (treeActivityIndex == null) return false;
+        if (treeActivityIndex.HideFlag == request.HideFlag) return true;
+        treeActivityIndex.HideFlag = request.HideFlag;
+        treeActivityIndex.LastModifyTime = DateTime.UtcNow;
+        await _treeActivityIndexRepository.AddOrUpdateAsync(treeActivityIndex);
+        return true;
     }
 }

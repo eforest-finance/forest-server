@@ -8,7 +8,8 @@ namespace NFTMarketServer.Tree;
 public interface ITreeService
 {
     Task<string> GenerateId();
-    Task CreateTreeActivityAsync(CreateTreeActivicyRequest request);
+    Task CreateTreeActivityAsync(CreateTreeActivityRequest request);
+    Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
 }
 
 public class TreeService : ITreeService, ISingletonDependency
@@ -25,8 +26,13 @@ public class TreeService : ITreeService, ISingletonDependency
         return Guid.NewGuid().ToString();
     }
 
-    public async Task CreateTreeActivityAsync(CreateTreeActivicyRequest request)
+    public async Task CreateTreeActivityAsync(CreateTreeActivityRequest request)
     {
         await _treeActivityProvider.CreateTreeActivityAsync(request);
+    }
+
+    public async Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request)
+    {
+        return await _treeActivityProvider.ModifyTreeActivityHideFlagAsync(request);
     }
 }

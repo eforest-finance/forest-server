@@ -1,6 +1,6 @@
 namespace NFTMarketServer.Tree;
 
-public class CreateTreeActivicyRequest
+public class CreateTreeActivityRequest
 {
     public string OriginId { get; set; }
     public string ImageUrl { get; set; }

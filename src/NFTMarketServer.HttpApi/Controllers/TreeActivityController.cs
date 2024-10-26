@@ -23,20 +23,29 @@ public class TreeActivityController : NFTMarketServerController
     }
 
     [HttpGet]
+    [Authorize]
     [Route("generate-id")]
     public async Task GetIdAsync(
     )
     {
         await _treeService.GenerateId();
     }
-    
+
     [HttpPost]
     [Authorize]
     [Route("create")]
-    public async Task CreateTreeActivityAsync(CreateTreeActivicyRequest request
+    public async Task CreateTreeActivityAsync(CreateTreeActivityRequest request
     )
     {
         await _treeService.CreateTreeActivityAsync(request);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request
+    )
+    {
+        await _treeService.ModifyTreeActivityHideFlagAsync(request);
     }
     
 }
