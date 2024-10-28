@@ -7,7 +7,7 @@ namespace NFTMarketServer.TreeGame.Provider;
 
 public interface ITreeGameUserInfoProvider
 {
-    public Task<TreeGameUserInfoIndex> SaveOrUpdateTreeUserBalanceAsync(TreeGameUserInfoDto treeGameUserInfoDto);
+    public Task<TreeGameUserInfoIndex> SaveOrUpdateTreeUserInfoAsync(TreeGameUserInfoDto treeGameUserInfoDto);
     
     public Task<TreeGameUserInfoIndex> GetTreeUserInfoAsync(string address);
 

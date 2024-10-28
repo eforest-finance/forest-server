@@ -5,7 +5,9 @@ namespace NFTMarketServer.TreeGame
 {
     public interface ITreeGameService
     {
-        Task<TreeGameHomePageInfoDto> GetUserTreeInfo(string address, string nickName);
+        Task<TreeGameHomePageInfoDto> GetUserTreeInfoAsync(string address, string nickName, bool needStorage);
+        
+        Task<TreeGameHomePageInfoDto> WateringTreeAsync(string address, int count);
 
     }
 }

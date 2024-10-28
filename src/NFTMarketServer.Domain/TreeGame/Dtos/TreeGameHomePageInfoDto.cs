@@ -28,7 +28,7 @@ public class TreeInfo
 
 public class WaterInfo
 {
-    public long Current{ get; set; }
+    public int Current{ get; set; }
     public long UpdateTime{ get; set; }
     public long Max { get; set; }
     public long Produce { get; set; }
@@ -48,6 +48,8 @@ public class WaterInfoConfig
 
 public class PointsDetail
 {
+    public string Id { get; set; }
+    public string Address { get; set; }
     public PointsDetailType Type{ get; set; }
     public long Amount { get; set; }
     public long UpdateTime{ get; set; }
@@ -80,7 +82,6 @@ public class TreeLevelConfig
 public class PointsDetailConfig
 {
     public PointsDetailType Type{ get; set; }
-    public long Amount { get; set; }
     public long ClaimLimit{ get; set; }
     public TimeUnit TimeUnit { get; set; }
 

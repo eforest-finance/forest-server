@@ -75,21 +75,18 @@ public class TreeGameConstants
         new PointsDetailConfig()
         {
             Type = PointsDetailType.NORMALONE,
-            Amount = 100,
             ClaimLimit = 0,
             TimeUnit = TimeUnit.MINUTE
         },
         new PointsDetailConfig()
         {
             Type = PointsDetailType.NORMALTWO,
-            Amount = 100,
             ClaimLimit = 0,
             TimeUnit = TimeUnit.MINUTE
         },
         new PointsDetailConfig()
         {
             Type = PointsDetailType.INVITE,
-            Amount = 0,
             ClaimLimit = 100,
             TimeUnit = TimeUnit.MINUTE
         }

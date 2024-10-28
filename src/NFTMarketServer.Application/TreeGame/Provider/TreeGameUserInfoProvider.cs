@@ -34,7 +34,7 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
         _objectMapper = objectMapper;
 
     }
-    public async Task<TreeGameUserInfoIndex> SaveOrUpdateTreeUserBalanceAsync(TreeGameUserInfoDto dto)
+    public async Task<TreeGameUserInfoIndex> SaveOrUpdateTreeUserInfoAsync(TreeGameUserInfoDto dto)
     {
         if (dto == null)
         {
