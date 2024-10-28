@@ -168,26 +168,65 @@ namespace NFTMarketServer.TreeGame
             var pointsDetailsConfig = _platformOptionsMonitor.CurrentValue.PointsDetails ?? TreeGameConstants.PointsDetailConfig;
             return pointsDetailsConfig;
         }
-        public async Task GetTreeGamePointsDetailsAsync(string address, string nickName)
+
+        private async Task<List<PointsDetail>> GetTreeGamePointsDetailsAsync(string address, TreeInfo treeInfo)
         {
             //first join in game - init pointsDetail
-            var pointsDetails = await _treeGamePointsDetailProvider.GetTreePointsDetailsAsync(address);
-            if (pointsDetails.IsNullOrEmpty())
+            var pointsDetailInfos = await _treeGamePointsDetailProvider.GetTreePointsDetailsAsync(address);
+            if (pointsDetailInfos.IsNullOrEmpty())
             {
-                var details = InitPointsDetailAsync(address);
+                pointsDetailInfos = await InitPointsDetailAsync(address, treeInfo);
+                return pointsDetailInfos.Select(i => _objectMapper.Map<TreeGamePointsDetailInfoIndex, PointsDetail>(i)).ToList();
             }
 
-            //init pointsDetail
-            return;
+            var updateDetails = new List<TreeGamePointsDetailInfoIndex>();
+            foreach (var pointsDetail in pointsDetailInfos)
+            {
+                if (pointsDetail.RemainingTime == 0)
+                {
+                    continue;
+                }
+                
+                if (pointsDetail.TimeUnit == TimeUnit.MINUTE)
+                {
+                    var currentTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+                    var timeDiff = currentTime - pointsDetail.UpdateTime;
+                    var remainingTime =(pointsDetail.RemainingTime - (timeDiff))/60000;
+                    pointsDetail.RemainingTime = remainingTime <= 0 ? 0 : remainingTime;
+                    pointsDetail.UpdateTime = currentTime;
+                    updateDetails.Add(pointsDetail);
+                }
+                else
+                {
+                    throw new Exception("Invalid pointsDetail timeunit:"+ pointsDetail.TimeUnit);
+                }
+            }
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(updateDetails);
+            return pointsDetailInfos.Select(i => _objectMapper.Map<TreeGamePointsDetailInfoIndex, PointsDetail>(i)).ToList();
         }
 
-        private List<TreeGamePointsDetailInfoIndex> InitPointsDetailAsync(string address)
+        private async Task<List<TreeGamePointsDetailInfoIndex>> InitPointsDetailAsync(string address, TreeInfo treeInfo)
         {
             var detailsConfig =  GetPointsDetailsConfig();
-            for(var detail : detailsConfig){
-                
+            List<TreeGamePointsDetailInfoIndex> pointsDetailInfos = new List<TreeGamePointsDetailInfoIndex>();
+            var currentTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+            foreach (var detail in detailsConfig)
+            {
+                pointsDetailInfos.Add(new TreeGamePointsDetailInfoIndex()
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Address = address,
+                    Type = detail.Type,
+                    Amount = detail.Amount,
+                    UpdateTime = currentTime,
+                    RemainingTime = treeInfo.Current.Frequency,
+                    TimeUnit = detail.TimeUnit,
+                    ClaimLimit = detail.ClaimLimit
+                });
             }
-            return null;
+
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(pointsDetailInfos);
+            return pointsDetailInfos;
         }
 
         public async Task<TreeGameHomePageInfoDto> GetUserTreeInfo(string address, string nickName)
@@ -210,9 +249,8 @@ namespace NFTMarketServer.TreeGame
             homePageDto.WaterInfo = waterInfo;
             
             //get points details
-            return null;
-
-            throw new NotImplementedException();
+            homePageDto.PointsDetails = await GetTreeGamePointsDetailsAsync(address, treeInfo);
+            return homePageDto;
         }
     }
 }

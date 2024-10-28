@@ -15,7 +15,7 @@ public class TreeGameHomePageInfoDto
     
     public WaterInfo WaterInfo{ get; set; }
     public TreeInfo TreeInfo{ get; set; }
-    public List<PointsDetail> pointsDetails{ get; set; }
+    public List<PointsDetail> PointsDetails{ get; set; }
 }
 
 public class TreeInfo
