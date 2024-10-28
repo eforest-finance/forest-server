@@ -11,7 +11,7 @@ namespace NFTMarketServer.Controllers
 {
     [RemoteService]
     [Area("app")]
-    [ControllerName("User")]
+    [ControllerName("Tree")]
     [Route("api/app/tree")]
     public class TreePointsController : NFTMarketServerController
     {

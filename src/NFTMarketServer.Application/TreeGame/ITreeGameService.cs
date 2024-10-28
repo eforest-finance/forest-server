@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using NFTMarketServer.Users.Index;
 
-namespace NFTMarketServer.Users
+namespace NFTMarketServer.TreeGame
 {
     public interface ITreeGameService
     {

@@ -1,4 +1,4 @@
-namespace NFTMarketServer.Users.Index;
+namespace NFTMarketServer.TreeGame;
 
 public class TreeGameUserInfoDto
 {
@@ -17,5 +17,8 @@ public class TreeGameUserInfoDto
     public long CreateTime { get; set; }
     
     public string ParentAddress { get; set; }
+    
+    public int CurrentWater { get; set; }
+    public long WaterUpdateTime { get; set; }
 
 }

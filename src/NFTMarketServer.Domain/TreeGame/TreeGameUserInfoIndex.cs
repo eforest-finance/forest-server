@@ -21,5 +21,8 @@ public class TreeGameUserInfoIndex : NFTMarketEntity<string>, IIndexBuild
     public long CreateTime { get; set; }
     
     [Keyword] public string ParentAddress { get; set; }
+    
+    public int CurrentWater { get; set; }
+    public long WaterUpdateTime { get; set; }
 
 }

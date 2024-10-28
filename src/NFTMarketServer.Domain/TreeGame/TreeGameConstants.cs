@@ -1,0 +1,97 @@
+using System.Collections.Generic;
+
+namespace NFTMarketServer.TreeGame;
+public class TreeGameConstants
+{
+    public static readonly List<TreeLevelInfo> TreeLevels = new List<TreeLevelInfo>()
+    {
+        new TreeLevelInfo
+        {
+            Level = 1,
+            LevelTitle = "LV1",
+            Produce = 10,
+            Frequency = 720,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 0
+        },
+        new TreeLevelInfo
+        {
+            Level = 2,
+            LevelTitle = "LV2",
+            Produce = 20,
+            Frequency = 720,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 100
+        },
+        new TreeLevelInfo
+        {
+            Level = 3,
+            LevelTitle = "LV3",
+            Produce = 30,
+            Frequency = 720,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 200
+        },
+        new TreeLevelInfo
+        {
+            Level = 4,
+            LevelTitle = "LV4",
+            Produce = 40,
+            Frequency = 720,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 300
+        },
+        new TreeLevelInfo
+        {
+            Level = 5,
+            LevelTitle = "LV5",
+            Produce = 50,
+            Frequency = 720,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 400
+        },
+        new TreeLevelInfo
+        {
+            Level = 6,
+            LevelTitle = "LV6",
+            Produce = 60,
+            Frequency = 720,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 500
+        }
+    };
+
+    public static readonly WaterInfoConfig WaterInfoConfig = new WaterInfoConfig()
+    {
+        Max = 60,
+        Produce = 1,
+        Frequency = 10,
+        TimeUnit = TimeUnit.MINUTE,
+        WateringIncome = 10
+    };
+
+    public static readonly List<PointsDetailConfig> PointsDetailConfig = new List<PointsDetailConfig>()
+    {
+        new PointsDetailConfig()
+        {
+            Type = PointsDetailType.NORMALONE,
+            Amount = 100,
+            ClaimLimit = 0,
+            TimeUnit = TimeUnit.MINUTE
+        },
+        new PointsDetailConfig()
+        {
+            Type = PointsDetailType.NORMALTWO,
+            Amount = 100,
+            ClaimLimit = 0,
+            TimeUnit = TimeUnit.MINUTE
+        },
+        new PointsDetailConfig()
+        {
+            Type = PointsDetailType.INVITE,
+            Amount = 0,
+            ClaimLimit = 100,
+            TimeUnit = TimeUnit.MINUTE
+        }
+    };
+}

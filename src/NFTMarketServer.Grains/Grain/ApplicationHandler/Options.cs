@@ -1,3 +1,6 @@
+using NFTMarketServer.TreeGame;
+using NFTMarketServer.Users.Index;
+
 namespace NFTMarketServer.Grains.Grain.ApplicationHandler;
 
 public class OpenAiOptions
@@ -103,4 +106,14 @@ public class PlatformNFTOptions
     public int IssueChainId{ get; set; }
     
     public List<int> ExcludeTokenIds{ get; set; }
+}
+
+public class TreeGameOptions
+{
+    public List<TreeLevelInfo> TreeLevels{ get; set; }
+
+    public WaterInfoConfig WaterInfo{ get; set; }
+
+    public List<PointsDetailConfig> PointsDetails { get; set; }
+
 }

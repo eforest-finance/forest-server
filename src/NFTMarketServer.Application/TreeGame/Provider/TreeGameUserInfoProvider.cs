@@ -7,25 +7,24 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Nest;
 using Newtonsoft.Json;
-using NFTMarketServer.Message.Provider;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
 
-namespace NFTMarketServer.Users.Provider;
+namespace NFTMarketServer.TreeGame.Provider;
 
 public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDependency
 {
     private readonly INESTRepository<TreeGameUserInfoIndex, string> _treeGameUserInfoIndexRepository;
     private readonly IBus _bus;
-    private readonly ILogger<MessageInfoProvider> _logger;
+    private readonly ILogger<ITreeGameUserInfoProvider> _logger;
     private readonly IObjectMapper _objectMapper;
 
 
     public TreeGameUserInfoProvider(
         INESTRepository<TreeGameUserInfoIndex, string> treeGameUserInfoIndexRepository,
         IBus bus,
-        ILogger<MessageInfoProvider> logger,
+        ILogger<ITreeGameUserInfoProvider> logger,
         IObjectMapper objectMapper
     )
     {

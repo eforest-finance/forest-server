@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NFTMarketServer.Users.Index;
 
-namespace NFTMarketServer.Users.Provider;
+namespace NFTMarketServer.TreeGame.Provider;
 
 public interface ITreeGameUserInfoProvider
 {
