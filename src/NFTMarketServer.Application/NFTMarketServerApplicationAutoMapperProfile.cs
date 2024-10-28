@@ -422,5 +422,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<MessageInfoIndex, MessageInfoDto>();
         CreateMap<UserInformationEto, UserIndex>();
         CreateMap<IndexerSeedOwnedSymbol, SeedSymbolIndexDto>();
+        CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>();
     }
 }
