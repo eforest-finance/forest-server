@@ -35,12 +35,12 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
         _objectMapper = objectMapper;
 
     }
-    public async Task SaveOrUpdateTreeUserBalanceAsync(TreeGameUserInfoDto dto)
+    public async Task<TreeGameUserInfoIndex> SaveOrUpdateTreeUserBalanceAsync(TreeGameUserInfoDto dto)
     {
         if (dto == null)
         {
             _logger.LogError("SaveOrUpdateTreeUserBalanceAsync dto is null");
-            return;
+            return null;
         }
         _logger.LogInformation("SaveOrUpdateTreeUserBalanceAsync dto:{A}",JsonConvert.SerializeObject(dto));
 
@@ -48,6 +48,7 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
         treeUserIndex.Id = Guid.NewGuid().ToString();
         treeUserIndex.CreateTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
         await _treeGameUserInfoIndexRepository.AddOrUpdateAsync(treeUserIndex);
+        return treeUserIndex;
     }
 
     public async Task<TreeGameUserInfoIndex> GetTreeUserInfoAsync(string address)

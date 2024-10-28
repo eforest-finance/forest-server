@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Users;
 using NFTMarketServer.Users.Dto;
+using NFTMarketServer.Users.Index;
 using Volo.Abp;
 
 namespace NFTMarketServer.Controllers
@@ -25,9 +26,9 @@ namespace NFTMarketServer.Controllers
 
         [HttpGet]
         [Route("user-info")]
-        public Task<UserDto> GetUserTreeInfo(string address, string nickName)
+        public Task<TreeGameHomePageInfoDto> GetUserTreeInfo(string address, string nickName)
         {
-            return _userAppService.GetByUserAddressAsync(address);
+            return _treeGameService.GetUserTreeInfo(address, nickName);
         }
 
         [HttpPost]
