@@ -12,5 +12,11 @@ public class CreateTreeActivityRequest
     public decimal LeftReward { get; set; }
     public string RewardLogo { get; set; }
     public RewardType RewardType { get; set; }
+    public decimal RedeemRewardOnce{ get; set; }
+    public RedeemType RedeemType{ get; set; }
+    //need MinPoints Participate in activities
+    public long MinPoints{ get; set; }
+    //cost Points Participate in activities
+    public long CostPoints{ get; set; }
     public long BeginDateTimeMilliseconds { get; set; }
 }

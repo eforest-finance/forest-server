@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NFTMarketServer.Tree.Provider;
 using Volo.Abp.DependencyInjection;
@@ -11,6 +12,9 @@ public interface ITreeService
     Task CreateTreeActivityAsync(CreateTreeActivityRequest request);
     Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
     Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request);
+    
+    Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request);
+
 }
 
 public class TreeService : ITreeService, ISingletonDependency
@@ -40,5 +44,10 @@ public class TreeService : ITreeService, ISingletonDependency
     public async Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request)
     {
         return await _treeActivityProvider.ModifyTreeActivityStatusAsync(request);
+    }
+
+    public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
+    {
+        return await _treeActivityProvider.GetTreeActivityListAsync(request);
     }
 }

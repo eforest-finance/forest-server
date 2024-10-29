@@ -12,6 +12,8 @@ namespace NFTMarketServer.TreeGame
         Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(string address, int nextLevel);
 
         Task<TreePointsClaimOutput> ClaimAsync(string address, PointsDetailType pointsDetailType);
+        
+        Task<TreePointsClaimOutput> PointsConvertAsync(string address, string activityId);
 
     }
 }

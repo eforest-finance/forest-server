@@ -56,7 +56,6 @@ namespace NFTMarketServer.Controllers
             return _treeGameService.ClaimAsync(address, pointsDetailType);
         }
         
-
         
         [HttpPost]
         [Route("points-convert")]

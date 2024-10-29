@@ -13,9 +13,18 @@ public class TreeActivityIndex : NFTMarketEntity<string>, IIndexBuild
     [Keyword] public string ActivityName { get; set; }
     [Text(Index = false)] public string ActivityDesc { get; set; }
     public string RewardName { get; set; }
-    [Text(Index = false)] public string Condition { get; set; }
+    //bonus pool maybe Token or NFT
     public decimal TotalReward { get; set; }
+    // remaining bonus
     public decimal LeftReward { get; set; }
+    //The number of bonuses that can be claimed at once
+    public decimal RedeemRewardOnce{ get; set; }
+    public RedeemType RedeemType{ get; set; }
+    //need MinPoints Participate in activities
+    public long MinPoints{ get; set; }
+    //cost Points Participate in activities
+    public long CostPoints{ get; set; }
+    
     [Text(Index = false)] public string RewardLogo { get; set; }
     public RewardType RewardType { get; set; }
     public TreeActivityStatus TreeActivityStatus { get; set; }

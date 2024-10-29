@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
+using Nest;
+using NFTMarketServer.Users.Index;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
 
@@ -11,6 +14,7 @@ public interface ITreeActivityProvider
     Task CreateTreeActivityAsync(CreateTreeActivityRequest request);
     Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
     Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request);
+    Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request);
 }
 
 public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
@@ -27,6 +31,11 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
 
     public async Task CreateTreeActivityAsync(CreateTreeActivityRequest request)
     {
+        if (request.MinPoints < 0 && request.CostPoints < 0)
+        {
+            throw new Exception("Invalid request points");
+        }
+
         var treeActivityIndex = _objectMapper.Map<CreateTreeActivityRequest, TreeActivityIndex>(request);
 
         treeActivityIndex.Id = IdGenerateHelper.ToSha256Hash(request.OriginId);
@@ -36,6 +45,11 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
         treeActivityIndex.TreeActivityStatus = TreeActivityStatus.NotStart;
         treeActivityIndex.HideFlag = true;
         treeActivityIndex.BeginDateTime = DateTimeHelper.FromUnixTimeMilliseconds(request.BeginDateTimeMilliseconds);
+        if (request.RedeemType == RedeemType.Free)
+        {
+            treeActivityIndex.CostPoints = 0;
+        }
+
         await _treeActivityIndexRepository.AddOrUpdateAsync(treeActivityIndex);
     }
 
@@ -59,5 +73,21 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
         treeActivityIndex.LastModifyTime = DateTime.UtcNow;
         await _treeActivityIndexRepository.AddOrUpdateAsync(treeActivityIndex);
         return true;
+    }
+
+    public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<TreeActivityIndex>, QueryContainer>>();
+        QueryContainer Filter(QueryContainerDescriptor<TreeActivityIndex> f) =>
+            f.Bool(b => b.Must(mustQuery));
+
+        var sorting = new Func<SortDescriptor<TreeActivityIndex>, IPromise<IList<ISort>>>(s =>
+            s.Ascending(t => t.TreeActivityStatus));
+        var tuple = await _treeActivityIndexRepository.GetSortListAsync(Filter, sortFunc: sorting);
+        if (tuple == null || tuple.Item1 == 0)
+        {
+            return null;
+        }
+        return tuple.Item2;
     }
 }

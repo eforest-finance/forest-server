@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +51,22 @@ public class TreeActivityController : NFTMarketServerController
     [Authorize]
     [Route("activity-modify-status")]
     public async Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request
+    )
+    {
+        return await _treeService.ModifyTreeActivityStatusAsync(request);
+    }
+    
+    [HttpGet]
+    [Authorize]
+    [Route("activity-list")]
+    public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
+    {
+        return await _treeService.GetTreeActivityListAsync(request);
+    }
+    [HttpGet]
+    [Authorize]
+    [Route("activity-detail")]
+    public async Task<bool> GetTreeActivityDetailAsync(ModifyTreeActivityStatusRequest request
     )
     {
         return await _treeService.ModifyTreeActivityStatusAsync(request);

@@ -432,6 +432,11 @@ namespace NFTMarketServer.TreeGame
             return response;
         }
 
+        public Task<TreePointsClaimOutput> PointsConvertAsync(string address, string activityId)
+        {
+            throw new NotImplementedException();
+        }
+
         private string BuildRequestHash(string request)
         {
             var hashVerifyKey = _platformOptionsMonitor.CurrentValue.HashVerifyKey ?? TreeGameConstants.HashVerifyKey;
