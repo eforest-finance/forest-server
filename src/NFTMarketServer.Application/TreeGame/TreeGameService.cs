@@ -316,7 +316,7 @@ namespace NFTMarketServer.TreeGame
 
                 if (pointsDetail.TimeUnit != TimeUnit.MINUTE)
                 {
-                    throw new Exception("Invalid pointsDetail timeuni:" + pointsDetail.TimeUnit);
+                    throw new Exception("Invalid pointsDetail timeunit:" + pointsDetail.TimeUnit);
                 }
 
                 var remainingTime = pointsDetail.RemainingTime - count*waterInfo.WateringIncome;
@@ -373,6 +373,51 @@ namespace NFTMarketServer.TreeGame
                 RequestHash = requestHash
             };
             return response;
+        }
+
+        public async Task ClaimAsync(string address, PointsDetailType pointsDetailType)
+        {
+            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
+            if (treeUserIndex == null)
+            {
+                throw new Exception("Please refresh homepage, init your tree");
+            }
+            var treeInfo =  await GetTreeGameTreeInfoAsync(treeUserIndex.TreeLevel);
+            var pointsDetails = await GetAndRefreshTreeGamePointsDetailsAsync(address, treeInfo, false);
+            var claimPointsDetail = new PointsDetail();
+            claimPointsDetail = null;
+            var claimPointsAmount = 0l;
+
+            foreach (var pointsDetail in pointsDetails)
+            {
+                if (pointsDetail.Type == pointsDetailType && 
+                    (pointsDetail.Type == PointsDetailType.NORMALONE ||pointsDetail.Type == PointsDetailType.NORMALTWO) 
+                    && pointsDetail.RemainingTime <= 0)
+                {
+                    claimPointsDetail = pointsDetail;
+                    claimPointsAmount = treeInfo.Current.Produce;
+                    claimPointsDetail.Amount = claimPointsAmount;
+                }
+                if (pointsDetail.Type == pointsDetailType && 
+                    (pointsDetail.Type == PointsDetailType.INVITE) 
+                    && pointsDetail.Amount >= pointsDetail.ClaimLimit)
+                {
+                    claimPointsDetail = pointsDetail;
+                    claimPointsAmount = pointsDetail.Amount;
+                    claimPointsDetail.Amount = 0;
+                }
+            }
+
+            if (claimPointsDetail == null)
+            {
+                throw new Exception("Your fruit does not meet the extraction criteria");
+            }
+
+            //update db
+            treeUserIndex.Points += claimPointsAmount;
+            await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(treeUserIndex));
+            var pointsDetailIndex = _objectMapper.Map<PointsDetail, TreeGamePointsDetailInfoIndex>(claimPointsDetail);
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(new List<TreeGamePointsDetailInfoIndex>(){pointsDetailIndex});
         }
 
         private string BuildRequestHash(string request)

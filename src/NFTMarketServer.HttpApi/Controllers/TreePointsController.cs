@@ -51,9 +51,9 @@ namespace NFTMarketServer.Controllers
         [HttpPost]
         [Route("claim")]
         [Authorize]
-        public Task PointsClaim(UserUpdateDto input)
+        public Task PointsClaim(string address, PointsDetailType pointsDetailType)
         {
-            return _userAppService.UserUpdateAsync(input);
+            return _treeGameService.ClaimAsync(address, pointsDetailType);
         }
         
 
