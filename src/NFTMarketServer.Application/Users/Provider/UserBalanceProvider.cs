@@ -155,7 +155,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var sorting = new Func<SortDescriptor<UserBalanceIndex>, IPromise<IList<ISort>>>(s =>
             s.Descending(t => t.ChangeTime));
         var tuple = await _userBalanceIndexRepository.GetSortListAsync(Filter, skip: input.SkipCount,
-            sortFunc: sorting);
+            sortFunc: sorting).ConfigureAwait(false);
         return tuple;
     }
     
@@ -171,14 +171,14 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
             {
                 return userBalanceList;
             }
-            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{size} input:{C}", result.Item1, result.Item2.Count, JsonConvert.SerializeObject(queryUserBalanceIndexInput));
+            // _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalance count:{A} size:{size} input:{C}", result.Item1, result.Item2.Count, JsonConvert.SerializeObject(queryUserBalanceIndexInput));
 
             if (queryCount == CommonConstant.IntOne)
             {
                 totalCount = (int)result.Item1;
             }
             userBalanceList.AddRange(result.Item2);
-            _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalanceList count:{A}", userBalanceList.Count);
+            // _logger.LogDebug("GetValidUserBalanceInfosAsync for debug query userBalanceList count:{A}", userBalanceList.Count);
 
             queryUserBalanceIndexInput.SkipCount = result.Item2.Count;
             queryCount++;
