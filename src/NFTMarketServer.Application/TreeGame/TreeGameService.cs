@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf;
 using AElf.Indexing.Elasticsearch;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
@@ -37,6 +38,7 @@ namespace NFTMarketServer.TreeGame
         private readonly ITreeGameUserInfoProvider _treeGameUserInfoProvider;
         private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
         private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
+        private readonly IUserAppService _userAppService;
 
         public TreeGameService(
             ITreeGameUserInfoProvider treeGameUserInfoProvider,
@@ -50,7 +52,8 @@ namespace NFTMarketServer.TreeGame
             ISymbolIconAppService symbolIconAppService,
             INESTRepository<UserIndex, Guid> userRepository,
             IObjectMapper objectMapper,
-            IOptionsMonitor<TreeGameOptions> platformOptionsMonitor)
+            IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
+            IUserAppService userAppService)
 
         {
             _userInformationProvider = userInformationProvider;
@@ -65,6 +68,7 @@ namespace NFTMarketServer.TreeGame
             _treeGameUserInfoProvider = treeGameUserInfoProvider;
             _platformOptionsMonitor = platformOptionsMonitor;
             _treeGamePointsDetailProvider = treeGamePointsDetailProvider;
+            _userAppService = userAppService;
         }
 
         public async Task<TreeGameUserInfoIndex> InitNewTreeGameUserAsync(string address, string nickName)
@@ -263,6 +267,12 @@ namespace NFTMarketServer.TreeGame
 
         public async Task<TreeGameHomePageInfoDto> WateringTreeAsync(string address, int count)
         {
+            var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+            if (currentUserAddress != address)
+            {
+                throw new Exception("Login address and parameter address are inconsistent");
+            }
+
             var needStorage = false;
             if (count != 1)
             {
@@ -325,6 +335,51 @@ namespace NFTMarketServer.TreeGame
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(treeUserIndex));
             await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(updateDetails);
             return homePageDto;
+        }
+
+        public async Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(string address, int nextLevel)
+        {
+            var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+            if (currentUserAddress != address)
+            {
+                throw new Exception("Login address and parameter address are inconsistent");
+            }
+            
+            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
+            if (treeUserIndex == null)
+            {
+                throw new Exception("Please refresh homepage, init your tree");
+            }
+            var treeInfo =  await GetTreeGameTreeInfoAsync(treeUserIndex.TreeLevel);
+            if (treeInfo.Next.Level != nextLevel)
+            {
+                throw new Exception("Tree level parameter error, currentLevel:"+treeInfo.Current.Level+",nextLevel:"+treeInfo.Next.Level);
+            }
+
+            if (treeUserIndex.Points < treeInfo.NextLevelCost)
+            {
+                throw new Exception("You don't have enough points");
+            }
+            
+            //build requestHash
+            var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+            var requestHash = BuildRequestHash(string.Concat(address, treeInfo.NextLevelCost, opTime));
+            var response = new TreeLevelUpgradeOutput()
+            {
+                Address = address,
+                Points = treeInfo.NextLevelCost,
+                OpTime = opTime,
+                UpgradeLevel = treeInfo.Next.Level,
+                RequestHash = requestHash
+            };
+            return response;
+        }
+
+        private string BuildRequestHash(string request)
+        {
+            var hashVerifyKey = _platformOptionsMonitor.CurrentValue.HashVerifyKey ?? TreeGameConstants.HashVerifyKey;
+            var requestHash = HashHelper.ComputeFrom(string.Concat(request, hashVerifyKey));
+            return requestHash.ToHex();
         }
     }
 }

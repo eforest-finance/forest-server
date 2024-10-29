@@ -91,4 +91,6 @@ public class TreeGameConstants
             TimeUnit = TimeUnit.MINUTE
         }
     };
+
+    public const string HashVerifyKey = "1a2b3c";
 }

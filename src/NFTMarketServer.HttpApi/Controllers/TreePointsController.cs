@@ -41,6 +41,14 @@ namespace NFTMarketServer.Controllers
         }
         
         [HttpPost]
+        [Route("level-update")]
+        [Authorize]
+        public Task<TreeLevelUpgradeOutput> TreeUpdateLevel(string address, int nextLevel)
+        {
+            return _treeGameService.UpgradeTreeLevelAsync(address, nextLevel);
+        }
+        
+        [HttpPost]
         [Route("claim")]
         [Authorize]
         public Task PointsClaim(UserUpdateDto input)
@@ -48,13 +56,7 @@ namespace NFTMarketServer.Controllers
             return _userAppService.UserUpdateAsync(input);
         }
         
-        [HttpPost]
-        [Route("level-update")]
-        [Authorize]
-        public Task TreeUpdateLevel(UserUpdateDto input)
-        {
-            return _userAppService.UserUpdateAsync(input);
-        }
+
         
         [HttpPost]
         [Route("points-convert")]

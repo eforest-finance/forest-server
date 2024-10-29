@@ -9,5 +9,7 @@ namespace NFTMarketServer.TreeGame
         
         Task<TreeGameHomePageInfoDto> WateringTreeAsync(string address, int count);
 
+        Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(string address, int nextLevel);
+
     }
 }

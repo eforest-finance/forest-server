@@ -115,5 +115,7 @@ public class TreeGameOptions
     public WaterInfoConfig WaterInfo{ get; set; }
 
     public List<PointsDetailConfig> PointsDetails { get; set; }
+    
+    public string HashVerifyKey{ get; set; }
 
 }
