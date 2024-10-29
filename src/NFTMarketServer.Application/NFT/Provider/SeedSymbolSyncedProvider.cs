@@ -135,7 +135,7 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
 
         var sort = GetSortForSeedBrife(dto.Sorting);
         var result = await _seedSymbolIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount,
-            limit: CommonConstant.IntMaxCount);
+            limit: dto.MaxResultCount);
         if (result?.Item1 != null && result?.Item1 != CommonConstant.EsLimitTotalNumber)
         {
             return result;
@@ -250,7 +250,7 @@ public class SeedSymbolSyncedProvider : ISeedSymbolSyncedProvider, ISingletonDep
             return f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
         }
         var result = await _seedSymbolIndexRepository.GetListAsync(Filter, sortType: sorting.Item1, sortExp: sorting.Item2,
-            skip: skipCount, limit: CommonConstant.IntMaxCount);
+            skip: skipCount, limit: dto.MaxResultCount);
         var indexerInfos = new IndexerSeedInfos
         {
             TotalRecordCount = result.Item1,
