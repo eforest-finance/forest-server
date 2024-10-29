@@ -69,9 +69,9 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     $maxResultCount:Int!,
                     $chainId:String!,
                     $symbol:String!,
-                    $owner: String!,
-                    $address: String,
-                    $excludedAddress: String,
+                    $owner:String!,
+                    $address:String,
+                    $excludedAddress:String,
                     $expireTimeGt:Long
                 ){
                   nftListingInfo(
