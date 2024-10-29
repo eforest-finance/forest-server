@@ -31,7 +31,7 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTCollections>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$addressList:[String]) {
+			    query($skipCount:Int!,$maxResultCount:Int!,$addressList:[String!]!) {
                     data:nftCollectionsByAddressList(dto:{skipCount: $skipCount,maxResultCount:$maxResultCount,addressList:$addressList}){
                         totalRecordCount,
                         indexerNftCollections:data{
@@ -178,7 +178,7 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
             await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerNFTCollectionChanges>>(new GraphQLRequest
             {
                 Query = @"
-			    query($skipCount:Int!,$chainId:String,$startBlockHeight:Long!) {
+			    query($skipCount:Int!,$chainId:String!,$startBlockHeight:Long!) {
                     data:nftCollectionChange(dto:{skipCount:$skipCount,chainId:$chainId,blockHeight:$startBlockHeight}) {
                         totalRecordCount,
                         indexerNftCollectionChanges:data{
@@ -204,7 +204,7 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
             await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerNFTCollectionPriceChanges>>(new GraphQLRequest
             {
                 Query = @"
-			    query($skipCount:Int!,$chainId:String,$startBlockHeight:Long!) {
+			    query($skipCount:Int!,$chainId:String!,$startBlockHeight:Long!) {
                     data:nftCollectionPriceChange(dto:{skipCount:$skipCount,chainId:$chainId,blockHeight:$startBlockHeight}) {
                         totalRecordCount,
                         indexerNftCollectionPriceChanges:data{

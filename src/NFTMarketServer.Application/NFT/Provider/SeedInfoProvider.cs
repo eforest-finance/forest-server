@@ -93,7 +93,7 @@ public class SeedInfoProvider : ISeedInfoProvider, ISingletonDependency
             await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerSeedMainChainChangePage>>(new GraphQLRequest
             {
                 Query = @"
-			    query($skipCount:Int!,$chainId:String,$startBlockHeight:Long!) {
+			    query($skipCount:Int!,$chainId:String!,$startBlockHeight:Long!) {
                     data:seedMainChainChange(dto:{skipCount:$skipCount,chainId:$chainId,blockHeight:$startBlockHeight}) {
                         totalRecordCount,
                         indexerSeedMainChainChangeList:data{
