@@ -82,7 +82,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$types:[Int!]!,$timestampMin:Long,$timestampMax:Long,$nFTInfoId:String!) {
+			    query($skipCount:Int!,$maxResultCount:Int!,$types:[Int!],$timestampMin:Long,$timestampMax:Long,$nFTInfoId:String!) {
                     data:nftActivityList(input:{skipCount: $skipCount,maxResultCount:$maxResultCount,types:$types,timestampMin:$timestampMin,timestampMax:$timestampMax,nFTInfoId:$nFTInfoId}){
                         totalRecordCount,
                         indexerNftactivity:data{
@@ -121,7 +121,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$collectionId:String!,$types:[Int],$bizIdList:[String]) {
+			    query($skipCount:Int!,$maxResultCount:Int!,$collectionId:String!,$types:[Int!],$bizIdList:[String]) {
                     data:collectionActivityList(input:{skipCount: $skipCount,maxResultCount:$maxResultCount,collectionId:$collectionId,types:$types,bizIdList:$bizIdList}){
                         totalRecordCount,
                         indexerNftactivity:data{
@@ -159,7 +159,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int],$chainId:String) {
+			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int!],$chainId:String) {
                     data:messageActivityList(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types,chainId:$chainId}){
                         totalRecordCount,
                         indexerNftactivity:data{
@@ -421,7 +421,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             => f.Bool(b => b.Must(mustQuery));
 
         var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
-            sortExp: item => item.Timestamp, skip: dto.SkipCount, limit: dto.MaxResultCount);
+            sortExp: item => item.Timestamp, skip: dto.SkipCount, limit: CommonConstant.IntMaxCount);
 
         return result;
     }

@@ -197,7 +197,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             => f.Bool(b => b.Must(mustQuery));
 
         var sort = GetSortForNFTBrife(dto.Sorting);
-        var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: dto.MaxResultCount);
+        var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: CommonConstant.IntMaxCount);
 
         var nftInfoIndexList = _objectMapper.Map<List<NFTInfoNewIndex>, List<IndexerNFTInfo>>(result?.Item2);
 
@@ -428,7 +428,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             return f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
         }
         var result = await _nftInfoNewIndexRepository.GetListAsync(Filter, sortType: sorting.Item1, sortExp: sorting.Item2,
-            skip: skipCount, limit: dto.MaxResultCount);
+            skip: skipCount, limit: CommonConstant.IntMaxCount);
          var indexerInfos = new IndexerNFTInfos
         {
             TotalRecordCount = result.Item1,
