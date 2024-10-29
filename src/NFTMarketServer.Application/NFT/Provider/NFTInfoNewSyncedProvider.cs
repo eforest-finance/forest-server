@@ -77,8 +77,12 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
                 TokenCreatedExternalInfoEnum.SeedOwnedSymbol, res.TokenName);
         }
         var balanceInfo = await _userBalanceProvider.GetNFTBalanceInfoAsync(nftInfoId);
-        res.Owner = balanceInfo.Owner;
-        res.AllOwnerCount = balanceInfo.OwnerCount;
+        if (balanceInfo != null)
+        {
+            res.Owner = balanceInfo.Owner;
+            res.AllOwnerCount = balanceInfo.OwnerCount;
+        }
+        
         return res;
     }
 
@@ -197,7 +201,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             => f.Bool(b => b.Must(mustQuery));
 
         var sort = GetSortForNFTBrife(dto.Sorting);
-        var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: CommonConstant.IntMaxCount);
+        var result = await _nftInfoNewIndexRepository.GetSortListAsync(Filter, sortFunc: sort, skip: dto.SkipCount, limit: dto.MaxResultCount);
 
         var nftInfoIndexList = _objectMapper.Map<List<NFTInfoNewIndex>, List<IndexerNFTInfo>>(result?.Item2);
 
@@ -428,7 +432,7 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
             return f.Bool(b => b.Must(mustQuery).MustNot(mustNotQuery));
         }
         var result = await _nftInfoNewIndexRepository.GetListAsync(Filter, sortType: sorting.Item1, sortExp: sorting.Item2,
-            skip: skipCount, limit: CommonConstant.IntMaxCount);
+            skip: skipCount, limit: dto.MaxResultCount);
          var indexerInfos = new IndexerNFTInfos
         {
             TotalRecordCount = result.Item1,

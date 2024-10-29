@@ -421,7 +421,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
             => f.Bool(b => b.Must(mustQuery));
 
         var result = await _nftActivityIndexRepository.GetListAsync(Filter, sortType: SortOrder.Descending,
-            sortExp: item => item.Timestamp, skip: dto.SkipCount, limit: CommonConstant.IntMaxCount);
+            sortExp: item => item.Timestamp, skip: dto.SkipCount, limit: dto.MaxResultCount);
 
         return result;
     }
