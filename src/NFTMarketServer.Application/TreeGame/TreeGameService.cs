@@ -375,7 +375,7 @@ namespace NFTMarketServer.TreeGame
             return response;
         }
 
-        public async Task ClaimAsync(string address, PointsDetailType pointsDetailType)
+        public async Task<TreePointsClaimOutput> ClaimAsync(string address, PointsDetailType pointsDetailType)
         {
             var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
             if (treeUserIndex == null)
@@ -413,11 +413,23 @@ namespace NFTMarketServer.TreeGame
                 throw new Exception("Your fruit does not meet the extraction criteria");
             }
 
-            //update db
+            /*//update db
             treeUserIndex.Points += claimPointsAmount;
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(treeUserIndex));
             var pointsDetailIndex = _objectMapper.Map<PointsDetail, TreeGamePointsDetailInfoIndex>(claimPointsDetail);
-            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(new List<TreeGamePointsDetailInfoIndex>(){pointsDetailIndex});
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(new List<TreeGamePointsDetailInfoIndex>(){pointsDetailIndex});*/
+            //build requestHash
+            var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+            var requestHash = BuildRequestHash(string.Concat(address, pointsDetailType, claimPointsAmount, opTime));
+            var response = new TreePointsClaimOutput()
+            {
+                Address = address,
+                PointsDetailType = pointsDetailType,
+                Points = claimPointsAmount,
+                OpTime = opTime,
+                RequestHash = requestHash
+            };
+            return response;
         }
 
         private string BuildRequestHash(string request)
