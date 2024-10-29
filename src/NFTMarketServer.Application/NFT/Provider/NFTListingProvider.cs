@@ -119,7 +119,6 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
                 }
             });
-            _logger.LogInformation("GetNFTListingsAsync input:{input}, res:{res}", JsonConvert.SerializeObject(dto), JsonConvert.SerializeObject(res));
             return res?.nftListingInfo;
         }
         catch (Exception e)
