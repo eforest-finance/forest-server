@@ -121,7 +121,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$collectionId:String!,$types:[Int!],$bizIdList:[String]) {
+			    query($skipCount:Int!,$maxResultCount:Int!,$collectionId:String!,$types:[Int],$bizIdList:[String]) {
                     data:collectionActivityList(input:{skipCount: $skipCount,maxResultCount:$maxResultCount,collectionId:$collectionId,types:$types,bizIdList:$bizIdList}){
                         totalRecordCount,
                         indexerNftactivity:data{
@@ -159,7 +159,7 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int!],$chainId:String) {
+			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int],$chainId:String) {
                     data:messageActivityList(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types,chainId:$chainId}){
                         totalRecordCount,
                         indexerNftactivity:data{
