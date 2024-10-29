@@ -1863,7 +1863,7 @@ namespace NFTMarketServer.NFT
                 MaxResultCount = 1
             };
             var dealInfos = await _nftDealInfoProvider.GetDealInfosAsync(dto);
-            if (dealInfos == null) return null;
+            if (dealInfos == null || dealInfos.IndexerNftDealList.IsNullOrEmpty()) return null;
             return dealInfos.IndexerNftDealList.FirstOrDefault();
         }
 
