@@ -115,7 +115,7 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTCollections>(new GraphQLRequest
         {
             Query = @"
-			    query($ids:[String]!) {
+			    query($ids:[String!]!) {
                     data:nftCollectionByIds(dto:{ids: $ids}){
                         totalRecordCount,
                         indexerNftCollections:data{
