@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
-using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -19,12 +18,9 @@ namespace NFTMarketServer.TreeGame
 {
     public class TreeGameService : NFTMarketServerAppService, ITreeGameService
     {
-        private readonly INESTRepository<UserIndex, Guid> _userIndexRepository;
-        private readonly INESTRepository<UserExtraIndex, Guid> _userExtraIndexRepository;
         private readonly ITreeActivityProvider _treeActivityProvider;
-        private readonly ILogger<UserAppService> _logger;
+        private readonly ILogger<TreeGameService> _logger;
         private readonly IObjectMapper _objectMapper;
-        private const string AELF = "AELF";
         private readonly ITreeGameUserInfoProvider _treeGameUserInfoProvider;
         private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
         private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
@@ -35,16 +31,12 @@ namespace NFTMarketServer.TreeGame
             ITreeActivityProvider treeActivityProvider,
             ITreeGameUserInfoProvider treeGameUserInfoProvider,
             ITreeGamePointsDetailProvider treeGamePointsDetailProvider,
-            INESTRepository<UserIndex, Guid> userIndexRepository,
-            INESTRepository<UserExtraIndex, Guid> userExtraIndexRepository,
-            ILogger<UserAppService> logger,
+            ILogger<TreeGameService> logger,
             IObjectMapper objectMapper,
             IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
             IUserAppService userAppService)
 
         {
-            _userIndexRepository = userIndexRepository;
-            _userExtraIndexRepository = userExtraIndexRepository;
             _logger = logger;
             _objectMapper = objectMapper;
             _treeGameUserInfoProvider = treeGameUserInfoProvider;
@@ -78,7 +70,7 @@ namespace NFTMarketServer.TreeGame
         private List<TreeLevelInfo> GetTreeLevelInfoConfig()
         {
             var treeLevels = _platformOptionsMonitor.CurrentValue.TreeLevels;
-            if (CollectionUtilities.IsNullOrEmpty(treeLevels))
+            if (treeLevels.IsNullOrEmpty())
             {
                 treeLevels = TreeGameConstants.TreeLevels;
             }

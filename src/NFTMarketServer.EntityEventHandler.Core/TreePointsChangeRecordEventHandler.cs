@@ -1,0 +1,176 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.NFT;
+using NFTMarketServer.NFT.Etos;
+using NFTMarketServer.NFT.Index;
+using NFTMarketServer.TreeGame;
+using NFTMarketServer.TreeGame.Provider;
+using NFTMarketServer.Users.Index;
+using NFTMarketServer.Users.Provider;
+using Volo.Abp.Caching;
+using Volo.Abp.DependencyInjection;
+using Volo.Abp.EventBus.Distributed;
+using Volo.Abp.ObjectMapping;
+
+namespace NFTMarketServer.EntityEventHandler.Core;
+
+public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreePointsChangeRecordEto>, ISingletonDependency
+{
+    private const int ExpireSeconds = 10;
+    private readonly ILogger<TreePointsChangeRecordEventHandler> _logger;
+    private readonly IDistributedCache<string> _distributedCacheForHeight;
+    private readonly INFTInfoAppService _nftInfoAppService;
+    private readonly IUserBalanceProvider _userBalanceProvider;
+    private readonly ITreeGameUserInfoProvider _treeGameUserInfoProvider;
+    private readonly IObjectMapper _objectMapper;
+    private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
+    private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
+
+
+
+    public TreePointsChangeRecordEventHandler(ILogger<TreePointsChangeRecordEventHandler> logger,
+        IDistributedCache<string> distributedCacheForHeight,
+        INFTInfoAppService nftInfoAppService,
+        ITreeGameUserInfoProvider treeGameUserInfoProvider,
+        IUserBalanceProvider userBalanceProvider,
+        ITreeGamePointsDetailProvider treeGamePointsDetailProvider,
+        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
+        IObjectMapper objectMapper)
+    {
+        _logger = logger;
+        _distributedCacheForHeight = distributedCacheForHeight;
+        _nftInfoAppService = nftInfoAppService;
+        _userBalanceProvider = userBalanceProvider;
+        _treeGameUserInfoProvider = treeGameUserInfoProvider;
+        _objectMapper = objectMapper;
+        _treeGamePointsDetailProvider = treeGamePointsDetailProvider;
+        _platformOptionsMonitor = platformOptionsMonitor;
+
+    }
+
+    public async Task HandleEventAsync(TreePointsChangeRecordEto etoData)
+    {
+        _logger.LogInformation("TreePointsChangeRecordEventHandler receive: {Data}", JsonConvert.SerializeObject(etoData));
+        var item = etoData.TreePointsChangeRecordItem;
+        if (item == null || item.Id.IsNullOrEmpty()) return;
+        var expireFlag = await _distributedCacheForHeight.GetAsync(item.Id);
+        if (!expireFlag.IsNullOrEmpty())
+        {
+            _logger.LogInformation("TreePointsChangeRecordEventHandler expireFlag: {expireFlag},Id:{Id}",expireFlag, item.Id);
+            return;
+        }
+        await _distributedCacheForHeight.SetAsync(item.Id,
+            item.Id, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(ExpireSeconds)
+            });
+        
+        //change points
+        //change tree
+        //change points detail
+        var userInfo = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(item.Address);
+        if (userInfo == null)
+        {
+            _logger.LogInformation("TreePointsChangeRecordEventHandler treeGameUserInfo is null: {A}",item.Address);
+            return;
+        }
+        var treeInfo = await GetTreeGameTreeInfoAsync(userInfo.TreeLevel);
+        if (treeInfo == null)
+        {
+            _logger.LogInformation("TreePointsChangeRecordEventHandler treeInfo is null: {A}",item.Address);
+            return;
+        }
+        
+        if (item.OpType == OpType.Added)
+        {
+            userInfo.Points = item.TotalPoints;
+            await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
+            var pointsDetailList = await _treeGamePointsDetailProvider.GetTreePointsDetailsAsync(item.Address);
+            foreach (var detail in pointsDetailList)
+            {
+                if (EnumHelper.ToEnumString(detail.Type).Equals(EnumHelper.ToEnumString(item.PointsType)))
+                {
+                    detail.Amount = treeInfo.Current.Produce;
+                    detail.UpdateTime = item.OpTime;
+                    detail.RemainingTime = treeInfo.Current.Frequency;
+                    await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
+                }
+            }
+        }
+        
+        if (item.OpType == OpType.UpdateTree)
+        {
+            userInfo.Points = item.TotalPoints;
+            userInfo.TreeLevel = Convert.ToInt32(item.TreeLevel);
+            await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
+            
+            var pointsDetailList = await _treeGamePointsDetailProvider.GetTreePointsDetailsAsync(item.Address);
+            var treeLevels = GetTreeLevelInfoConfig();
+            treeInfo = new TreeInfo();
+            var currentLevel = treeLevels.FirstOrDefault(x => x.Level == Convert.ToInt32(item.TreeLevel));
+            if (currentLevel == null)
+            {
+                throw new Exception("TreePointsChangeRecordEventHandler Invalid treelevel:"+item.TreeLevel);
+            }
+            foreach (var detail in pointsDetailList)
+            {
+                if (detail.Type == PointsDetailType.INVITE)
+                {
+                    continue;
+                }
+
+                detail.Amount = treeInfo.Current.Produce;
+            }
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(pointsDetailList);
+
+        }
+        
+        if (item.OpType == OpType.Claim)
+        {
+            userInfo.Points = item.TotalPoints;
+            await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
+            //record user join this activity count
+            var activityId = item.ActivityId;
+        }
+    }
+    private async Task<TreeInfo> GetTreeGameTreeInfoAsync(int treeLevel)
+    {
+        //first join in game - init tree
+        var treeLevels = GetTreeLevelInfoConfig();
+
+        var treeInfo = new TreeInfo();
+        var currentLevel = treeLevels.FirstOrDefault(x => x.Level == treeLevel);
+        if (currentLevel == null)
+        {
+            throw new Exception("Invalid treelevel:"+treeLevel);
+        }
+        var nextLevel = treeLevels.FirstOrDefault(x => x.Level == (treeLevel+1));
+        treeInfo.Current = currentLevel;
+        treeInfo.Next = nextLevel;
+        var nextLevelCost = 0;
+        if (nextLevel != null)
+        {
+            nextLevelCost = nextLevel.MinPoints;
+        }
+
+        treeInfo.NextLevelCost = nextLevelCost;
+        return treeInfo;
+    }
+    private List<TreeLevelInfo> GetTreeLevelInfoConfig()
+    {
+        var treeLevels = _platformOptionsMonitor.CurrentValue.TreeLevels;
+        if (treeLevels.IsNullOrEmpty())
+        {
+            treeLevels = TreeGameConstants.TreeLevels;
+        }
+
+        return treeLevels;
+    }
+}
