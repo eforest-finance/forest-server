@@ -4,19 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Indexing.Elasticsearch;
-using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using NFTMarketServer.Chains;
-using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.Tree;
+using NFTMarketServer.Tree.Provider;
 using NFTMarketServer.TreeGame.Provider;
 using NFTMarketServer.Users;
 using NFTMarketServer.Users.Index;
-using NFTMarketServer.Users.Provider;
-using Org.BouncyCastle.Utilities;
-using Orleans;
 using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.TreeGame
@@ -25,49 +21,36 @@ namespace NFTMarketServer.TreeGame
     {
         private readonly INESTRepository<UserIndex, Guid> _userIndexRepository;
         private readonly INESTRepository<UserExtraIndex, Guid> _userExtraIndexRepository;
-        private readonly IClusterClient _clusterClient;
+        private readonly ITreeActivityProvider _treeActivityProvider;
         private readonly ILogger<UserAppService> _logger;
         private readonly IObjectMapper _objectMapper;
-        private readonly IUserInformationProvider _userInformationProvider;
-        private readonly IChainAppService _chainAppService;
-        private readonly ISymbolIconAppService _symbolIconAppService;
-        private readonly INESTRepository<UserIndex, Guid> _userRepository;
-        private const string FullAddressPrefix = "ELF";
-        public const char FullAddressSeparator = '_';
         private const string AELF = "AELF";
         private readonly ITreeGameUserInfoProvider _treeGameUserInfoProvider;
         private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
         private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
         private readonly IUserAppService _userAppService;
 
+
         public TreeGameService(
+            ITreeActivityProvider treeActivityProvider,
             ITreeGameUserInfoProvider treeGameUserInfoProvider,
             ITreeGamePointsDetailProvider treeGamePointsDetailProvider,
-            IUserInformationProvider userInformationProvider,
             INESTRepository<UserIndex, Guid> userIndexRepository,
             INESTRepository<UserExtraIndex, Guid> userExtraIndexRepository,
             ILogger<UserAppService> logger,
-            IClusterClient clusterClient,
-            IChainAppService chainAppService,
-            ISymbolIconAppService symbolIconAppService,
-            INESTRepository<UserIndex, Guid> userRepository,
             IObjectMapper objectMapper,
             IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
             IUserAppService userAppService)
 
         {
-            _userInformationProvider = userInformationProvider;
             _userIndexRepository = userIndexRepository;
             _userExtraIndexRepository = userExtraIndexRepository;
-            _clusterClient = clusterClient;
             _logger = logger;
-            _chainAppService = chainAppService;
             _objectMapper = objectMapper;
-            _symbolIconAppService = symbolIconAppService;
-            _userRepository = userRepository;
             _treeGameUserInfoProvider = treeGameUserInfoProvider;
             _platformOptionsMonitor = platformOptionsMonitor;
             _treeGamePointsDetailProvider = treeGamePointsDetailProvider;
+            _treeActivityProvider = treeActivityProvider;
             _userAppService = userAppService;
         }
 
@@ -432,9 +415,45 @@ namespace NFTMarketServer.TreeGame
             return response;
         }
 
-        public Task<TreePointsClaimOutput> PointsConvertAsync(string address, string activityId)
+        public async Task<TreePointsConvertOutput> PointsConvertAsync(string address, string activityId)
         {
-            throw new NotImplementedException();
+            var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+            if (currentUserAddress != address)
+            {
+                throw new Exception("Login address and parameter address are inconsistent");
+            }
+            
+            var activityDetail = await  _treeActivityProvider.GetTreeActivityDetailAsync(activityId);
+            if (activityDetail == null)
+            {
+                throw new Exception("Invalid activityId");
+            }
+            
+            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
+            if (treeUserIndex == null)
+            {
+                throw new Exception("Please refresh homepage, init your tree");
+            }
+
+            var activityType = activityDetail.RedeemType;
+            var costPoints = activityType == RedeemType.Free?0:activityDetail.CostPoints;
+            if (treeUserIndex.Points < activityDetail.MinPoints || treeUserIndex.Points < costPoints)
+            {
+                throw new Exception("you do not have enough points");
+            }
+
+            var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+            var requestHash = BuildRequestHash(string.Concat(address, activityId, costPoints,opTime));
+            var response = new TreePointsConvertOutput()
+            {
+                Address = address,
+                ActivityId = activityId,
+                Points = costPoints,
+                OpTime = opTime,
+                RequestHash = requestHash
+            };
+
+            return response;
         }
 
         private string BuildRequestHash(string request)

@@ -13,7 +13,7 @@ namespace NFTMarketServer.TreeGame
 
         Task<TreePointsClaimOutput> ClaimAsync(string address, PointsDetailType pointsDetailType);
         
-        Task<TreePointsClaimOutput> PointsConvertAsync(string address, string activityId);
+        Task<TreePointsConvertOutput> PointsConvertAsync(string address, string activityId);
 
     }
 }

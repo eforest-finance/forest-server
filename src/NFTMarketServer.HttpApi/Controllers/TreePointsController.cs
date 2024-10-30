@@ -60,9 +60,9 @@ namespace NFTMarketServer.Controllers
         [HttpPost]
         [Route("points-convert")]
         [Authorize]
-        public Task PointsConvert(UserUpdateDto input)
+        public Task<TreePointsConvertOutput> PointsConvert(string address, string activityId)
         {
-            return _userAppService.UserUpdateAsync(input);
+            return _treeGameService.PointsConvertAsync(address, activityId);
         }
         
         [HttpGet]
