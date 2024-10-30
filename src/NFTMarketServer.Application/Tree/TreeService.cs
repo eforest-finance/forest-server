@@ -14,6 +14,9 @@ public interface ITreeService
     Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request);
     
     Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request);
+    
+    Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id);
+
 
 }
 
@@ -49,5 +52,10 @@ public class TreeService : ITreeService, ISingletonDependency
     public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
     {
         return await _treeActivityProvider.GetTreeActivityListAsync(request);
+    }
+
+    public async Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id)
+    {
+        return await _treeActivityProvider.GetTreeActivityDetailAsync(id);
     }
 }

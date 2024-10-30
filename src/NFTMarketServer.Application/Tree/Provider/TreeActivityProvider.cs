@@ -15,6 +15,8 @@ public interface ITreeActivityProvider
     Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
     Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request);
     Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request);
+    Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id);
+
 }
 
 public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
@@ -89,5 +91,10 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
             return null;
         }
         return tuple.Item2;
+    }
+
+    public async Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id)
+    {
+        return await _treeActivityIndexRepository.GetAsync(id);
     }
 }
