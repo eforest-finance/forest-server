@@ -85,9 +85,9 @@ public class NFTCollectionProvider : INFTCollectionProvider, ISingletonDependenc
                         creatorAddress,
                         proxyOwnerAddress,
                         proxyIssuerAddress,
-                        logoImage,
-                        featuredImageLink,
-                        description,
+                        #logoImage,
+                        #featuredImageLink,
+                        #description,
                         isOfficial,
                         externalInfoDictionary{
                           key,
