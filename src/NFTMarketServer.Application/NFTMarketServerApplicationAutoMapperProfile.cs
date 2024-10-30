@@ -430,5 +430,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
 
         CreateMap<CreateTreeActivityRequest, TreeActivityIndex>();
 
+        CreateMap<IndexerSeedOwnedSymbol, SeedSymbolIndexDto>();
+        CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>();
     }
 }

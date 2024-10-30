@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NFTMarketServer.Basic;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Common;
+using NFTMarketServer.Common.AElfSdk.Dtos;
 using NFTMarketServer.Grains.ApplicationHandler;
 using NFTMarketServer.Inscription;
 using NFTMarketServer.NFT.Index;
@@ -20,6 +23,7 @@ using NFTMarketServer.Seed.Index;
 using Orleans;
 using Volo.Abp.DependencyInjection;
 using TokenType = NFTMarketServer.Seed.Dto.TokenType;
+using NFTMarketServer.Common.Http;
 
 namespace NFTMarketServer;
 
@@ -27,19 +31,22 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
 {
     private readonly IClusterClient _clusterClient;
     private readonly GraphQLHttpClient _graphQLClient;
-    private readonly GraphQLOptions _graphQLOptions;
     private readonly ILogger<GraphQLProvider> _logger;
     private readonly IGraphQLClientFactory _graphQlClientFactory;
+    private readonly IHttpService _httpService;
+    private readonly IOptionsMonitor<GraphQLOptions> _graphQLOptions;
 
 
     public GraphQLProvider(ILogger<GraphQLProvider> logger, IClusterClient clusterClient,
-        IOptionsSnapshot<GraphQLOptions> graphQLOptions, IGraphQLClientFactory graphQlClientFactory)
+        IOptionsMonitor<GraphQLOptions> graphQLOptions, IGraphQLClientFactory graphQlClientFactory,
+        IHttpService httpService)
     {
         _logger = logger;
         _clusterClient = clusterClient;
-        _graphQLOptions = graphQLOptions.Value;
-        _graphQLClient = new GraphQLHttpClient(_graphQLOptions.Configuration, new NewtonsoftJsonSerializer());
+        _graphQLOptions = graphQLOptions;
+        _graphQLClient = new GraphQLHttpClient(_graphQLOptions.CurrentValue.Configuration, new NewtonsoftJsonSerializer());
         _graphQlClientFactory = graphQlClientFactory;
+        _httpService = httpService;
     }
 
 
@@ -73,21 +80,25 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
 
     public async Task<long> GetIndexBlockHeightAsync(string chainId)
     {
-        var graphQLResponse = await _graphQLClient.SendQueryAsync<ConfirmedBlockHeightRecord>(new GraphQLRequest
-        {
-            Query = 
-                @"query($chainId:String,$filterType:BlockFilterType!) {
-                    syncState(dto: {chainId:$chainId,filterType:$filterType}){
-                        confirmedBlockHeight}
-                    }",
-            Variables = new
-            {
-                chainId,
-                filterType = BlockFilterType.LOG_EVENT
-            }
-        });
+        var result = new AelfScanTokenAppResponse();
 
-        return graphQLResponse.Data.SyncState.ConfirmedBlockHeight;
+        var resultStr = await _httpService.SendGetRequest(_graphQLOptions.CurrentValue.BasicConfiguration,
+            new Dictionary<string, string>());
+        if (resultStr.IsNullOrEmpty()) return 0;
+        result = JsonConvert.DeserializeObject<AelfScanTokenAppResponse>(resultStr);
+        if (result != null && result.CurrentVersion != null && !result.CurrentVersion.Items.IsNullOrEmpty())
+        {
+            var list = result.CurrentVersion.Items;
+            var first = list.FirstOrDefault(item => item.ChainId == chainId);
+            if (first == null)
+            {
+                return 0;
+            }
+
+            return first.LastIrreversibleBlockHeight;
+        }
+
+        return 0;
     }
 
     public async Task<List<AuctionInfoDto>> GetSyncSymbolAuctionRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight)
@@ -245,7 +256,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var graphQlResponse = await _graphQLClient.SendQueryAsync<IndexerNFTInfoSync>(new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+                @"query($chainId:String!,$startBlockHeight:Long!,$endBlockHeight:Long!){
             dataList:getSyncNftInfoRecords(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
             {
                 id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},

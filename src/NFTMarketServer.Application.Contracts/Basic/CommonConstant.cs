@@ -12,6 +12,7 @@ public static class CommonConstant
     public const int IntNegativeOne = -1;
     public const int IntTen = 10;
     public const int IntOneThousand = 1000;
+    public const int IntMaxCount = 100;
     public const int IntThreeHundred = 300;
     public const int RecentSearchNumber = 30000;
     public const long LongOne = 1;
@@ -70,6 +71,8 @@ public static class CommonConstant
     public const int MessageUnReadStatus = 0;
     public const int MessageReadStatus = 1;
     public const int MessageAllStatus = -1;
+    public const string SortTypeNumber = "number";
+    public const string SortScriptSourceValueLength = "doc['seedOwnedSymbol'].value.length()";
 
 
 

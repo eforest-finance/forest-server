@@ -77,8 +77,12 @@ public class NFTInfoNewSyncedProvider : INFTInfoNewSyncedProvider, ISingletonDep
                 TokenCreatedExternalInfoEnum.SeedOwnedSymbol, res.TokenName);
         }
         var balanceInfo = await _userBalanceProvider.GetNFTBalanceInfoAsync(nftInfoId);
-        res.Owner = balanceInfo.Owner;
-        res.AllOwnerCount = balanceInfo.OwnerCount;
+        if (balanceInfo != null)
+        {
+            res.Owner = balanceInfo.Owner;
+            res.AllOwnerCount = balanceInfo.OwnerCount;
+        }
+        
         return res;
     }
 

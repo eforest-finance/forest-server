@@ -107,54 +107,6 @@ public class SeedProvider : ISeedProvider, ISingletonDependency
         return seedInfoDto?.Data;
     }
 
-    public async Task<MySeedDto> MySeedAsync(MySeedInput input)
-    {
-        var mySeedDto = await _graphQlHelper.QueryAsync<MySeedDto>(new GraphQLRequest
-        {
-            Query = @"query(
-                 $skipCount: Int!
-                ,$maxResultCount: Int!
-                ,$address: [String]
-                ,$tokenType: TokenType
-                ,$status: SeedStatus
-                ,$chainId: String
-            ){
-                data:mySeed(input:{
-                skipCount: $skipCount,
-                maxResultCount: $maxResultCount,
-                addressList: $address,
-                tokenType: $tokenType,
-                status: $status,
-                chainId: $chainId,
-                }){
-                   totalRecordCount
-                   seedDtoList:data{
-                   id,
-                   chainId,
-                   symbol,
-                   seedSymbol,
-                   seedImage,
-                   seedName,
-                   status
-                   expireTime
-                   tokenType
-                   owner:issuerTo
-                 }
-              }
-            }",
-            Variables = new
-            {
-                SkipCount = input.SkipCount,
-                MaxResultCount = input.MaxResultCount,
-                Address = input.Address,
-                TokenType = input.TokenType,
-                Status = input.Status,
-                ChainId = input.ChainId
-            }
-        });
-        return mySeedDto?.Data;
-    }
-
     public async Task<IndexerSpecialSeeds> GetSpecialSeedsAsync(QuerySpecialListInput input)
     {
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerSpecialSeeds>(new GraphQLRequest

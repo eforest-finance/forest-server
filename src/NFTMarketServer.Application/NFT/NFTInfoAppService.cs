@@ -1653,7 +1653,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = balance?.Amount/(decimal)Math.Pow(10, balance.Decimals) ?? 0
+                Balance = balance?.Amount/(decimal)Math.Pow(10, 0) ?? 0
             };
 
 
@@ -1863,6 +1863,7 @@ namespace NFTMarketServer.NFT
                 MaxResultCount = 1
             };
             var dealInfos = await _nftDealInfoProvider.GetDealInfosAsync(dto);
+            if (dealInfos == null || dealInfos.IndexerNftDealList.IsNullOrEmpty()) return null;
             return dealInfos.IndexerNftDealList.FirstOrDefault();
         }
 
@@ -2231,7 +2232,7 @@ namespace NFTMarketServer.NFT
                 HasListingFlag = input.HasListingFlag,
                 HasOfferFlag = input.HasOfferFlag,
                 SkipCount = 0,
-                MaxResultCount = 10000,
+                MaxResultCount = 100,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 IssueAddress = input.Address,
@@ -2267,7 +2268,7 @@ namespace NFTMarketServer.NFT
                     QueryType = input.QueryType,
                     SkipCount = CommonConstant.IntZero,
                     CollectionIdList = input.CollectionIds,
-                    MaxResultCount = 10000
+                    MaxResultCount = 100
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
