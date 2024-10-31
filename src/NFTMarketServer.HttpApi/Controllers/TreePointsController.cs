@@ -2,10 +2,9 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NFTMarketServer.Tree;
 using NFTMarketServer.TreeGame;
 using NFTMarketServer.Users;
-using NFTMarketServer.Users.Dto;
-using NFTMarketServer.Users.Index;
 using Volo.Abp;
 
 namespace NFTMarketServer.Controllers
@@ -35,9 +34,9 @@ namespace NFTMarketServer.Controllers
         [HttpPost]
         [Route("watering")]
         [Authorize]
-        public async Task<TreeGameHomePageInfoDto> WateringTree(string address, int count)
+        public async Task<TreeGameHomePageInfoDto> WateringTree(TreeWateringRequest input)
         {
-            return await _treeGameService.WateringTreeAsync(address, count);
+            return await _treeGameService.WateringTreeAsync(input);
         }
         
         [HttpPost]

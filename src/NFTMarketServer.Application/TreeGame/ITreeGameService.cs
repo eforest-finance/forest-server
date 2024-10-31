@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using NFTMarketServer.Tree;
 using NFTMarketServer.Users.Index;
 
 namespace NFTMarketServer.TreeGame
@@ -7,7 +8,7 @@ namespace NFTMarketServer.TreeGame
     {
         Task<TreeGameHomePageInfoDto> GetUserTreeInfoAsync(string address, string nickName, bool needStorage);
         
-        Task<TreeGameHomePageInfoDto> WateringTreeAsync(string address, int count);
+        Task<TreeGameHomePageInfoDto> WateringTreeAsync(TreeWateringRequest input);
 
         Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(string address, int nextLevel);
 
