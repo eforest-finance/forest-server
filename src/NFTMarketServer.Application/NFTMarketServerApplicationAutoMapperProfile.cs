@@ -46,6 +46,8 @@ using NFTMarketServer.Synchronize.Dto;
 using NFTMarketServer.Synchronize.Eto;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Trait;
+using NFTMarketServer.Tree;
+using NFTMarketServer.TreeGame;
 using NFTMarketServer.Users;
 using NFTMarketServer.Users.Dto;
 using NFTMarketServer.Users.Eto;
@@ -421,6 +423,13 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 opt => opt.MapFrom(source => source.ClaimMax));
         CreateMap<MessageInfoIndex, MessageInfoDto>();
         CreateMap<UserInformationEto, UserIndex>();
+        CreateMap<TreeGameUserInfoDto, TreeGameUserInfoIndex>();
+        CreateMap<TreeGameUserInfoIndex, TreeGameUserInfoDto>();
+        CreateMap<PointsDetail, TreeGamePointsDetailInfoIndex>();
+        CreateMap<TreeGamePointsDetailInfoIndex, PointsDetail>();
+
+        CreateMap<CreateTreeActivityRequest, TreeActivityIndex>();
+
         CreateMap<IndexerSeedOwnedSymbol, SeedSymbolIndexDto>();
         CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>();
     }
