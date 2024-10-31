@@ -583,7 +583,14 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             return null;
         }
+        //todo
+
+        var target = await _seedSymbolIndexRepository.GetAsync("AELF-SEED-3022");
+        _logger.LogInformation("AELF-SEED-3022 {A}",JsonConvert.SerializeObject(target));
+        var target2 = await _seedSymbolIndexRepository.GetAsync("tDVV-SEED-3022");
+        _logger.LogInformation("tDVV-SEED-3022 {A}",JsonConvert.SerializeObject(target2));
         
+        //todo
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
         
         if (input.TokenType != null)
