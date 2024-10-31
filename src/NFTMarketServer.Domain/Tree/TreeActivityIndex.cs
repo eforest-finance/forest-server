@@ -32,4 +32,6 @@ public class TreeActivityIndex : NFTMarketEntity<string>, IIndexBuild
     public DateTime BeginDateTime { get; set; }
     public DateTime CreateTime { get; set; }
     public DateTime LastModifyTime { get; set; }
+    public int Frequency{ get; set; }
+
 }

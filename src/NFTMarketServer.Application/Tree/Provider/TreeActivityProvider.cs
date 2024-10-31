@@ -11,7 +11,7 @@ namespace NFTMarketServer.Tree.Provider;
 
 public interface ITreeActivityProvider
 {
-    Task CreateTreeActivityAsync(CreateTreeActivityRequest request);
+    Task<TreeActivityIndex> CreateTreeActivityAsync(CreateTreeActivityRequest request);
     Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
     Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request);
     Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request);
@@ -31,7 +31,7 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
         _treeActivityIndexRepository = treeActivityIndexRepository;
     }
 
-    public async Task CreateTreeActivityAsync(CreateTreeActivityRequest request)
+    public async Task<TreeActivityIndex> CreateTreeActivityAsync(CreateTreeActivityRequest request)
     {
         if (request.MinPoints < 0 && request.CostPoints < 0)
         {
@@ -53,6 +53,7 @@ public class TreeActivityProvider : ITreeActivityProvider, ISingletonDependency
         }
 
         await _treeActivityIndexRepository.AddOrUpdateAsync(treeActivityIndex);
+        return treeActivityIndex;
     }
 
     public async Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request)

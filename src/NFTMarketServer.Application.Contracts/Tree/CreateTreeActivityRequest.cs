@@ -19,4 +19,5 @@ public class CreateTreeActivityRequest
     //cost Points Participate in activities
     public long CostPoints{ get; set; }
     public long BeginDateTimeMilliseconds { get; set; }
+    public int Frequency{ get; set; }
 }

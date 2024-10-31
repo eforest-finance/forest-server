@@ -32,10 +32,10 @@ public class TreeActivityController : NFTMarketServerController
     [HttpPost]
     [Authorize]
     [Route("activity-create")]
-    public async Task CreateTreeActivityAsync(CreateTreeActivityRequest request
+    public async Task<TreeActivityIndex> CreateTreeActivityAsync(CreateTreeActivityRequest request
     )
     {
-        await _treeService.CreateTreeActivityAsync(request);
+        return await _treeService.CreateTreeActivityAsync(request);
     }
 
     [HttpPost]
@@ -57,14 +57,12 @@ public class TreeActivityController : NFTMarketServerController
     }
     
     [HttpGet]
-    [Authorize]
     [Route("activity-list")]
     public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
     {
         return await _treeService.GetTreeActivityListAsync(request);
     }
     [HttpGet]
-    [Authorize]
     [Route("activity-detail")]
     public async Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id
     )
