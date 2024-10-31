@@ -423,6 +423,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<UserInformationEto, UserIndex>();
         CreateMap<IndexerSeedOwnedSymbol, SeedSymbolIndexDto>();
         CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>().ForMember(destination => destination.SeedSymbol,
-            opt => opt.MapFrom(source => source.Symbol));
+            opt => opt.MapFrom(source => source.SeedOwnedSymbol));
     }
 }
