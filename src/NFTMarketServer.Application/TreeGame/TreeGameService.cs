@@ -102,7 +102,7 @@ namespace NFTMarketServer.TreeGame
             {
                 var complete = timeDiff / (rtnWaterInfo.Frequency * 60 * 1000);
                 var remainder = timeDiff % (rtnWaterInfo.Frequency * 60 * 1000);
-                var currentActual = (complete * rtnWaterInfo.Produce) >= 60 ? 60 : (complete * rtnWaterInfo.Produce);
+                var currentActual = (treeUserIndex.CurrentWater + complete * rtnWaterInfo.Produce) >= 60 ? 60 : (treeUserIndex.CurrentWater + complete * rtnWaterInfo.Produce);
                 if (currentActual != rtnWaterInfo.Current)
                 {
                     rtnWaterInfo.Current = (int)currentActual;
@@ -168,12 +168,16 @@ namespace NFTMarketServer.TreeGame
                 {
                     continue;
                 }
-                
                 if (pointsDetail.TimeUnit == TimeUnit.MINUTE)
                 {
                     var currentTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
                     var timeDiff = currentTime - pointsDetail.UpdateTime;
-                    var remainingTime =(pointsDetail.RemainingTime - (timeDiff))/60000;
+                    if ((timeDiff / 60000) < 1)
+                    {
+                        continue;
+                    }
+
+                    var remainingTime =pointsDetail.RemainingTime - (timeDiff/60000);
                     pointsDetail.RemainingTime = remainingTime <= 0 ? 0 : remainingTime;
                     pointsDetail.UpdateTime = currentTime;
                     updateDetails.Add(pointsDetail);
@@ -184,9 +188,9 @@ namespace NFTMarketServer.TreeGame
                 }
             }
 
-            if (needStorage)
+            if (needStorage && !updateDetails.IsNullOrEmpty())
             {
-                await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(updateDetails);
+                await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(updateDetails);
             }
             return pointsDetailInfos.Select(i => _objectMapper.Map<TreeGamePointsDetailInfoIndex, PointsDetail>(i)).ToList();
         }
@@ -211,7 +215,7 @@ namespace NFTMarketServer.TreeGame
                 });
             }
 
-            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(pointsDetailInfos);
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(pointsDetailInfos);
             return pointsDetailInfos;
         }
 
@@ -225,7 +229,9 @@ namespace NFTMarketServer.TreeGame
             //get points    
             var homePageDto = new TreeGameHomePageInfoDto();
             homePageDto.TotalPoints = treeUserIndex.Points;
-            
+            homePageDto.Id = treeUserIndex.Id;
+            homePageDto.Address = treeUserIndex.Address;
+            homePageDto.NickName = treeUserIndex.NickName;
             //get tree
             var treeInfo =  await GetTreeGameTreeInfoAsync(treeUserIndex.TreeLevel);
             homePageDto.TreeInfo = treeInfo;
@@ -308,7 +314,7 @@ namespace NFTMarketServer.TreeGame
             
             //update db
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(treeUserIndex));
-            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(updateDetails);
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(updateDetails);
             return homePageDto;
         }
 

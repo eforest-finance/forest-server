@@ -46,6 +46,7 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
         var treeUserIndex = _objectMapper.Map<TreeGameUserInfoDto, TreeGameUserInfoIndex>(dto);
         treeUserIndex.Id = Guid.NewGuid().ToString();
         treeUserIndex.CreateTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+        treeUserIndex.WaterUpdateTime = treeUserIndex.CreateTime;
         await _treeGameUserInfoIndexRepository.AddOrUpdateAsync(treeUserIndex);
         return treeUserIndex;
     }
