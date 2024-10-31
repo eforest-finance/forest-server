@@ -35,9 +35,13 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
 
     }
 
-    public async Task BulkSaveOrUpdateTreePointsDetaislAsync(List<TreeGamePointsDetailInfoIndex> treeGameUserInfos)
+    public async Task BulkSaveOrUpdateTreePointsDetailsAsync(List<TreeGamePointsDetailInfoIndex> pointsDetailList)
     {
-        await _treeGamePointsDetailIndexRepository.BulkAddOrUpdateAsync(treeGameUserInfos);
+        foreach (var points in pointsDetailList)
+        {
+            await _treeGamePointsDetailIndexRepository.AddOrUpdateAsync(points);
+        }
+        //await _treeGamePointsDetailIndexRepository.BulkAddOrUpdateAsync(treeGameUserInfos);
     }
 
     public async Task<TreeGamePointsDetailInfoIndex> SaveOrUpdateTreePointsDetailAsync(TreeGamePointsDetailInfoIndex info)
