@@ -74,17 +74,23 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<NFTCollectionIndexDto>> GetNFTCollectionsAsync(GetNFTCollectionsInput input)
         {
             if (input.SkipCount < 0) return BuildInitNFTCollectionIndexDto();
+
+            if (!input.AddressList.IsNullOrEmpty())
+            {
+                input.AddressList = input.AddressList.Distinct().ToList();
+            }
+            
             var nftCollectionIndexs =
                 await _nftCollectionProvider.GetNFTCollectionsIndexAsync(input.SkipCount,
                     input.MaxResultCount, input.AddressList.IsNullOrEmpty()?new List<string>{input.Address}:input.AddressList);
             if (nftCollectionIndexs == null) return BuildInitNFTCollectionIndexDto();
-
+            
             var totalCount = nftCollectionIndexs.TotalRecordCount;
             if (nftCollectionIndexs.IndexerNftCollections == null)
             {
                 return BuildInitNFTCollectionIndexDto();
             }
-
+            
             var addresses = nftCollectionIndexs.IndexerNftCollections.Select(o => o.CreatorAddress).Distinct().ToList();
             var accounts = await _userAppService.GetAccountsAsync(addresses);
 
