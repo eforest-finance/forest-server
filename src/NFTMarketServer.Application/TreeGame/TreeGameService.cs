@@ -246,21 +246,20 @@ namespace NFTMarketServer.TreeGame
             return homePageDto;
         }
 
-        public async Task<TreeGameHomePageInfoDto> WateringTreeAsync(string address, int count)
+        public async Task<TreeGameHomePageInfoDto> WateringTreeAsync(TreeWateringRequest input)
         {
             var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
-            if (currentUserAddress != address)
+            if (currentUserAddress != input.Address)
             {
                 throw new Exception("Login address and parameter address are inconsistent");
             }
-
             var needStorage = false;
-            if (count != 1)
+            if (input.Count != 1)
             {
                 throw new Exception("Invalid param count");
             }
 
-            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
+            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(currentUserAddress);
             if (treeUserIndex == null)
             {
                 throw new Exception("Please refresh homepage, init your tree");
@@ -268,19 +267,19 @@ namespace NFTMarketServer.TreeGame
             
             //cal water
             var waterInfo = await GetAndRefreshTreeGameWaterInfoAsync(treeUserIndex, needStorage);
-            if ((waterInfo.Current - count) < 0)
+            if ((waterInfo.Current - input.Count) < 0)
             {
                 throw new Exception("You don't have enough water");
             }
 
-            waterInfo.Current = waterInfo.Current - count;
+            waterInfo.Current = waterInfo.Current - input.Count;
             waterInfo.UpdateTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-            treeUserIndex.CurrentWater = waterInfo.Current - count;
+            treeUserIndex.CurrentWater = waterInfo.Current;
             treeUserIndex.WaterUpdateTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
             
             //cal points detail
             var treeInfo =  await GetTreeGameTreeInfoAsync(treeUserIndex.TreeLevel);
-            var pointsDetails = await GetAndRefreshTreeGamePointsDetailsAsync(address, treeInfo, needStorage);
+            var pointsDetails = await GetAndRefreshTreeGamePointsDetailsAsync(currentUserAddress, treeInfo, needStorage);
 
             var updateDetails = new List<TreeGamePointsDetailInfoIndex>();
             foreach (var pointsDetail in pointsDetails)
@@ -300,9 +299,10 @@ namespace NFTMarketServer.TreeGame
                     throw new Exception("Invalid pointsDetail timeunit:" + pointsDetail.TimeUnit);
                 }
 
-                var remainingTime = pointsDetail.RemainingTime - count*waterInfo.WateringIncome;
+                var remainingTime = pointsDetail.RemainingTime - input.Count*waterInfo.WateringIncome;
                 pointsDetail.RemainingTime = remainingTime;
                 updateDetails.Add(_objectMapper.Map<PointsDetail, TreeGamePointsDetailInfoIndex>(pointsDetail));
+                break;
             }
             
             //build rtun msg
@@ -320,11 +320,12 @@ namespace NFTMarketServer.TreeGame
 
         public async Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(string address, int nextLevel)
         {
-            var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+            /*var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
             if (currentUserAddress != address)
             {
                 throw new Exception("Login address and parameter address are inconsistent");
-            }
+            }*/
+            var currentUserAddress = address;
             
             var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
             if (treeUserIndex == null)
