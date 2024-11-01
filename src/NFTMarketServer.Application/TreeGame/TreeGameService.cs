@@ -470,10 +470,12 @@ namespace NFTMarketServer.TreeGame
 
         public async Task<List<string>> GetInviteFriendsAsync(string address)
         {
-            var friends = new List<string>();
-            friends.Add("A");
-            friends.Add("B");
-            return friends;
+            var friends = await _treeGameUserInfoProvider.GetTreeUsersByParentUserAsync(address);
+            if (friends == null || friends.Item1 == 0 || friends.Item2.IsNullOrEmpty())
+            {
+                return new List<string>();
+            }
+            return friends.Item2.Select(i => i.NickName).ToList();
         }
 
         private string BuildRequestHash(string request)
