@@ -347,7 +347,7 @@ namespace NFTMarketServer.TreeGame
             
             //build requestHash
             var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-            var requestHash = BuildRequestHash(string.Concat(address, treeInfo.NextLevelCost, opTime));
+            var requestHash = BuildRequestHash(string.Concat(address, treeInfo.NextLevelCost, opTime, treeInfo.Next.Level));
             var response = new TreeLevelUpgradeOutput()
             {
                 Address = address,
@@ -406,7 +406,7 @@ namespace NFTMarketServer.TreeGame
             await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(new List<TreeGamePointsDetailInfoIndex>(){pointsDetailIndex});*/
             //build requestHash
             var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-            var requestHash = BuildRequestHash(string.Concat(request.Address, (int)request.PointsDetailType, claimPointsAmount, opTime));
+            var requestHash = BuildRequestHash(string.Concat(request.Address, claimPointsAmount,(int)request.PointsDetailType, opTime));
             var response = new TreePointsClaimOutput()
             {
                 Address = request.Address,
@@ -448,14 +448,22 @@ namespace NFTMarketServer.TreeGame
             }
 
             var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-            var requestHash = BuildRequestHash(string.Concat(address, activityId, costPoints,opTime));
+            var rewardSymbol = activityDetail.RewardType.ToString();
+            var rewardAmount = activityDetail.RedeemRewardOnce;
+            var rewardDecimals = 8;
+            rewardAmount =  (long)(rewardAmount * (decimal)Math.Pow(10, rewardDecimals));
+            var requestStr = string.Concat(address, activityId, costPoints,opTime);
+            var requestHash = BuildRequestHash(string.Concat(requestStr,rewardSymbol,rewardAmount));
+            
             var response = new TreePointsConvertOutput()
             {
                 Address = address,
                 ActivityId = activityId,
                 Points = costPoints,
                 OpTime = opTime,
-                RequestHash = requestHash
+                RewardSymbol = rewardSymbol,
+                RewardAmount = (long)rewardAmount,
+                RequestHash = requestHash,
             };
 
             return response;

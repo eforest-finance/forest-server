@@ -11,5 +11,10 @@ public class TreePointsConvertOutput
     //13 timestamp
     public long OpTime{ get; set; }
     
+    public string RewardSymbol{ get; set; }
+    
+    public long RewardAmount{ get; set; }
+    
     public string RequestHash{ get; set; }
+    
 }
