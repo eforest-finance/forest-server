@@ -381,6 +381,7 @@ namespace NFTMarketServer.TreeGame
                     claimPointsDetail = pointsDetail;
                     claimPointsAmount = treeInfo.Current.Produce;
                     claimPointsDetail.Amount = claimPointsAmount;
+                    break;
                 }
                 if (pointsDetail.Type == request.PointsDetailType && 
                     (pointsDetail.Type == PointsDetailType.INVITE) 
@@ -389,6 +390,7 @@ namespace NFTMarketServer.TreeGame
                     claimPointsDetail = pointsDetail;
                     claimPointsAmount = pointsDetail.Amount;
                     claimPointsDetail.Amount = 0;
+                    break;
                 }
             }
 
@@ -404,7 +406,7 @@ namespace NFTMarketServer.TreeGame
             await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(new List<TreeGamePointsDetailInfoIndex>(){pointsDetailIndex});*/
             //build requestHash
             var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-            var requestHash = BuildRequestHash(string.Concat(request.Address, request.PointsDetailType, claimPointsAmount, opTime));
+            var requestHash = BuildRequestHash(string.Concat(request.Address, (int)request.PointsDetailType, claimPointsAmount, opTime));
             var response = new TreePointsClaimOutput()
             {
                 Address = request.Address,
