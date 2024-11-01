@@ -93,4 +93,6 @@ public class TreeGameConstants
     };
 
     public const string HashVerifyKey = "1a2b3c";
+    public const string TreeGameInviteType = "treegame";
+
 }
