@@ -318,13 +318,15 @@ namespace NFTMarketServer.TreeGame
             return homePageDto;
         }
 
-        public async Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(string address, int nextLevel)
+        public async Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(TreeLevelUpdateRequest request)
         {
             /*var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
             if (currentUserAddress != address)
             {
                 throw new Exception("Login address and parameter address are inconsistent");
             }*/
+            var address = request.Address;
+            var nextLevel = request.NextLevel;
             var currentUserAddress = address;
             
             var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
@@ -357,22 +359,22 @@ namespace NFTMarketServer.TreeGame
             return response;
         }
 
-        public async Task<TreePointsClaimOutput> ClaimAsync(string address, PointsDetailType pointsDetailType)
+        public async Task<TreePointsClaimOutput> ClaimAsync(TreePointsClaimRequest request)
         {
-            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
+            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(request.Address);
             if (treeUserIndex == null)
             {
                 throw new Exception("Please refresh homepage, init your tree");
             }
             var treeInfo =  await GetTreeGameTreeInfoAsync(treeUserIndex.TreeLevel);
-            var pointsDetails = await GetAndRefreshTreeGamePointsDetailsAsync(address, treeInfo, false);
+            var pointsDetails = await GetAndRefreshTreeGamePointsDetailsAsync(request.Address, treeInfo, false);
             var claimPointsDetail = new PointsDetail();
             claimPointsDetail = null;
             var claimPointsAmount = 0l;
 
             foreach (var pointsDetail in pointsDetails)
             {
-                if (pointsDetail.Type == pointsDetailType && 
+                if (pointsDetail.Type == request.PointsDetailType && 
                     (pointsDetail.Type == PointsDetailType.NORMALONE ||pointsDetail.Type == PointsDetailType.NORMALTWO) 
                     && pointsDetail.RemainingTime <= 0)
                 {
@@ -380,7 +382,7 @@ namespace NFTMarketServer.TreeGame
                     claimPointsAmount = treeInfo.Current.Produce;
                     claimPointsDetail.Amount = claimPointsAmount;
                 }
-                if (pointsDetail.Type == pointsDetailType && 
+                if (pointsDetail.Type == request.PointsDetailType && 
                     (pointsDetail.Type == PointsDetailType.INVITE) 
                     && pointsDetail.Amount >= pointsDetail.ClaimLimit)
                 {
@@ -402,11 +404,11 @@ namespace NFTMarketServer.TreeGame
             await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetaislAsync(new List<TreeGamePointsDetailInfoIndex>(){pointsDetailIndex});*/
             //build requestHash
             var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-            var requestHash = BuildRequestHash(string.Concat(address, pointsDetailType, claimPointsAmount, opTime));
+            var requestHash = BuildRequestHash(string.Concat(request.Address, request.PointsDetailType, claimPointsAmount, opTime));
             var response = new TreePointsClaimOutput()
             {
-                Address = address,
-                PointsDetailType = pointsDetailType,
+                Address = request.Address,
+                PointsDetailType = request.PointsDetailType,
                 Points = claimPointsAmount,
                 OpTime = opTime,
                 RequestHash = requestHash
@@ -414,8 +416,10 @@ namespace NFTMarketServer.TreeGame
             return response;
         }
 
-        public async Task<TreePointsConvertOutput> PointsConvertAsync(string address, string activityId)
+        public async Task<TreePointsConvertOutput> PointsConvertAsync(TreePointsConvertRequest request)
         {
+            var address = request.Address;
+            var activityId = request.ActivityId;
             var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
             if (currentUserAddress != address)
             {

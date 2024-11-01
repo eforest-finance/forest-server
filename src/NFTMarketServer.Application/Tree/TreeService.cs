@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NFTMarketServer.Helper;
 using NFTMarketServer.Tree.Provider;
 using Volo.Abp.DependencyInjection;
+using GuidHelper = NFTMarketServer.Common.GuidHelper;
 
 namespace NFTMarketServer.Tree;
 
@@ -16,6 +18,8 @@ public interface ITreeService
     Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request);
     
     Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id);
+    Task<string> CreateNewTreeActivityIdAsync();
+
 
 
 }
@@ -57,5 +61,10 @@ public class TreeService : ITreeService, ISingletonDependency
     public async Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id)
     {
         return await _treeActivityProvider.GetTreeActivityDetailAsync(id);
+    }
+
+    public async Task<string> CreateNewTreeActivityIdAsync()
+    {
+        return Guid.NewGuid().ToString();
     }
 }
