@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using AElf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Tree;
 using NFTMarketServer.Tree.Provider;
@@ -467,6 +466,14 @@ namespace NFTMarketServer.TreeGame
             };
 
             return response;
+        }
+
+        public async Task<List<string>> GetInviteFriendsAsync(string address)
+        {
+            var friends = new List<string>();
+            friends.Add("A");
+            friends.Add("B");
+            return friends;
         }
 
         private string BuildRequestHash(string request)

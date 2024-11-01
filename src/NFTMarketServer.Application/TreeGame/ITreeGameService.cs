@@ -1,6 +1,6 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NFTMarketServer.Tree;
-using NFTMarketServer.Users.Index;
 
 namespace NFTMarketServer.TreeGame
 {
@@ -15,6 +15,7 @@ namespace NFTMarketServer.TreeGame
         Task<TreePointsClaimOutput> ClaimAsync(TreePointsClaimRequest request);
         
         Task<TreePointsConvertOutput> PointsConvertAsync(TreePointsConvertRequest request);
+        Task<List<string>> GetInviteFriendsAsync(string address);
 
     }
 }

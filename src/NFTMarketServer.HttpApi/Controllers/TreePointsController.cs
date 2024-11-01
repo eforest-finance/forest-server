@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -69,6 +70,13 @@ namespace NFTMarketServer.Controllers
         public Task<long> CountAsync(DateTime beginTime, DateTime endTime)
         {
             return _userAppService.GetUserCountAsync(beginTime, endTime);
+        }
+        
+        [HttpGet]
+        [Route("invite-friends")]
+        public async Task<List<string>> GetInviteFriends(string address)
+        {
+            return await _treeGameService.GetInviteFriendsAsync(address);
         }
     }
 }
