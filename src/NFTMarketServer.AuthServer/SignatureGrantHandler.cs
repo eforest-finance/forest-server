@@ -18,6 +18,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NFTMarketServer.Dto;
 using NFTMarketServer.Model;
+using NFTMarketServer.TreeGame;
 using NFTMarketServer.Users.Dto;
 using NFTMarketServer.Users.Provider;
 using OpenIddict.Abstractions;
@@ -32,6 +33,7 @@ namespace NFTMarketServer;
 public class SignatureGrantHandler: ITokenExtensionGrant
 {
     private IUserInformationProvider _userInformationProvider;
+    private ITreeGameService _treeGameService;
     private ILogger<SignatureGrantHandler> _logger;
     private IAbpDistributedLock _distributedLock;
     private readonly string _lockKeyPrefix = "NFTMarketServer:Auth:SignatureGrantHandler:";
@@ -46,6 +48,10 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         var publicKeyVal = context.Request.GetParameter("pubkey").ToString();
         var signatureVal = context.Request.GetParameter("signature").ToString();
         var timestampVal = context.Request.GetParameter("timestamp").ToString();
+        var inviteFrom = context.Request.GetParameter("invite_from").ToString();
+        var inviteType = context.Request.GetParameter("invite_type").ToString();
+        var nickName = context.Request.GetParameter("nickname").ToString();
+
         // var caHash = context.Request.GetParameter("ca_hash").ToString();
         // var chainId = context.Request.GetParameter("chain_id").ToString();
         var accountInfo = context.Request.GetParameter("accountInfo").ToString();
@@ -129,6 +135,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         _distributedLock = context.HttpContext.RequestServices.GetRequiredService<IAbpDistributedLock>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<IdentityUserManager>();
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
+        _treeGameService = context.HttpContext.RequestServices.GetRequiredService<ITreeGameService>();
 
         var userName = address;
         if (!string.IsNullOrWhiteSpace(caHash))
@@ -148,6 +155,11 @@ public class SignatureGrantHandler: ITokenExtensionGrant
             }
 
             user = await userManager.GetByIdAsync(userId);
+
+            if (TreeGameConstants.TreeGameInviteType.Equals(inviteType))
+            {
+                await _treeGameService.AcceptInvitationAsync(address, nickName, inviteFrom);
+            }
         }
         else
         {
