@@ -59,9 +59,10 @@ public class SymbolMarketTokenAppService : ISymbolMarketTokenAppService, ISingle
                 }
                 return address;
             })
+            .Distinct()
             .ToList();
         
-        var fullAddressListMap = input?.AddressList
+        var fullAddressListMap = input?.AddressList.Distinct().ToList()
             .Select(address =>
             {
                 var parts = address.Split(ChainIdHelper.UNDERLINE);
