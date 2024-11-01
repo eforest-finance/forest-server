@@ -423,16 +423,16 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 opt => opt.MapFrom(source => source.ClaimMax));
         CreateMap<MessageInfoIndex, MessageInfoDto>();
         CreateMap<UserInformationEto, UserIndex>();
+
         CreateMap<TreeGameUserInfoDto, TreeGameUserInfoIndex>();
         CreateMap<TreeGameUserInfoIndex, TreeGameUserInfoDto>();
         CreateMap<PointsDetail, TreeGamePointsDetailInfoIndex>();
         CreateMap<TreeGamePointsDetailInfoIndex, PointsDetail>();
 
         CreateMap<CreateTreeActivityRequest, TreeActivityIndex>();
-        CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>()
-            .ForMember(
-                destination => destination.SeedSymbol,
-                opt => opt.MapFrom(source => source.SeedOwnedSymbol))
-            .ForMember(destination => destination.Symbol, opt => opt.MapFrom(source => source.Symbol));
+        CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>().ForMember(destination => destination.SeedSymbol,
+            opt => opt.MapFrom(source => source.Symbol))
+            .ForMember(destination => destination.Symbol,
+                opt => opt.MapFrom(source => source.SeedOwnedSymbol));
     }
 }
