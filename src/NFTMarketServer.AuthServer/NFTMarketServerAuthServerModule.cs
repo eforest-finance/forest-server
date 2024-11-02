@@ -21,6 +21,7 @@ using NFTMarketServer.Users.Provider;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Providers.MongoDB.Configuration;
+using Serilog;
 using StackExchange.Redis;
 using Volo.Abp;
 using Volo.Abp.Account;

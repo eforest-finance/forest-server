@@ -74,17 +74,23 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<NFTCollectionIndexDto>> GetNFTCollectionsAsync(GetNFTCollectionsInput input)
         {
             if (input.SkipCount < 0) return BuildInitNFTCollectionIndexDto();
+
+            if (!input.AddressList.IsNullOrEmpty())
+            {
+                input.AddressList = input.AddressList.Distinct().ToList();
+            }
+            
             var nftCollectionIndexs =
                 await _nftCollectionProvider.GetNFTCollectionsIndexAsync(input.SkipCount,
                     input.MaxResultCount, input.AddressList.IsNullOrEmpty()?new List<string>{input.Address}:input.AddressList);
             if (nftCollectionIndexs == null) return BuildInitNFTCollectionIndexDto();
-
+            
             var totalCount = nftCollectionIndexs.TotalRecordCount;
             if (nftCollectionIndexs.IndexerNftCollections == null)
             {
                 return BuildInitNFTCollectionIndexDto();
             }
-
+            
             var addresses = nftCollectionIndexs.IndexerNftCollections.Select(o => o.CreatorAddress).Distinct().ToList();
             var accounts = await _userAppService.GetAccountsAsync(addresses);
 
@@ -183,6 +189,7 @@ namespace NFTMarketServer.NFT
 
             var resultList = extensionList
                 .Select(index => MapForTrendingCollectionsDto(index, collectionDictionary, recentImageDic))
+
                 .ToList();
             return new PagedResultDto<TrendingCollectionsDto>
             {
@@ -194,6 +201,7 @@ namespace NFTMarketServer.NFT
 
         public async Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCollectionsAsync()
         {
+
             var recommendedCollectionsOptions = _optionsMonitor.CurrentValue;
             if (recommendedCollectionsOptions.RecommendedCollections.IsNullOrEmpty())
             {
@@ -368,6 +376,26 @@ namespace NFTMarketServer.NFT
             
             
                 
+            
+            return trendingCollectionsDto;
+        }
+        
+        private TrendingCollectionsDto MapForTrendingCollectionsDto(NFTCollectionExtensionIndex index, 
+            Dictionary<string, IndexerNFTCollection> collectionInfos)
+        {
+            var trendingCollectionsDto =
+                _objectMapper.Map<NFTCollectionExtensionIndex, TrendingCollectionsDto>(index);
+            
+            trendingCollectionsDto.FloorChange = index.CurrentDayFloorChange;
+            trendingCollectionsDto.VolumeTotal = index.CurrentMonthVolumeTotal;
+            trendingCollectionsDto.VolumeTotalChange = index.CurrentMonthVolumeTotalChange;
+
+            if (collectionInfos != null && collectionInfos.TryGetValue(index.Id, out var info))
+            { 
+                trendingCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
+                trendingCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
+                trendingCollectionsDto.PreviewImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
+            }
             
             return trendingCollectionsDto;
         }

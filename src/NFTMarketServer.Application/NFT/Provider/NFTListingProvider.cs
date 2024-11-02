@@ -138,8 +138,8 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 Query = @"query (
                     $skipCount:Int!,
                     $maxResultCount:Int!,
-                    $chainIdList:[String],
-                    $nFTInfoIdList:[String],
+                    $chainIdList:[String!]!,
+                    $nFTInfoIdList:[String!]!,
                     $owner:String!,
                     $expireTimeGt:Long
                 ){

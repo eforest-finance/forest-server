@@ -164,7 +164,7 @@ namespace NFTMarketServer.Market
                         Items = new List<CollectedCollectionListingDto>()
                     };
                 }
-            }
+            } 
 
             var collectedNFTListings = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
                 input.MaxResultCount, input.Address, input.ChainList, nftInfoIds);

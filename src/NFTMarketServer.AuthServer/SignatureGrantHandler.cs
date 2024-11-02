@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Cryptography;
@@ -47,6 +48,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
     public async Task<IActionResult> HandleAsync(ExtensionGrantContext context)
     {
+        _logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<SignatureGrantHandler>>();
+        _logger.LogInformation("create token start");
         var publicKeyVal = context.Request.GetParameter("pubkey").ToString();
         var signatureVal = context.Request.GetParameter("signature").ToString();
         var timestampVal = context.Request.GetParameter("timestamp").ToString();
@@ -95,8 +98,19 @@ public class SignatureGrantHandler: ITokenExtensionGrant
             {
                 var version = context.Request.GetParameter("version").ToString();
                 var portkeyUrl = version == _V2 ? graphqlConfig.PortkeyV2Url : graphqlConfig.PortkeyUrl;
-                var caHolderInfos = await GetCAHolderInfo(portkeyUrl,
-                    new List<string>(){ account.Address} , account.ChainId);
+                var caHolderInfos = new IndexerCAHolderInfos();
+                try
+                {
+                    caHolderInfos = await GetCAHolderInfo(portkeyUrl,
+                        new List<string>(){ account.Address} , account.ChainId);
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "create token exception portkeyUrl:{A} errMsg:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(ex.Message));
+                    return null;
+                }
+
                 if (caHolderInfos == null || caHolderInfos.CaHolderManagerInfo==null || caHolderInfos.CaHolderManagerInfo.Count == 0)
                 {
                     return GetForbidResult(OpenIddictConstants.Errors.InvalidRequest,
@@ -133,11 +147,11 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                     $"The time should be {timeRangeConfig.TimeRange} minutes before and after the current time.");
             }
         }
-        _logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<SignatureGrantHandler>>();
         _distributedLock = context.HttpContext.RequestServices.GetRequiredService<IAbpDistributedLock>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<IdentityUserManager>();
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
         _treeGameUserInfoProvider = context.HttpContext.RequestServices.GetRequiredService<ITreeGameUserInfoProvider>();
+
 
         var userName = address;
         if (!string.IsNullOrWhiteSpace(caHash))
@@ -146,6 +160,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         }
 
         var user = await userManager.FindByNameAsync(userName);
+        _logger.LogInformation("create token user:{A} userName:{B} address:{C} caHash:{D}",JsonConvert.SerializeObject(user), userName, address, caHash);
+
         if (user == null)
         {
             var userId = Guid.NewGuid();
@@ -177,19 +193,33 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
         }
 
-        var userClaimsPrincipalFactory = context.HttpContext.RequestServices
-            .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
-        var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
-        var principal = await signInManager.CreateUserPrincipalAsync(user);
-        var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
-        claimsPrincipal.SetScopes("NFTMarketServer");
-        claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
-        claimsPrincipal.SetAudiences("NFTMarketServer");
+        try
+        {
+            var userClaimsPrincipalFactory = context.HttpContext.RequestServices
+                .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+            var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
 
-        await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
-            .SetAsync(principal);
+            var principal = await signInManager.CreateUserPrincipalAsync(user);
+            var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
+            _logger.LogInformation("create token scopes:{A}",JsonConvert.SerializeObject(principal.GetScopes()));
 
-        return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
+            claimsPrincipal.SetScopes("NFTMarketServer");
+            claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
+            claimsPrincipal.SetAudiences("NFTMarketServer");
+        
+            await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
+                .SetAsync(principal);
+
+            var token = new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
+            return token;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "create token errMsg:{A}",ex.Message);
+            throw  ex;
+        }
+
+        return null;
     }
     
     private ForbidResult GetForbidResult(string errorType, string errorDescription)
