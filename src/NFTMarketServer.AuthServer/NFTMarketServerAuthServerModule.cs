@@ -107,7 +107,7 @@ public class NFTMarketServerAuthServerModule : AbpModule
         
         ConfigureOrleans(context, configuration);
         context.Services.AddSingleton<IUserInformationProvider, UserInformationProvider>();
-        context.Services.AddSingleton<ITreeGameService, TreeGameService>();
+        //context.Services.AddSingleton<ITreeGameService, TreeGameService>();
 
         Configure<AbpOpenIddictExtensionGrantsOptions>(options =>
         {
