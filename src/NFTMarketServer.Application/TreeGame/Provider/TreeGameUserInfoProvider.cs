@@ -16,20 +16,20 @@ namespace NFTMarketServer.TreeGame.Provider;
 public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDependency
 {
     private readonly INESTRepository<TreeGameUserInfoIndex, string> _treeGameUserInfoIndexRepository;
-    private readonly IBus _bus;
+   // private readonly IBus _bus;
     private readonly ILogger<ITreeGameUserInfoProvider> _logger;
     private readonly IObjectMapper _objectMapper;
 
 
     public TreeGameUserInfoProvider(
         INESTRepository<TreeGameUserInfoIndex, string> treeGameUserInfoIndexRepository,
-        IBus bus,
+        //IBus bus,
         ILogger<ITreeGameUserInfoProvider> logger,
         IObjectMapper objectMapper
     )
     {
         _treeGameUserInfoIndexRepository = treeGameUserInfoIndexRepository;
-        _bus = bus;
+       // _bus = bus;
         _logger = logger;
         _objectMapper = objectMapper;
 
@@ -91,5 +91,22 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
             return null;
         }
         return tuple;
+    }
+    public async Task AcceptInvitationAsync(string address, string nickName, string parentAddress)
+    {
+        var treeUserIndex = await GetTreeUserInfoAsync(address);
+        if (treeUserIndex == null)
+        {
+            var treeGameUserInfoDto = new TreeGameUserInfoDto()
+            {
+                Address = address,
+                NickName = nickName,
+                Points = 0,
+                TreeLevel = 1,
+                ParentAddress = parentAddress,
+                CurrentWater = 60
+            };
+            await SaveOrUpdateTreeUserInfoAsync(treeGameUserInfoDto);
+        }
     }
 }

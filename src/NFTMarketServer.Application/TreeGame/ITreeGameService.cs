@@ -17,7 +17,6 @@ namespace NFTMarketServer.TreeGame
         Task<TreePointsConvertOutput> PointsConvertAsync(TreePointsConvertRequest request);
         Task<List<string>> GetInviteFriendsAsync(string address);
 
-        Task AcceptInvitationAsync(string address, string nickName, string parentAddress);
 
 
     }

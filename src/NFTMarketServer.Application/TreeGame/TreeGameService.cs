@@ -485,14 +485,7 @@ namespace NFTMarketServer.TreeGame
             return requestHash.ToHex();
         }
 
-        public async Task AcceptInvitationAsync(string address, string nickName, string parentAddress)
-        {
-            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
-            if (treeUserIndex == null)
-            {
-                treeUserIndex = await InitNewTreeGameUserAsync(address, nickName, parentAddress);
-            }
-        }
+        
 
     }
 }
