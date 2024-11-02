@@ -83,7 +83,7 @@ namespace NFTMarketServer.NFT
             var nftCollectionIndexs =
                 await _nftCollectionProvider.GetNFTCollectionsIndexAsync(input.SkipCount,
                     input.MaxResultCount, input.AddressList.IsNullOrEmpty()?new List<string>{input.Address}:input.AddressList);
-            if (nftCollectionIndexs == null) return BuildInitNFTCollectionIndexDto();
+            if (nftCollectionIndexs==null || nftCollectionIndexs.IndexerNftCollections.IsNullOrEmpty()) return BuildInitNFTCollectionIndexDto();
             
             var totalCount = nftCollectionIndexs.TotalRecordCount;
             if (nftCollectionIndexs.IndexerNftCollections == null)
