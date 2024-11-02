@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using NFTMarketServer.Dto;
 using NFTMarketServer.Model;
 using NFTMarketServer.TreeGame;
+using NFTMarketServer.TreeGame.Provider;
 using NFTMarketServer.Users.Dto;
 using NFTMarketServer.Users.Provider;
 using OpenIddict.Abstractions;
@@ -33,7 +34,8 @@ namespace NFTMarketServer;
 public class SignatureGrantHandler: ITokenExtensionGrant
 {
     private IUserInformationProvider _userInformationProvider;
-    private ITreeGameService _treeGameService;
+    private ITreeGameUserInfoProvider _treeGameUserInfoProvider;
+
     private ILogger<SignatureGrantHandler> _logger;
     private IAbpDistributedLock _distributedLock;
     private readonly string _lockKeyPrefix = "NFTMarketServer:Auth:SignatureGrantHandler:";
@@ -135,7 +137,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         _distributedLock = context.HttpContext.RequestServices.GetRequiredService<IAbpDistributedLock>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<IdentityUserManager>();
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
-        _treeGameService = context.HttpContext.RequestServices.GetRequiredService<ITreeGameService>();
+        _treeGameUserInfoProvider = context.HttpContext.RequestServices.GetRequiredService<ITreeGameUserInfoProvider>();
 
         var userName = address;
         if (!string.IsNullOrWhiteSpace(caHash))
@@ -158,7 +160,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
             if (TreeGameConstants.TreeGameInviteType.Equals(inviteType))
             {
-                await _treeGameService.AcceptInvitationAsync(address, nickName, inviteFrom);
+                await _treeGameUserInfoProvider.AcceptInvitationAsync(address, nickName, inviteFrom);
             }
         }
         else
@@ -172,6 +174,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                 CaAddressSide = caAddressSide
             };
             await _userInformationProvider.SaveUserSourceAsync(userSourceInput);
+
         }
 
         var userClaimsPrincipalFactory = context.HttpContext.RequestServices
