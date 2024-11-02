@@ -34,7 +34,7 @@ namespace NFTMarketServer;
 public class SignatureGrantHandler: ITokenExtensionGrant
 {
     private IUserInformationProvider _userInformationProvider;
-    private ITreeGameService _treeGameService;
+    //private ITreeGameService _treeGameService;
     private ILogger<SignatureGrantHandler> _logger;
     private IAbpDistributedLock _distributedLock;
     private readonly string _lockKeyPrefix = "NFTMarketServer:Auth:SignatureGrantHandler:";
