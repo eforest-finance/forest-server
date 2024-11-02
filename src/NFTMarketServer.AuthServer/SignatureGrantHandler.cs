@@ -148,7 +148,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         _distributedLock = context.HttpContext.RequestServices.GetRequiredService<IAbpDistributedLock>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<IdentityUserManager>();
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
-        _treeGameService = context.HttpContext.RequestServices.GetRequiredService<ITreeGameService>();
+        //_treeGameService = context.HttpContext.RequestServices.GetRequiredService<ITreeGameService>();
 
         var userName = address;
         if (!string.IsNullOrWhiteSpace(caHash))
