@@ -53,9 +53,21 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
         var skipCount = 0;
         long maxProcessedBlockHeight = -1;
         //Paging for logical processing
-        
-        var changePageInfo = await _treeGamePointsRecordProvider.GetSyncTreePointsRecordsAsync(skipCount,
-            lastEndHeight, chainId);
+        var changePageInfo = new IndexerTreePointsRecordPage();
+        try
+        {
+            changePageInfo = await _treeGamePointsRecordProvider.GetSyncTreePointsRecordsAsync(lastEndHeight,
+                -1, chainId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, 
+                "HandleTreePointsRecordAsync Exception lastEndHeight={A} newIndexHeight={B} msg:{C}", lastEndHeight,
+                newIndexHeight, e.Message);
+            changePageInfo = null;
+        }
+
+   
 
         if (changePageInfo == null || changePageInfo.Data.IsNullOrEmpty())
         {
@@ -67,8 +79,8 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
         var processChangeOriginList = changePageInfo.Data;
         
         _logger.LogInformation(
-            "HandleTreePointsRecordAsync queryOriginList count: {count} queryList count{count},chainId:{chainId} ",
-            processChangeOriginList.Count, processChangeOriginList.Count, chainId);
+            "HandleTreePointsRecordAsync queryOriginList lastEndHeight: {count} queryList count{count},chainId:{chainId} ",
+            lastEndHeight, processChangeOriginList.Count, chainId);
         
         var blockHeight = await HandleTreePointsRecordAsync(chainId, processChangeOriginList, lastEndHeight);
 

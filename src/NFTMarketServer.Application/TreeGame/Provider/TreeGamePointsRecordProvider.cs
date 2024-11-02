@@ -36,13 +36,13 @@ public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISing
 
     }
 
-    public async Task<IndexerTreePointsRecordPage> GetSyncTreePointsRecordsAsync(int skipCount, long startBlockHeight, string chainId)
+    public async Task<IndexerTreePointsRecordPage> GetSyncTreePointsRecordsAsync(long startBlockHeight, long endBlockHeight,string chainId)
     {
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerTreePointsRecordPage>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$blockHeight:Long!,$types:[Int!],$chainId:String) {
-                    data:getSyncTreePointsRecords(input:{skipCount: $skipCount,blockHeight:$blockHeight,types:$types,chainId:$chainId}){
+			    query($startBlockHeight:Long!,$endBlockHeight:Long!,$chainId:String) {
+                    data:getSyncTreePointsRecords(dto:{startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight,chainIds:$chainId}){
                         totalRecordCount,
                         data{
                              id,
@@ -61,8 +61,8 @@ public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISing
                 }",
             Variables = new
             {
-                skipCount = skipCount,
-                blockHeight = startBlockHeight,
+                startBlockHeight = startBlockHeight,
+                endBlockHeight = endBlockHeight,
                 chainId = chainId
             }
         });

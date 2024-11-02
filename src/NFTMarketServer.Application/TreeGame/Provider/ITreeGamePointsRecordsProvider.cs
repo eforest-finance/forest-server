@@ -5,7 +5,7 @@ namespace NFTMarketServer.TreeGame.Provider;
 
 public interface ITreeGamePointsRecordProvider
 {
-    public Task<IndexerTreePointsRecordPage> GetSyncTreePointsRecordsAsync(int skipCount, long startBlockHeight ,string chainId);
+    public Task<IndexerTreePointsRecordPage> GetSyncTreePointsRecordsAsync(long startBlockHeight ,long endBlockHeight, string chainId);
 
     
     
