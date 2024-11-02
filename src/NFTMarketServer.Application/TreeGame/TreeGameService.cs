@@ -201,12 +201,18 @@ namespace NFTMarketServer.TreeGame
             var currentTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
             foreach (var detail in detailsConfig)
             {
+                var amount = 0l;
+                if (detail.Type != PointsDetailType.INVITE)
+                {
+                    amount = treeInfo.Current.Produce;
+                }
+
                 pointsDetailInfos.Add(new TreeGamePointsDetailInfoIndex()
                 {
                     Id = Guid.NewGuid().ToString(),
                     Address = address,
                     Type = detail.Type,
-                    Amount = treeInfo.Current.Produce,
+                    Amount = amount,
                     UpdateTime = currentTime,
                     RemainingTime = treeInfo.Current.Frequency,
                     TimeUnit = detail.TimeUnit,
@@ -307,6 +313,9 @@ namespace NFTMarketServer.TreeGame
             //build rtun msg
             var homePageDto = new TreeGameHomePageInfoDto();
             homePageDto.TotalPoints = treeUserIndex.Points;
+            homePageDto.Address = treeUserIndex.Address;
+            homePageDto.Id = treeUserIndex.Id;
+            homePageDto.NickName = treeUserIndex.NickName;
             homePageDto.TreeInfo = treeInfo;
             homePageDto.WaterInfo = waterInfo;
             homePageDto.PointsDetails = pointsDetails;
