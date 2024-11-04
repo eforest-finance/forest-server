@@ -88,7 +88,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
             return;
         }
         
-        if (item.OpType == OpType.Added)
+        if (item.OpType == OpType.ADDED)
         {
             userInfo.Points = item.TotalPoints;
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
@@ -103,9 +103,40 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
                     await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
                 }
             }
+            //update invite parent user points
+            {
+                if (!userInfo.ParentAddress.IsNullOrEmpty())
+                {
+                    var parentPointsDetailList = await _treeGamePointsDetailProvider.GetTreePointsDetailsAsync(userInfo.ParentAddress);
+                    if (parentPointsDetailList.IsNullOrEmpty())
+                    {
+                        _logger.LogInformation("TreePointsChangeRecordEventHandler treeGameUserInfo's parent userTreePointsDetails is null: child:{A}, parent:{B}",item.Address, userInfo.ParentAddress);
+                    }
+                    else
+                    {
+                        foreach (var detail in parentPointsDetailList)
+                        {
+                            if (detail.Type == PointsDetailType.INVITE)
+                            {
+                                var rewardProportion = TreeGameConstants.RewardProportion;
+                                var rewardConfig = _platformOptionsMonitor.CurrentValue.InviteReward;
+                                if (rewardConfig != null)
+                                {
+                                    rewardProportion = rewardConfig.RewardProportion;
+                                }
+                                detail.Amount += (decimal)item.PointsType * (decimal)rewardProportion;
+                                await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
+                                break;
+                            }
+                        }
+                    }
+
+
+                }
+            }
         }
         
-        if (item.OpType == OpType.UpdateTree)
+        if (item.OpType == OpType.UPDATETREE)
         {
             userInfo.Points = item.TotalPoints;
             userInfo.TreeLevel = Convert.ToInt32(item.TreeLevel);
@@ -131,7 +162,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
 
         }
         
-        if (item.OpType == OpType.Claim)
+        if (item.OpType == OpType.CLAIM)
         {
             userInfo.Points = item.TotalPoints;
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
