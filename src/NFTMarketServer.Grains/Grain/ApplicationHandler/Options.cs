@@ -117,5 +117,13 @@ public class TreeGameOptions
     public List<PointsDetailConfig> PointsDetails { get; set; }
     
     public string HashVerifyKey{ get; set; }
+    
+    public InviteReward InviteReward{ get; set; }
+
+}
+public class InviteReward
+{
+    public long RewardPoints{ get; set; }
+    public long RewardProportion{ get; set; }
 
 }

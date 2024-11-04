@@ -94,5 +94,7 @@ public class TreeGameConstants
 
     public const string HashVerifyKey = "1a2b3c";
     public const string TreeGameInviteType = "treegame";
+    public const long TreeGameInviteReward = 100;
+    public const double RewardProportion = 0.05;
 
 }
