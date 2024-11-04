@@ -63,7 +63,7 @@ public class ResetNFTSyncHeightExpireMinutesOptions
 
 public class ChoiceNFTInfoNewFlagOptions
 {
-    public bool ChoiceNFTInfoNewFlagIsOn { get; set; }
+    public bool ChoiceNFTInfoNewFlagIsOn { get; set; } = true;
 }
 
 public class CollectionActivityNFTLimitOptions
