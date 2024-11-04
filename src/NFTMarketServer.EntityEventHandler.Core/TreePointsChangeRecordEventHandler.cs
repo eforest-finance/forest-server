@@ -150,13 +150,15 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
             {
                 throw new Exception("TreePointsChangeRecordEventHandler Invalid treelevel:"+item.TreeLevel);
             }
+
             foreach (var detail in pointsDetailList)
             {
                 if (detail.Type == PointsDetailType.INVITE)
                 {
                     continue;
                 }
-                detail.Amount = treeInfo.Current.Produce;
+
+                detail.Amount = currentLevel.Produce;
             }
             await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(pointsDetailList);
 
