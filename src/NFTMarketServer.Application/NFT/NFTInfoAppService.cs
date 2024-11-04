@@ -1240,7 +1240,7 @@ namespace NFTMarketServer.NFT
 
             if (fromNFTInfo == null)
             {
-                _logger.LogError("AddOrUpdateNftInfoNewAsync fromNFTInfo and localNFTInfo are null!");
+                _logger.LogError("AddOrUpdateNftInfoNewAsync fromNFTInfo and localNFTInfo are null! nftInfoI={A}",nftInfoId);
                 return;
             }
 
