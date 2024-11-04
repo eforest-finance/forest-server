@@ -125,7 +125,7 @@ namespace NFTMarketServer.Market
             
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    string.Empty, input.ChainList, string.Empty, nftInfoIds, input.Address, string.Empty, string.Empty);
+                    string.Empty, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, string.Empty, nftInfoIds, input.Address, string.Empty, string.Empty);
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
@@ -199,7 +199,7 @@ namespace NFTMarketServer.Market
             
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    string.Empty, input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
+                    string.Empty, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
