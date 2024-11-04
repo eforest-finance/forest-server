@@ -18,7 +18,7 @@ public class TreePointsChangeRecordItem
 
     public long TotalPoints { get; set; }
     
-    public long Points { get; set; }
+    public decimal Points { get; set; }
     
     public OpType OpType { get; set; }//0:Added 1:updateTree 2:claim activity
     public long OpTime { get; set; }
@@ -41,15 +41,15 @@ public class TreePointsChangeRecordItem
 
 public enum OpType
 {
-    Added = 0,
-    UpdateTree = 1,
-    Claim = 2
+    ADDED = 0,
+    UPDATETREE = 1,
+    CLAIM = 2
 }
 
 public enum PointsType
 {
-    NormalOne = 0,
-    NormalTwo = 1,
-    Invite = 2,
+    NORMALONE = 0,
+    NORMALONETWO = 1,
+    INVITE = 2,
     DEFAULT = 3
 }

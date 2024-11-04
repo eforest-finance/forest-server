@@ -15,7 +15,7 @@ public class TreeGamePointsDetailInfoIndex : NFTMarketEntity<string>, IIndexBuil
     
     public PointsDetailType Type { get; set; }
     
-    public long Amount { get; set; }
+    public decimal Amount { get; set; }
     
     //13 timestamp
     public long UpdateTime { get; set; }

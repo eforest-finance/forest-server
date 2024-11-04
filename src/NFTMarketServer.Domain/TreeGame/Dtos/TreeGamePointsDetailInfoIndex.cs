@@ -15,7 +15,7 @@ public class TreeGamePointsDetailInfoDto
     
     public PointsDetailType Type { get; set; }
     
-    public int Amount { get; set; }
+    public decimal Amount { get; set; }
     
     //13 timestamp
     public long UpdateTime { get; set; }

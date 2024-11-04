@@ -5,7 +5,7 @@ public class TreeLevelUpgradeOutput
 {
     public string Address { get; set; }
     
-    public long Points { get; set; }
+    public decimal Points { get; set; }
     
     //13 timestamp
     public long OpTime{ get; set; }
