@@ -2090,7 +2090,7 @@ namespace NFTMarketServer.NFT
                 HasListingFlag = input.HasListingFlag,
                 HasOfferFlag = input.HasOfferFlag,
                 SkipCount = 0,
-                MaxResultCount = 10000,
+                MaxResultCount = 1000,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 PriceLow = input.PriceLow,
