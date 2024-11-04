@@ -57,7 +57,7 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
         try
         {
             changePageInfo = await _treeGamePointsRecordProvider.GetSyncTreePointsRecordsAsync(lastEndHeight,
-                -1, chainId);
+                newIndexHeight, chainId);
         }
         catch (Exception e)
         {

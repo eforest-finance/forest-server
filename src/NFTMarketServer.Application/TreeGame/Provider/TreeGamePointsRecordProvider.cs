@@ -66,6 +66,6 @@ public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISing
                 chainId = chainId
             }
         });
-        return graphQLResponse;
+        return graphQLResponse.Data.Data;
     }
 }
