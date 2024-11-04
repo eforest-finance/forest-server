@@ -104,7 +104,8 @@ namespace NFTMarketServer.Market
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, skip, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
-                while (nftInfoIds.Count >= CommonConstant.IntOneThousand)
+                //while (nftInfoIds.Count >= CommonConstant.IntOneThousand) todo v2
+                if (nftInfoIds.Count >= CommonConstant.IntOneThousand)
                 {
                     skip += CommonConstant.IntOneThousand;
                     compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
@@ -112,9 +113,13 @@ namespace NFTMarketServer.Market
                     var infoIds = compositeNFTDic?.Keys.ToList();
                     if (infoIds.IsNullOrEmpty())
                     {
-                        break;
+                        //break; todo v2
+                        return result;
                     }
-                    nftInfoIds.AddRange(infoIds);
+                    else
+                    {
+                        nftInfoIds.AddRange(infoIds);
+                    }
                 }
                 if (nftInfoIds.IsNullOrEmpty())
                 {
@@ -166,7 +171,8 @@ namespace NFTMarketServer.Market
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, skip, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
-                while (nftInfoIds.Count >= CommonConstant.IntOneThousand)
+                //while (nftInfoIds.Count >= CommonConstant.IntOneThousand) todo v2
+                if (nftInfoIds.Count >= CommonConstant.IntOneThousand)
                 {
                     skip += CommonConstant.IntOneThousand;
                     compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
@@ -174,10 +180,13 @@ namespace NFTMarketServer.Market
                     var infoIds = compositeNFTDic?.Keys.ToList();
                     if (infoIds.IsNullOrEmpty())
                     {
-                        break;
+                        //break; todo v2
                     }
-                    nftInfoIds.AddRange(infoIds);
-                }
+                    else
+                    {
+                        nftInfoIds.AddRange(infoIds);
+                    }
+            }
                 
             }
             else
