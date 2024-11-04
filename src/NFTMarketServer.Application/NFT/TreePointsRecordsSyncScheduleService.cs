@@ -69,14 +69,14 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
 
    
 
-        if (changePageInfo == null || changePageInfo.Data.IsNullOrEmpty())
+        if (changePageInfo == null || changePageInfo.TreePointsChangeRecordList.IsNullOrEmpty())
         {
             _logger.LogInformation(
                 "HandleTreePointsRecordAsync no data skipCount={A} lastEndHeight={B}", skipCount,
                 lastEndHeight);
             return 0;
         }
-        var processChangeOriginList = changePageInfo.Data;
+        var processChangeOriginList = changePageInfo.TreePointsChangeRecordList;
         
         _logger.LogInformation(
             "HandleTreePointsRecordAsync queryOriginList lastEndHeight: {count} queryList count{count},chainId:{chainId} ",

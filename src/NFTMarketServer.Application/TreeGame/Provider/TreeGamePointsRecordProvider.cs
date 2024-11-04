@@ -41,10 +41,10 @@ public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISing
         var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerTreePointsRecordPage>(new GraphQLRequest
         {
             Query = @"
-			    query($startBlockHeight:Long!,$endBlockHeight:Long!,$chainId:String) {
-                    data:getSyncTreePointsRecords(dto:{startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight,chainIds:$chainId}){
+			    query($startBlockHeight:Long!,$endBlockHeight:Long!,$chainId:String!) {
+                    data:getSyncTreePointsRecords(dto:{startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight,chainId:$chainId}){
                         totalRecordCount,
-                        data{
+                        treePointsChangeRecordList:data{
                              id,
                              address,
                              totalPoints,
