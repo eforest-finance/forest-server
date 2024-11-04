@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NFTMarketServer.NFT.Index;
 
 public class IndexerNFTOffers : IndexerCommonResult<IndexerNFTOffers>
 {
     public long TotalRecordCount { get; set; }
-    public List<IndexerNFTOffer> IndexerNFTOfferList { get; set; }
+    [CanBeNull] public List<IndexerNFTOffer> IndexerNFTOfferList { get; set; }
 }
 
 public class IndexerNFTOffer : IndexerCommonResult<IndexerNFTOffer>
