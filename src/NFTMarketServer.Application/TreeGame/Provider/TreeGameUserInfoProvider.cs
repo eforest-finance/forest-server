@@ -16,6 +16,8 @@ namespace NFTMarketServer.TreeGame.Provider;
 public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDependency
 {
     private readonly INESTRepository<TreeGameUserInfoIndex, string> _treeGameUserInfoIndexRepository;
+    private readonly INESTRepository<TreeGamePointsDetailInfoIndex, string> _treeGamePointsDetailIndexRepository;
+
    // private readonly IBus _bus;
     private readonly ILogger<ITreeGameUserInfoProvider> _logger;
     private readonly IObjectMapper _objectMapper;
@@ -23,6 +25,7 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
 
     public TreeGameUserInfoProvider(
         INESTRepository<TreeGameUserInfoIndex, string> treeGameUserInfoIndexRepository,
+        INESTRepository<TreeGamePointsDetailInfoIndex, string> treeGamePointsDetailIndexRepository,
         //IBus bus,
         ILogger<ITreeGameUserInfoProvider> logger,
         IObjectMapper objectMapper
@@ -32,6 +35,7 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
        // _bus = bus;
         _logger = logger;
         _objectMapper = objectMapper;
+        _treeGamePointsDetailIndexRepository = treeGamePointsDetailIndexRepository;
 
     }
     public async Task<TreeGameUserInfoIndex> SaveOrUpdateTreeUserInfoAsync(TreeGameUserInfoDto dto)
@@ -108,5 +112,35 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
             };
             await SaveOrUpdateTreeUserInfoAsync(treeGameUserInfoDto);
         }
+
+        var parentPointsList = await GetTreePointsDetailsAsync(parentAddress);
+        var invitePointsDetail = parentPointsList.FirstOrDefault(i => i.Type == PointsDetailType.INVITE);
+        if (invitePointsDetail != null)
+        {
+            invitePointsDetail.Amount += TreeGameConstants.TreeGameInviteReward;
+            await _treeGamePointsDetailIndexRepository.AddOrUpdateAsync(invitePointsDetail);
+        }
+
+    }
+    private async Task<List<TreeGamePointsDetailInfoIndex>> GetTreePointsDetailsAsync(string address)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<TreeGamePointsDetailInfoIndex>, QueryContainer>>();
+        if (!address.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Term(i =>
+                i.Field(f => f.Address).Value(address)));
+        }
+        QueryContainer Filter(QueryContainerDescriptor<TreeGamePointsDetailInfoIndex> f) =>
+            f.Bool(b => b.Must(mustQuery));
+
+        var sorting = new Func<SortDescriptor<TreeGamePointsDetailInfoIndex>, IPromise<IList<ISort>>>(s =>
+            s.Ascending(t => t.Type));
+        var tuple = await _treeGamePointsDetailIndexRepository.GetSortListAsync(Filter, sortFunc: sorting);
+        if (tuple == null || tuple.Item1 == 0)
+        {
+            return null;
+        }
+
+        return tuple.Item2;
     }
 }
