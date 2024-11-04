@@ -7,7 +7,7 @@ public class IndexerTreePointsRecordPage : IndexerCommonResult<IndexerTreePoints
 {
     public long TotalRecordCount { get; set; }
 
-    public List<TreePointsChangeRecordItem> Data { get; set; }
+    public List<TreePointsChangeRecordItem> TreePointsChangeRecordList { get; set; }
 }
 
 public class TreePointsChangeRecordItem
