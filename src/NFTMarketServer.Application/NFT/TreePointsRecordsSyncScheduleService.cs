@@ -69,7 +69,7 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
 
    
 
-        if (changePageInfo == null || changePageInfo.TreePointsChangeRecordList.IsNullOrEmpty())
+        if (changePageInfo.TotalRecordCount ==0 || changePageInfo.TreePointsChangeRecordList.IsNullOrEmpty())
         {
             _logger.LogInformation(
                 "HandleTreePointsRecordAsync no data skipCount={A} lastEndHeight={B}", skipCount,

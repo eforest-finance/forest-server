@@ -41,7 +41,8 @@ public class TreeGamePointsRecordProviderTest : NFTMarketServerApplicationTestBa
     {
        var client = new GraphQLHttpClient("https://test-indexer-api.aefinder.io/api/app/graphql/forest",
             new NewtonsoftJsonSerializer());
-
+       var totalCount = 0;
+       var itemCount = 0;
        try
        {
            var graphQlResponse = await client.SendQueryAsync<IndexerTreePointsRecordPage>(new GraphQLRequest
@@ -69,20 +70,29 @@ public class TreeGamePointsRecordProviderTest : NFTMarketServerApplicationTestBa
                 }",
                Variables = new
                {
-                   startBlockHeight = 200,
+                   startBlockHeight = 300,
                    endBlockHeight = 0,
                    chainId = "tDVW"
                }
            });
-           var totalCount = graphQlResponse.Data.Data.TotalRecordCount;
-           var itemCount = graphQlResponse.Data.Data.TreePointsChangeRecordList.Count;
-           totalCount.ShouldBeGreaterThan(0);
-           itemCount.ShouldBeGreaterThan(0);
+           totalCount = (int)graphQlResponse.Data.Data.TotalRecordCount;
+           itemCount = graphQlResponse.Data.Data.TreePointsChangeRecordList.Count;
+
+           foreach (var item in graphQlResponse.Data.Data.TreePointsChangeRecordList)
+           {
+               var type = item.PointsType;
+           }
+          
+         
        }
        catch (Exception e)
        {
            var err = e.Message;
+           totalCount = 0;
+           itemCount = 0;
        }
+       totalCount.ShouldBeGreaterThan(0);
+       itemCount.ShouldBeGreaterThan(0);
 
       
 
