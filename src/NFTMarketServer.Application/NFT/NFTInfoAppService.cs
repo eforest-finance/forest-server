@@ -2234,7 +2234,7 @@ namespace NFTMarketServer.NFT
                 HasListingFlag = input.HasListingFlag,
                 HasOfferFlag = input.HasOfferFlag,
                 SkipCount = 0,
-                MaxResultCount = 1000,
+                MaxResultCount = CommonConstant.ProfileTotalNumber,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 IssueAddress = input.Address,
@@ -2270,7 +2270,7 @@ namespace NFTMarketServer.NFT
                     QueryType = input.QueryType,
                     SkipCount = CommonConstant.IntZero,
                     CollectionIdList = input.CollectionIds,
-                    MaxResultCount = 1000
+                    MaxResultCount = CommonConstant.ProfileTotalNumber
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
@@ -2311,7 +2311,7 @@ namespace NFTMarketServer.NFT
                     QueryType = input.QueryType,
                     SkipCount = CommonConstant.IntZero,
                     CollectionIdList = input.CollectionIds,
-                    MaxResultCount = 1000,
+                    MaxResultCount = CommonConstant.ProfileTotalNumber,
                     KeyWord = ""
                 };
                 var userBalanceList =
