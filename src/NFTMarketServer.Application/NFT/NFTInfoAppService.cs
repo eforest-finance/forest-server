@@ -1798,6 +1798,7 @@ namespace NFTMarketServer.NFT
 
         private async Task<Dictionary<string, IndexerNFTOffer>> GetMaxOfferInfosAsync(List<string> nftIds)
         {
+            return new Dictionary<string, IndexerNFTOffer>();//todo v2
             var tasks = nftIds.Select(nftId => _nftOfferProvider.GetMaxOfferInfoAsync(nftId)).ToList();
             var maxOfferResults = await Task.WhenAll(tasks);
             var maxOfferDict = maxOfferResults.Where(offer => offer != null && !offer.BizInfoId.IsNullOrEmpty())
@@ -1808,6 +1809,7 @@ namespace NFTMarketServer.NFT
         private async Task<Dictionary<string, IndexerNFTListingInfo>> GetMyMinListInfosAsync(List<string> symbols,
             string address, string chainId, string from)
         {
+            return new Dictionary<string, IndexerNFTListingInfo>(); //todo v2
             var tasks = new List<Task<PagedResultDto<IndexerNFTListingInfo>>>();
             foreach (var symbol in symbols)
             {
