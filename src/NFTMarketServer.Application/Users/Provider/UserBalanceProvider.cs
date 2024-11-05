@@ -166,7 +166,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var totalCount = 0;
         var queryCount = 1;
         //while (queryCount <= MaxQueryBalanceCount) todo v2
-        if (queryCount <= MaxQueryBalanceCount * 2)
+        if (queryCount <= queryUserBalanceIndexInput.MaxResultCount)
         {
             var result = await GetUserBalancesAsync(queryUserBalanceIndexInput);
             if (result == null || result.Item1 <= CommonConstant.IntZero)
