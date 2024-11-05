@@ -171,7 +171,7 @@ namespace NFTMarketServer.Market
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, skip, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
-                //while (nftInfoIds.Count >= CommonConstant.IntOneThousand) todo v2
+                //while (nftInfoIds.Count >= CommonConstant.IntOneThousand) todo v2  
                 if (nftInfoIds.Count >= CommonConstant.IntOneThousand)
                 { 
                     skip += CommonConstant.IntOneThousand;
