@@ -2498,9 +2498,12 @@ namespace NFTMarketServer.NFT
                 {
                     //break; todo v2
                 }
+                else
+                {
+                    allCount += nextPageNFTResult.Item1;
+                    allNFTList.AddRange(nextPageNFTResult.Item2);
+                }
 
-                allCount += nextPageNFTResult.Item1;
-                allNFTList.AddRange(nextPageNFTResult.Item2);
             }
 
             return new Tuple<long, List<IndexerNFTInfo>>(allCount, allNFTList);
