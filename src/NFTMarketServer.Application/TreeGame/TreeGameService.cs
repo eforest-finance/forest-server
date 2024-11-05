@@ -418,7 +418,7 @@ namespace NFTMarketServer.TreeGame
             var response = new TreePointsClaimOutput()
             {
                 Address = request.Address,
-                PointsDetailType = request.PointsDetailType,
+                PointsType = request.PointsDetailType,
                 Points = claimPointsAmount,
                 OpTime = opTime,
                 RequestHash = requestHash
