@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -160,6 +161,8 @@ namespace NFTMarketServer.Market
 
         public async Task<PagedResultDto<CollectedCollectionOffersDto>> GetCollectedCollectionReceivedOfferAsync(GetCollectedCollectionReceivedOfferInput input)
         {
+            var stopwatch = Stopwatch.StartNew();
+            Logger.LogDebug("GetCollectedCollectionReceivedOfferAsync 0");
             input.Address = FullAddressHelper.ToShortAddress(input.Address);
 
             var result = PagedResultWrapper<CollectedCollectionOffersDto>.Initialize();
@@ -199,6 +202,8 @@ namespace NFTMarketServer.Market
                 }
                 
             }
+            var spend1 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetCollectedCollectionReceivedOfferAsync 1 {A}",spend1);
 
             if (nftInfoIds.IsNullOrEmpty())
             {
@@ -208,6 +213,8 @@ namespace NFTMarketServer.Market
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
                     string.Empty, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
+            var spend2 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetCollectedCollectionReceivedOfferAsync 2 {A} {B}",spend2,spend2-spend1);
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
@@ -216,11 +223,13 @@ namespace NFTMarketServer.Market
             var nftInfoIdList = nftOfferIndexes.IndexerNFTOfferList?.Select(item => item.BizInfoId).ToList();
 
             var compositeNFTInfoDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(nftInfoIdList);
-            
+            var spend3 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetCollectedCollectionReceivedOfferAsync 3 {A} {B}",spend3,spend3-spend2);
             var nftCollectionExtensionDic =
                 await _nftCollectionExtensionProvider.GetNFTCollectionExtensionsAsync(nftInfoIdList
                     .Select(item => SymbolHelper.TransferNFTIdToCollectionId(item)).ToList());
-
+            var spend4 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetCollectedCollectionReceivedOfferAsync 4 {A} {B}",spend4,spend4-spend3);
             var addresses = new List<string>();
             foreach (var info in nftOfferIndexes.IndexerNFTOfferList)
             {
@@ -231,6 +240,8 @@ namespace NFTMarketServer.Market
             }
 
             var accounts = await _userAppService.GetAccountsAsync(addresses.Distinct().ToList());
+            var spend5 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetCollectedCollectionReceivedOfferAsync 5 {A} {B}",spend5,spend5-spend4);
 
             return Map(result, nftOfferIndexes, nftCollectionExtensionDic, accounts, compositeNFTInfoDic);
         }
