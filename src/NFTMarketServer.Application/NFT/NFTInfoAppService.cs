@@ -2084,7 +2084,7 @@ namespace NFTMarketServer.NFT
             var nftIds = userBalanceList.Select(i => i.NFTInfoId).Distinct().ToList();
             var nftSymbols = userBalanceList.Select(i => i.Symbol).Distinct().ToList();
             var fuzzySearchSwitch = _fuzzySearchOptionsMonitor.CurrentValue.FuzzySearchSwitch;
-
+ 
             var getCompositeNFTInfosInput = new GetCompositeNFTInfosInput()
             {
                 NFTIdList = nftIds,
