@@ -2471,8 +2471,8 @@ namespace NFTMarketServer.NFT
             var allNFTList = nftResult.Item2;
             var allCount = nftResult.Item1;
             //while (allCount > allNFTList.Count) todo v2
-            int i = 0;
-            while (allCount > allNFTList.Count && i<3)
+            //int i = 0;
+            if (allCount > allNFTList.Count)
             {
                 var nextPageNFTResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
                 if (nextPageNFTResult == null || nextPageNFTResult.Item1 == 0)
@@ -2481,7 +2481,6 @@ namespace NFTMarketServer.NFT
                 }
                 else
                 {
-                    i++;
                     allCount += nextPageNFTResult.Item1;
                     allNFTList.AddRange(nextPageNFTResult.Item2);
                 }
