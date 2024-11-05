@@ -1801,7 +1801,11 @@ namespace NFTMarketServer.NFT
             var tasks = nftIds.Select(nftId => _nftOfferProvider.GetMaxOfferInfoAsync(nftId)).ToList();
             var maxOfferResults = await Task.WhenAll(tasks);
             var maxOfferDict = maxOfferResults.Where(offer => offer != null && !offer.BizInfoId.IsNullOrEmpty())
-                .ToDictionary(offer => offer.BizInfoId, offer => offer);
+                .GroupBy(offer => offer.BizInfoId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.First()
+                );
             return maxOfferDict;
         }
 
@@ -2287,8 +2291,13 @@ namespace NFTMarketServer.NFT
             var nftTask = Task.Run(async () =>
             {
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
-                var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
-                    .ToDictionary(info => info.Id, info => info.Decimals);
+                var nftDecimalDict = nftResult.Item2
+                    .Where(info => info != null && !string.IsNullOrEmpty(info.Id))
+                    .GroupBy(info => info.Id)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.First().Decimals
+                    );
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
                     input.Address, input.ChainList.FirstOrDefault(), "Create-NFT");
