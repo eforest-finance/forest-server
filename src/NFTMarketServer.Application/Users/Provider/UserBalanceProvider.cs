@@ -164,7 +164,8 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var userBalanceList = new List<UserBalanceIndex>();
         var totalCount = 0;
         var queryCount = 1;
-        while (queryCount <= MaxQueryBalanceCount)
+        //while (queryCount <= MaxQueryBalanceCount) todo v2
+        if (queryCount <= MaxQueryBalanceCount * 2)
         {
             var result = await GetUserBalancesAsync(queryUserBalanceIndexInput);
             if (result == null || result.Item1 <= CommonConstant.IntZero)
@@ -182,10 +183,10 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
 
             queryUserBalanceIndexInput.SkipCount = result.Item2.Count;
             queryCount++;
-            if (totalCount == userBalanceList.Count)
-            {
-                break;
-            }
+            // if (totalCount == userBalanceList.Count)
+            // {
+            //     break;
+            // } todo v2
         }
         var returnUserBalances = new List<UserBalanceIndex>();
         foreach (var userBalance in userBalanceList)
