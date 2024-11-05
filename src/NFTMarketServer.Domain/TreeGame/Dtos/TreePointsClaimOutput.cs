@@ -5,7 +5,7 @@ public class TreePointsClaimOutput
 {
     public string Address { get; set; }
     
-    public PointsDetailType PointsDetailType{ get; set; }
+    public PointsDetailType PointsType{ get; set; }
     public decimal Points { get; set; }
     
     //13 timestamp
