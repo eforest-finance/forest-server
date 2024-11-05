@@ -2482,22 +2482,22 @@ namespace NFTMarketServer.NFT
             var allNFTList = nftResult.Item2;
             var allCount = nftResult.Item1;
             //while (allCount > allNFTList.Count) todo v2
-            if (allCount > allNFTList.Count)
-            {
-                input.SkipCount += allNFTList.Count;
-                var nextPageNFTResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
-                if (nextPageNFTResult == null || nextPageNFTResult.Item1 == 0)
-                {
-                    //break; todo v2
-                }
-                else
-                {
-                    allCount += nextPageNFTResult.Item1;
-                    
-                    allNFTList.AddRange(nextPageNFTResult.Item2);
-                }
-
-            }
+            // if (allCount > allNFTList.Count)
+            // {
+            //     input.SkipCount += allNFTList.Count;
+            //     var nextPageNFTResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
+            //     if (nextPageNFTResult == null || nextPageNFTResult.Item1 == 0)
+            //     {
+            //         //break; todo v2
+            //     }
+            //     else
+            //     {
+            //         allCount += nextPageNFTResult.Item1;
+            //         
+            //         allNFTList.AddRange(nextPageNFTResult.Item2);
+            //     }
+            //
+            // }
 
             return new Tuple<long, List<IndexerNFTInfo>>(allCount, allNFTList);
         }
