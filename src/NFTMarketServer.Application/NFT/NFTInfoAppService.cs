@@ -2291,13 +2291,8 @@ namespace NFTMarketServer.NFT
             var nftTask = Task.Run(async () =>
             {
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
-                var nftDecimalDict = nftResult.Item2
-                    .Where(info => info != null && !string.IsNullOrEmpty(info.Id))
-                    .GroupBy(info => info.Id)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.First().Decimals
-                    );
+                var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
+                    .ToDictionary(info => info.Id, info => info.Decimals);
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
                     input.Address, input.ChainList.FirstOrDefault(), "Create-NFT");
