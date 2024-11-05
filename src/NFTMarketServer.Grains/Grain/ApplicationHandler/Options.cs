@@ -119,11 +119,15 @@ public class TreeGameOptions
     public string HashVerifyKey{ get; set; }
     
     public InviteReward InviteReward{ get; set; }
+    
+    public List<Reward> Rewards { get; set; }
+
 
 }
 public class InviteReward
 {
     public long RewardPoints{ get; set; }
-    public long RewardProportion{ get; set; }
+    public double RewardProportion{ get; set; }
 
 }
+

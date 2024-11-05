@@ -458,7 +458,7 @@ namespace NFTMarketServer.TreeGame
             var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
             var rewardSymbol = activityDetail.RewardType.ToString();
             var rewardAmount = activityDetail.RedeemRewardOnce;
-            var rewardDecimals = 8;
+            var rewardDecimals = GetSymbolDecimals(rewardSymbol);
             rewardAmount =  (long)(rewardAmount * (decimal)Math.Pow(10, rewardDecimals));
             var requestStr = string.Concat(address, activityId, costPoints,opTime);
             var requestHash = BuildRequestHash(string.Concat(requestStr,rewardSymbol,rewardAmount));
@@ -485,6 +485,18 @@ namespace NFTMarketServer.TreeGame
                 return new List<string>();
             }
             return friends.Item2.Select(i => i.NickName).ToList();
+        }
+
+        private int GetSymbolDecimals(string symbol)
+        {
+            var rewardsConfig = _platformOptionsMonitor.CurrentValue.Rewards ?? TreeGameConstants.RewardsConfig;
+            if (rewardsConfig.IsNullOrEmpty())
+            {
+                return TreeGameConstants.DefaultRewardDecimal;
+            }
+
+            var reward = rewardsConfig.FirstOrDefault(x => x.Symbol == symbol);
+            return reward?.Decimals ?? TreeGameConstants.DefaultRewardDecimal;
         }
 
         private string BuildRequestHash(string request)
