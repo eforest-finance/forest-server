@@ -96,5 +96,26 @@ public class TreeGameConstants
     public const string TreeGameInviteType = "treegame";
     public const long TreeGameInviteReward = 100;
     public const double RewardProportion = 0.05;
+    public const int DefaultRewardDecimal = 8;
+
+    public static readonly List<Reward> RewardsConfig = new List<Reward>()
+    {
+        new Reward()
+        {
+            Symbol = "ELF",
+            Decimals = 8
+        },
+        new Reward()
+        {
+            Symbol = "SGR-0",
+            Decimals = 8
+        }
+    };
 
 }
+public class Reward
+{
+    public string Symbol{ get; set; }
+    public int Decimals{ get; set; }
+}
+
