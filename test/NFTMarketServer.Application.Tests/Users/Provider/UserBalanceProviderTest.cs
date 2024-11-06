@@ -104,7 +104,7 @@ public class UserBalanceProviderTest : NFTMarketServerApplicationTestBase
             Query = @"query (
                     $skipCount:Int!,
                     $maxResultCount:Int!,
-                    $chainId:String,
+                    $chainId:String!,
                     $symbol:String,
                     $owner: String,
                     $address: String,

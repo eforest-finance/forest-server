@@ -9,6 +9,10 @@ namespace NFTMarketServer.Common;
 
 public static class NFTHelper
 {
+    public static string GetCollectionIdPre(string collectionId)
+    {
+        return collectionId.Replace(CommonConstant.NftSubfix, "");
+    }
     
     public static SymbolType GetCreateInputSymbolType(string symbol)
     {

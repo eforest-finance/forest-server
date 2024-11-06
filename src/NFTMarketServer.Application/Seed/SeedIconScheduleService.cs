@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
@@ -34,7 +35,6 @@ public class SeedIconScheduleService : ScheduleSyncDataService
     public override async Task<long> SyncIndexerRecordsAsync(string chainId,long lastEndHeight, long newIndexHeight)
     {
         var queryList = await _graphQlProvider.GetSyncTsmSeedRecordsAsync(chainId, lastEndHeight, newIndexHeight);
-        _logger.LogInformation("SyncSeedIconRecordsAsync queryList count: {count}", queryList.Count);
         long blockHeight = -1;
         if (CollectionUtilities.IsNullOrEmpty(queryList))
         {

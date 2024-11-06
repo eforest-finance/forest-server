@@ -11,6 +11,7 @@ using Forest;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Nest;
 using Newtonsoft.Json;
 using NFTMarketServer.Ai;
 using NFTMarketServer.Basic;
@@ -142,18 +143,23 @@ namespace NFTMarketServer.Market
                 var compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
                     input.SearchParam, skip, CommonConstant.IntOneThousand);
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
-                while (nftInfoIds.Count >= CommonConstant.IntOneThousand)
-                {
-                    skip += CommonConstant.IntOneThousand;
-                    compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
-                        input.SearchParam, skip, CommonConstant.IntOneThousand);
-                    var infoIds = compositeNFTDic?.Keys.ToList();
-                    if (infoIds.IsNullOrEmpty())
-                    {
-                        break;
-                    }
-                    nftInfoIds.AddRange(infoIds);
-                }
+                //while (nftInfoIds.Count >= CommonConstant.IntOneThousand) todo v2
+                // if (nftInfoIds.Count >= CommonConstant.IntOneThousand)
+                // {
+                //     skip += CommonConstant.IntOneThousand;
+                //     compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
+                //         input.SearchParam, skip, CommonConstant.IntOneThousand);
+                //     var infoIds = compositeNFTDic?.Keys.ToList();
+                //     if (infoIds.IsNullOrEmpty())
+                //     {
+                //         //break; todo v2
+                //     }
+                //     else
+                //     {
+                //         nftInfoIds.AddRange(infoIds);
+                //     }
+                //     
+                // }
                 
                 
                 if (nftInfoIds.IsNullOrEmpty())
@@ -164,7 +170,7 @@ namespace NFTMarketServer.Market
                         Items = new List<CollectedCollectionListingDto>()
                     };
                 }
-            }
+            } 
 
             var collectedNFTListings = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
                 input.MaxResultCount, input.Address, input.ChainList, nftInfoIds);

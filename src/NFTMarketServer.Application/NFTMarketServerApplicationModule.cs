@@ -113,6 +113,7 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, NFTActivitySyncScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, NFTActivityTransferSyncScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, UserBalanceSyncScheduleService>();
+            context.Services.AddTransient<IScheduleSyncDataService, TreePointsRecordsSyncScheduleService>();
 
             Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
             Configure<AwsS3Option>(configuration.GetSection("AwsS3"));
@@ -125,6 +126,7 @@ namespace NFTMarketServer
             Configure<StatisticsUserListRecordOptions>(configuration.GetSection("StatisticsUserListRecordOptions"));
             Configure<FuzzySearchOptions>(configuration.GetSection("FuzzySearchOptions"));
             Configure<PlatformNFTOptions>(configuration.GetSection("PlatformNFT"));
+            Configure<TreeGameOptions>(configuration.GetSection("TreeGame"));
 
             ConfigureTokenBucketService(context, configuration);
             ConfigureDistributedLocking(context, configuration);

@@ -67,11 +67,11 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 Query = @"query (
                     $skipCount:Int!,
                     $maxResultCount:Int!,
-                    $chainId:String,
-                    $symbol:String,
-                    $owner: String,
-                    $address: String,
-                    $excludedAddress: String,
+                    $chainId:String!,
+                    $symbol:String!,
+                    $owner:String,
+                    $address:String,
+                    $excludedAddress:String,
                     $expireTimeGt:Long
                 ){
                   nftListingInfo(
@@ -138,8 +138,8 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 Query = @"query (
                     $skipCount:Int!,
                     $maxResultCount:Int!,
-                    $chainIdList:[String],
-                    $nFTInfoIdList:[String],
+                    $chainIdList:[String!]!,
+                    $nFTInfoIdList:[String!]!,
                     $owner:String!,
                     $expireTimeGt:Long
                 ){
@@ -303,7 +303,7 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
             await _graphQlHelper.QueryAsync<IndexerCommonResult<IndexerNFTListingChangePage>>(new GraphQLRequest
             {
                 Query = @"
-			    query($skipCount:Int!,$chainId:String,$startBlockHeight:Long!) {
+			    query($skipCount:Int!,$chainId:String!,$startBlockHeight:Long!) {
                     data:nftListingChange(dto:{skipCount:$skipCount,chainId:$chainId,blockHeight:$startBlockHeight}) {
                         totalRecordCount,
                         indexerNFTListingChangeList:data{
@@ -332,8 +332,8 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 Query = @"query (
                     $skipCount:Int!,
                     $maxResultCount:Int!,
-                    $chainId:String,
-                    $symbol:String,
+                    $chainId:String!,
+                    $symbol:String!,
                     $owner: String,
                     $address: String,
                     $excludedAddress: String,

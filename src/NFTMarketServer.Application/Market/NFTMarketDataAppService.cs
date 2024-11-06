@@ -26,7 +26,7 @@ public class NFTMarketDataAppService : NFTMarketServerAppService, INFTMarketData
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTInfoMarketDatas>(new GraphQLRequest
         {
             Query = @"
-			 		    query ($skipCount:Int!,$maxResultCount:Int!,$nFTInfoId:String,$timestampMin:Long!,$timestampMax:Long!) {
+			 		    query ($skipCount:Int!,$maxResultCount:Int!,$nFTInfoId:String!,$timestampMin:Long!,$timestampMax:Long!) {
                   data:marketData(input:{skipCount: $skipCount
                                     ,maxResultCount:$maxResultCount
                                     ,nFTInfoId:$nFTInfoId

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -74,17 +75,23 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<NFTCollectionIndexDto>> GetNFTCollectionsAsync(GetNFTCollectionsInput input)
         {
             if (input.SkipCount < 0) return BuildInitNFTCollectionIndexDto();
+
+            if (!input.AddressList.IsNullOrEmpty())
+            {
+                input.AddressList = input.AddressList.Distinct().ToList();
+            }
+            
             var nftCollectionIndexs =
                 await _nftCollectionProvider.GetNFTCollectionsIndexAsync(input.SkipCount,
                     input.MaxResultCount, input.AddressList.IsNullOrEmpty()?new List<string>{input.Address}:input.AddressList);
-            if (nftCollectionIndexs == null) return BuildInitNFTCollectionIndexDto();
-
+            if (nftCollectionIndexs==null || nftCollectionIndexs.IndexerNftCollections.IsNullOrEmpty()) return BuildInitNFTCollectionIndexDto();
+            
             var totalCount = nftCollectionIndexs.TotalRecordCount;
             if (nftCollectionIndexs.IndexerNftCollections == null)
             {
                 return BuildInitNFTCollectionIndexDto();
             }
-
+            
             var addresses = nftCollectionIndexs.IndexerNftCollections.Select(o => o.CreatorAddress).Distinct().ToList();
             var accounts = await _userAppService.GetAccountsAsync(addresses);
 
@@ -183,6 +190,7 @@ namespace NFTMarketServer.NFT
 
             var resultList = extensionList
                 .Select(index => MapForTrendingCollectionsDto(index, collectionDictionary, recentImageDic))
+
                 .ToList();
             return new PagedResultDto<TrendingCollectionsDto>
             {
@@ -194,6 +202,7 @@ namespace NFTMarketServer.NFT
 
         public async Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCollectionsAsync()
         {
+
             var recommendedCollectionsOptions = _optionsMonitor.CurrentValue;
             if (recommendedCollectionsOptions.RecommendedCollections.IsNullOrEmpty())
             {
@@ -372,6 +381,26 @@ namespace NFTMarketServer.NFT
             return trendingCollectionsDto;
         }
         
+        private TrendingCollectionsDto MapForTrendingCollectionsDto(NFTCollectionExtensionIndex index, 
+            Dictionary<string, IndexerNFTCollection> collectionInfos)
+        {
+            var trendingCollectionsDto =
+                _objectMapper.Map<NFTCollectionExtensionIndex, TrendingCollectionsDto>(index);
+            
+            trendingCollectionsDto.FloorChange = index.CurrentDayFloorChange;
+            trendingCollectionsDto.VolumeTotal = index.CurrentMonthVolumeTotal;
+            trendingCollectionsDto.VolumeTotalChange = index.CurrentMonthVolumeTotalChange;
+
+            if (collectionInfos != null && collectionInfos.TryGetValue(index.Id, out var info))
+            { 
+                trendingCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
+                trendingCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
+                trendingCollectionsDto.PreviewImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
+            }
+            
+            return trendingCollectionsDto;
+        }
+        
         private SearchCollectionsFloorPriceDto MapForSearchNftCollectionsFloorPriceDto(NFTCollectionExtensionIndex index)
         {
             return _objectMapper.Map<NFTCollectionExtensionIndex, SearchCollectionsFloorPriceDto>(index);
@@ -467,6 +496,8 @@ namespace NFTMarketServer.NFT
 
         public async Task<PagedResultDto<SearchNFTCollectionsDto>> GetMyHoldNFTCollectionsAsync(GetMyHoldNFTCollectionsInput input)
         {
+            var stopwatch = Stopwatch.StartNew();
+            Logger.LogDebug("GetMyHoldNFTCollectionsAsync 0");
             var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput()
             {
                 Address = input.Address,
@@ -475,6 +506,8 @@ namespace NFTMarketServer.NFT
                 SkipCount = CommonConstant.IntZero
             };
             var userBalanceList = await _userBalanceProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+            var spend1 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetMyHoldNFTCollectionsAsync 1 {A}",spend1);
             if (userBalanceList.IsNullOrEmpty())
             {
                 return new PagedResultDto<SearchNFTCollectionsDto>()
@@ -489,7 +522,8 @@ namespace NFTMarketServer.NFT
 
             var collectionDictionary = await _nftCollectionProvider.GetNFTCollectionIndexByIdsAsync(collectionIds);
             _logger.LogDebug("GetMyHoldNFTCollectionsAsync for debug query userBalance collectionDictionary:{A}", JsonConvert.SerializeObject(collectionDictionary));
-
+            var spend2 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetMyHoldNFTCollectionsAsync 2 {A} {B}",spend2,spend2-spend1);
             if (collectionDictionary == null || collectionDictionary.Count == CommonConstant.IntZero)
             {
                 return new PagedResultDto<SearchNFTCollectionsDto>()
@@ -504,7 +538,8 @@ namespace NFTMarketServer.NFT
                 CollectionIdList = collectionIds
             });
             var extensionList = tuple.Item2;
-
+            var spend3 = stopwatch.ElapsedMilliseconds;
+            Logger.LogDebug("GetMyHoldNFTCollectionsAsync 3 {A} {B}",spend3,spend3-spend2);
             List<SearchNFTCollectionsDto> nftCollectionIndexDtos = new List<SearchNFTCollectionsDto>();
             foreach (var indexerNFTCollection in collectionDictionary.Values)
             {

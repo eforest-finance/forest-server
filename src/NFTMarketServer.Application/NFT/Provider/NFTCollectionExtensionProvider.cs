@@ -226,8 +226,11 @@ public class NFTCollectionExtensionProvider : INFTCollectionExtensionProvider, I
         SearchCollectionsFloorPriceInput input)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<NFTCollectionExtensionIndex>, QueryContainer>>();
-        mustQuery.Add(q => q.Terms(t => t.Field(f => f.Id).Terms(input.CollectionIdList)));
-        
+        if(!input.CollectionIdList.IsNullOrEmpty())
+        {
+            mustQuery.Add(q => q.Terms(t => t.Field(f => f.Id).Terms(input.CollectionIdList)));
+        }
+
         var mustNotQuery = new List<Func<QueryContainerDescriptor<NFTCollectionExtensionIndex>, QueryContainer>>();
         
         var hideCollectionInfo = _hideCollectionInfoOptionsMonitor?.CurrentValue;

@@ -29,7 +29,7 @@ public class SymbolMarketTokenProvider : ISymbolMarketTokenProvider, ISingletonD
             Query = @"query(
                 $skipCount: Int!
                 ,$maxResultCount: Int!
-                ,$address: [String]
+                ,$address: [String!]!
             ){
                 data: symbolMarketTokens(dto:{
                 skipCount: $skipCount

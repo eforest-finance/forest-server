@@ -16,10 +16,12 @@ using NFTMarketServer.Localization;
 using NFTMarketServer.Middleware;
 using NFTMarketServer.MongoDB;
 using NFTMarketServer.MultiTenancy;
+using NFTMarketServer.TreeGame;
 using NFTMarketServer.Users.Provider;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Providers.MongoDB.Configuration;
+using Serilog;
 using StackExchange.Redis;
 using Volo.Abp;
 using Volo.Abp.Account;
@@ -105,7 +107,7 @@ public class NFTMarketServerAuthServerModule : AbpModule
         
         ConfigureOrleans(context, configuration);
         context.Services.AddSingleton<IUserInformationProvider, UserInformationProvider>();
-        
+
         Configure<AbpOpenIddictExtensionGrantsOptions>(options =>
         {
             options.Grants.Add("signature", new SignatureGrantHandler());

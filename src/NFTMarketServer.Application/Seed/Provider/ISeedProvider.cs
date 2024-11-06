@@ -10,6 +10,5 @@ public interface ISeedProvider
 {
     public Task<SeedInfoDto> SearchSeedInfoAsync(SearchSeedInput input);
     public Task<SeedInfoDto> GetSeedInfoAsync(QuerySeedInput input);
-    public Task<MySeedDto> MySeedAsync(MySeedInput input);
     public Task<IndexerSpecialSeeds> GetSpecialSeedsAsync(QuerySpecialListInput input);
 }
