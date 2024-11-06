@@ -1656,7 +1656,7 @@ namespace NFTMarketServer.NFT
                 BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
-                Balance = balance?.Amount/(decimal)Math.Pow(10, 0) ?? 0
+                Balance = balance==null?0:balance.Amount/(decimal)Math.Pow(10, balance.Decimals)
             };
 
 
