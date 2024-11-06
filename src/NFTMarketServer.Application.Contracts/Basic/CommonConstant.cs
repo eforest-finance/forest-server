@@ -39,7 +39,7 @@ public static class CommonConstant
     public const int CacheExpirationDays = 365;
     public const long EsLimitTotalNumber = 10000;
     public const int CollectionActivityNFTLimit = 1000;
-    public const int ProfileTotalNumber = 50;
+    public const int ProfileTotalNumber = 5000;
     
     public const string CollectionTypeSeed = "seed";
     public const string CollectionSeedName = "SEED";
