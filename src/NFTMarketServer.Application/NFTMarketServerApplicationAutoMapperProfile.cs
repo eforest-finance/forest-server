@@ -435,6 +435,14 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForMember(destination => destination.Symbol,
                 opt => opt.MapFrom(source => source.SeedOwnedSymbol));
         CreateMap<NFTActivityIndex, NFTActivityItem>().ForMember(destination => destination.NFTInfoId,
-            opt => opt.MapFrom(source => source.NftInfoId));
+            opt => opt.MapFrom(source => source.NftInfoId))
+            .ForMember(des => des.PriceTokenInfo,
+                opt => opt.MapFrom(source => new NFTMarketServer.NFT.Index.TokenInfoDto
+                {
+                    Id = source.PriceTokenInfo.Id,
+                    ChainId = source.PriceTokenInfo.ChainId,
+                    Symbol = source.PriceTokenInfo.Symbol,
+                    Decimals = source.PriceTokenInfo.Decimals
+                }));;
     }
 }
