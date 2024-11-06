@@ -2109,9 +2109,15 @@ namespace NFTMarketServer.NFT
             var seedTask = Task.Run(async () =>
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
-                var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
-                var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault(), "Hold-Seed");
+                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                //todo v2
+                // var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+
+                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                //todo v2
+                // var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
+                //     input.Address, input.ChainList.FirstOrDefault(), "Hold-Seed");
+                
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
 
@@ -2135,9 +2141,15 @@ namespace NFTMarketServer.NFT
                 var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
                     .GroupBy(info => info.Id)
                     .ToDictionary(info => info.Key, info => info.First().Decimals);
-                var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
-                var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault(), "Hold-NFT");
+
+                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                //todo v2
+                // var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+
+                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                //todo v2
+                // var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
+                //     input.Address, input.ChainList.FirstOrDefault(), "Hold-NFT");
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
 
@@ -2271,14 +2283,18 @@ namespace NFTMarketServer.NFT
                 
                 var spend2 = stopwatch.ElapsedMilliseconds;
                 Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 2 {A} {B}",spend2,spend2-spend1);
-                
-                var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+
+                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                //todo v2
+                // var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
                 
                 var spend3 = stopwatch.ElapsedMilliseconds;
                 Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 3 {A} {B}",spend3,spend3-spend2);
                 
-                var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault(), "Create-Seed");
+                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                //todo v2
+                // var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
+                //     input.Address, input.ChainList.FirstOrDefault(), "Create-Seed");
 
                 var spend4 = stopwatch.ElapsedMilliseconds;
                 Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 4 {A} {B}",spend4,spend4-spend3);
@@ -2329,14 +2345,18 @@ namespace NFTMarketServer.NFT
                 
                 var spend3 = stopwatch.ElapsedMilliseconds;
                 Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 3 {A} {B}",spend3,spend3-spend2);
-                
-                var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+
+                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                //todo v2
+                // var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
                 
                 var spend4 = stopwatch.ElapsedMilliseconds;
                 Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 4 {A} {B}",spend4,spend4-spend3);
-                
-                var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault(), "Create-NFT");
+
+                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                //todo v2
+                // var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
+                //     input.Address, input.ChainList.FirstOrDefault(), "Create-NFT");
                 
                 var spend5 = stopwatch.ElapsedMilliseconds;
                 Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 5 {A} {B}",spend5,spend5-spend4);
