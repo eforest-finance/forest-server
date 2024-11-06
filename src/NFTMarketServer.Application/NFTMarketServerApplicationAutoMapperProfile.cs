@@ -434,5 +434,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             opt => opt.MapFrom(source => source.Symbol))
             .ForMember(destination => destination.Symbol,
                 opt => opt.MapFrom(source => source.SeedOwnedSymbol));
+        CreateMap<NFTActivityIndex, NFTActivityItem>();
     }
 }
