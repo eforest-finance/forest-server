@@ -55,7 +55,7 @@ namespace NFTMarketServer.NFT
         private readonly IDistributedEventBus _distributedEventBus;
         private readonly IObjectMapper _objectMapper;
         private readonly INFTInfoExtensionProvider _nftInfoExtensionProvider;
-
+ 
         private readonly INESTRepository<NFTInfoIndex, string> _nftInfoIndexRepository;
         private readonly INESTRepository<NFTInfoNewIndex, string> _nftInfoNewIndexRepository;
         private readonly ISeedSymbolSyncedProvider _seedSymbolSyncedProvider;
