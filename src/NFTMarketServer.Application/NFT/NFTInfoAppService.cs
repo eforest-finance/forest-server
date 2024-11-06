@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
@@ -2262,11 +2263,26 @@ namespace NFTMarketServer.NFT
 
             var seedTask = Task.Run(async () =>
             {
+                var stopwatch = Stopwatch.StartNew();
+                var spend1 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 1 {A}",spend1);
+                
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
+                
+                var spend2 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 2 {A} {B}",spend2,spend2-spend1);
+                
                 var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+                
+                var spend3 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 3 {A} {B}",spend3,spend3-spend2);
+                
                 var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
                     input.Address, input.ChainList.FirstOrDefault(), "Create-Seed");
 
+                var spend4 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 4 {A} {B}",spend4,spend4-spend3);
+                
                 var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput
                 {
                     Address = input.Address,
@@ -2277,24 +2293,60 @@ namespace NFTMarketServer.NFT
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+                
+                var spend5 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 5 {A} {B}",spend5,spend5-spend4);
+                
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
 
-                return PageSeedBriefInfoIndexDto(input, seedResult.Item2, maxOfferDict, accountDtoDict, minListDict,
+                var spend6 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 6 {A} {B}",spend6,spend6-spend5);
+                
+                var result = PageSeedBriefInfoIndexDto(input, seedResult.Item2, maxOfferDict, accountDtoDict, minListDict,
                     userBalanceList);
+                
+                var spend7 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-Seed 7 {A} {B}",spend7,spend7-spend6);
+
+                return result;
+
             });
 
             var nftTask = Task.Run(async () =>
             {
+                var stopwatch = Stopwatch.StartNew();
+                var spend1 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 1 {A}",spend1);
+
                 var nftResult = await GetAllNFTBriefInfosAsync(getCompositeNFTInfosInput);
+                
+                var spend2 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 2 {A} {B}",spend2,spend2-spend1);
+                
                 var nftDecimalDict = nftResult.Item2.Where(info => info != null && !info.Id.IsNullOrEmpty())
                     .ToDictionary(info => info.Id, info => info.Decimals);
+                
+                var spend3 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 3 {A} {B}",spend3,spend3-spend2);
+                
                 var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+                
+                var spend4 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 4 {A} {B}",spend4,spend4-spend3);
+                
                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
                     input.Address, input.ChainList.FirstOrDefault(), "Create-NFT");
+                
+                var spend5 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 5 {A} {B}",spend5,spend5-spend4);
+                
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
 
+                var spend6 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 6 {A} {B}",spend6,spend6-spend5);
+                
                 var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput
                 {
                     Address = input.Address,
@@ -2306,11 +2358,20 @@ namespace NFTMarketServer.NFT
                 };
                 var userBalanceList =
                     await _userBalanceIndexProvider.GetValidUserBalanceInfosAsync(queryUserBalanceIndexInput);
+                
+                var spend7 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 7 {A} {B}",spend7,spend7-spend6);
+                
                 _logger.LogInformation("GetMyCreatedNFTInfosAsyncV2 NFT userBalanceListCount:{userBalanceList}",
                     userBalanceList.Count);
 
-                return PageCompositeNFTInfoIndexDto(input, nftResult.Item2, maxOfferDict, accountDtoDict, minListDict,
+                var result =  PageCompositeNFTInfoIndexDto(input, nftResult.Item2, maxOfferDict, accountDtoDict, minListDict,
                     nftDecimalDict, userBalanceList);
+                
+                var spend8 = stopwatch.ElapsedMilliseconds;
+                Logger.LogDebug("GetMyCreatedNFTInfosAsyncV2-NFT 8 {A} {B}",spend8,spend8-spend7);
+
+                return result;
             });
             await Task.WhenAll(seedTask, nftTask);
             seedPageResult = await seedTask;
