@@ -428,7 +428,7 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<NFTActivityIndex, NFTActivityItem>().ForMember(destination => destination.NFTInfoId,
             opt => opt.MapFrom(source => source.NftInfoId))
             .ForMember(des => des.PriceTokenInfo,
-                opt => opt.MapFrom(source => new NFTMarketServer.NFT.Dtos.TokenInfoDto
+                opt => opt.MapFrom(source => new NFTMarketServer.NFT.Index.TokenInfoDto
                 {
                     Id = source.PriceTokenInfo.Id,
                     ChainId = source.PriceTokenInfo.ChainId,
