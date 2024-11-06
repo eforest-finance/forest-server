@@ -2,6 +2,7 @@ namespace NFTMarketServer.Basic;
 
 public static class CommonConstant
 {
+    public const string NftSubfix = "0";
     public const string Coin_ELF = "ELF";
     public const int Coin_ELF_Decimals = 8;
     public const long LongError = -1;
