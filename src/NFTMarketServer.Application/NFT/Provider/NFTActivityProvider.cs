@@ -181,10 +181,8 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
 
         var list = await _nftActivityIndexRepository.GetSortListAsync(Filter, limit: maxResultCount,
             skip: skipCount, sortFunc: GetSortForNFTActivityIndexs());
-        var dataList1 = _objectMapper.Map<List<NFTActivityIndex>, List<NFTActivityDto>>(list.Item2);
-        
-        var dataList = _objectMapper.Map<List<NFTActivityDto>, List<NFTActivityItem>>(dataList1);
-        
+        var dataList = _objectMapper.Map<List<NFTActivityIndex>, List<NFTActivityItem>>(list.Item2);
+
         var totalCount = list?.Item1;
         if (list?.Item1 == CommonConstant.EsLimitTotalNumber)
         {
