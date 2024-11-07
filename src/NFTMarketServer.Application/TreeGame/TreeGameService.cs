@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
+using MassTransit.Mediator;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
@@ -11,6 +13,7 @@ using NFTMarketServer.Tree.Provider;
 using NFTMarketServer.TreeGame.Provider;
 using NFTMarketServer.Users;
 using NFTMarketServer.Users.Index;
+using Volo.Abp.Caching;
 using Volo.Abp.ObjectMapping;
 
 namespace NFTMarketServer.TreeGame
@@ -24,6 +27,10 @@ namespace NFTMarketServer.TreeGame
         private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
         private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
         private readonly IUserAppService _userAppService;
+        private readonly IDistributedCache<TreeClaimPointsCacheItem> _claimPointsCache;
+        private const string ClaimCatchKeyPrefix = "claim_points_";
+        private const long ClaimCatchExpireTime = 30000;//30s
+
 
 
         public TreeGameService(
@@ -33,7 +40,8 @@ namespace NFTMarketServer.TreeGame
             ILogger<TreeGameService> logger,
             IObjectMapper objectMapper,
             IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
-            IUserAppService userAppService)
+            IUserAppService userAppService,
+            IDistributedCache<TreeClaimPointsCacheItem> claimPointsCache)
 
         {
             _logger = logger;
@@ -43,6 +51,8 @@ namespace NFTMarketServer.TreeGame
             _treeGamePointsDetailProvider = treeGamePointsDetailProvider;
             _treeActivityProvider = treeActivityProvider;
             _userAppService = userAppService;
+            _claimPointsCache = claimPointsCache;
+
         }
 
         public async Task<TreeGameUserInfoIndex> InitNewTreeGameUserAsync(string address, string nickName,string parentAddress)
@@ -367,8 +377,43 @@ namespace NFTMarketServer.TreeGame
             return response;
         }
 
+        private async Task<bool> CheckTreeClaimPointsCacheAsync(string address, PointsDetailType type)
+        {
+            var cacheKey = ClaimCatchKeyPrefix + address + "_" +type;
+            var treeClaimPointsCacheItem = await _claimPointsCache.GetAsync(cacheKey);
+            if (treeClaimPointsCacheItem == null)
+            {
+                return true;
+            }
+            var currentTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+            if ((currentTime - treeClaimPointsCacheItem.ClaimTime) >= ClaimCatchExpireTime)
+            {
+                return true;
+            }
+            return false;
+        }
+        private async Task SetTreeClaimPointsCacheAsync(string address,PointsDetailType type, long time)
+        {
+            var cacheKey = ClaimCatchKeyPrefix + address + "_" + type;
+            var cacheOptions = new DistributedCacheEntryOptions
+            {
+                SlidingExpiration = TimeSpan.FromSeconds(ClaimCatchExpireTime/1000)
+            };
+            var treeClaimPointsCacheItem = new TreeClaimPointsCacheItem()
+            {
+                ClaimTime = time
+            };
+            await _claimPointsCache.SetAsync(cacheKey, treeClaimPointsCacheItem, cacheOptions);
+        }
+
         public async Task<TreePointsClaimOutput> ClaimAsync(TreePointsClaimRequest request)
         {
+            var checkCache = await CheckTreeClaimPointsCacheAsync(request.Address, request.PointsDetailType);
+            if (!checkCache)
+            {
+                throw new Exception(
+                    "You have already extracted it, please be patient and wait for the confirmation of the results on the chain.");
+            }
             var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(request.Address);
             if (treeUserIndex == null)
             {
@@ -415,6 +460,7 @@ namespace NFTMarketServer.TreeGame
             //build requestHash
             var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
             var requestHash = BuildRequestHash(string.Concat(request.Address, claimPointsAmount,(int)request.PointsDetailType, opTime));
+            await SetTreeClaimPointsCacheAsync(request.Address, request.PointsDetailType, opTime);
             var response = new TreePointsClaimOutput()
             {
                 Address = request.Address,
