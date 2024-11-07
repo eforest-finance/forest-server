@@ -48,10 +48,10 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
                     businessQueryChainType, chainId, lastEndHeight, newIndexHeight);
                 var preLastEndHeight = lastEndHeight;
                 var blockHeight = await SyncIndexerRecordsAsync(chainId, lastEndHeight, newIndexHeight);
-                if (preLastEndHeight == lastEndHeight && lastEndHeight < newIndexHeight)
+                if (blockHeight > 0 && preLastEndHeight == lastEndHeight && lastEndHeight < newIndexHeight)
                 {
                     var realBlockHeight = blockHeight;
-                    blockHeight += 1;
+                    blockHeight = Math.Max(realBlockHeight, preLastEndHeight) + 1;
                     _logger.LogInformation(
                         "blockHeight keep same then change for businessType: {businessQueryChainType} chainId: {chainId} " +
                         "preLastEndHeight:{A} realBlockHeight: {B} BlockHeight:{C}",
