@@ -1368,12 +1368,18 @@ namespace NFTMarketServer.NFT
                 MaxResultCount = CommonConstant.IntOne
             };
             var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
+           
             if (listingDto != null && listingDto.TotalCount > CommonConstant.IntZero)
             {
+                _logger.Debug("UpdateNFTOtherInfoAsync nftInfoNewIndex.Id={A} listingDto.Id={B} listingIsNull={C} listing price={D}",
+                    nftInfoNewIndex.Id,
+                    listingDto.Items[CommonConstant.IntZero]?.Id, listingDto.Items[CommonConstant.IntZero] == null,listingDto.Items[CommonConstant.IntZero]?.Prices);
                 UpdateMinListingInfo(nftInfoNewIndex, listingDto.Items[CommonConstant.IntZero]);
             }
             else
             {
+                _logger.Debug("UpdateNFTOtherInfoAsync nftInfoNewIndex.Id={A} listingIsNull",
+                    nftInfoNewIndex.Id);
                 UpdateMinListingInfo(nftInfoNewIndex, null);
             }
 
@@ -1417,7 +1423,7 @@ namespace NFTMarketServer.NFT
 
         private bool UpdateMinListingInfo(NFTInfoNewIndex nftInfoIndex, IndexerNFTListingInfo listingDto)
         {
-            _logger.Debug("UpdateMinListingInfo nftInfoIndexId={A} listingDto={B}", nftInfoIndex.Id,
+            _logger.Debug("UpdateMinListingInfo nftInfoIndexId={A} nftInfoIndex.ListingId={A2} listingDto={B}", nftInfoIndex.Id,nftInfoIndex.ListingId,
                 JsonConvert.SerializeObject(listingDto));
             if (listingDto == null && nftInfoIndex.ListingId.IsNullOrEmpty())
             {
