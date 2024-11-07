@@ -1436,7 +1436,8 @@ namespace NFTMarketServer.NFT
                 return false;
             }
 
-            if (listingDto != null && listingDto.Id.Equals(nftInfoIndex.ListingId))
+            if (listingDto != null && listingDto.Id.Equals(nftInfoIndex.ListingId) &&
+                nftInfoIndex.ListingPrice == listingDto.Prices)
             {
                 return false;
             }
