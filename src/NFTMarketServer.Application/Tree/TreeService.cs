@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Tree.Provider;
@@ -55,7 +56,23 @@ public class TreeService : ITreeService, ISingletonDependency
 
     public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
     {
-        return await _treeActivityProvider.GetTreeActivityListAsync(request);
+        var activityList = await _treeActivityProvider.GetTreeActivityListAsync(request);
+        var sortActivityList = new List<TreeActivityIndex>();
+        var ongoingList = activityList
+            .Where(i => i.TreeActivityStatus == TreeActivityStatus.Active && i.LeftReward > 0 &&
+                        i.BeginDateTime < DateTime.UtcNow).OrderBy(i=>i.BeginDateTime).ToList();
+        var toStartList = activityList
+            .Where(i => i.TreeActivityStatus == TreeActivityStatus.Active && i.LeftReward > 0 &&
+                        i.BeginDateTime >= DateTime.UtcNow).OrderBy(i=>i.BeginDateTime).ToList();
+        var notStartList = activityList
+            .Where(i => i.TreeActivityStatus == TreeActivityStatus.NotStart && i.LeftReward > 0).OrderBy(i=>i.BeginDateTime).ToList();
+        var endList = activityList
+            .Where(i => i.LeftReward <= 0).OrderBy(i=>i.BeginDateTime).ToList();
+        sortActivityList.AddRange(ongoingList);
+        sortActivityList.AddRange(toStartList);
+        sortActivityList.AddRange(notStartList);
+        sortActivityList.AddRange(endList);
+        return sortActivityList;
     }
 
     public async Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id)
