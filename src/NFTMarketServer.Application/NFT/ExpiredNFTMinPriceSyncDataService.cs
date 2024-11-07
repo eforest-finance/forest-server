@@ -40,7 +40,7 @@ public class ExpiredNftMinPriceSyncDataService : ScheduleSyncDataService
     private const int HeightExpireMinutes = 10;
     private readonly IDistributedCache<List<string>> _distributedCache;
     
-    public ExpiredNftMinPriceSyncDataService(ILogger<NftInfoSyncDataService> logger,
+    public ExpiredNftMinPriceSyncDataService(ILogger<ExpiredNftMinPriceSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         INFTInfoAppService nftInfoAppService, 
         IChainAppService chainAppService,
