@@ -152,7 +152,6 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
         _treeGameService = context.HttpContext.RequestServices.GetRequiredService<ITreeGameService>();
 
-        _logger.LogInformation("miniapp user login:loginUser:{user},inviteFrom{A},inviteType:{B},nickName:{C}", address,inviteFrom,inviteType,nickName);
 
 
         var userName = address;
@@ -160,13 +159,16 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         {
             userName = caHash;
         }
-
+        
         var user = await userManager.FindByNameAsync(userName);
         _logger.LogInformation("create token user:{A} userName:{B} address:{C} caHash:{D}",JsonConvert.SerializeObject(user), userName, address, caHash);
 
+        _logger.LogInformation("miniapp user login:loginUser:{userName},address:{address}, inviteFrom{A},inviteType:{B},nickName:{C}, userDto:{user}", 
+            userName,address,inviteFrom,inviteType,nickName,JsonConvert.SerializeObject(user));
+
         if (user == null)
         {
-            _logger.LogInformation("miniapp user login:loginUser:{user} is not exist", address);
+            _logger.LogInformation("miniapp user login:loginUser:{user} is not exist", userName);
 
             var userId = Guid.NewGuid();
 
@@ -185,7 +187,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         }
         else
         {
-            _logger.LogInformation("miniapp user login:loginUser:{user} is exist", address);
+            _logger.LogInformation("miniapp user login:loginUser:{user} is exist", userName);
 
             UserSourceInput userSourceInput = new UserSourceInput
             {
