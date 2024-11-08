@@ -182,7 +182,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
             var activityId = item.ActivityId;
             var activity = await _treeActivityProvider.GetTreeActivityDetailAsync(activityId);
             var leftReward = activity.LeftReward - activity.RedeemRewardOnce;
-            activity.LeftReward = leftReward;
+            activity.LeftReward = leftReward <=0 ? 0 : leftReward;
             if (leftReward <= 0)
             {
                 activity.TreeActivityStatus = TreeActivityStatus.Ended;

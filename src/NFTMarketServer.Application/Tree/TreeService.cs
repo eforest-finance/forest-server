@@ -91,6 +91,11 @@ public class TreeService : ITreeService, ISingletonDependency
                 break;
             }
 
+            if (record.LeftReward < 0)
+            {
+                record.LeftReward = 0;
+            }
+
             var activityRecordGrain = _clusterClient.GetGrain<ITreeUserActivityRecordGrain>(string.Concat(request.Address,"_",record.Id));
             var activityRecord = await activityRecordGrain.GetTreeUserActivityRecordAsync();
             if (activityRecord == null || activityRecord.Data == null || activityRecord.Data.ClaimCount <= 0)
@@ -123,6 +128,10 @@ public class TreeService : ITreeService, ISingletonDependency
         else
         {
             sortActivityDto.CanClaim = false;
+        }
+        if (sortActivityDto.LeftReward < 0)
+        {
+            sortActivityDto.LeftReward = 0;
         }
         return sortActivityDto;
     }
