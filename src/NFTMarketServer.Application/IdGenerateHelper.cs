@@ -127,4 +127,9 @@ public class IdGenerateHelper
 
         return HashHelper.ComputeFrom(str).ToHex();
     }
+    
+    public static string GetTsmSeedSymbolId(string chainId,string seedOwnedSymbol)
+    {
+        return GetId(chainId, seedOwnedSymbol);
+    }
 }

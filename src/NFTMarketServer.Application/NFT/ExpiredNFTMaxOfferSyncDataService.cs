@@ -38,7 +38,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
     private const int HeightExpireSeconds = 2;
     private readonly IDistributedCache<List<string>> _distributedCache;
 
-    public ExpiredNftMaxOfferSyncDataService(ILogger<NftInfoSyncDataService> logger,
+    public ExpiredNftMaxOfferSyncDataService(ILogger<ExpiredNftMaxOfferSyncDataService> logger,
         IGraphQLProvider graphQlProvider,
         INFTInfoAppService nftInfoAppService,
         IChainAppService chainAppService,

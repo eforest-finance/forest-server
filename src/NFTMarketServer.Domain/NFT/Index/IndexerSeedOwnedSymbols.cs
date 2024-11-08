@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NFTMarketServer.NFT.Index;
 
-public class IndexerSeedOwnedSymbols : IndexerCommonResult<IndexerSeedOwnedSymbols>
+public class IndexerSeedOwnedSymbols
 {
     public long TotalRecordCount { get; set; }
     public List<IndexerSeedOwnedSymbol> IndexerSeedOwnedSymbolList { get; set; }
