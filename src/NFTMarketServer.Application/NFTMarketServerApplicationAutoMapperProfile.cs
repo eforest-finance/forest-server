@@ -428,7 +428,9 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<TreeGameUserInfoIndex, TreeGameUserInfoDto>();
         CreateMap<PointsDetail, TreeGamePointsDetailInfoIndex>();
         CreateMap<TreeGamePointsDetailInfoIndex, PointsDetail>();
-
+        CreateMap<TreeGamePointsDetailInfoDto, TreeGamePointsDetailInfoIndex>();
+        CreateMap<TreeGamePointsDetailInfoIndex, TreeGamePointsDetailInfoDto>();
+        
         CreateMap<CreateTreeActivityRequest, TreeActivityIndex>();
         CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>().ForMember(destination => destination.SeedSymbol,
             opt => opt.MapFrom(source => source.Symbol))
