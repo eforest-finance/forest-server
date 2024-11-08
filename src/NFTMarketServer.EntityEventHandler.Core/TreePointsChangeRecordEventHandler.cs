@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.Grains.Grain.Tree;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
@@ -14,6 +15,7 @@ using NFTMarketServer.TreeGame;
 using NFTMarketServer.TreeGame.Provider;
 using NFTMarketServer.Users.Index;
 using NFTMarketServer.Users.Provider;
+using Orleans;
 using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
@@ -32,6 +34,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
     private readonly IObjectMapper _objectMapper;
     private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
     private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
+    private readonly IClusterClient _clusterClient;
 
 
 
@@ -42,6 +45,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         IUserBalanceProvider userBalanceProvider,
         ITreeGamePointsDetailProvider treeGamePointsDetailProvider,
         IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
+        IClusterClient clusterClient,
         IObjectMapper objectMapper)
     {
         _logger = logger;
@@ -52,6 +56,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         _objectMapper = objectMapper;
         _treeGamePointsDetailProvider = treeGamePointsDetailProvider;
         _platformOptionsMonitor = platformOptionsMonitor;
+        _clusterClient = clusterClient;
 
     }
 
@@ -170,6 +175,15 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
             //record user join this activity count
             var activityId = item.ActivityId;
+            var activityRecordGrain = _clusterClient.GetGrain<ITreeUserActivityRecordGrain>(string.Concat(item.Address,"_",item.ActivityId));
+            var activityRecord = await activityRecordGrain.GetTreeUserActivityRecordAsync();
+            await activityRecordGrain.SetTreeUserActivityRecordAsync(new TreeUserActivityRecordGrainDto()
+            {
+                Id = item.Id,
+                ActivityId = item.ActivityId,
+                Address = item.Address,
+                ClaimCount = activityRecord.Data.ClaimCount+1
+            });
         }
     }
     private async Task<TreeInfo> GetTreeGameTreeInfoAsync(int treeLevel)

@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NFTMarketServer.Grains.Grain.Tree;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Tree.Provider;
+using Orleans;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.ObjectMapping;
 using GuidHelper = NFTMarketServer.Common.GuidHelper;
 
 namespace NFTMarketServer.Tree;
@@ -16,9 +19,9 @@ public interface ITreeService
     Task<bool> ModifyTreeActivityHideFlagAsync(ModifyTreeActivityHideFlagRequest request);
     Task<bool> ModifyTreeActivityStatusAsync(ModifyTreeActivityStatusRequest request);
     
-    Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request);
+    Task<List<TreeActivityDto>> GetTreeActivityListAsync(GetTreeActivityListInput request);
     
-    Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id);
+    Task<TreeActivityDto> GetTreeActivityDetailAsync(string id, string address);
     Task<string> CreateNewTreeActivityIdAsync();
 
 
@@ -28,10 +31,18 @@ public interface ITreeService
 public class TreeService : ITreeService, ISingletonDependency
 {
     private readonly ITreeActivityProvider _treeActivityProvider;
+    private readonly IObjectMapper _objectMapper;
+    private readonly IClusterClient _clusterClient;
 
-    public TreeService(ITreeActivityProvider treeActivityProvider)
+    public TreeService(ITreeActivityProvider treeActivityProvider,
+        IClusterClient clusterClient,
+        IObjectMapper objectMapper
+        )
     {
         _treeActivityProvider = treeActivityProvider;
+        _objectMapper = objectMapper;
+        _clusterClient = clusterClient;
+
     }
 
     public async Task<string> GenerateIdAsync()
@@ -54,7 +65,7 @@ public class TreeService : ITreeService, ISingletonDependency
         return await _treeActivityProvider.ModifyTreeActivityStatusAsync(request);
     }
 
-    public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
+    public async Task<List<TreeActivityDto>> GetTreeActivityListAsync(GetTreeActivityListInput request)
     {
         var activityList = await _treeActivityProvider.GetTreeActivityListAsync(request);
         var sortActivityList = new List<TreeActivityIndex>();
@@ -72,12 +83,48 @@ public class TreeService : ITreeService, ISingletonDependency
         sortActivityList.AddRange(toStartList);
         sortActivityList.AddRange(notStartList);
         sortActivityList.AddRange(endList);
-        return sortActivityList;
+        var sortActivityDtos = sortActivityList.Select(i => _objectMapper.Map<TreeActivityIndex,TreeActivityDto>(i)).ToList();
+        foreach (var record in sortActivityDtos)
+        {
+            if (request.Address.IsNullOrEmpty())
+            {
+                break;
+            }
+
+            var activityRecordGrain = _clusterClient.GetGrain<ITreeUserActivityRecordGrain>(string.Concat(request.Address,"_",record.Id));
+            var activityRecord = await activityRecordGrain.GetTreeUserActivityRecordAsync();
+            if (activityRecord == null || activityRecord.Data == null || activityRecord.Data.ClaimCount <= 0)
+            {
+                record.CanClaim = true;
+            }
+            else
+            {
+                record.CanClaim = false;
+            }
+        }
+        
+        return sortActivityDtos;
     }
 
-    public async Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id)
+    public async Task<TreeActivityDto> GetTreeActivityDetailAsync(string id, string address)
     {
-        return await _treeActivityProvider.GetTreeActivityDetailAsync(id);
+        var sortActivityIndex = await _treeActivityProvider.GetTreeActivityDetailAsync(id);
+        var sortActivityDto = _objectMapper.Map<TreeActivityIndex, TreeActivityDto>(sortActivityIndex);
+        if (address.IsNullOrEmpty())
+        {
+            return sortActivityDto;
+        }
+        var activityRecordGrain = _clusterClient.GetGrain<ITreeUserActivityRecordGrain>(string.Concat(address,"_",id));
+        var activityRecord = await activityRecordGrain.GetTreeUserActivityRecordAsync();
+        if (activityRecord == null || activityRecord.Data == null || activityRecord.Data.ClaimCount <= 0)
+        {
+            sortActivityDto.CanClaim = true;
+        }
+        else
+        {
+            sortActivityDto.CanClaim = false;
+        }
+        return sortActivityDto;
     }
 
     public async Task<string> CreateNewTreeActivityIdAsync()
