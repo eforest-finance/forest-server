@@ -3,7 +3,7 @@ using NFTMarketServer.NFT.Index;
 
 namespace NFTMarketServer.Seed.Dto;
 
-public class MySeedDto : IndexerCommonResult<MySeedDto>
+public class MySeedDto
 {
     public long TotalRecordCount { get; set; }
     public List<SeedDto> SeedDtoList { get; set; }

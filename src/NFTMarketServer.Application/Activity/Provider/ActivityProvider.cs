@@ -28,8 +28,8 @@ public class ActivityProvider : IActivityProvider, ISingletonDependency
             Query = @"query(
                 $skipCount: Int!
                 ,$maxResultCount: Int!
-                ,$address: [String!]
-                ,$types: [SymbolMarketActivityType!]
+                ,$address: [String!]!
+                ,$types: [SymbolMarketActivityType!]!
             ){
                 data: symbolMarketActivities(dto:{
                 skipCount: $skipCount

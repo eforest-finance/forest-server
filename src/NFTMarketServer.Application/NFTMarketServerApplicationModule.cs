@@ -95,11 +95,11 @@ namespace NFTMarketServer
 
             context.Services.AddTransient<IScheduleSyncDataService, BidScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionStatisticalDataScheduleService>();
-            context.Services.AddTransient<IScheduleSyncDataService, CollectionExtenstionCurrentInitScheduleService>(); 
+            // context.Services.AddTransient<IScheduleSyncDataService, CollectionExtenstionCurrentInitScheduleService>(); 
             context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionPriceScheduleService>();   
             context.Services.AddTransient<IScheduleSyncDataService, TsmSeedMainChainScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, TsmSeedSideChainScheduleService>();
-            context.Services.AddTransient<IScheduleSyncDataService, NftInfoSyncDataService>();
+            //context.Services.AddTransient<IScheduleSyncDataService, NftInfoSyncDataService>();
             context.Services.AddTransient<IScheduleSyncDataService, NftInfoNewSyncDataService>();
             context.Services.AddTransient<IScheduleSyncDataService, NftInfoNewRecentSyncDataService>();
             context.Services.AddTransient<IScheduleSyncDataService, SeedSymbolSyncDataService>();

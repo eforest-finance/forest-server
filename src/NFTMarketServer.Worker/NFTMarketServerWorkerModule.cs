@@ -14,13 +14,14 @@ namespace NFTMarketServer.Worker
             var backgroundWorkerManger = context.ServiceProvider.GetRequiredService<IBackgroundWorkerManager>();
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SymbolBidEventSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SymbolClaimEventSyncWorker>());
-            backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTCollectionStatisticalDataSyncWorker>());backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<CollectionExtenstionCurrentInitWorker>());
+            backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTCollectionStatisticalDataSyncWorker>());
+            // backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<CollectionExtenstionCurrentInitWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTCollectionPriceSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SeedIconSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<TsmSeedSymbolSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SeedPriceRuleSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SeedMainChainCreateSyncWorker>());
-            backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTInfoSyncWorker>());
+            // backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTInfoSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTInfoNewSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<NFTInfoNewRecentSyncWorker>());
             backgroundWorkerManger.AddAsync(context.ServiceProvider.GetService<SeedSymbolSyncWorker>());
