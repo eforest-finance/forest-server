@@ -11,6 +11,8 @@ using NFTMarketServer.Grains.Grain.Tree;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
+using NFTMarketServer.Tree;
+using NFTMarketServer.Tree.Provider;
 using NFTMarketServer.TreeGame;
 using NFTMarketServer.TreeGame.Provider;
 using NFTMarketServer.Users.Index;
@@ -33,6 +35,8 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
     private readonly ITreeGameUserInfoProvider _treeGameUserInfoProvider;
     private readonly IObjectMapper _objectMapper;
     private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
+    private readonly ITreeActivityProvider _treeActivityProvider;
+
     private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
     private readonly IClusterClient _clusterClient;
 
@@ -44,6 +48,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         ITreeGameUserInfoProvider treeGameUserInfoProvider,
         IUserBalanceProvider userBalanceProvider,
         ITreeGamePointsDetailProvider treeGamePointsDetailProvider,
+        ITreeActivityProvider treeActivityProvider,
         IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
         IClusterClient clusterClient,
         IObjectMapper objectMapper)
@@ -57,7 +62,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         _treeGamePointsDetailProvider = treeGamePointsDetailProvider;
         _platformOptionsMonitor = platformOptionsMonitor;
         _clusterClient = clusterClient;
-
+        _treeActivityProvider = treeActivityProvider;
     }
 
     public async Task HandleEventAsync(TreePointsChangeRecordEto etoData)
@@ -173,8 +178,19 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         {
             userInfo.Points = item.TotalPoints;
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
-            //record user join this activity count
+            //update activity
             var activityId = item.ActivityId;
+            var activity = await _treeActivityProvider.GetTreeActivityDetailAsync(activityId);
+            var leftReward = activity.LeftReward - activity.RedeemRewardOnce;
+            activity.LeftReward = leftReward;
+            if (leftReward <= 0)
+            {
+                activity.TreeActivityStatus = TreeActivityStatus.Ended;
+            }
+
+            await _treeActivityProvider.UpdateTreeActivityDetailAsync(activity);
+            
+            //record user join this activity count
             var activityRecordGrain = _clusterClient.GetGrain<ITreeUserActivityRecordGrain>(string.Concat(item.Address,"_",item.ActivityId));
             var activityRecord = await activityRecordGrain.GetTreeUserActivityRecordAsync();
             await activityRecordGrain.SetTreeUserActivityRecordAsync(new TreeUserActivityRecordGrainDto()
@@ -184,6 +200,8 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
                 Address = item.Address,
                 ClaimCount = activityRecord.Data.ClaimCount+1
             });
+            
+            
         }
     }
     private async Task<TreeInfo> GetTreeGameTreeInfoAsync(int treeLevel)
