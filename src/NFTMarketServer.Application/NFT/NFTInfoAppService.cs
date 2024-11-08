@@ -2110,14 +2110,12 @@ namespace NFTMarketServer.NFT
             var seedTask = Task.Run(async () =>
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
-                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
-                //todo v2
-                // var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+                //var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
 
-                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
-                //todo v2
-                // var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
-                //     input.Address, input.ChainList.FirstOrDefault(), "Hold-Seed");
+                //var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
+                    input.Address, input.ChainList.FirstOrDefault(), "Hold-Seed");
                 
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
@@ -2143,14 +2141,14 @@ namespace NFTMarketServer.NFT
                     .GroupBy(info => info.Id)
                     .ToDictionary(info => info.Key, info => info.First().Decimals);
 
-                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                //var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
                 //todo v2
-                // var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+                var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
 
-                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                //var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
                 //todo v2
-                // var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
-                //     input.Address, input.ChainList.FirstOrDefault(), "Hold-NFT");
+                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
+                    input.Address, input.ChainList.FirstOrDefault(), "Hold-NFT");
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
 
@@ -2259,7 +2257,7 @@ namespace NFTMarketServer.NFT
                 HasListingFlag = input.HasListingFlag,
                 HasOfferFlag = input.HasOfferFlag,
                 SkipCount = 0,
-                MaxResultCount = CommonConstant.ProfileTotalNumber,
+                MaxResultCount = CommonConstant.ProfileTotalNumber * 2,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 IssueAddress = input.Address,
@@ -2563,19 +2561,16 @@ namespace NFTMarketServer.NFT
 
             var allNFTList = nftResult.Item2;
             var allCount = nftResult.Item1;
-            //while (allCount > allNFTList.Count) todo v2
-            //int i = 0;
-            // while (allNFTList.Count != 0 && i < 2)
+            // while (allCount > allNFTList.Count)
             // {
-            //      input.SkipCount += allNFTList.Count;
-            //      var nextPageNFTResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
-            //      if (nextPageNFTResult == null || nextPageNFTResult.Item1 == 0)
-            //      {
-            //          break;
-            //      }
-            //      allCount += nextPageNFTResult.Item1;
-            //      allNFTList.AddRange(nextPageNFTResult.Item2);
-            //      i++;
+            //     var nextPageNFTResult = await _nftInfoNewSyncedProvider.GetNFTBriefInfosAsync(input);
+            //     if (nextPageNFTResult == null || nextPageNFTResult.Item1 == 0)
+            //     {
+            //         break;
+            //     }
+            //
+            //     allCount += nextPageNFTResult.Item1;
+            //     allNFTList.AddRange(nextPageNFTResult.Item2);
             // }
 
             return new Tuple<long, List<IndexerNFTInfo>>(allCount, allNFTList);
