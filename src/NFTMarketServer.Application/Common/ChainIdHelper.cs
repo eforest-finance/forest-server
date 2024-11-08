@@ -17,7 +17,7 @@ public static class ChainIdHelper
 
         if (chain.Equals(SymbolHelper.MAIN_CHAIN_SYMBOL))
         {
-            return chain.ToLower() + SymbolHelper.MAIN_CHAIN_PREFIX;
+            return "aelf MainChain";
         }
 
         return "aelf dAppChain";
