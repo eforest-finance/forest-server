@@ -1736,8 +1736,8 @@ namespace NFTMarketServer.NFT
             List<UserBalanceIndex> balanceList)
         {
             var accountDto = new AccountDto();
-            maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
-            listDtoDict.TryGetValue(nftInfoIndex.Id, out var minList);
+            //maxOfferDict.TryGetValue(nftInfoIndex.Id, out var maxOffer);
+            //listDtoDict.TryGetValue(nftInfoIndex.Id, out var minList);
             nftDecimalDict.TryGetValue(nftInfoIndex.Id, out var nftDecimals);
             var balance = balanceList.IsNullOrEmpty()?null:balanceList.FirstOrDefault(x => x.NFTInfoId == nftInfoIndex.Id);
             if (!nftInfoIndex.RealOwner.IsNullOrEmpty())
@@ -1748,25 +1748,37 @@ namespace NFTMarketServer.NFT
 
             var showPrice = "--";
             var hasOwnerListingFlag = false;
-            if (minList != null && minList.Prices > 0)
+            // if (minList != null && minList.Prices > 0)
+            // {
+            //     showPrice = minList.Prices.ToString();
+            // }
+            // else if (maxOffer != null && maxOffer.Price > 0)
+            // {
+            //     showPrice = maxOffer.Price.ToString();
+            // } todo v2
+            var maxOfferPrice = nftInfoIndex.MaxOfferPrice != null && nftInfoIndex.MaxOfferPrice > 0
+                ? nftInfoIndex.MaxOfferPrice
+                : CommonConstant.DefaultValueNone;
+            if (nftInfoIndex.MinListingPrice != null && nftInfoIndex.MinListingPrice > 0)
             {
-                showPrice = minList.Prices.ToString();
+                showPrice = nftInfoIndex.MinListingPrice.ToString();
             }
-            else if (maxOffer != null && maxOffer.Price > 0)
+            else if (maxOfferPrice > 0)
             {
-                showPrice = maxOffer.Price.ToString();
+                showPrice = maxOfferPrice.ToString();
             }
+            
 
             var profileInfo = new ProfileInfo()
             {
-                MinListingPrice = minList == null ? null : minList.Prices,
-                BestOfferPrice = maxOffer == null ? null : maxOffer.Price,
+                MinListingPrice = nftInfoIndex.MinListingPrice,
+                BestOfferPrice = nftInfoIndex.MaxOfferPrice,
                 ShowPrice = showPrice,
                 Decimal = nftDecimals,
                 Balance = balance==null?0:(decimal)balance.Amount/(decimal)Math.Pow(10, balance.Decimals)
             };
 
-            var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(maxOffer?.Price ?? 0);
+            var (temDescription, temPrice) = nftInfoIndex.GetDescriptionAndPrice(nftInfoIndex?.MaxOfferPrice ?? 0);
 
             return new CompositeNFTInfoIndexDto
             {
@@ -1784,7 +1796,7 @@ namespace NFTMarketServer.NFT
                 Generation = nftInfoIndex.Generation,
                 ListingPrice = nftInfoIndex.ListingPrice,
                 ListingPriceCreateTime = nftInfoIndex.LatestListingTime,
-                OfferPrice = maxOffer?.Price ?? CommonConstant.DefaultValueNone,
+                OfferPrice = maxOfferPrice,
                 LatestDealPrice = nftInfoIndex.LatestDealPrice,
                 AllOwnerCount = nftInfoIndex.AllOwnerCount,
                 RealOwner = accountDto,
@@ -2110,12 +2122,12 @@ namespace NFTMarketServer.NFT
             var seedTask = Task.Run(async () =>
             {
                 var seedResult = await _seedSymbolSyncedProvider.GetSeedBriefInfosAsync(getCompositeNFTInfosInput);
-                //var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
-                var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
+                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                // var maxOfferDict = await GetMaxOfferInfosAsync(seedResult.Item2.Select(info => info.Id).ToList());
 
-                //var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
-                var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault(), "Hold-Seed");
+                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                // var minListDict = await GetMyMinListInfosAsync(seedResult.Item2.Select(info => info.Symbol).ToList(),
+                //     input.Address, input.ChainList.FirstOrDefault(), "Hold-Seed");
                 
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(seedResult.Item2.Select(info => info.RealOwner).ToList());
@@ -2141,14 +2153,14 @@ namespace NFTMarketServer.NFT
                     .GroupBy(info => info.Id)
                     .ToDictionary(info => info.Key, info => info.First().Decimals);
 
-                //var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
+                var maxOfferDict = new Dictionary<string, IndexerNFTOffer>();
                 //todo v2
-                var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
+                // var maxOfferDict = await GetMaxOfferInfosAsync(nftResult.Item2.Select(info => info.Id).ToList());
 
-                //var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
+                var minListDict = new Dictionary<string, IndexerNFTListingInfo>();
                 //todo v2
-                 var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
-                    input.Address, input.ChainList.FirstOrDefault(), "Hold-NFT");
+                 // var minListDict = await GetMyMinListInfosAsync(nftResult.Item2.Select(info => info.Symbol).ToList(),
+                 //    input.Address, input.ChainList.FirstOrDefault(), "Hold-NFT");
                 var accountDtoDict =
                     await _userAppService.GetAccountsAsync(nftResult.Item2.Select(info => info.RealOwner).ToList());
 
@@ -2257,7 +2269,7 @@ namespace NFTMarketServer.NFT
                 HasListingFlag = input.HasListingFlag,
                 HasOfferFlag = input.HasOfferFlag,
                 SkipCount = 0,
-                MaxResultCount = CommonConstant.ProfileTotalNumber * 2,
+                MaxResultCount = CommonConstant.ProfileTotalNumber,
                 Sorting = input.Sorting,
                 SearchParam = input.KeyWord,
                 IssueAddress = input.Address,
