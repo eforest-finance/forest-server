@@ -249,12 +249,12 @@ namespace NFTMarketServer.TreeGame
             return pointsDetailInfos;
         }
 
-        public async Task<TreeGameHomePageInfoDto> GetUserTreeInfoAsync(string address, string nickName, bool needStorage)
+        public async Task<TreeGameHomePageInfoDto> GetUserTreeInfoAsync(string address, string nickName, bool needStorage, string parentAddress)
         {
             var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
             if (treeUserIndex == null)
             {
-                treeUserIndex = await InitNewTreeGameUserAsync(address, nickName, "");
+                treeUserIndex = await InitNewTreeGameUserAsync(address, nickName, parentAddress);
             }
             //get points    
             var homePageDto = new TreeGameHomePageInfoDto();
@@ -575,7 +575,31 @@ namespace NFTMarketServer.TreeGame
             return requestHash.ToHex();
         }
 
-        
+        public async Task AcceptInvitationAsync(string address, string nickName, string parentAddress)
+        {
+            _logger.LogInformation("miniapp AcceptInvitationAsync address:{A} nickName:{nickName} parentAddress:{parentAddress}",address,nickName,parentAddress);
+
+            var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
+            if (treeUserIndex != null)
+            {
+                _logger.LogInformation("miniapp AcceptInvitationAsync address:{A} tree already exists nickName:{nickName} parentAddress:{parentAddress}",address,nickName,parentAddress);
+                return;
+            }
+            //init user tree
+            var treeGameHomePageInfoDto = await GetUserTreeInfoAsync(address, nickName, false, parentAddress);
+
+            var pointsDetails = treeGameHomePageInfoDto.PointsDetails;
+            var pointsDetailsInfos = new List<TreeGamePointsDetailInfoIndex>();
+            foreach (var detail in pointsDetails)
+            {
+                if (detail.Type == PointsDetailType.INVITE)
+                {
+                    detail.Amount += TreeGameConstants.TreeGameInviteReward;
+                }
+                pointsDetailsInfos.Add(_objectMapper.Map<PointsDetail,TreeGamePointsDetailInfoIndex>(detail));
+            }
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(address, pointsDetailsInfos);
+        }
 
     }
 }
