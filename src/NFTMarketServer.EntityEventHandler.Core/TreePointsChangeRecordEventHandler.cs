@@ -160,7 +160,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
 
                 detail.Amount = currentLevel.Produce;
             }
-            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(pointsDetailList);
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(userInfo.Address,pointsDetailList);
 
         }
         

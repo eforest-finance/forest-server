@@ -1,4 +1,3 @@
-using AElf.Contracts.MultiToken;
 using AutoMapper;
 using NFTMarketServer.Dealer.Dtos;
 using NFTMarketServer.Grains.Grain.Icon;
@@ -16,7 +15,7 @@ using NFTMarketServer.Grains.State.Order;
 using NFTMarketServer.Grains.State.Synchronize;
 using NFTMarketServer.Grains.State.Users;
 using NFTMarketServer.Grains.State.Verify;
-using NFTMarketServer.Users.Dto;
+using NFTMarketServer.TreeGame;
 
 namespace NFTMarketServer.Grains;
 
@@ -53,5 +52,7 @@ public class NFTMarketServerGrainsAutoMapperProfile : Profile
         CreateMap<InscriptionInscribeState, InscriptionInscribeGrainDto>().ReverseMap();
         CreateMap<InscriptionAmountState, InscriptionAmountGrainDto>().ReverseMap();
         CreateMap<InscriptionItemCrossChainState, InscriptionItemCrossChainGrainDto>().ReverseMap();
+        CreateMap<TreeUserInfoState, TreeGameUserInfoDto>();
+        CreateMap<TreeGameUserInfoDto, TreeUserInfoState>();
     }
 }
