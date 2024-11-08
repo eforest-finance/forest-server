@@ -67,15 +67,15 @@ public class TreeActivityController : NFTMarketServerController
     
     [HttpGet]
     [Route("activity-list")]
-    public async Task<List<TreeActivityIndex>> GetTreeActivityListAsync(GetTreeActivityListInput request)
+    public async Task<List<TreeActivityDto>> GetTreeActivityListAsync(GetTreeActivityListInput request)
     {
         return await _treeService.GetTreeActivityListAsync(request);
     }
     [HttpGet]
     [Route("activity-detail")]
-    public async Task<TreeActivityIndex> GetTreeActivityDetailAsync(string id
+    public async Task<TreeActivityDto> GetTreeActivityDetailAsync(string id, string address
     )
     {
-        return await _treeService.GetTreeActivityDetailAsync(id);
+        return await _treeService.GetTreeActivityDetailAsync(id, address);
     }
 }

@@ -10,7 +10,7 @@ public class TreeGameConstants
             Level = 1,
             LevelTitle = "LV1",
             Produce = 10,
-            Frequency = 720,
+            Frequency = 10,
             TimeUnit = TimeUnit.MINUTE,
             MinPoints = 0
         },
@@ -67,7 +67,7 @@ public class TreeGameConstants
         Produce = 1,
         Frequency = 10,
         TimeUnit = TimeUnit.MINUTE,
-        WateringIncome = 10
+        WateringIncome = 2
     };
 
     public static readonly List<PointsDetailConfig> PointsDetailConfig = new List<PointsDetailConfig>()
