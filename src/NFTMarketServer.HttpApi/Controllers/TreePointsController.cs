@@ -29,7 +29,7 @@ namespace NFTMarketServer.Controllers
         [Route("user-info")]
         public async Task<TreeGameHomePageInfoDto> GetUserTreeInfo(string address, string nickName)
         {
-            return await _treeGameService.GetUserTreeInfoAsync(address, nickName, true);
+            return await _treeGameService.GetUserTreeInfoAsync(address, nickName, true, "");
         }
 
         [HttpPost]

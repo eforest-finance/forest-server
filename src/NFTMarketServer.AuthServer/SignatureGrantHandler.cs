@@ -34,7 +34,7 @@ namespace NFTMarketServer;
 public class SignatureGrantHandler: ITokenExtensionGrant
 {
     private IUserInformationProvider _userInformationProvider;
-    private ITreeGameUserInfoProvider _treeGameUserInfoProvider;
+    private ITreeGameService _treeGameService;
 
     private ILogger<SignatureGrantHandler> _logger;
     private IAbpDistributedLock _distributedLock;
@@ -137,7 +137,9 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         _distributedLock = context.HttpContext.RequestServices.GetRequiredService<IAbpDistributedLock>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<IdentityUserManager>();
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
-        _treeGameUserInfoProvider = context.HttpContext.RequestServices.GetRequiredService<ITreeGameUserInfoProvider>();
+        _treeGameService = context.HttpContext.RequestServices.GetRequiredService<ITreeGameService>();
+
+        _logger.LogInformation("miniapp user login:loginUser:{user},inviteFrom{A},inviteType:{B},nickName:{C}", address,inviteFrom,inviteType,nickName);
 
         var userName = address;
         if (!string.IsNullOrWhiteSpace(caHash))
@@ -148,6 +150,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         var user = await userManager.FindByNameAsync(userName);
         if (user == null)
         {
+            _logger.LogInformation("miniapp user login:loginUser:{user} is not exist", address);
+
             var userId = Guid.NewGuid();
 
             var createUserResult = await CreateUserAsync(userManager, _userInformationProvider, userId, address, caHash,caAddressMain,caAddressSide);
@@ -160,11 +164,13 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
             if (TreeGameConstants.TreeGameInviteType.Equals(inviteType))
             {
-                await _treeGameUserInfoProvider.AcceptInvitationAsync(address, nickName, inviteFrom);
+                await _treeGameService.AcceptInvitationAsync(address, nickName, inviteFrom);
             }
         }
         else
         {
+            _logger.LogInformation("miniapp user login:loginUser:{user} is exist", address);
+
             UserSourceInput userSourceInput = new UserSourceInput
             {
                 UserId = user.Id,
