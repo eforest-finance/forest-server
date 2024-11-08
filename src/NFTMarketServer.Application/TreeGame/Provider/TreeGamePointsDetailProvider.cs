@@ -17,7 +17,6 @@ namespace NFTMarketServer.TreeGame.Provider;
 public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISingletonDependency
 {
     private readonly INESTRepository<TreeGamePointsDetailInfoIndex, string> _treeGamePointsDetailIndexRepository;
-    private readonly IBus _bus;
     private readonly ILogger<ITreeGamePointsDetailProvider> _logger;
     private readonly IObjectMapper _objectMapper;
     private readonly IClusterClient _clusterClient;
@@ -25,14 +24,12 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
 
     public TreeGamePointsDetailProvider(
         INESTRepository<TreeGamePointsDetailInfoIndex, string> treeGamePointsDetailIndexRepository,
-        IBus bus,
         ILogger<ITreeGamePointsDetailProvider> logger,
         IObjectMapper objectMapper,
         IClusterClient clusterClient
     )
     {
         _treeGamePointsDetailIndexRepository = treeGamePointsDetailIndexRepository;
-        _bus = bus;
         _logger = logger;
         _objectMapper = objectMapper;
         _clusterClient = clusterClient;

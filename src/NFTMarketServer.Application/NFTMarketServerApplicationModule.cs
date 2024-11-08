@@ -20,6 +20,7 @@ using NFTMarketServer.OwnerShip.Verify;
 using NFTMarketServer.Provider;
 using NFTMarketServer.Redis;
 using NFTMarketServer.Seed;
+using NFTMarketServer.TreeGame.Provider;
 using StackExchange.Redis;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
@@ -84,6 +85,9 @@ namespace NFTMarketServer
             context.Services.AddSingleton<InscriptionItemCrossChainCreateInvoker>();
             context.Services.AddSingleton<InscriptionCollectionCrossChainCreateInvoker>();
             context.Services.AddSingleton<InscriptionIssueInvoker>();
+            
+            context.Services.AddSingleton<ITreeGamePointsDetailProvider, TreeGamePointsDetailProvider>();
+            context.Services.AddSingleton<ITreeGameUserInfoProvider, TreeGameUserInfoProvider>();
 
 
             context.Services.AddTransient<IScheduleSyncDataService, SeedIconScheduleService>();
