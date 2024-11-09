@@ -182,7 +182,17 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
             if (TreeGameConstants.TreeGameInviteType.Equals(inviteType))
             {
-                await _treeGameService.AcceptInvitationAsync(address, nickName, inviteFrom);
+                var userAddress = address;
+                if (!string.IsNullOrWhiteSpace(caHash) && !string.IsNullOrWhiteSpace(caAddressMain))
+                {
+                    userAddress = caAddressMain;
+                }
+                if (!string.IsNullOrWhiteSpace(caHash) && !caAddressSide.IsNullOrEmpty())
+                {
+                    userAddress = caAddressSide.FirstOrDefault().Value;
+                }
+                
+                await _treeGameService.AcceptInvitationAsync(userAddress, nickName, inviteFrom);
             }
         }
         else
