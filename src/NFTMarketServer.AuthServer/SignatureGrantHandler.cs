@@ -52,7 +52,7 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         var timestampVal = context.Request.GetParameter("timestamp").ToString();
         var inviteFrom = context.Request.GetParameter("invite_from").ToString();
         var inviteType = context.Request.GetParameter("invite_type").ToString();
-        var nickName = context.Request.GetParameter("nickname").ToString();
+        var nickName = context.Request.GetParameter("nick_name").ToString();
 
         // var caHash = context.Request.GetParameter("ca_hash").ToString();
         // var chainId = context.Request.GetParameter("chain_id").ToString();
