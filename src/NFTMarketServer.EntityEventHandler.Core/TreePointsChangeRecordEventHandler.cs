@@ -138,7 +138,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
                                 {
                                     rewardProportion = rewardConfig.RewardProportion;
                                 }
-                                detail.Amount += (decimal)item.PointsType * (decimal)rewardProportion;
+                                detail.Amount += (decimal)item.Points * (decimal)rewardProportion;
                                 await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
                                 break;
                             }
