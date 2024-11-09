@@ -108,6 +108,10 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
                 if (EnumHelper.ToEnumString(detail.Type).Equals(EnumHelper.ToEnumString(item.PointsType)))
                 {
                     detail.Amount = treeInfo.Current.Produce;
+                    if (detail.Type == PointsDetailType.INVITE)
+                    {
+                        detail.Amount = 0;
+                    }
                     detail.UpdateTime = item.OpTime;
                     detail.RemainingTime = treeInfo.Current.Frequency;
                     await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
