@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using MassTransit;
@@ -25,7 +27,8 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
    // private readonly IBus _bus;
     private readonly ILogger<ITreeGameUserInfoProvider> _logger;
     private readonly IObjectMapper _objectMapper;
-
+    private readonly ConcurrentDictionary<string, Lazy<SemaphoreSlim>> _userLocks =
+        new ConcurrentDictionary<string, Lazy<SemaphoreSlim>>();
 
     public TreeGameUserInfoProvider(
         INESTRepository<TreeGameUserInfoIndex, string> treeGameUserInfoIndexRepository,
@@ -54,7 +57,9 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
             return null;
         }
         _logger.LogInformation("SaveOrUpdateTreeUserBalanceAsync dto:{A}",JsonConvert.SerializeObject(dto));
-
+        var lazyLock = _userLocks.GetOrAdd(dto.Address, new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1)));
+        var semaphore = lazyLock.Value;
+        await semaphore.WaitAsync();
         var treeUserIndex = _objectMapper.Map<TreeGameUserInfoDto, TreeGameUserInfoIndex>(dto);
         //update grain
         var userGrain = _clusterClient.GetGrain<ITreeUserInfoGrain>(dto.Address);
@@ -62,6 +67,7 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
 
         //update es
         await _treeGameUserInfoIndexRepository.AddOrUpdateAsync(treeUserIndex);
+        semaphore.Release();
         return treeUserIndex;
     }
 
@@ -88,6 +94,9 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
 
     public async Task<TreeGameUserInfoIndex> GetTreeUserInfoAsync(string address)
     {
+        var lazyLock = _userLocks.GetOrAdd(address, new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1)));
+        var semaphore = lazyLock.Value;
+        await semaphore.WaitAsync();
         var userGrain = _clusterClient.GetGrain<ITreeUserInfoGrain>(address);
         var treeUserInfoDto = await userGrain.GetTreeUserInfoAsync();
         var treeUserIndex = new TreeGameUserInfoIndex();
@@ -96,13 +105,14 @@ public class TreeGameUserInfoProvider : ITreeGameUserInfoProvider, ISingletonDep
             treeUserIndex = await GetTreeUserInfoByEsAsync(address);
             if (treeUserIndex == null)
             {
+                semaphore.Release();
                 return null;
             }
             await userGrain.SetTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(treeUserIndex));
         }else {
             treeUserIndex = _objectMapper.Map<TreeGameUserInfoDto, TreeGameUserInfoIndex>(treeUserInfoDto.Data);
         }
-
+        semaphore.Release();
         return treeUserIndex;
     }
 
