@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
-using MassTransit.Mediator;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -30,7 +29,7 @@ namespace NFTMarketServer.TreeGame
         private readonly IDistributedCache<TreeClaimPointsCacheItem> _claimPointsCache;
         private const string ClaimCatchKeyPrefix = "claim_points_";
         private const long ClaimCatchExpireTime = 30000;//30s
-
+        private readonly ITreeGameLockProvider _treeGameLockProvider;
 
 
         public TreeGameService(
@@ -41,7 +40,8 @@ namespace NFTMarketServer.TreeGame
             IObjectMapper objectMapper,
             IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
             IUserAppService userAppService,
-            IDistributedCache<TreeClaimPointsCacheItem> claimPointsCache)
+            IDistributedCache<TreeClaimPointsCacheItem> claimPointsCache,
+            ITreeGameLockProvider treeGameLockProvider)
 
         {
             _logger = logger;
@@ -52,7 +52,7 @@ namespace NFTMarketServer.TreeGame
             _treeActivityProvider = treeActivityProvider;
             _userAppService = userAppService;
             _claimPointsCache = claimPointsCache;
-
+            _treeGameLockProvider = treeGameLockProvider;
         }
 
         public async Task<TreeGameUserInfoIndex> InitNewTreeGameUserAsync(string address, string nickName,string parentAddress)
@@ -251,6 +251,11 @@ namespace NFTMarketServer.TreeGame
 
         public async Task<TreeGameHomePageInfoDto> GetUserTreeInfoAsync(string address, string nickName, bool needStorage, string parentAddress)
         {
+            var lockAcquired = await _treeGameLockProvider.TryAcquireLockAsync(address);
+            if (!lockAcquired)
+            {
+                throw new Exception("Frequent operations, please refresh and retry");
+            }
             var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(address);
             if (treeUserIndex == null)
             {
@@ -273,6 +278,7 @@ namespace NFTMarketServer.TreeGame
             //get points details
             var pointsDetails = await GetAndRefreshTreeGamePointsDetailsAsync(address, treeInfo, needStorage);
             homePageDto.PointsDetails = pointsDetails;
+            await _treeGameLockProvider.ReleaseLockAsync(address);
             return homePageDto;
         }
 
@@ -288,10 +294,16 @@ namespace NFTMarketServer.TreeGame
             {
                 throw new Exception("Invalid param count");
             }
-
+            var lockAcquired = await _treeGameLockProvider.TryAcquireLockAsync(currentUserAddress);
+            if (!lockAcquired)
+            {
+                throw new Exception("Frequent operations, please refresh and retry");
+            }
+            
             var treeUserIndex = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(currentUserAddress);
             if (treeUserIndex == null)
             {
+                await _treeGameLockProvider.ReleaseLockAsync(currentUserAddress);
                 throw new Exception("Please refresh homepage, init your tree");
             }
             
@@ -299,6 +311,7 @@ namespace NFTMarketServer.TreeGame
             var waterInfo = await GetAndRefreshTreeGameWaterInfoAsync(treeUserIndex, needStorage);
             if ((waterInfo.Current - input.Count) < 0)
             {
+                await _treeGameLockProvider.ReleaseLockAsync(currentUserAddress);
                 throw new Exception("You don't have enough water");
             }
 
@@ -356,16 +369,12 @@ namespace NFTMarketServer.TreeGame
             //update db
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(treeUserIndex));
             await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(input.Address, updateDetails);
+            await _treeGameLockProvider.ReleaseLockAsync(currentUserAddress);
             return homePageDto;
         }
 
         public async Task<TreeLevelUpgradeOutput> UpgradeTreeLevelAsync(TreeLevelUpdateRequest request)
         {
-            /*var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
-            if (currentUserAddress != address)
-            {
-                throw new Exception("Login address and parameter address are inconsistent");
-            }*/
             var address = request.Address;
             var nextLevel = request.NextLevel;
             var currentUserAddress = address;
