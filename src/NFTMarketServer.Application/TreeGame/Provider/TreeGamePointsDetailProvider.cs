@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using MassTransit;
@@ -20,7 +22,8 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
     private readonly ILogger<ITreeGamePointsDetailProvider> _logger;
     private readonly IObjectMapper _objectMapper;
     private readonly IClusterClient _clusterClient;
-
+    private readonly ConcurrentDictionary<string, Lazy<SemaphoreSlim>> _pointsLocks =
+        new ConcurrentDictionary<string, Lazy<SemaphoreSlim>>();
 
     public TreeGamePointsDetailProvider(
         INESTRepository<TreeGamePointsDetailInfoIndex, string> treeGamePointsDetailIndexRepository,
@@ -38,6 +41,9 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
 
     public async Task BulkSaveOrUpdateTreePointsDetailsAsync(string address, List<TreeGamePointsDetailInfoIndex> pointsDetailList)
     {
+        var lazyLock = _pointsLocks.GetOrAdd(address, new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1)));
+        var semaphore = lazyLock.Value;
+        await semaphore.WaitAsync();
         var pointsGrain = _clusterClient.GetGrain<ITreeUserPointsDetailGrain>(address);
         var pointsDetailDtoList = pointsDetailList.Select(x => _objectMapper.Map<TreeGamePointsDetailInfoIndex, TreeGamePointsDetailInfoDto>(x)).ToList();
         
@@ -47,10 +53,14 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
         {
             await _treeGamePointsDetailIndexRepository.AddOrUpdateAsync(points);
         }
+        semaphore.Release();
     }
 
     public async Task<TreeGamePointsDetailInfoIndex> SaveOrUpdateTreePointsDetailAsync(TreeGamePointsDetailInfoIndex info)
     {
+        var lazyLock = _pointsLocks.GetOrAdd(info.Address, new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1)));
+        var semaphore = lazyLock.Value;
+        await semaphore.WaitAsync();
         var pointsGrain = _clusterClient.GetGrain<ITreeUserPointsDetailGrain>(info.Address);
         var pointsDetailState = await pointsGrain.GetTreeUserPointsDetailListAsync();
         var pointsDetails = pointsDetailState.Data;
@@ -66,6 +76,8 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
 
         await pointsGrain.SetTreeUserPointsDetailListAsync(pointsDetails);        
         await _treeGamePointsDetailIndexRepository.AddOrUpdateAsync(info);
+        semaphore.Release();
+
         return info;
     }
 
@@ -92,6 +104,9 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
     }
     public async Task<List<TreeGamePointsDetailInfoIndex>> GetTreePointsDetailsAsync(string address)
     {
+        var lazyLock = _pointsLocks.GetOrAdd(address, new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1)));
+        var semaphore = lazyLock.Value;
+        await semaphore.WaitAsync();
         var pointsGrain = _clusterClient.GetGrain<ITreeUserPointsDetailGrain>(address);
         var pointsDetails = await pointsGrain.GetTreeUserPointsDetailListAsync();
         var pointsDetailIndexList = new List<TreeGamePointsDetailInfoIndex>();
@@ -100,6 +115,7 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
             pointsDetailIndexList = await GetTreePointsDetailsByEsAsync(address);
             if (pointsDetailIndexList.IsNullOrEmpty())
             {
+                semaphore.Release();
                 return null;
             }
 
@@ -111,7 +127,7 @@ public class TreeGamePointsDetailProvider : ITreeGamePointsDetailProvider, ISing
             pointsDetailIndexList = pointsDetails.Data
                 .Select(x => _objectMapper.Map<TreeGamePointsDetailInfoDto, TreeGamePointsDetailInfoIndex>(x)).ToList();
         }
-
+        semaphore.Release();
         return pointsDetailIndexList;
         
     }
