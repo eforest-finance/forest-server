@@ -139,7 +139,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
                                     rewardProportion = rewardConfig.RewardProportion;
                                 }
                                 _logger.LogInformation("TreePointsChangeRecordEventHandler treeGameUserInfo's parent userTreePointsDetails invite amount old:{amount} add:{add}",detail.Amount,((decimal)item.Points * (decimal)rewardProportion));
-                                detail.Amount += (decimal)item.Points * (decimal)rewardProportion;
+                                detail.Amount += (int)((decimal)item.Points * (decimal)rewardProportion);
                                 _logger.LogInformation("TreePointsChangeRecordEventHandler treeGameUserInfo's parent userTreePointsDetails invite amount new:{amount}",detail.Amount);
                                 await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
                                 break;
