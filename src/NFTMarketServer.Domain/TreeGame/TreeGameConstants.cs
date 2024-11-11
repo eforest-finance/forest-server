@@ -109,6 +109,11 @@ public class TreeGameConstants
         {
             Symbol = "SGR-0",
             Decimals = 8
+        },
+        new Reward()
+        {
+            Symbol = "USDT",
+            Decimals = 6
         }
     };
 
