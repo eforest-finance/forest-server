@@ -423,6 +423,20 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 opt => opt.MapFrom(source => source.ClaimMax));
         CreateMap<MessageInfoIndex, MessageInfoDto>();
         CreateMap<UserInformationEto, UserIndex>();
+        CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>().ForMember(destination => destination.SeedSymbol,
+            opt => opt.MapFrom(source => source.Symbol))
+            .ForMember(destination => destination.Symbol,
+                opt => opt.MapFrom(source => source.SeedOwnedSymbol));
+        CreateMap<NFTActivityIndex, NFTActivityItem>().ForMember(destination => destination.NFTInfoId,
+            opt => opt.MapFrom(source => source.NftInfoId))
+            .ForMember(des => des.PriceTokenInfo,
+                opt => opt.MapFrom(source => new NFTMarketServer.NFT.Index.TokenInfoDto
+                {
+                    Id = source.PriceTokenInfo.Id,
+                    ChainId = source.PriceTokenInfo.ChainId,
+                    Symbol = source.PriceTokenInfo.Symbol,
+                    Decimals = source.PriceTokenInfo.Decimals
+                }));;
         CreateMap<TreeGameUserInfoDto, TreeGameUserInfoIndex>();
         CreateMap<TreeGameUserInfoIndex, TreeGameUserInfoDto>();
         CreateMap<PointsDetail, TreeGamePointsDetailInfoIndex>();
@@ -433,20 +447,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         CreateMap<CreateTreeActivityRequest, TreeActivityIndex>();
 
         CreateMap<IndexerSeedOwnedSymbol, SeedSymbolIndexDto>();
-        CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>().ForMember(destination => destination.SeedSymbol,
-                opt => opt.MapFrom(source => source.Symbol))
-            .ForMember(destination => destination.Symbol,
-                opt => opt.MapFrom(source => source.SeedOwnedSymbol));
-        CreateMap<NFTActivityIndex, NFTActivityItem>().ForMember(destination => destination.NFTInfoId,
-                opt => opt.MapFrom(source => source.NftInfoId))
-            .ForMember(des => des.PriceTokenInfo,
-                opt => opt.MapFrom(source => new NFTMarketServer.NFT.Index.TokenInfoDto
-                {
-                    Id = source.PriceTokenInfo.Id,
-                    ChainId = source.PriceTokenInfo.ChainId,
-                    Symbol = source.PriceTokenInfo.Symbol,
-                    Decimals = source.PriceTokenInfo.Decimals
-                }));;        
         CreateMap<TreeActivityIndex, TreeActivityDto>();
         CreateMap<TreeActivityDto, TreeActivityIndex>();
 
