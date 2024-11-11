@@ -78,6 +78,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         if (!expireFlag.IsNullOrEmpty())
         {
             _logger.LogInformation("TreePointsChangeRecordEventHandler expireFlag: {expireFlag},Id:{Id}",expireFlag, item.Id);
+            
             return;
         }
         await _distributedCacheForHeight.SetAsync(item.Id,
