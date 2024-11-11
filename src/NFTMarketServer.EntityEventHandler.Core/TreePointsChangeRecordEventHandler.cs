@@ -90,7 +90,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         //change points detail
         
         var lockAcquired = await _treeGameLockProvider.TryAcquireLockAsync(item.Address);
-        var retryCount = 3;
+        var retryCount = 1;
         while (!lockAcquired && retryCount > 0)
         {
             retryCount--;

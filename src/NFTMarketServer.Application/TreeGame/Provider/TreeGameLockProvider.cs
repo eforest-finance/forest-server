@@ -11,8 +11,8 @@ public class TreeGameLockProvider : ITreeGameLockProvider, ISingletonDependency
 {
     private readonly ILogger<TreeGameLockProvider> _logger;
     private const string TreeUserCatchKeyPrefix = "tree_user_";
-    private const long CatchExpireTime = 10000;//10s
-    private const long LockWaitTimeout = 11000;//s
+    private const long CatchExpireTime = 5000;//5s
+    private const long LockWaitTimeout = 6000;//s
     private readonly IDistributedCache<TreeUserCacheItem> _treeCache;
     private readonly Random _random = new Random();
     public TreeGameLockProvider(ILogger<TreeGameLockProvider> logger,IDistributedCache<TreeUserCacheItem> treeCache)
