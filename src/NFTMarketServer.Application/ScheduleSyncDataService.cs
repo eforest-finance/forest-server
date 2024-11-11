@@ -46,7 +46,17 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
                 _logger.LogInformation(
                     "Start deal data for businessType: {businessQueryChainType} chainId: {chainId} lastEndHeight: {lastEndHeight} newIndexHeight: {newIndexHeight}",
                     businessQueryChainType, chainId, lastEndHeight, newIndexHeight);
+                var preLastEndHeight = lastEndHeight;
                 var blockHeight = await SyncIndexerRecordsAsync(chainId, lastEndHeight, newIndexHeight);
+                if (blockHeight > 0 && preLastEndHeight == blockHeight && lastEndHeight < newIndexHeight)
+                {
+                    var realBlockHeight = blockHeight;
+                    blockHeight = Math.Max(realBlockHeight, preLastEndHeight) + 1;
+                    _logger.LogInformation(
+                        "blockHeight keep same then change for businessType: {businessQueryChainType} chainId: {chainId} " +
+                        "preLastEndHeight:{A} realBlockHeight: {B} BlockHeight:{C}",
+                        businessQueryChainType, chainId, preLastEndHeight, realBlockHeight, blockHeight);
+                }
 
                 if (blockHeight > 0)
                 {

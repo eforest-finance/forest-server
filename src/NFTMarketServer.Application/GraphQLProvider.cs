@@ -106,7 +106,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var graphQlResponse = await _graphQLClient.SendQueryAsync<SymbolAuctionRecordResultDto>(new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+                @"query($chainId:String!,$startBlockHeight:Long!,$endBlockHeight:Long!){
             getSymbolAuctionInfos(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
             {
                 id,
@@ -151,7 +151,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var str = new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+                @"query($chainId:String!,$startBlockHeight:Long!,$endBlockHeight:Long!){
             seedDtoList:getTsmSeedInfos(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
             {
                 id,
@@ -200,7 +200,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var graphQlResponse = await _graphQLClient.SendQueryAsync<SeedPriceRecordResultDto>(new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+                @"query($chainId:String!,$startBlockHeight:Long!,$endBlockHeight:Long!){
             getSeedPriceInfos(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
             {
                 id,
@@ -228,7 +228,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var graphQlResponse = await _graphQLClient.SendQueryAsync<UniqueSeedPriceRecordResultDto>(new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+                @"query($chainId:String!,$startBlockHeight:Long!,$endBlockHeight:Long!){
             getUniqueSeedPriceInfos(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
             {
                 id,
@@ -317,7 +317,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var graphQlResponse = await _graphQLClient.SendQueryAsync<IndexerSeedSymbolSync>(new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+                @"query($chainId:String!,$startBlockHeight:Long!,$endBlockHeight:Long!){
              dataList:getSyncSeedSymbolRecords(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
             {
                 id,chainId,blockHeight,symbol,tokenContractAddress,decimals,supply,totalSupply,tokenName,owner,issuer,isBurnable,issueChainId,issued,createTime,externalInfoDictionary{key, value},
@@ -379,7 +379,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var graphQlResponse = await _graphQLClient.SendQueryAsync<SymbolBidRecordResultDto>(new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+                @"query($chainId:String!,$startBlockHeight:Long!,$endBlockHeight:Long!){
             getSymbolBidInfos(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight})
             {
                 id,

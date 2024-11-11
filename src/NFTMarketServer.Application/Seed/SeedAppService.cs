@@ -383,7 +383,10 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
             //Get seed info from indexer
             var seedInfoDto = await _seedProvider.SearchSeedInfoAsync(input);
-            
+            if (seedInfoDto == null)
+            {
+                return null;
+            }
             //Get token price from tsm seed symbol index
             var mustQuery = new List<Func<QueryContainerDescriptor<TsmSeedSymbolIndex>, QueryContainer>>();
             mustQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(seedInfoDto.Symbol)));
@@ -580,7 +583,14 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             return null;
         }
+        //todo
+
+        var target = await _seedSymbolIndexRepository.GetAsync("AELF-SEED-3022");
+        _logger.LogInformation("AELF-SEED-3022 {A}",JsonConvert.SerializeObject(target));
+        var target2 = await _seedSymbolIndexRepository.GetAsync("tDVV-SEED-3022");
+        _logger.LogInformation("tDVV-SEED-3022 {A}",JsonConvert.SerializeObject(target2));
         
+        //todo
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
         
         if (input.TokenType != null)

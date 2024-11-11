@@ -116,6 +116,10 @@ public class UserBalanceSyncScheduleService : ScheduleSyncDataService
                 });
         }
 
+        if (lastEndHeight == blockHeight)
+        {
+            blockHeight += 1;
+        }
         return blockHeight;
     }
 

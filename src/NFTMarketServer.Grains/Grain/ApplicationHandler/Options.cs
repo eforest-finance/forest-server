@@ -63,7 +63,7 @@ public class ResetNFTSyncHeightExpireMinutesOptions
 
 public class ChoiceNFTInfoNewFlagOptions
 {
-    public bool ChoiceNFTInfoNewFlagIsOn { get; set; }
+    public bool ChoiceNFTInfoNewFlagIsOn { get; set; } = true;
 }
 
 public class CollectionActivityNFTLimitOptions
@@ -106,6 +106,9 @@ public class PlatformNFTOptions
     public int IssueChainId{ get; set; }
     
     public List<int> ExcludeTokenIds{ get; set; }
+    public int IssueCount { get; set; } = 1;
+
+    
 }
 
 public class TreeGameOptions

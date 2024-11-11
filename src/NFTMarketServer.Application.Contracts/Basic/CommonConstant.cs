@@ -2,6 +2,7 @@ namespace NFTMarketServer.Basic;
 
 public static class CommonConstant
 {
+    public const string NftSubfix = "0";
     public const string Coin_ELF = "ELF";
     public const int Coin_ELF_Decimals = 8;
     public const long LongError = -1;
@@ -38,6 +39,7 @@ public static class CommonConstant
     public const int CacheExpirationDays = 365;
     public const long EsLimitTotalNumber = 10000;
     public const int CollectionActivityNFTLimit = 1000;
+    public const int ProfileTotalNumber = 5000;
     
     public const string CollectionTypeSeed = "seed";
     public const string CollectionSeedName = "SEED";
@@ -73,6 +75,10 @@ public static class CommonConstant
     public const int MessageAllStatus = -1;
     public const string SortTypeNumber = "number";
     public const string SortScriptSourceValueLength = "doc['seedOwnedSymbol'].value.length()";
+    public const string  BurnedAllNftScript = "doc['supply'].value == 0 && doc['issued'].value == doc['totalSupply'].value";
+    public const string  CreateFailedANftScript = "doc['supply'].value == 0 && doc['issued'].value == 0";
+    public const string IssuedLessThenOneANftScript = "(doc['supply'].value / Math.pow(10, doc['decimals'].value)) < 1";
+    public const string SeedCollectionSymbol = "SEED-0";
 
 
 

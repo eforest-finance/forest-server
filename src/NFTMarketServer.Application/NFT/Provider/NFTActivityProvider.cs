@@ -115,43 +115,122 @@ public class NFTActivityProvider : INFTActivityProvider, ISingletonDependency
         return graphQLResponse?.Data;
     }
 
+    //todo v2 change to local search
+    // public async Task<IndexerNFTActivityPage> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
+    //     List<int> types, int skipCount, int maxResultCount)
+    // {
+    //     var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
+    //     {
+    //         Query = @"
+			 //    query($skipCount:Int!,$maxResultCount:Int!,$collectionId:String!,$types:[Int!]!,$bizIdList:[String!]!) {
+    //                 data:collectionActivityList(input:{skipCount: $skipCount,maxResultCount:$maxResultCount,collectionId:$collectionId,types:$types,bizIdList:$bizIdList}){
+    //                     totalRecordCount,
+    //                     indexerNftactivity:data{
+    //                                         nftInfoId,
+    //                                         type,
+    //                                         from,
+    //                                         to,
+    //                                         amount,
+    //                                         price,
+    //                                         transactionHash,
+    //                                         timestamp,
+    //                                         priceTokenInfo{
+    //                                           id,
+    //                                           chainId,
+    //                                           blockHash,
+    //                                           blockHeight,
+    //                                           previousBlockHash,
+    //                                           symbol
+    //                                         }
+    //                      }
+    //                 }
+    //             }",
+    //         Variables = new
+    //         {
+    //             skipCount = skipCount, maxResultCount = maxResultCount, types = types,
+    //             collectionId = collectionId, bizIdList = bizIdList
+    //         }
+    //     });
+    //     return graphQLResponse?.Data;
+    // }
+    
     public async Task<IndexerNFTActivityPage> GetCollectionActivityListAsync(string collectionId, List<string> bizIdList,
         List<int> types, int skipCount, int maxResultCount)
     {
-        var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerNFTActivityPage>(new GraphQLRequest
+        var mustQuery = new List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>>();
+
+        if (!bizIdList.IsNullOrEmpty())
         {
-            Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$collectionId:String!,$types:[Int!]!,$bizIdList:[String!]!) {
-                    data:collectionActivityList(input:{skipCount: $skipCount,maxResultCount:$maxResultCount,collectionId:$collectionId,types:$types,bizIdList:$bizIdList}){
-                        totalRecordCount,
-                        indexerNftactivity:data{
-                                            nftInfoId,
-                                            type,
-                                            from,
-                                            to,
-                                            amount,
-                                            price,
-                                            transactionHash,
-                                            timestamp,
-                                            priceTokenInfo{
-                                              id,
-                                              chainId,
-                                              blockHash,
-                                              blockHeight,
-                                              previousBlockHash,
-                                              symbol
-                                            }
-                         }
-                    }
-                }",
-            Variables = new
-            {
-                skipCount = skipCount, maxResultCount = maxResultCount, types = types,
-                collectionId = collectionId, bizIdList = bizIdList
-            }
-        });
-        return graphQLResponse?.Data;
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.NftInfoId).Terms(bizIdList)));
+        }
+        if (types?.Count > 0)
+        {
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Type).Terms(types)));
+        }
+        
+        var collectionSymbolPre = NFTHelper.GetCollectionIdPre(collectionId);
+        mustQuery.Add(q => q
+            .Script(sc => sc
+                .Script(script =>
+                    script.Source($"{"doc['nftInfoId'].value.contains('"+collectionSymbolPre+"')"}")
+                )
+            )
+        );
+
+        QueryContainer Filter(QueryContainerDescriptor<NFTActivityIndex> f) => f.Bool(b => b.Must(mustQuery));
+
+        var list = await _nftActivityIndexRepository.GetSortListAsync(Filter, limit: maxResultCount,
+            skip: skipCount, sortFunc: GetSortForNFTActivityIndexs());
+        var dataList = _objectMapper.Map<List<NFTActivityIndex>, List<NFTActivityItem>>(list.Item2);
+
+        var totalCount = list?.Item1;
+        if (list?.Item1 == CommonConstant.EsLimitTotalNumber)
+        {
+            totalCount =
+                await QueryRealCountAsync(_nftActivityIndexRepository, mustQuery, null);
+        }
+        
+        return new IndexerNFTActivityPage
+        {
+            IndexerNftActivity = dataList,
+            TotalRecordCount = (long)(totalCount == null ? 0 : totalCount),
+        };
     }
+    private static async Task<long> QueryRealCountAsync(INESTRepository<NFTActivityIndex, string> nftActivityIndexRepository,List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>> mustQuery,List<Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer>> mustNotQuery)
+    {
+        var countRequest = new SearchRequest<NFTActivityIndex>
+        {
+            Query = new BoolQuery
+            {
+                Must = mustQuery != null && mustQuery.Any()
+                    ? mustQuery
+                        .Select(func => func(new QueryContainerDescriptor<NFTActivityIndex>()))
+                        .ToList()
+                        .AsEnumerable()
+                    : Enumerable.Empty<QueryContainer>(),
+                MustNot = mustNotQuery != null && mustNotQuery.Any()
+                    ? mustNotQuery
+                        .Select(func => func(new QueryContainerDescriptor<NFTActivityIndex>()))
+                        .ToList()
+                        .AsEnumerable()
+                    : Enumerable.Empty<QueryContainer>()
+            },
+            Size = 0
+        };
+        
+        Func<QueryContainerDescriptor<NFTActivityIndex>, QueryContainer> queryFunc = q => countRequest.Query;
+        var realCount = await nftActivityIndexRepository.CountAsync(queryFunc);
+        return realCount.Count;
+    }
+    
+    private static Func<SortDescriptor<NFTActivityIndex>, IPromise<IList<ISort>>> GetSortForNFTActivityIndexs()
+    {
+        SortDescriptor<NFTActivityIndex> sortDescriptor = new SortDescriptor<NFTActivityIndex>();
+        sortDescriptor.Descending(a=>a.Timestamp);
+        sortDescriptor.Ascending(a=>a.Type);
+        IPromise<IList<ISort>> promise = sortDescriptor;
+        return s => promise;
+    } 
 
     public async Task<IndexerNFTActivityPage> GetMessageActivityListAsync(List<int> types, int skipCount,
         long startBlockHeight, string chainId)
