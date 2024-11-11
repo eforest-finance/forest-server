@@ -66,11 +66,12 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         _clusterClient = clusterClient;
         _treeActivityProvider = treeActivityProvider;
         _treeGameLockProvider = treeGameLockProvider;
+        
     }
 
     public async Task HandleEventAsync(TreePointsChangeRecordEto etoData)
     {
-        _logger.LogInformation("TreePointsChangeRecordEventHandler receive: {Data}", JsonConvert.SerializeObject(etoData));
+        _logger.LogInformation("TreePointsChangeRecordEventHandler receive: {Data} ", JsonConvert.SerializeObject(etoData));
         var item = etoData.TreePointsChangeRecordItem;
         if (item == null || item.Id.IsNullOrEmpty()) return;
         var expireFlag = await _distributedCacheForHeight.GetAsync(item.Id);
