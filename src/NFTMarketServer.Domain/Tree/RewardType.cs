@@ -2,7 +2,8 @@ namespace NFTMarketServer.Tree;
 
 public enum RewardType
 {
-    ELF
+    ELF,
+    USDT
 }
 
 public enum TreeActivityStatus
