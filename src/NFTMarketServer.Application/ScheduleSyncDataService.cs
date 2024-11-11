@@ -65,6 +65,7 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
                         "End deal data for businessType: {businessQueryChainType} chainId: {chainId} lastEndHeight: {BlockHeight}",
                         businessQueryChainType, chainId, blockHeight);
                 }
+               
                 
             }
             catch (Exception e)
