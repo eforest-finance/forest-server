@@ -79,7 +79,7 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
         var processChangeOriginList = changePageInfo.TreePointsChangeRecordList;
         
         _logger.LogInformation(
-            "HandleTreePointsRecordAsync queryOriginList lastEndHeight: {count} queryList count{count},chainId:{chainId} ",
+            "HandleTreePointsRecordAsync queryOriginList lastEndHeight: {lastHeight} queryList count{count},chainId:{chainId} ",
             lastEndHeight, processChangeOriginList.Count, chainId);
         
         var blockHeight = await HandleTreePointsRecordAsync(chainId, processChangeOriginList, lastEndHeight);
@@ -111,7 +111,7 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
         
             stopwatch.Stop();
             _logger.LogInformation(
-                "It took {Elapsed} ms to execute HandleNFTActivityAsync for record: {B}.",
+                "It took {Elapsed} ms to execute TreePointsRecordsSyncScheduleService for record: {B}.",
                 stopwatch.ElapsedMilliseconds, JsonConvert.SerializeObject(record));
 
         }
