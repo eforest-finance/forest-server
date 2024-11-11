@@ -217,13 +217,12 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
             
             //record user join this activity count
             var activityRecordGrain = _clusterClient.GetGrain<ITreeUserActivityRecordGrain>(string.Concat(item.Address,"_",item.ActivityId));
-            var activityRecord = await activityRecordGrain.GetTreeUserActivityRecordAsync();
             await activityRecordGrain.SetTreeUserActivityRecordAsync(new TreeUserActivityRecordGrainDto()
             {
                 Id = item.Id,
                 ActivityId = item.ActivityId,
                 Address = item.Address,
-                ClaimCount = activityRecord.Data.ClaimCount+1
+                ClaimCount = 1
             });
         }
         await _treeGameLockProvider.ReleaseLockAsync(item.Address);

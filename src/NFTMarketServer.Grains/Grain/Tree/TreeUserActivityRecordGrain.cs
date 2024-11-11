@@ -30,17 +30,10 @@ public class TreeUserActivityRecordGrain : Grain<TreeUserActivityRecordState>, I
 
     public async Task<GrainResultDto<TreeUserActivityRecordGrainDto>> SetTreeUserActivityRecordAsync(TreeUserActivityRecordGrainDto input)
     {
-        if (State == null || State.Id.IsNullOrEmpty())
-        {
-            return null;
-        }
-        else
-        {
-            State.Id = input.Id;
-            State.Address = input.Address;
-            State.ActivityId = input.ActivityId;
-            State.ClaimCount = input.ClaimCount;
-        }
+        State.Id = input.Id;
+        State.Address = input.Address;
+        State.ActivityId = input.ActivityId;
+        State.ClaimCount = input.ClaimCount;
 
         await WriteStateAsync();
         return new GrainResultDto<TreeUserActivityRecordGrainDto>()
