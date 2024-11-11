@@ -20,6 +20,7 @@ using NFTMarketServer.OwnerShip.Verify;
 using NFTMarketServer.Provider;
 using NFTMarketServer.Redis;
 using NFTMarketServer.Seed;
+using NFTMarketServer.TreeGame.Provider;
 using StackExchange.Redis;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
@@ -84,6 +85,9 @@ namespace NFTMarketServer
             context.Services.AddSingleton<InscriptionItemCrossChainCreateInvoker>();
             context.Services.AddSingleton<InscriptionCollectionCrossChainCreateInvoker>();
             context.Services.AddSingleton<InscriptionIssueInvoker>();
+            
+            context.Services.AddSingleton<ITreeGamePointsDetailProvider, TreeGamePointsDetailProvider>();
+            context.Services.AddSingleton<ITreeGameUserInfoProvider, TreeGameUserInfoProvider>();
 
 
             context.Services.AddTransient<IScheduleSyncDataService, SeedIconScheduleService>();
@@ -113,6 +117,7 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, NFTActivitySyncScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, NFTActivityTransferSyncScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, UserBalanceSyncScheduleService>();
+            context.Services.AddTransient<IScheduleSyncDataService, TreePointsRecordsSyncScheduleService>();
 
             Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
             Configure<AwsS3Option>(configuration.GetSection("AwsS3"));
@@ -125,6 +130,7 @@ namespace NFTMarketServer
             Configure<StatisticsUserListRecordOptions>(configuration.GetSection("StatisticsUserListRecordOptions"));
             Configure<FuzzySearchOptions>(configuration.GetSection("FuzzySearchOptions"));
             Configure<PlatformNFTOptions>(configuration.GetSection("PlatformNFT"));
+            Configure<TreeGameOptions>(configuration.GetSection("TreeGame"));
 
             ConfigureTokenBucketService(context, configuration);
             ConfigureDistributedLocking(context, configuration);
