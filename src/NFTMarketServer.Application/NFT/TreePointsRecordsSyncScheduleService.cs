@@ -112,7 +112,7 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
             stopwatch.Stop();
             _logger.LogInformation(
                 "It took {Elapsed} ms to execute TreePointsRecordsSyncScheduleService for record: {B}.",
-                stopwatch.ElapsedMilliseconds, JsonConvert.SerializeObject(record));
+                stopwatch.ElapsedMilliseconds, record.Id);
 
         }
         if (blockHeight > 0)
