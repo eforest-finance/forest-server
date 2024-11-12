@@ -6,6 +6,7 @@ using AElf;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Tree;
 using NFTMarketServer.Tree.Provider;
@@ -82,8 +83,17 @@ namespace NFTMarketServer.TreeGame
         private List<TreeLevelInfo> GetTreeLevelInfoConfig()
         {
             var treeLevels = _platformOptionsMonitor.CurrentValue.TreeLevels;
+            var retryCount = 3;
+            while (treeLevels.IsNullOrEmpty() && retryCount>=0)
+            {
+                retryCount--;
+                treeLevels = _platformOptionsMonitor.CurrentValue.TreeLevels;
+            }
+            
             if (treeLevels.IsNullOrEmpty())
             {
+                _logger.LogInformation("TreeGameService.GetTreeLevelInfoConfig apollo is null");
+
                 treeLevels = TreeGameConstants.TreeLevels;
             }
 
@@ -148,14 +158,17 @@ namespace NFTMarketServer.TreeGame
         {
             //first join in game - init tree
             var treeLevels = GetTreeLevelInfoConfig();
-
+            _logger.LogInformation("TreeGameService.GetTreeLevelInfoConfig config:{A}", JsonConvert.SerializeObject(treeLevels));
             var treeInfo = new TreeInfo();
             var currentLevel = treeLevels.FirstOrDefault(x => x.Level == treeLevel);
+            _logger.LogInformation("TreeGameService.GetTreeLevelInfoConfig currentLevel:{A}", JsonConvert.SerializeObject(currentLevel));
+
             if (currentLevel == null)
             {
                 throw new Exception("Invalid treelevel:"+treeLevel);
             }
             var nextLevel = treeLevels.FirstOrDefault(x => x.Level == (treeLevel+1));
+            _logger.LogInformation("TreeGameService.GetTreeLevelInfoConfig nextLevel:{A}", JsonConvert.SerializeObject(nextLevel));
             treeInfo.Current = currentLevel;
             treeInfo.Next = nextLevel;
             var nextLevelCost = 0;
