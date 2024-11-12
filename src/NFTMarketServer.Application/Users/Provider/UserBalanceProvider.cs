@@ -155,7 +155,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var sorting = new Func<SortDescriptor<UserBalanceIndex>, IPromise<IList<ISort>>>(s =>
             s.Descending(t => t.ChangeTime));
         var tuple = await _userBalanceIndexRepository.GetSortListAsync(Filter, skip: input.SkipCount,
-            sortFunc: sorting).ConfigureAwait(false);
+            sortFunc: sorting);
         return tuple;
     }
     
