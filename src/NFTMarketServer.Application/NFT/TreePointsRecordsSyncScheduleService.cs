@@ -67,8 +67,6 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
             changePageInfo = null;
         }
 
-   
-
         if (changePageInfo.TotalRecordCount ==0 || changePageInfo.TreePointsChangeRecordList.IsNullOrEmpty())
         {
             _logger.LogInformation(
@@ -101,7 +99,7 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
             var innerKey = record.Id;
             if (recordList != null && recordList.Contains(innerKey))
             {
-                _logger.Debug("HandleTreePointsRecordAsync duplicated bizKey: {A}", record.Id);
+                _logger.Debug("HandleTreePointsRecordAsync duplicated bizKey: {A} ", record.Id);
                 continue;
             }
             
