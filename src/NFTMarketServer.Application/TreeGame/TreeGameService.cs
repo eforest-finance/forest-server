@@ -83,6 +83,13 @@ namespace NFTMarketServer.TreeGame
         private List<TreeLevelInfo> GetTreeLevelInfoConfig()
         {
             var treeLevels = _platformOptionsMonitor.CurrentValue.TreeLevels;
+            var retryCount = 3;
+            while (treeLevels.IsNullOrEmpty() && retryCount>=0)
+            {
+                retryCount--;
+                treeLevels = _platformOptionsMonitor.CurrentValue.TreeLevels;
+            }
+            
             if (treeLevels.IsNullOrEmpty())
             {
                 _logger.LogInformation("TreeGameService.GetTreeLevelInfoConfig apollo is null");
