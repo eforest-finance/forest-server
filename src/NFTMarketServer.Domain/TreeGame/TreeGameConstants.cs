@@ -9,7 +9,7 @@ public class TreeGameConstants
         {
             Level = 1,
             LevelTitle = "LV1",
-            Produce = 200,
+            Produce = 190,
             Frequency = 10,
             TimeUnit = TimeUnit.MINUTE,
             MinPoints = 0
