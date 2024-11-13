@@ -9,8 +9,8 @@ public class TreeGameConstants
         {
             Level = 1,
             LevelTitle = "LV1",
-            Produce = 190,
-            Frequency = 10,
+            Produce = 100,
+            Frequency = 1440,
             TimeUnit = TimeUnit.MINUTE,
             MinPoints = 0
         },
@@ -18,46 +18,46 @@ public class TreeGameConstants
         {
             Level = 2,
             LevelTitle = "LV2",
-            Produce = 20,
-            Frequency = 720,
-            TimeUnit = TimeUnit.MINUTE,
-            MinPoints = 100
-        },
-        new TreeLevelInfo
-        {
-            Level = 3,
-            LevelTitle = "LV3",
-            Produce = 30,
-            Frequency = 720,
-            TimeUnit = TimeUnit.MINUTE,
-            MinPoints = 200
-        },
-        new TreeLevelInfo
-        {
-            Level = 4,
-            LevelTitle = "LV4",
-            Produce = 40,
-            Frequency = 720,
+            Produce = 200,
+            Frequency = 1440,
             TimeUnit = TimeUnit.MINUTE,
             MinPoints = 300
         },
         new TreeLevelInfo
         {
+            Level = 3,
+            LevelTitle = "LV3",
+            Produce = 400,
+            Frequency = 1440,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 5000
+        },
+        new TreeLevelInfo
+        {
+            Level = 4,
+            LevelTitle = "LV4",
+            Produce = 600,
+            Frequency = 1440,
+            TimeUnit = TimeUnit.MINUTE,
+            MinPoints = 15000
+        },
+        new TreeLevelInfo
+        {
             Level = 5,
             LevelTitle = "LV5",
-            Produce = 50,
-            Frequency = 720,
+            Produce = 800,
+            Frequency = 1440,
             TimeUnit = TimeUnit.MINUTE,
-            MinPoints = 400
+            MinPoints = 40000
         },
         new TreeLevelInfo
         {
             Level = 6,
             LevelTitle = "LV6",
-            Produce = 60,
-            Frequency = 720,
+            Produce = 1000,
+            Frequency = 1440,
             TimeUnit = TimeUnit.MINUTE,
-            MinPoints = 500
+            MinPoints = 80000
         }
     };
 
@@ -67,7 +67,7 @@ public class TreeGameConstants
         Produce = 1,
         Frequency = 10,
         TimeUnit = TimeUnit.MINUTE,
-        WateringIncome = 2
+        WateringIncome = 24
     };
 
     public static readonly List<PointsDetailConfig> PointsDetailConfig = new List<PointsDetailConfig>()
