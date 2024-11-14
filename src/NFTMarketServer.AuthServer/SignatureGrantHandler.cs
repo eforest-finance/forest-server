@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Cryptography;
@@ -35,7 +34,7 @@ namespace NFTMarketServer;
 public class SignatureGrantHandler: ITokenExtensionGrant
 {
     private IUserInformationProvider _userInformationProvider;
-    private ITreeGameUserInfoProvider _treeGameUserInfoProvider;
+    private ITreeGameService _treeGameService;
 
     private ILogger<SignatureGrantHandler> _logger;
     private IAbpDistributedLock _distributedLock;
@@ -48,14 +47,12 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
     public async Task<IActionResult> HandleAsync(ExtensionGrantContext context)
     {
-        _logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<SignatureGrantHandler>>();
-        _logger.LogInformation("create token start");
         var publicKeyVal = context.Request.GetParameter("pubkey").ToString();
         var signatureVal = context.Request.GetParameter("signature").ToString();
         var timestampVal = context.Request.GetParameter("timestamp").ToString();
         var inviteFrom = context.Request.GetParameter("invite_from").ToString();
         var inviteType = context.Request.GetParameter("invite_type").ToString();
-        var nickName = context.Request.GetParameter("nickname").ToString();
+        var nickName = context.Request.GetParameter("nick_name").ToString();
 
         // var caHash = context.Request.GetParameter("ca_hash").ToString();
         // var chainId = context.Request.GetParameter("chain_id").ToString();
@@ -98,19 +95,8 @@ public class SignatureGrantHandler: ITokenExtensionGrant
             {
                 var version = context.Request.GetParameter("version").ToString();
                 var portkeyUrl = version == _V2 ? graphqlConfig.PortkeyV2Url : graphqlConfig.PortkeyUrl;
-                var caHolderInfos = new IndexerCAHolderInfos();
-                try
-                {
-                    caHolderInfos = await GetCAHolderInfo(portkeyUrl,
-                        new List<string>(){ account.Address} , account.ChainId);
-
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "create token exception portkeyUrl:{A} errMsg:{B}", JsonConvert.SerializeObject(portkeyUrl),JsonConvert.SerializeObject(ex.Message));
-                    return null;
-                }
-
+                var caHolderInfos = await GetCAHolderInfo(portkeyUrl,
+                    new List<string>(){ account.Address} , account.ChainId);
                 if (caHolderInfos == null || caHolderInfos.CaHolderManagerInfo==null || caHolderInfos.CaHolderManagerInfo.Count == 0)
                 {
                     return GetForbidResult(OpenIddictConstants.Errors.InvalidRequest,
@@ -147,10 +133,11 @@ public class SignatureGrantHandler: ITokenExtensionGrant
                     $"The time should be {timeRangeConfig.TimeRange} minutes before and after the current time.");
             }
         }
+        _logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<SignatureGrantHandler>>();
         _distributedLock = context.HttpContext.RequestServices.GetRequiredService<IAbpDistributedLock>();
         var userManager = context.HttpContext.RequestServices.GetRequiredService<IdentityUserManager>();
         _userInformationProvider = context.HttpContext.RequestServices.GetRequiredService<IUserInformationProvider>();
-        _treeGameUserInfoProvider = context.HttpContext.RequestServices.GetRequiredService<ITreeGameUserInfoProvider>();
+        _treeGameService = context.HttpContext.RequestServices.GetRequiredService<ITreeGameService>();
 
 
         var userName = address;
@@ -158,12 +145,15 @@ public class SignatureGrantHandler: ITokenExtensionGrant
         {
             userName = caHash;
         }
-
+        
         var user = await userManager.FindByNameAsync(userName);
-        _logger.LogInformation("create token user:{A} userName:{B} address:{C} caHash:{D}",JsonConvert.SerializeObject(user), userName, address, caHash);
+        _logger.LogInformation("miniapp user login:loginUser:{userName},address:{address}, inviteFrom{A},inviteType:{B},nickName:{C}, userDto:{user}", 
+            userName,address,inviteFrom,inviteType,nickName,JsonConvert.SerializeObject(user));
 
         if (user == null)
         {
+            _logger.LogInformation("miniapp user login:loginUser:{user} is not exist", userName);
+
             var userId = Guid.NewGuid();
 
             var createUserResult = await CreateUserAsync(userManager, _userInformationProvider, userId, address, caHash,caAddressMain,caAddressSide);
@@ -176,11 +166,23 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
             if (TreeGameConstants.TreeGameInviteType.Equals(inviteType))
             {
-                await _treeGameUserInfoProvider.AcceptInvitationAsync(address, nickName, inviteFrom);
+                var userAddress = address;
+                if (!string.IsNullOrWhiteSpace(caHash) && !string.IsNullOrWhiteSpace(caAddressMain))
+                {
+                    userAddress = caAddressMain;
+                }
+                if (!string.IsNullOrWhiteSpace(caHash) && !caAddressSide.IsNullOrEmpty())
+                {
+                    userAddress = caAddressSide.FirstOrDefault().Value;
+                }
+                
+                await _treeGameService.AcceptInvitationAsync(userAddress, nickName, inviteFrom);
             }
         }
         else
         {
+            _logger.LogInformation("miniapp user login:loginUser:{user} is exist", userName);
+
             UserSourceInput userSourceInput = new UserSourceInput
             {
                 UserId = user.Id,
@@ -193,33 +195,19 @@ public class SignatureGrantHandler: ITokenExtensionGrant
 
         }
 
-        try
-        {
-            var userClaimsPrincipalFactory = context.HttpContext.RequestServices
-                .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
-            var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
+        var userClaimsPrincipalFactory = context.HttpContext.RequestServices
+            .GetRequiredService<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+        var signInManager = context.HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.SignInManager<IdentityUser>>();
+        var principal = await signInManager.CreateUserPrincipalAsync(user);
+        var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
+        claimsPrincipal.SetScopes("NFTMarketServer");
+        claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
+        claimsPrincipal.SetAudiences("NFTMarketServer");
 
-            var principal = await signInManager.CreateUserPrincipalAsync(user);
-            var claimsPrincipal = await userClaimsPrincipalFactory.CreateAsync(user);
-            _logger.LogInformation("create token scopes:{A}",JsonConvert.SerializeObject(principal.GetScopes()));
+        await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
+            .SetAsync(principal);
 
-            claimsPrincipal.SetScopes("NFTMarketServer");
-            claimsPrincipal.SetResources(await GetResourcesAsync(context, principal.GetScopes()));
-            claimsPrincipal.SetAudiences("NFTMarketServer");
-        
-            await context.HttpContext.RequestServices.GetRequiredService<AbpOpenIddictClaimDestinationsManager>()
-                .SetAsync(principal);
-
-            var token = new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
-            return token;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "create token errMsg:{A}",ex.Message);
-            throw  ex;
-        }
-
-        return null;
+        return new SignInResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);
     }
     
     private ForbidResult GetForbidResult(string errorType, string errorDescription)

@@ -68,7 +68,8 @@ public class NFTOfferChangeScheduleService : ScheduleSyncDataService
             var innerKey = queryDto.NftId + queryDto.BlockHeight;
             if (nftIdList != null && nftIdList.Contains(innerKey))
             {
-                _logger.LogInformation("GetNFTOfferChangeAsync duplicated nftId: {nftId}", queryDto.NftId);
+                _logger.LogInformation("GetNFTOfferChangeAsync duplicated nftId: {nftId} blockHeight:{B} lastEndHeight:{C}", queryDto.NftId,
+                    queryDto.BlockHeight, lastEndHeight);
                 continue;
             }
             
@@ -77,7 +78,9 @@ public class NFTOfferChangeScheduleService : ScheduleSyncDataService
             {
                 Data = queryDto
             });
-            _logger.LogInformation("GetNFTOfferChangeAsync publish, nft id: {nftId}", queryDto.NftId);
+           
+            _logger.LogInformation("GetNFTOfferChangeAsync publish nftId: {nftId} blockHeight:{B} lastEndHeight:{C}", queryDto.NftId,
+                queryDto.BlockHeight, lastEndHeight);
         }
 
         if (blockHeight > 0)

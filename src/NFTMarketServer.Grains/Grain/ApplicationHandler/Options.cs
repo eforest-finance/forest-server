@@ -107,6 +107,8 @@ public class PlatformNFTOptions
     
     public List<int> ExcludeTokenIds{ get; set; }
     public int IssueCount { get; set; } = 1;
+
+    
 }
 
 public class TreeGameOptions

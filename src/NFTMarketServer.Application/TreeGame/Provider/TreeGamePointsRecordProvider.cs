@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using GraphQL;
@@ -13,7 +14,6 @@ namespace NFTMarketServer.TreeGame.Provider;
 
 public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISingletonDependency
 {
-    private readonly INESTRepository<TreeGamePointsDetailInfoIndex, string> _treeGamePointsDetailIndexRepository;
     private readonly IBus _bus;
     private readonly ILogger<ITreeGamePointsDetailProvider> _logger;
     private readonly IObjectMapper _objectMapper;
@@ -22,13 +22,11 @@ public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISing
 
     public TreeGamePointsRecordProvider(
         IGraphQLHelper graphQlHelper,
-        INESTRepository<TreeGamePointsDetailInfoIndex, string> treeGamePointsDetailIndexRepository,
         IBus bus,
         ILogger<ITreeGamePointsDetailProvider> logger,
         IObjectMapper objectMapper
     )
     {
-        _treeGamePointsDetailIndexRepository = treeGamePointsDetailIndexRepository;
         _bus = bus;
         _logger = logger;
         _objectMapper = objectMapper;
@@ -64,6 +62,39 @@ public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISing
                 startBlockHeight = startBlockHeight,
                 endBlockHeight = endBlockHeight,
                 chainId = chainId
+            }
+        });
+        return graphQLResponse.Data;
+    }
+
+    public async Task<IndexerTreePointsRecordPage> GetTreePointsRecordsAsync(List<string> addresses, long minTimestamp, long maxTimestamp)
+    {
+        var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerTreePointsRecordPage>(new GraphQLRequest
+        {
+            Query = @"
+			    query($minTimestamp:Long!,$maxTimestamp:Long!,$addresses: [String!]!) {
+                    data:getTreePointsRecords(dto:{minTimestamp:$minTimestamp,maxTimestamp:$maxTimestamp,addresses:$addresses}){
+                        totalRecordCount,
+                        treePointsChangeRecordList:data{
+                             id,
+                             address,
+                             totalPoints,
+                             points,
+                             opType,
+                             opTime,
+                             pointsType,
+                             activityId,
+                             treeLevel,
+                             chainId,
+                             blockHeight                                   
+                         }
+                    }
+                }",
+            Variables = new
+            {
+                addresses = addresses,
+                minTimestamp = minTimestamp,
+                maxTimestamp = maxTimestamp
             }
         });
         return graphQLResponse.Data;

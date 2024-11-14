@@ -423,13 +423,6 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                 opt => opt.MapFrom(source => source.ClaimMax));
         CreateMap<MessageInfoIndex, MessageInfoDto>();
         CreateMap<UserInformationEto, UserIndex>();
-
-        CreateMap<TreeGameUserInfoDto, TreeGameUserInfoIndex>();
-        CreateMap<TreeGameUserInfoIndex, TreeGameUserInfoDto>();
-        CreateMap<PointsDetail, TreeGamePointsDetailInfoIndex>();
-        CreateMap<TreeGamePointsDetailInfoIndex, PointsDetail>();
-
-        CreateMap<CreateTreeActivityRequest, TreeActivityIndex>();
         CreateMap<SeedSymbolIndex, IndexerSeedOwnedSymbol>().ForMember(destination => destination.SeedSymbol,
             opt => opt.MapFrom(source => source.Symbol))
             .ForMember(destination => destination.Symbol,
@@ -444,5 +437,19 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
                     Symbol = source.PriceTokenInfo.Symbol,
                     Decimals = source.PriceTokenInfo.Decimals
                 }));;
+        CreateMap<TreeGameUserInfoDto, TreeGameUserInfoIndex>();
+        CreateMap<TreeGameUserInfoIndex, TreeGameUserInfoDto>();
+        CreateMap<PointsDetail, TreeGamePointsDetailInfoIndex>();
+        CreateMap<TreeGamePointsDetailInfoIndex, PointsDetail>();
+        CreateMap<TreeGamePointsDetailInfoDto, TreeGamePointsDetailInfoIndex>();
+        CreateMap<TreeGamePointsDetailInfoIndex, TreeGamePointsDetailInfoDto>();
+        
+        CreateMap<CreateTreeActivityRequest, TreeActivityIndex>();
+
+        CreateMap<IndexerSeedOwnedSymbol, SeedSymbolIndexDto>();
+        
+        CreateMap<TreeActivityIndex, TreeActivityDto>();
+        CreateMap<TreeActivityDto, TreeActivityIndex>();
+
     }
 }

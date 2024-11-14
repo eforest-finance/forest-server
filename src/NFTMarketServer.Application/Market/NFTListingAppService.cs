@@ -161,7 +161,6 @@ namespace NFTMarketServer.Market
                 //     
                 // }
                 
-                
                 if (nftInfoIds.IsNullOrEmpty())
                 {
                     return new PagedResultDto<CollectedCollectionListingDto>()
@@ -173,7 +172,7 @@ namespace NFTMarketServer.Market
             } 
 
             var collectedNFTListings = await _nftListingProvider.GetCollectedNFTListingsAsync(input.SkipCount,
-                input.MaxResultCount, input.Address, input.ChainList, nftInfoIds);
+                input.MaxResultCount, input.Address, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, nftInfoIds);
 
             if (collectedNFTListings == null || collectedNFTListings.TotalRecordCount == CommonConstant.IntZero)
             {

@@ -20,6 +20,7 @@ using NFTMarketServer.OwnerShip.Verify;
 using NFTMarketServer.Provider;
 using NFTMarketServer.Redis;
 using NFTMarketServer.Seed;
+using NFTMarketServer.TreeGame.Provider;
 using StackExchange.Redis;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
@@ -84,6 +85,9 @@ namespace NFTMarketServer
             context.Services.AddSingleton<InscriptionItemCrossChainCreateInvoker>();
             context.Services.AddSingleton<InscriptionCollectionCrossChainCreateInvoker>();
             context.Services.AddSingleton<InscriptionIssueInvoker>();
+            
+            context.Services.AddSingleton<ITreeGamePointsDetailProvider, TreeGamePointsDetailProvider>();
+            context.Services.AddSingleton<ITreeGameUserInfoProvider, TreeGameUserInfoProvider>();
 
 
             context.Services.AddTransient<IScheduleSyncDataService, SeedIconScheduleService>();
@@ -95,11 +99,11 @@ namespace NFTMarketServer
 
             context.Services.AddTransient<IScheduleSyncDataService, BidScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionStatisticalDataScheduleService>();
-            context.Services.AddTransient<IScheduleSyncDataService, CollectionExtenstionCurrentInitScheduleService>(); 
+            // context.Services.AddTransient<IScheduleSyncDataService, CollectionExtenstionCurrentInitScheduleService>(); 
             context.Services.AddTransient<IScheduleSyncDataService, NFTCollectionPriceScheduleService>();   
             context.Services.AddTransient<IScheduleSyncDataService, TsmSeedMainChainScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, TsmSeedSideChainScheduleService>();
-            context.Services.AddTransient<IScheduleSyncDataService, NftInfoSyncDataService>();
+            //context.Services.AddTransient<IScheduleSyncDataService, NftInfoSyncDataService>();
             context.Services.AddTransient<IScheduleSyncDataService, NftInfoNewSyncDataService>();
             context.Services.AddTransient<IScheduleSyncDataService, NftInfoNewRecentSyncDataService>();
             context.Services.AddTransient<IScheduleSyncDataService, SeedSymbolSyncDataService>();

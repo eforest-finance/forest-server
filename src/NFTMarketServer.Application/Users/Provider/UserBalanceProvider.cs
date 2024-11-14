@@ -155,8 +155,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var sorting = new Func<SortDescriptor<UserBalanceIndex>, IPromise<IList<ISort>>>(s =>
             s.Descending(t => t.ChangeTime));
         var tuple = await _userBalanceIndexRepository.GetSortListAsync(Filter, skip: input.SkipCount,
-            limit:input.MaxResultCount,
-            sortFunc: sorting).ConfigureAwait(false);
+            sortFunc: sorting);
         return tuple;
     }
     
@@ -165,8 +164,7 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
         var userBalanceList = new List<UserBalanceIndex>();
         var totalCount = 0;
         var queryCount = 1;
-        //while (queryCount <= MaxQueryBalanceCount) todo v2
-        if (queryCount <= queryUserBalanceIndexInput.MaxResultCount)
+        while (queryCount <= MaxQueryBalanceCount)
         {
             var result = await GetUserBalancesAsync(queryUserBalanceIndexInput);
             if (result == null || result.Item1 <= CommonConstant.IntZero)
@@ -184,10 +182,10 @@ public class UserBalanceProvider : IUserBalanceProvider, ISingletonDependency
 
             queryUserBalanceIndexInput.SkipCount = result.Item2.Count;
             queryCount++;
-            // if (totalCount == userBalanceList.Count)
-            // {
-            //     break;
-            // } todo v2
+            if (totalCount == userBalanceList.Count)
+            {
+                break;
+            }
         }
         var returnUserBalances = new List<UserBalanceIndex>();
         foreach (var userBalance in userBalanceList)

@@ -7,13 +7,17 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.Grains.Grain.Tree;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
+using NFTMarketServer.Tree;
+using NFTMarketServer.Tree.Provider;
 using NFTMarketServer.TreeGame;
 using NFTMarketServer.TreeGame.Provider;
 using NFTMarketServer.Users.Index;
 using NFTMarketServer.Users.Provider;
+using Orleans;
 using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
@@ -31,7 +35,11 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
     private readonly ITreeGameUserInfoProvider _treeGameUserInfoProvider;
     private readonly IObjectMapper _objectMapper;
     private readonly ITreeGamePointsDetailProvider _treeGamePointsDetailProvider;
+    private readonly ITreeActivityProvider _treeActivityProvider;
+
     private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
+    private readonly IClusterClient _clusterClient;
+    private readonly ITreeGameLockProvider _treeGameLockProvider;
 
 
 
@@ -41,8 +49,11 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         ITreeGameUserInfoProvider treeGameUserInfoProvider,
         IUserBalanceProvider userBalanceProvider,
         ITreeGamePointsDetailProvider treeGamePointsDetailProvider,
+        ITreeActivityProvider treeActivityProvider,
         IOptionsMonitor<TreeGameOptions> platformOptionsMonitor,
-        IObjectMapper objectMapper)
+        IClusterClient clusterClient,
+        IObjectMapper objectMapper,
+        ITreeGameLockProvider treeGameLockProvider)
     {
         _logger = logger;
         _distributedCacheForHeight = distributedCacheForHeight;
@@ -52,7 +63,9 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         _objectMapper = objectMapper;
         _treeGamePointsDetailProvider = treeGamePointsDetailProvider;
         _platformOptionsMonitor = platformOptionsMonitor;
-
+        _clusterClient = clusterClient;
+        _treeActivityProvider = treeActivityProvider;
+        _treeGameLockProvider = treeGameLockProvider;
     }
 
     public async Task HandleEventAsync(TreePointsChangeRecordEto etoData)
@@ -64,6 +77,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         if (!expireFlag.IsNullOrEmpty())
         {
             _logger.LogInformation("TreePointsChangeRecordEventHandler expireFlag: {expireFlag},Id:{Id}",expireFlag, item.Id);
+            
             return;
         }
         await _distributedCacheForHeight.SetAsync(item.Id,
@@ -75,15 +89,30 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         //change points
         //change tree
         //change points detail
+        
+        var lockAcquired = await _treeGameLockProvider.TryAcquireLockAsync(item.Address);
+        var retryCount = 1;
+        while (!lockAcquired && retryCount > 0)
+        {
+            retryCount--;
+            lockAcquired = await _treeGameLockProvider.TryAcquireLockAsync(item.Address);
+        }
+
+        if (!lockAcquired)
+        {
+            throw new Exception("Frequent operations, please refresh and retry");
+        }
         var userInfo = await _treeGameUserInfoProvider.GetTreeUserInfoAsync(item.Address);
         if (userInfo == null)
         {
+            await _treeGameLockProvider.ReleaseLockAsync(item.Address);
             _logger.LogInformation("TreePointsChangeRecordEventHandler treeGameUserInfo is null: {A}",item.Address);
             return;
         }
         var treeInfo = await GetTreeGameTreeInfoAsync(userInfo.TreeLevel);
         if (treeInfo == null)
         {
+            await _treeGameLockProvider.ReleaseLockAsync(item.Address);
             _logger.LogInformation("TreePointsChangeRecordEventHandler treeInfo is null: {A}",item.Address);
             return;
         }
@@ -98,6 +127,10 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
                 if (EnumHelper.ToEnumString(detail.Type).Equals(EnumHelper.ToEnumString(item.PointsType)))
                 {
                     detail.Amount = treeInfo.Current.Produce;
+                    if (detail.Type == PointsDetailType.INVITE)
+                    {
+                        detail.Amount = 0;
+                    }
                     detail.UpdateTime = item.OpTime;
                     detail.RemainingTime = treeInfo.Current.Frequency;
                     await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
@@ -124,7 +157,9 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
                                 {
                                     rewardProportion = rewardConfig.RewardProportion;
                                 }
-                                detail.Amount += (decimal)item.PointsType * (decimal)rewardProportion;
+                                _logger.LogInformation("TreePointsChangeRecordEventHandler treeGameUserInfo's parent userTreePointsDetails invite amount old:{amount} add:{add}",detail.Amount,((decimal)item.Points * (decimal)rewardProportion));
+                                detail.Amount += (int)((decimal)item.Points * (decimal)rewardProportion);
+                                _logger.LogInformation("TreePointsChangeRecordEventHandler treeGameUserInfo's parent userTreePointsDetails invite amount new:{amount}",detail.Amount);
                                 await _treeGamePointsDetailProvider.SaveOrUpdateTreePointsDetailAsync(detail);
                                 break;
                             }
@@ -148,6 +183,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
             var currentLevel = treeLevels.FirstOrDefault(x => x.Level == Convert.ToInt32(item.TreeLevel));
             if (currentLevel == null)
             {
+                await _treeGameLockProvider.ReleaseLockAsync(item.Address);
                 throw new Exception("TreePointsChangeRecordEventHandler Invalid treelevel:"+item.TreeLevel);
             }
 
@@ -160,7 +196,7 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
 
                 detail.Amount = currentLevel.Produce;
             }
-            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(pointsDetailList);
+            await _treeGamePointsDetailProvider.BulkSaveOrUpdateTreePointsDetailsAsync(userInfo.Address,pointsDetailList);
 
         }
         
@@ -168,9 +204,29 @@ public class TreePointsChangeRecordEventHandler : IDistributedEventHandler<TreeP
         {
             userInfo.Points = item.TotalPoints;
             await _treeGameUserInfoProvider.SaveOrUpdateTreeUserInfoAsync(_objectMapper.Map<TreeGameUserInfoIndex, TreeGameUserInfoDto>(userInfo));
-            //record user join this activity count
+            //update activity
             var activityId = item.ActivityId;
+            var activity = await _treeActivityProvider.GetTreeActivityDetailAsync(activityId);
+            var leftReward = activity.LeftReward - activity.RedeemRewardOnce;
+            activity.LeftReward = leftReward <=0 ? 0 : leftReward;
+            if (leftReward <= 0)
+            {
+                activity.TreeActivityStatus = TreeActivityStatus.Ended;
+            }
+
+            await _treeActivityProvider.UpdateTreeActivityDetailAsync(activity);
+            
+            //record user join this activity count
+            var activityRecordGrain = _clusterClient.GetGrain<ITreeUserActivityRecordGrain>(string.Concat(item.Address,"_",item.ActivityId));
+            await activityRecordGrain.SetTreeUserActivityRecordAsync(new TreeUserActivityRecordGrainDto()
+            {
+                Id = item.Id,
+                ActivityId = item.ActivityId,
+                Address = item.Address,
+                ClaimCount = 1
+            });
         }
+        await _treeGameLockProvider.ReleaseLockAsync(item.Address);
     }
     private async Task<TreeInfo> GetTreeGameTreeInfoAsync(int treeLevel)
     {
