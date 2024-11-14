@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Indexing.Elasticsearch;
 using GraphQL;
@@ -61,6 +62,39 @@ public class TreeGamePointsRecordProvider : ITreeGamePointsRecordProvider, ISing
                 startBlockHeight = startBlockHeight,
                 endBlockHeight = endBlockHeight,
                 chainId = chainId
+            }
+        });
+        return graphQLResponse.Data;
+    }
+
+    public async Task<IndexerTreePointsRecordPage> GetTreePointsRecordsAsync(List<string> addresses, long minTimestamp, long maxTimestamp)
+    {
+        var graphQLResponse = await _graphQlHelper.QueryAsync<IndexerTreePointsRecordPage>(new GraphQLRequest
+        {
+            Query = @"
+			    query($minTimestamp:Long!,$maxTimestamp:Long!,$addresses: [String!]!) {
+                    data:getTreePointsRecords(dto:{minTimestamp:$minTimestamp,maxTimestamp:$maxTimestamp,addresses:$addresses}){
+                        totalRecordCount,
+                        treePointsChangeRecordList:data{
+                             id,
+                             address,
+                             totalPoints,
+                             points,
+                             opType,
+                             opTime,
+                             pointsType,
+                             activityId,
+                             treeLevel,
+                             chainId,
+                             blockHeight                                   
+                         }
+                    }
+                }",
+            Variables = new
+            {
+                addresses = addresses,
+                minTimestamp = minTimestamp,
+                maxTimestamp = maxTimestamp
             }
         });
         return graphQLResponse.Data;
