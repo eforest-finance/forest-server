@@ -78,7 +78,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         }
     }
 
-    /*public async Task<long> GetIndexBlockHeightAsync(string chainId)
+    public async Task<long> GetIndexBlockHeightAsync(string chainId)
     {
         var result = new AelfScanTokenAppResponse();
 
@@ -99,24 +99,6 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         }
 
         return 0;
-    }*/
-    public async Task<long> GetIndexBlockHeightAsync(string chainId)
-    {
-        var graphQLResponse = await _graphQLClient.SendQueryAsync<ConfirmedBlockHeightRecord>(new GraphQLRequest
-        {
-            Query = 
-                @"query($chainId:String,$filterType:BlockFilterType!) {
-                    syncState(dto: {chainId:$chainId,filterType:$filterType}){
-                        confirmedBlockHeight}
-                    }",
-            Variables = new
-            {
-                chainId,
-                filterType = BlockFilterType.LOG_EVENT
-            }
-        });
-
-        return graphQLResponse.Data.SyncState.ConfirmedBlockHeight;
     }
 
     public async Task<List<AuctionInfoDto>> GetSyncSymbolAuctionRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight)

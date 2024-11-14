@@ -10,5 +10,4 @@ public static class ApolloConfigurationExtension
         return builder
             .ConfigureAppConfiguration(config => { config.AddApollo(config.Build().GetSection("apollo")); });
     }
-    
 }

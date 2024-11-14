@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using NFTMarketServer.Common;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.NFT.Eto;
@@ -46,12 +45,8 @@ public class NFTCollectionProviderAdapter : INFTCollectionProviderAdapter, ISing
 
     public async Task AddOrUpdateNftCollectionExtensionAsync(NFTCollectionExtensionDto dto)
     {
-        try
-        {
-            var nftCollectionExtensionGrain = _clusterClient.GetGrain<INFTCollectionExtensionGrain>(dto.Id);
+        var nftCollectionExtensionGrain = _clusterClient.GetGrain<INFTCollectionExtensionGrain>(dto.Id);
         var grainDto = (await nftCollectionExtensionGrain.GetAsync()).Data;
-        _logger.LogInformation("NftCollectionExtensionGrain grainDto create {id}. dto:{B}", dto.Id, JsonConvert.SerializeObject(grainDto));
-
         //when grainDto or it's id is empty return.
         if (grainDto.Id.IsNullOrEmpty())
         {
@@ -85,13 +80,5 @@ public class NFTCollectionProviderAdapter : INFTCollectionProviderAdapter, ISing
 
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<NftCollectionExtensionGrainDto, NFTCollectionExtraEto>(resultDto.Data));
-        }
-        catch (Exception e)
-        {
-            _logger.LogError("NftCollectionExtensionGrain grainDto fail,  id: {id} errorMsg: {msg}.", dto.Id,e.Message);
-
-        }
-
-        
     }
 }

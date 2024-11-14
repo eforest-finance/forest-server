@@ -544,10 +544,6 @@ public class SynchronizeTxJobGrain : Grain<SynchronizeState>, ISynchronizeTxJobG
         var txId = await SendTransactionAsync(State.ToChainId,
             await GenerateRawTransaction(MethodName.CrossChainSyncProxyAccount, crossChainParams,
                 State.ToChainId, chainOptions.ChainInfos[State.ToChainId].ProxyAccountAddress));
-        var client = _blockchainClientFactory.GetClient(State.ToChainId);
-        if (!_chainOptionsMonitor.CurrentValue.ChainInfos.TryGetValue(State.ToChainId, out var chainInfo)) return "";
-        _logger.LogInformation("CrossChainSyncProxyAccountAsync oldTx:{oldTx} newTx:{txId} privateKey:{prikey} chainId:{chain} address:{add}", validateAgentTxId, txId, chainInfo.PrivateKey, State.ToChainId,client.GetAddressFromPrivateKey(chainInfo.PrivateKey));
-
         return txId.TransactionId;
     }
 
@@ -682,7 +678,7 @@ public class SynchronizeTxJobGrain : Grain<SynchronizeState>, ISynchronizeTxJobG
         State.Status = SynchronizeTransactionJobStatus.Failed;
 
         await WriteStateAsync();
-        _logger.LogInformation("Transaction failed, TxHash id {txHash} update status to {status}.",
+        _logger.LogWarning("Transaction failed, TxHash id {txHash} update status to {status}.",
             State.TxHash, State.Status);
 
         return false;
@@ -744,7 +740,6 @@ public class SynchronizeTxJobGrain : Grain<SynchronizeState>, ISynchronizeTxJobG
         return client.SignTransaction(chainInfo.PrivateKey, await client.GenerateTransactionAsync(
                 client.GetAddressFromPrivateKey(chainInfo.PrivateKey), contractAddress, methodName, param))
             .ToByteArray().ToHex();
-        
     }
 
     private async Task<TransactionResultDto> GetTxResultAsync(string chainId, string txId)

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
 using NFTMarketServer.NFT.Index;
@@ -50,9 +49,8 @@ public class NFTCollectionStatisticalDataScheduleService : ScheduleSyncDataServi
             }
 
             var count = nftCollectionChanges.IndexerNftCollectionChanges.Count;
-            _logger.LogInformation("GetNFTCollectionChangesByBlockHeightAsync queryList chainId:{chainId} count: {count} ", 
-                 chainId, count);
-
+            _logger.LogInformation("GetNFTCollectionChangesByBlockHeightAsync queryList chainId:{chainId} count: {count}", 
+                chainId, count);
 
             skipCount += count;
 
@@ -61,7 +59,7 @@ public class NFTCollectionStatisticalDataScheduleService : ScheduleSyncDataServi
             var blockHeight = await _nftCollectionChangeService.HandleItemsChangesAsync(chainId, processCollectionChanges);
             
             maxProcessedBlockHeight = Math.Max(maxProcessedBlockHeight, blockHeight);
-
+            
         } while (!processCollectionChanges.IsNullOrEmpty());
 
         return maxProcessedBlockHeight;

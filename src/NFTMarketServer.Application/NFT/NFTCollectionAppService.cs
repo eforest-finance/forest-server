@@ -190,7 +190,6 @@ namespace NFTMarketServer.NFT
 
             var resultList = extensionList
                 .Select(index => MapForTrendingCollectionsDto(index, collectionDictionary, recentImageDic))
-
                 .ToList();
             return new PagedResultDto<TrendingCollectionsDto>
             {
@@ -202,7 +201,6 @@ namespace NFTMarketServer.NFT
 
         public async Task<List<RecommendedNFTCollectionsDto>> GetRecommendedNFTCollectionsAsync()
         {
-
             var recommendedCollectionsOptions = _optionsMonitor.CurrentValue;
             if (recommendedCollectionsOptions.RecommendedCollections.IsNullOrEmpty())
             {
@@ -377,26 +375,6 @@ namespace NFTMarketServer.NFT
             
             
                 
-            
-            return trendingCollectionsDto;
-        }
-        
-        private TrendingCollectionsDto MapForTrendingCollectionsDto(NFTCollectionExtensionIndex index, 
-            Dictionary<string, IndexerNFTCollection> collectionInfos)
-        {
-            var trendingCollectionsDto =
-                _objectMapper.Map<NFTCollectionExtensionIndex, TrendingCollectionsDto>(index);
-            
-            trendingCollectionsDto.FloorChange = index.CurrentDayFloorChange;
-            trendingCollectionsDto.VolumeTotal = index.CurrentMonthVolumeTotal;
-            trendingCollectionsDto.VolumeTotalChange = index.CurrentMonthVolumeTotalChange;
-
-            if (collectionInfos != null && collectionInfos.TryGetValue(index.Id, out var info))
-            { 
-                trendingCollectionsDto.LogoImage ??= GetNftImageUrl(info.Symbol, info.ExternalInfoDictionary);
-                trendingCollectionsDto.LogoImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
-                trendingCollectionsDto.PreviewImage = FTHelper.BuildIpfsUrl(trendingCollectionsDto.LogoImage);
-            }
             
             return trendingCollectionsDto;
         }
