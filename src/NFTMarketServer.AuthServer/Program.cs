@@ -36,12 +36,10 @@ public class Program
         {
             Log.Information("Starting NFTMarketServer.AuthServer.");
             var builder = WebApplication.CreateBuilder(args);
-            builder.Configuration.AddJsonFile("apollosettings.json");
+            builder.Configuration.AddJsonFile("apollo.appsettings.json");
             builder.Host.AddAppSettingsSecretsJson()
                 .UseAutofac()
-                #if !DEBUG
                 .UseApollo()
-                #endif
                 .UseSerilog();
             await builder.AddApplicationAsync<NFTMarketServerAuthServerModule>();
             var app = builder.Build();
