@@ -40,6 +40,7 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
                         businessQueryChainType, chainId, resetHeight);
                     return;
                 }
+               
                 
                 var lastEndHeight = await _graphQlProvider.GetLastEndHeightAsync(chainId, businessQueryChainType);
                 var newIndexHeight = await _graphQlProvider.GetIndexBlockHeightAsync(chainId);
