@@ -569,7 +569,7 @@ public class NFTInfoProvider : INFTInfoProvider, ISingletonDependency
         {
             Query = @"query($skipCount: Int!
                     ,$maxResultCount: Int!
-                    ,$nftInfoId: String
+                    ,$nftInfoId: String!
                     ,$chainId: String!
                 ) {
                 data: queryOwnersByNftId(input: {

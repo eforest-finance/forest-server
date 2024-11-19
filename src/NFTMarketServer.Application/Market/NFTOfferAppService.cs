@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,7 @@ namespace NFTMarketServer.Market
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
                     input.ChainId, new List<string>(), input.NFTInfoId, new List<string>(),string.Empty, string.Empty,input.ExcludeAddress);
-            if (nftOfferIndexes == null || nftOfferIndexes.TotalRecordCount==0)
+            if (nftOfferIndexes == null || nftOfferIndexes.TotalRecordCount==0 || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
                 return buildInitNFTOffersDto();
             
             var totalCount = nftOfferIndexes.TotalRecordCount;
@@ -106,16 +107,19 @@ namespace NFTMarketServer.Market
                 nftInfoIds = compositeNFTDic?.Keys.ToList();
                 while (nftInfoIds.Count >= CommonConstant.IntOneThousand)
                 {
-                    skip += CommonConstant.IntOneThousand;
-                    compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
-                        input.SearchParam, skip, CommonConstant.IntOneThousand);
-                    var infoIds = compositeNFTDic?.Keys.ToList();
-                    if (infoIds.IsNullOrEmpty())
-                    {
-                        break;
-                    }
-                    nftInfoIds.AddRange(infoIds);
-                }
+                     skip += CommonConstant.IntOneThousand;
+                     compositeNFTDic = await _compositeNFTProvider.QueryCompositeNFTInfoAsync(input.CollectionIdList,
+                         input.SearchParam, skip, CommonConstant.IntOneThousand);
+                     var infoIds = compositeNFTDic?.Keys.ToList();
+                     if (infoIds.IsNullOrEmpty())
+                     {
+                         break;
+                     }
+                     
+                     {
+                         nftInfoIds.AddRange(infoIds);
+                     }
+                 }
                 if (nftInfoIds.IsNullOrEmpty())
                 {
                     return result;
@@ -125,7 +129,7 @@ namespace NFTMarketServer.Market
             
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    string.Empty, input.ChainList, string.Empty, nftInfoIds, input.Address, string.Empty, string.Empty);
+                    string.Empty, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, string.Empty, nftInfoIds, input.Address, string.Empty, string.Empty);
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
@@ -199,7 +203,7 @@ namespace NFTMarketServer.Market
             
             var nftOfferIndexes =
                 await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    string.Empty, input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
+                    string.Empty, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;

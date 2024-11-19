@@ -34,13 +34,11 @@ namespace NFTMarketServer.ContractEventHandler
             {
                 Log.Information("Starting NFTMarketServer.Dealer.");
                 var builder = WebApplication.CreateBuilder(args);
-                builder.Configuration.AddJsonFile("apollosettings.json");
+                builder.Configuration.AddJsonFile("apollo.appsettings.json");
                 builder.Host.AddAppSettingsSecretsJson()
                     .UseAutofac()
-                    .UseOrleansClient()
-                #if !DEBUG
                     .UseApollo() 
-                #endif
+                    .UseOrleansClient()
                     .UseSerilog();
                 await builder.AddApplicationAsync<NFTMarketServerDealerModule>();
                 var app = builder.Build();

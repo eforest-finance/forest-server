@@ -78,13 +78,16 @@ public class NFTActivitySyncScheduleService : ScheduleSyncDataService
         var processChangeOriginList = changePageInfo.IndexerNftActivity;
         
         _logger.LogInformation(
-            "HandleNFTActivityAsync queryOriginList count: {count} queryList count{count},chainId:{chainId} ",
-            processChangeOriginList.Count, processChangeOriginList.Count, chainId);
+            "HandleNFTActivityAsync queryOriginList count: {count} queryList count{count},chainId:{chainId} lastEndHeight:{A} ",
+            processChangeOriginList.Count, processChangeOriginList.Count, chainId,lastEndHeight);
         
         var blockHeight = await HandleNFTActivityAsync(chainId, processChangeOriginList, lastEndHeight);
 
         maxProcessedBlockHeight = Math.Max(maxProcessedBlockHeight, blockHeight);
         
+        _logger.LogInformation(
+            "HandleNFTActivityAsync queryOriginList count: {count} queryList count{count},chainId:{chainId} lastEndHeight:{A} blockHeight:{B}",
+            processChangeOriginList.Count, processChangeOriginList.Count, chainId,lastEndHeight,blockHeight);
         return maxProcessedBlockHeight;
     }
     

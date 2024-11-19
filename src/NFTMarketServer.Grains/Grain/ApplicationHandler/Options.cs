@@ -1,3 +1,6 @@
+using NFTMarketServer.TreeGame;
+using NFTMarketServer.Users.Index;
+
 namespace NFTMarketServer.Grains.Grain.ApplicationHandler;
 
 public class OpenAiOptions
@@ -60,7 +63,7 @@ public class ResetNFTSyncHeightExpireMinutesOptions
 
 public class ChoiceNFTInfoNewFlagOptions
 {
-    public bool ChoiceNFTInfoNewFlagIsOn { get; set; }
+    public bool ChoiceNFTInfoNewFlagIsOn { get; set; } = true;
 }
 
 public class CollectionActivityNFTLimitOptions
@@ -103,4 +106,31 @@ public class PlatformNFTOptions
     public int IssueChainId{ get; set; }
     
     public List<int> ExcludeTokenIds{ get; set; }
+    public int IssueCount { get; set; } = 1;
+
+    
 }
+
+public class TreeGameOptions
+{
+    public List<TreeLevelInfo> TreeLevels{ get; set; }
+
+    public WaterInfoConfig WaterInfo{ get; set; }
+
+    public List<PointsDetailConfig> PointsDetails { get; set; }
+    
+    public string HashVerifyKey{ get; set; }
+    
+    public InviteReward InviteReward{ get; set; }
+    
+    public List<Reward> Rewards { get; set; }
+
+
+}
+public class InviteReward
+{
+    public long RewardPoints{ get; set; }
+    public double RewardProportion{ get; set; }
+
+}
+

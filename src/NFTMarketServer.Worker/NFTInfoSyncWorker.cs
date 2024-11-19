@@ -8,21 +8,21 @@ using Volo.Abp.Threading;
 
 namespace NFTMarketServer.Worker;
 
-public class NFTInfoSyncWorker : NFTMarketServerWorkBase
-{
-    protected override BusinessQueryChainType BusinessType => BusinessQueryChainType.NftInfoSync;
-
-    public NFTInfoSyncWorker(ILogger<ScheduleSyncDataContext> logger,
-        AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
-        IScheduleSyncDataContext scheduleSyncDataContext,
-        IOptionsMonitor<WorkerOptions> optionsMonitor) :
-        base(logger, timer, serviceScopeFactory, scheduleSyncDataContext, optionsMonitor)
-    {
-        // add others.
-    }
-
-    protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
-    {
-        await _scheduleSyncDataContext.DealAsync(BusinessType, GetResetBlockHeightFlag(), GetResetBlockHeight());
-    }
-}
+// public class NFTInfoSyncWorker : NFTMarketServerWorkBase
+// {
+//     protected override BusinessQueryChainType BusinessType => BusinessQueryChainType.NftInfoSync;
+//
+//     public NFTInfoSyncWorker(ILogger<ScheduleSyncDataContext> logger,
+//         AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
+//         IScheduleSyncDataContext scheduleSyncDataContext,
+//         IOptionsMonitor<WorkerOptions> optionsMonitor) :
+//         base(logger, timer, serviceScopeFactory, scheduleSyncDataContext, optionsMonitor)
+//     {
+//         // add others.
+//     }
+//
+//     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
+//     {
+//         await _scheduleSyncDataContext.DealAsync(BusinessType, GetResetBlockHeightFlag(), GetResetBlockHeight());
+//     }
+// }
