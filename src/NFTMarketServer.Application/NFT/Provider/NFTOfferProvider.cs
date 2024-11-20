@@ -38,8 +38,8 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
         var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTOffers>(new GraphQLRequest
         {
             Query = @"
-			    query($skipCount:Int!,$maxResultCount:Int!,$chainId:String,$chainIdList:[String],$nftInfoId:String,$nftInfoIdList:[String],$expireTimeGt:Long,$offerFrom:String,$offerTo:String,$offerNotFrom:String) {
-                    data:nftOffers(dto:{skipCount:$skipCount,maxResultCount:$maxResultCount,chainId:$chainId,chainIdList:$chainIdList,nFTInfoId:$nftInfoId,nFTInfoIdList:$nftInfoIdList,expireTimeGt:$expireTimeGt,offerFrom:$offerFrom,offerTo:$offerTo,offerNotFrom:$offerNotFrom}){
+			    query($skipCount:Int!,$maxResultCount:Int!,$chainId:String,$chainIdList:[String!]!,$nftInfoId:String,$nftInfoIdList:[String!]!,$expireTimeGt:Long,$offerFrom:String,$offerTo:String,$offerNotFrom:String,$symbol:String) {
+                    data:nftOffers(dto:{skipCount:$skipCount,maxResultCount:$maxResultCount,chainId:$chainId,chainIdList:$chainIdList,nFTInfoId:$nftInfoId,nFTInfoIdList:$nftInfoIdList,expireTimeGt:$expireTimeGt,offerFrom:$offerFrom,offerTo:$offerTo,offerNotFrom:$offerNotFrom,symbol:$symbol}){
                         totalRecordCount,
                         indexerNFTOfferList:data{
                           bizSymbol,
@@ -70,7 +70,8 @@ public class NFTOfferProvider : INFTOfferProvider, ISingletonDependency
                 expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow),
                 offerFrom = inputOfferFrom,
                 offerTo = inputOfferTo,
-                offerNotFrom = inputOfferNotFrom
+                offerNotFrom = inputOfferNotFrom,
+                symbol = ""
             }
         });
         return indexerCommonResult?.Data;

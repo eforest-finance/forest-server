@@ -28,5 +28,6 @@ public enum BusinessQueryChainType
     NFTActivityMessageSync,
     NFTActivitySync,
     NFTActivityTransferSync,
-    UserBalanceSync
+    UserBalanceSync,
+    TreePointsRecordsSync
 }

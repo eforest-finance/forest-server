@@ -13,7 +13,11 @@ public class IndexerNFTCollectionChange : IndexerCommonResult<IndexerNFTCollecti
     public string ChainId { get; set; }
     public string Symbol { get; set; }
     public long BlockHeight { get; set; }
-    
+
+    public IndexerNFTCollectionChange()
+    {
+        
+    }
     public IndexerNFTCollectionChange(string chainId, string symbol, long blockHeight)
     {
         ChainId = chainId;

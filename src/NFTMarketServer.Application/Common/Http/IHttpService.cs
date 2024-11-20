@@ -9,6 +9,9 @@ public interface IHttpService
 
     Task<string> SendPostRequest(string apiUrl, string requestBody,
         Dictionary<string, string> header, int maxRetryCount);
+
+    Task<string> SendGetRequest(string apiUrl,
+        Dictionary<string, string> header);
 }
 
 public class HttpService : NFTMarketServerAppService, IHttpService
@@ -22,5 +25,11 @@ public class HttpService : NFTMarketServerAppService, IHttpService
         Dictionary<string, string> header,int maxRetryCount)
     {
         return await HttpUtil.SendPostRequest(apiUrl, requestBody, header, maxRetryCount);
+    }
+    
+    public async Task<string> SendGetRequest(string apiUrl,
+        Dictionary<string, string> header)
+    {
+        return await HttpUtil.SendGetRequest(apiUrl, header);
     }
 }

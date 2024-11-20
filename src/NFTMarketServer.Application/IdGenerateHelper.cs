@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 using AElf;
 using NFTMarketServer.Helper;
 
@@ -6,6 +9,23 @@ namespace NFTMarketServer;
 
 public class IdGenerateHelper
 {
+    public static string ToSha256Hash(string input)
+    {
+        if (input == null) throw new ArgumentNullException(nameof(input));
+
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            var bytes = Encoding.UTF8.GetBytes(input);
+            var hashBytes = sha256.ComputeHash(bytes);
+
+            StringBuilder builder = new StringBuilder();
+            foreach (byte b in hashBytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+            return builder.ToString();
+        }
+    }
     public static string GetCollectionRelationId(string collectionId, string address)
     {
         return GetId(collectionId, address);
@@ -126,5 +146,10 @@ public class IdGenerateHelper
         }
 
         return HashHelper.ComputeFrom(str).ToHex();
+    }
+    
+    public static string GetTsmSeedSymbolId(string chainId,string seedOwnedSymbol)
+    {
+        return GetId(chainId, seedOwnedSymbol);
     }
 }
