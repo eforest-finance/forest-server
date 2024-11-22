@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using AElf.ExceptionHandler.ABP;
 using AElf.Whitelist;
 using Elasticsearch.Net;
 using Medallion.Threading;
@@ -46,7 +47,8 @@ namespace NFTMarketServer
         typeof(AbpSettingManagementApplicationModule),
         typeof(NFTMarketServerGrainsModule),
        // typeof(AElfWhitelistApplicationModule),
-        typeof(AbpEventBusRabbitMqModule) 
+        typeof(AbpEventBusRabbitMqModule),
+        typeof(AOPExceptionModule)
     )]
     public class NFTMarketServerApplicationModule : AbpModule
     {

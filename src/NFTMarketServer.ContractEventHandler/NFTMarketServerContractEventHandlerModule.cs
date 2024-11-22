@@ -1,4 +1,5 @@
 ﻿using System;
+using AElf.ExceptionHandler.ABP;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -45,7 +46,8 @@ namespace NFTMarketServer.ContractEventHandler
         typeof(NFTMarketServerMongoDbModule),
         typeof(AbpAspNetCoreSerilogModule),
         typeof(AbpSwashbuckleModule),
-        typeof(AbpAspNetCoreMvcUiMultiTenancyModule)
+        typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
+        typeof(AOPExceptionModule)
     )]
     public class NFTMarketServerContractEventHandlerModule : AbpModule
     {

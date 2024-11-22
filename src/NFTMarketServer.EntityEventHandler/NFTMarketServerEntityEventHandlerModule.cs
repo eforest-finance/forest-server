@@ -1,3 +1,4 @@
+using AElf.ExceptionHandler.ABP;
 using AElf.Indexing.Elasticsearch.Options;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
@@ -34,6 +35,7 @@ namespace NFTMarketServer;
     typeof(NFTMarketServerCoinGeckoApiModule),
     typeof(AbpAspNetCoreSerilogModule),
     typeof(NFTMarketServerWorkerModule),
+    typeof(AOPExceptionModule),
     typeof(AbpEventBusRabbitMqModule))]
 public class NFTMarketServerEntityEventHandlerModule : AbpModule
 {

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using AElf.ExceptionHandler.ABP;
 using AutoResponseWrapper;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
@@ -55,7 +56,8 @@ namespace NFTMarketServer;
     typeof(AbpSwashbuckleModule),
     typeof(AbpEventBusRabbitMqModule),
     typeof(NFTMarketServerCoinGeckoApiModule),
-    typeof(AbpBlobStoringAliyunModule)
+    typeof(AbpBlobStoringAliyunModule),
+    typeof(AOPExceptionModule)
 )]
 public class NFTMarketServerHttpApiHostModule : AbpModule
 {

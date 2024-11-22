@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using AElf.ExceptionHandler.ABP;
 using Localization.Resources.AbpUi;
 using Medallion.Threading;
 using Medallion.Threading.Redis;
@@ -57,7 +58,8 @@ namespace NFTMarketServer;
     typeof(NFTMarketServerMongoDbModule),
     typeof(NFTMarketServerApplicationModule),
     typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpEventBusRabbitMqModule)
+    typeof(AbpEventBusRabbitMqModule),
+    typeof(AOPExceptionModule)
     )]
 public class NFTMarketServerAuthServerModule : AbpModule
 {

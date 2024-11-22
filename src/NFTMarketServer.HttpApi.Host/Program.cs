@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler.ABP;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -42,7 +43,8 @@ namespace NFTMarketServer
                 builder.Configuration.AddJsonFile("apollo.appsettings.json");
                 builder.Host.AddAppSettingsSecretsJson()
                     .UseAutofac()
-                   .UseApollo()
+                    .UseAElfExceptionHandler()
+                    .UseApollo()
                     .UseSerilog()
                     .UseOrleansClient();
                 await builder.AddApplicationAsync<NFTMarketServerHttpApiHostModule>();
