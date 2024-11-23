@@ -47,6 +47,7 @@ namespace NFTMarketServer.ContractEventHandler
                // CreateHostBuilder(args).Build().Run();
                 await app.InitializeApplicationAsync();
                 await app.RunAsync();
+                Log.Information("Starting NFTMarketServer.Dealer. started");
                 return 0;
             }
             catch (Exception ex)
