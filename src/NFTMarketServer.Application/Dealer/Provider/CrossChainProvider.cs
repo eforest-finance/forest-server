@@ -42,8 +42,8 @@ public class CrossChainProvider : ISingletonDependency
             indexHeight = await GetIndexHeightAsync(GetDefaultSideChainId(), _optionsMonitor.CurrentValue.CrossChainDelay);
         }
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "CrossChainProvider.GetIndexBlockHeight on chain", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "CrossChainProvider.GetIndexBlockHeight on chain is fail", 
         TargetType = typeof(CrossChainExceptionHandlingService), 
         MethodName = nameof(CrossChainExceptionHandlingService.HandleExceptionDelayReturn),
         LogTargets = new []{"chainId", "delayTime"})]
@@ -65,8 +65,8 @@ public class CrossChainProvider : ISingletonDependency
         var result = Int64Value.Parser.ParseFrom(ByteArrayHelper.HexStringToByteArray(transactionGetTokenResult));
         return result.Value;
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "CrossChainProvider.GetMerklePathDtoAsync on TransactionId", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "CrossChainProvider.GetMerklePathDtoAsync on TransactionId is fail", 
         TargetType = typeof(CrossChainExceptionHandlingService), 
         MethodName = nameof(CrossChainExceptionHandlingService.HandleExceptionDelayDefaultReturn),
         LogTargets = new []{"chainId", "transactionId"})]
@@ -80,8 +80,8 @@ public class CrossChainProvider : ISingletonDependency
         }
         return null;
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "CrossChainProvider.GetTransactionResultAsync on TransactionId", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "CrossChainProvider.GetTransactionResultAsync on TransactionId is fail", 
         TargetType = typeof(CrossChainExceptionHandlingService), 
         MethodName = nameof(CrossChainExceptionHandlingService.HandleExceptionDelayDefaultReturn),
         LogTargets = new []{"chainId", "transactionId"})]

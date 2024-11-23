@@ -84,8 +84,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         _objectMapper = objectMapper;
         _distributedLock = distributedLock;
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "AiAppService.CreateAiArtAsync", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "AiAppService.CreateAiArtAsync is fail", 
         TargetType = typeof(AiAppExceptionHandlingService), 
         MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"input"})]
@@ -120,8 +120,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
                 .ToList()
         };
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "AiAppService.CreateAiArtAsyncV2", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "AiAppService.CreateAiArtAsyncV2 is fail", 
         TargetType = typeof(AiAppExceptionHandlingService), 
         MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"input"})]
@@ -179,8 +179,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         };
     }
     
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "AiAppService.SensitiveWordCheckAsync", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "AiAppService.SensitiveWordCheckAsync is fail", 
         TargetType = typeof(AiAppExceptionHandlingService), 
         MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"promot", "negativePromot"})]
@@ -393,8 +393,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return createArtInput;
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "AiAppService.GenerateImageAsync", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "AiAppService.GenerateImageAsync is fail", 
         TargetType = typeof(AiAppExceptionHandlingService), 
         MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"fromAddress", "transactionId", "aiCreateIndex", "currentUserAddress"})]
@@ -552,8 +552,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
 
         return transactionId;
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "AiAppService.GetAiArtsAsync", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "AiAppService.GetAiArtsAsync is fail", 
         TargetType = typeof(AiAppExceptionHandlingService), 
         MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"input"})]
@@ -594,8 +594,8 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
             }).ToList()
         };
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "AiAppService.UseAIArtsAsync", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "AiAppService.UseAIArtsAsync is fail", 
         TargetType = typeof(AiAppExceptionHandlingService), 
         MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"input"})]
@@ -666,7 +666,7 @@ public class AiAppService : NFTMarketServerAppService, IAiAppService
         return new ResultDto<string>() {Success = true, Message = "", Data = result};
 
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
+    [ExceptionHandler(typeof(Exception),
         Message = "CreateAiArtRetryAsync something is wrong", 
         TargetType = typeof(AiAppExceptionHandlingService), 
         MethodName = nameof(AiAppExceptionHandlingService.HandleExceptionRethrow),

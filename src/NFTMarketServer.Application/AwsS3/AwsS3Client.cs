@@ -120,7 +120,7 @@ public class AwsS3Client : ISingletonDependency
         }
     }
 
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
+    [ExceptionHandler(typeof(Exception),
         Message = "AwsS3Client.UploadS3Async", 
         TargetType = typeof(ExceptionHandlingService), 
         MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),

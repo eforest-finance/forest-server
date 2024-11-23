@@ -77,12 +77,12 @@ public class HttpUtil
 
         return await requestAction();
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
+    [ExceptionHandler(typeof(Exception), 
         Message = "HttpUtils.PostRequest PostRequest is fail", 
         TargetType = typeof(ExceptionHandlingService), 
         MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"apiUrl", "requestBody", "header", "mediaType"})]
-    public static async Task<string> PostRequest(string apiUrl, string requestBody,
+    public  static  async Task<string> PostRequest(string apiUrl, string requestBody,
         Dictionary<string, string> header, string mediaType = "application/json")
     {
         var client = CreateHttpClient(header);
@@ -98,7 +98,7 @@ public class HttpUtil
             return await response.Content.ReadAsStringAsync();
         }
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
+    [ExceptionHandler(typeof(Exception),
         Message = "HttpUtils.PostRequest HTTP POST Exception is fail", 
         TargetType = typeof(ExceptionHandlingService), 
         MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
@@ -115,8 +115,8 @@ public class HttpUtil
 
         return await response?.Content?.ReadAsStringAsync();
     }
-    [ExceptionHandler(typeof(Exception), LogOnly = true,
-        Message = "HttpUtils.GetRequest", 
+    [ExceptionHandler(typeof(Exception),
+        Message = "HttpUtils.GetRequest fail", 
         TargetType = typeof(ExceptionHandlingService), 
         MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
         LogTargets = new []{"apiUrl"})]

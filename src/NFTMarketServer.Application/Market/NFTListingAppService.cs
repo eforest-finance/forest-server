@@ -68,7 +68,7 @@ namespace NFTMarketServer.Market
 
 
         }
-        [ExceptionHandler(typeof(Exception), LogOnly = true,
+        [ExceptionHandler(typeof(Exception),
             Message = "NFTListingAppService.GetNFTListingsAsync", 
             TargetType = typeof(ExceptionHandlingService), 
             MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
