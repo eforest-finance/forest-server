@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using CoinGecko.Clients;
 using CoinGecko.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.Tokens;
 using Volo.Abp.DependencyInjection;
 
@@ -28,8 +30,13 @@ namespace NFTMarketServer.CoinGeckoApi
 
             Logger = NullLogger<TokenMarketDataProvider>.Instance;
         }
-        
-        public async Task<decimal> GetPriceAsync(string symbol)
+        [ExceptionHandler(typeof(Exception),
+            Message = "Can not get current price from CoinGecko service for", 
+            TargetType = typeof(ExceptionHandlingService), 
+            MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+            LogTargets = new []{"symbol"}
+        )]
+        public virtual async Task<decimal> GetPriceAsync(string symbol)
         {
             var coinId = GetCoinIdAsync(symbol);
             if (coinId == null)
@@ -37,25 +44,15 @@ namespace NFTMarketServer.CoinGeckoApi
                 Logger.LogWarning($"can not get the token {symbol}");
                 return 0;
             }
+            var coinData =
+                await RequestAsync(async () =>
+                    await _coinGeckoClient.SimpleClient.GetSimplePrice(new[] {coinId}, new[] { UsdSymbol }));
 
-            try
+            if (!coinData.TryGetValue(coinId,out var value))
             {
-                var coinData =
-                    await RequestAsync(async () =>
-                        await _coinGeckoClient.SimpleClient.GetSimplePrice(new[] {coinId}, new[] { UsdSymbol }));
-
-                if (!coinData.TryGetValue(coinId,out var value))
-                {
-                    return 0;
-                }
-
-                return value[UsdSymbol].Value;
+                return 0;
             }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Can not get current price from CoinGecko service for " + symbol);
-                throw new Exception("Can not get current price from CoinGecko service for " + symbol);
-            }
+            return value[UsdSymbol].Value;
         }
 
         public async Task<decimal> GetHistoryPriceAsync(string symbol, DateTime dateTime)
