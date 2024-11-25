@@ -11,7 +11,7 @@
         <PackageReference Include="AElf.AElfNode.EventHandler.BackgroundJob" Version="1.2.1-19314" />
         <PackageReference Include="AElf.ExceptionHandler.ABP" Version="8.2.7" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Orleans.CodeGenerator" Version="7.0.0">
+        <PackageReference Include="Microsoft.Orleans.CodeGenerator" Version="8.1.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -29,9 +29,9 @@
         <PackageReference Include="Volo.Abp.Caching" Version="8.2.0" />
         <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="5.1.0" />
         <PackageReference Include="GraphQL.Client" Version="5.1.0" />
-        <PackageReference Include="Microsoft.Orleans.Reminders" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Orleans.Streaming" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Orleans.Reminders" Version="8.1.0" />
+        <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.1.0" />
+        <PackageReference Include="Microsoft.Orleans.Streaming" Version="8.1.0" />
     </ItemGroup>
 
     <ItemGroup>

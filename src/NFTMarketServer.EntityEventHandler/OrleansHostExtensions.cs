@@ -29,16 +29,16 @@ public static class OrleansHostExtensions
                     options.ClusterId = configSection.GetValue<string>("ClusterId");
                     options.ServiceId = configSection.GetValue<string>("ServiceId");
                 })
-                .Configure<ExceptionSerializationOptions>(options=>
+                .Configure<ExceptionSerializationOptions>(options =>
                 {
                     options.SupportedNamespacePrefixes.Add("Volo.Abp");
                     options.SupportedNamespacePrefixes.Add("Newtonsoft.Json");
-                })              
-                .Services.AddSerializer(serializerBuilder =>
-                {
-                    serializerBuilder.AddNewtonsoftJsonSerializer(
-                        isSupported: type => type.Namespace.StartsWith("NFTMarketServer"));
                 });
+            /*.Services.AddSerializer(serializerBuilder =>
+            {
+                serializerBuilder.AddNewtonsoftJsonSerializer(
+                    isSupported: type => type.Namespace.StartsWith("NFTMarketServer"));
+            });*/
         });
     }
     

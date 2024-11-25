@@ -33,8 +33,8 @@
 
         <!-- worker-->
         <PackageReference Include="Volo.Abp.BackgroundWorkers.Quartz" Version="8.2.0" />
-        <PackageReference Include="Microsoft.Orleans.Client" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Orleans.Client" Version="8.1.0" />
+        <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.1.0" />
 
     </ItemGroup>
 

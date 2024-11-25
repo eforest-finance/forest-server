@@ -9,7 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 using NFTMarketServer.Host;
-namespace NFTMarketServer
+namespace NFTMarketServer.Host
 {
     public class Program
     {

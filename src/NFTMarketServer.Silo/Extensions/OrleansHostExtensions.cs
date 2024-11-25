@@ -1,10 +1,13 @@
 using System.Net;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Silo.MongoDB;
 using Orleans.Configuration;
 using Orleans.Providers.MongoDB.Configuration;
+using Orleans.Providers.MongoDB.StorageProviders.Serializers;
 using Orleans.Statistics;
 using Serilog;
 
@@ -31,19 +34,50 @@ public static class OrleansHostExtensions
                     options.DatabaseName = configSection.GetValue<string>("DataBase");;
                     options.Strategy = MongoDBMembershipStrategy.SingleDocument;
                 })
-                .AddMongoDBGrainStorage("Default",(MongoDBGrainStorageOptions op) =>
+                .Configure<GrainCollectionNameOptions>(options =>
+                {
+                    /*var collectionName = configSection.GetSection(nameof(GrainCollectionNameOptions.GrainSpecificCollectionName)).GetChildren();
+                    options.GrainSpecificCollectionName = collectionName.ToDictionary(o => o.Key, o => o.Value);*/
+                    options.GrainSpecificCollectionName = ForestMongoCollectionConstants.GrainSpecificCollectionName;
+                })
+                /*.AddMongoDBGrainStorage("Default",(MongoDBGrainStorageOptions op) =>
                 {
                     op.CollectionPrefix = "GrainStorage";
                     op.DatabaseName = configSection.GetValue<string>("DataBase");
                 
-                    op.ConfigureJsonSerializerSettings = jsonSettings =>
+                    /*op.ConfigureJsonSerializerSettings = jsonSettings =>
                     {
                         // jsonSettings.ContractResolver = new PrivateSetterContractResolver();
                         jsonSettings.NullValueHandling = NullValueHandling.Include;
                         jsonSettings.DefaultValueHandling = DefaultValueHandling.Populate;
                         jsonSettings.ObjectCreationHandling = ObjectCreationHandling.Replace;
-                    };
+                    };#1#
                     
+                })*/
+                .AddForestMongoDBGrainStorage("Default", (MongoDBGrainStorageOptions op) =>
+                {
+                    op.CollectionPrefix = "GrainStorage";
+                    op.DatabaseName = configSection.GetValue<string>("DataBase");
+
+                    /*var grainIdPrefix = configSection
+                        .GetSection("GrainSpecificIdPrefix").GetChildren().ToDictionary(o => o.Key.ToLower(), o => o.Value);*/
+                    var grainIdPrefix = ForestMongoGrainIdConstants.GrainSpecificIdPrefix;
+                    foreach (var kv in grainIdPrefix)
+                    {
+                        Log.Information($"GrainSpecificIdPrefix, key: {kv.Key}, Value: {kv.Value}");
+                    }
+
+                    op.KeyGenerator = id =>
+                    {
+                        var grainType = id.Type.ToString();
+                        if (grainIdPrefix.TryGetValue(grainType, out var prefix))
+                        {
+                            return $"{prefix}+{id.Key}";
+                        }
+
+                        return id.ToString();
+                    };
+                    op.CreateShardKeyForCosmos = configSection.GetValue<bool>("CreateShardKeyForMongoDB", false);
                 })
                 .UseMongoDBReminders(options =>
                 {
@@ -55,6 +89,8 @@ public static class OrleansHostExtensions
                     options.ClusterId = clusterId;
                     options.ServiceId = serviceId;
                 })
+                .ConfigureServices(services =>
+                    services.AddSingleton<IGrainStateSerializer, ForestJsonGrainStateSerializer>())
                  .AddMemoryGrainStorage("PubSubStore")
                 //.ConfigureApplicationParts(parts => parts.AddFromApplicationBaseDirectory())
                 .UseDashboard(options =>

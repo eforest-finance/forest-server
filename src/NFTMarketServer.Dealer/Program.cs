@@ -10,7 +10,7 @@ using NFTMarketServer.Dealer;
 using Serilog;
 using Serilog.Events;
 
-namespace NFTMarketServer.ContractEventHandler
+namespace NFTMarketServer.Dealer
 {
     public class Program
     {
