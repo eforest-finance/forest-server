@@ -16,6 +16,41 @@ public class ExceptionHandlingService
         };
     }
     
+    public static async Task<FlowBehavior> HandleExceptionSymbolPriceRetrun(Exception ex)
+    {
+        return new FlowBehavior
+        {
+            ExceptionHandlingStrategy = ExceptionHandlingStrategy.Return,
+            ReturnValue = -1
+        };
+    }
+    public static async Task<FlowBehavior> HandleExceptionFailRetrun(Exception ex)
+    {
+        return new FlowBehavior
+        {
+            ExceptionHandlingStrategy = ExceptionHandlingStrategy.Return,
+            ReturnValue = -1
+        };
+    }
+    
+    public static async Task<FlowBehavior> HandleExceptionSeedSyncRetrun(Exception ex)
+    {
+        return new FlowBehavior
+        {
+            ExceptionHandlingStrategy = ExceptionHandlingStrategy.Return,
+            ReturnValue = -1
+        };
+    }
+    
+    public static async Task<FlowBehavior> HandleExceptionRetrunResultDto(Exception ex)
+    {
+        return new FlowBehavior
+        {
+            ExceptionHandlingStrategy = ExceptionHandlingStrategy.Return,
+            ReturnValue = new ResultDto<string>() {Success = false, Message = ex.Message}
+        };
+    }
+    
     public static async Task<FlowBehavior> HandleExceptionRetrunFlag(Exception ex, bool flag)
     {
         return new FlowBehavior

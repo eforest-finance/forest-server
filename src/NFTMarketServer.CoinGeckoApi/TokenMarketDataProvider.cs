@@ -31,7 +31,7 @@ namespace NFTMarketServer.CoinGeckoApi
             Logger = NullLogger<TokenMarketDataProvider>.Instance;
         }
         [ExceptionHandler(typeof(Exception),
-            Message = "Can not get current price from CoinGecko service for", 
+            Message = "GetPriceAsync:Can not get current price from CoinGecko service for", 
             TargetType = typeof(ExceptionHandlingService), 
             MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
             LogTargets = new []{"symbol"}
@@ -54,8 +54,13 @@ namespace NFTMarketServer.CoinGeckoApi
             }
             return value[UsdSymbol].Value;
         }
-
-        public async Task<decimal> GetHistoryPriceAsync(string symbol, DateTime dateTime)
+        [ExceptionHandler(typeof(Exception),
+            Message = "GetHistoryPriceAsync:can not get price for", 
+            TargetType = typeof(ExceptionHandlingService), 
+            MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+            LogTargets = new []{"symbol","dateTime"}
+        )]
+        public virtual async Task<decimal> GetHistoryPriceAsync(string symbol, DateTime dateTime)
         {
             var coinId = GetCoinIdAsync(symbol);
             if (coinId == null)
@@ -63,35 +68,17 @@ namespace NFTMarketServer.CoinGeckoApi
                 Logger.LogWarning($"can not get the token {symbol}");
                 return 0;
             }
+            var coinData =
+                await RequestAsync(async () => await _coinGeckoClient.CoinsClient.GetHistoryByCoinId(coinId,
+                    dateTime.ToString("dd-MM-yyyy"), "false"));
 
-            try
+            if (coinData.MarketData == null)
             {
-                // var proxy = new WebProxy
-                // {
-                //     Address = new Uri("http://127.0.0.1:1087"),
-                // };
-                // var clientHandler = new HttpClientHandler()
-                // {
-                //     Proxy = proxy,
-                // };
-                // var client = new CoinGeckoClient(clientHandler);
-                
-                var coinData =
-                    await RequestAsync(async () => await _coinGeckoClient.CoinsClient.GetHistoryByCoinId(coinId,
-                        dateTime.ToString("dd-MM-yyyy"), "false"));
-
-                if (coinData.MarketData == null)
-                {
-                    return 0;
-                }
-
-                return (decimal) coinData.MarketData.CurrentPrice[UsdSymbol].Value;
+                return 0;
             }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, $"can not get :{symbol} price.");
-                throw;
-            }
+
+            return (decimal) coinData.MarketData.CurrentPrice[UsdSymbol].Value;
+            
         }
 
         private string GetCoinIdAsync(string symbol)

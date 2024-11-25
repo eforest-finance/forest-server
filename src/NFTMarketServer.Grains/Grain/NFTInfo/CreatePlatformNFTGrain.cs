@@ -1,5 +1,7 @@
+using AElf.ExceptionHandler;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Users.Dto;
 using Orleans;
@@ -33,58 +35,49 @@ public class CreatePlatformNFTGrain : Grain<CreatePlatformNFTState>, ICreatePlat
         await WriteStateAsync();
         await base.OnDeactivateAsync(reason, token);
     }
-
-    public async Task<GrainResultDto<CreatePlatformNFTGrainDto>> SaveCreatePlatformNFTAsync(CreatePlatformNFTGrainInput createPlatformNFTGrainInput)
+    [ExceptionHandler(typeof(Exception),
+        Message = "CreatePlatformNFTGrain.SaveCreatePlatformNFTAsync is fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"createPlatformNFTGrainInput"}
+    )]
+    public virtual async Task<GrainResultDto<CreatePlatformNFTGrainDto>> SaveCreatePlatformNFTAsync(CreatePlatformNFTGrainInput createPlatformNFTGrainInput)
     {
-        try
+        if (State == null || State.Address.IsNullOrEmpty())
         {
-            
-            if (State == null || State.Address.IsNullOrEmpty())
+            State = new CreatePlatformNFTState()
             {
-                State = new CreatePlatformNFTState()
-                {
-                    Address = createPlatformNFTGrainInput.Address,
-                    Count = 1
-                };
-            }
-            else if(createPlatformNFTGrainInput.IsBack)
-            {
-                State.Count -= 1;
-            }
-            else
-            {
-                State.Count += 1;
-            }
-
-            await WriteStateAsync();
-            return new GrainResultDto<CreatePlatformNFTGrainDto>()
-            {
-                Success = true,
-                Data = _objectMapper.Map<CreatePlatformNFTState, CreatePlatformNFTGrainDto>(State)
+                Address = createPlatformNFTGrainInput.Address,
+                Count = 1
             };
         }
-        catch (Exception e)
+        else if(createPlatformNFTGrainInput.IsBack)
         {
-            _logger.LogError(e, "SaveCreatePlatformNFTAsync Exception input:{A} errMsg:{C}",JsonConvert.SerializeObject(createPlatformNFTGrainInput) ,e.Message);
-            throw e;
+            State.Count -= 1;
+        }
+        else
+        {
+            State.Count += 1;
         }
 
+        await WriteStateAsync();
+        return new GrainResultDto<CreatePlatformNFTGrainDto>()
+        {
+            Success = true,
+            Data = _objectMapper.Map<CreatePlatformNFTState, CreatePlatformNFTGrainDto>(State)
+        };
     }
-    
-    public async Task<GrainResultDto<CreatePlatformNFTGrainDto>> GetCreatePlatformNFTAsync()
+    [ExceptionHandler(typeof(Exception),
+        Message = "CreatePlatformNFTGrain.GetCreatePlatformNFTAsync is fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow)
+    )]
+    public virtual async Task<GrainResultDto<CreatePlatformNFTGrainDto>> GetCreatePlatformNFTAsync()
     {
-        try
+        return new GrainResultDto<CreatePlatformNFTGrainDto>()
         {
-            return new GrainResultDto<CreatePlatformNFTGrainDto>()
-            {
-                Success = true,
-                Data = _objectMapper.Map<CreatePlatformNFTState, CreatePlatformNFTGrainDto>(State)
-            };
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "GetCreatePlatformNFTAsync Exception errMsg:{C}",e.Message);
-            throw e;
-        }
+            Success = true,
+            Data = _objectMapper.Map<CreatePlatformNFTState, CreatePlatformNFTGrainDto>(State)
+        };
     }
 }

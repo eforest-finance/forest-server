@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,6 +11,7 @@ using Nest;
 using Newtonsoft.Json;
 using NFTMarketServer.Common;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
@@ -51,128 +53,145 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         _elasticClient = elasticClient;
     }
 
-    public async Task HandleEventAsync(NFTCollectionTradeEto eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTCollectionTradeHandler.HandleEventInnerAsync",
+        TargetType = typeof(ExceptionHandlingService),
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionFailRetrun),
+        LogTargets = new[] { "eventData" }
+    )]
+    public virtual async Task<long> HandleEventInnerAsync(NFTCollectionTradeEto eventData)
     {
-        var stopwatch = Stopwatch.StartNew();
-        try
+        _logger.LogInformation("NFTCollectionTradeEto begin, eventData={A} ",
+            JsonConvert.SerializeObject(eventData));
+        var collectionId = eventData?.CollectionId;
+        if (collectionId.IsNullOrEmpty())
         {
-            _logger.LogInformation("NFTCollectionTradeEto begin, eventData={A} ",
+            _logger.LogError("NFTCollectionTradeEto param is null. collectionId ={A} eventData={B}", collectionId,
                 JsonConvert.SerializeObject(eventData));
-            var collectionId = eventData?.CollectionId;
-            if (collectionId.IsNullOrEmpty())
-            {
-                _logger.LogError("NFTCollectionTradeEto param is null. collectionId ={A} eventData={B}", collectionId,
-                    JsonConvert.SerializeObject(eventData));
-                return;
-            }
-
-            var collectionTradeInfoOptions = _collectionTradeInfoOptions?.CurrentValue;
-            if (collectionTradeInfoOptions != null && collectionTradeInfoOptions.GrayIsOn)
-            {
-                if (!collectionTradeInfoOptions.CollectionIdList.Contains(collectionId))
-                {
-                    _logger.LogDebug("NFTCollectionTradeEto Gray mode. not contain this   collectionId={A}",
-                        collectionId);
-                    return;
-                }
-            }
-            
-            var chainId = eventData.ChainId;
-            var id = eventData.Id;
-            var currentOrdinal = eventData.CurrentOrdinal;
-            var nftCollectionExtensionIndex = await _nftCollectionExtensionRepository.GetAsync(collectionId);
-
-            if (nftCollectionExtensionIndex == null)
-            {
-                _logger.LogError("collectionExtension is null . collectionId ={A}", collectionId);
-                return;
-            }
-
-            var changeFlag = false;
-            var temChangeFlag = false;
-            temChangeFlag = await SaveCurrentHourRecordAsync(id, chainId, collectionId, currentOrdinal,nftCollectionExtensionIndex);
-            
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            if (eventData.InitFlag)
-            {
-                _logger.LogDebug("SavePreHourRecordInitAsync {A}",collectionId);
-                await SavePreHourRecordInitAsync(id, chainId, collectionId, currentOrdinal);
-            }
-            else
-            {
-                await SavePreHourRecordAsync(id, chainId, collectionId, currentOrdinal);
-            }
-            
-            temChangeFlag = await BuildPreDayFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildPreWeekFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildPreMonthFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildPreAllFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            
-            temChangeFlag = await BuildDayTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildCurrentWeekTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildCurrentMonthTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildCurrentAllTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildPreWeekTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-            
-            temChangeFlag = await BuildPreMonthTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
-            changeFlag = UpdateChangeFlag(changeFlag,temChangeFlag);
-
-            var temSupplyTotal = 0l;
-            if (nftCollectionExtensionIndex.NFTSymbol.Equals(SymbolHelper.SEED_COLLECTION))
-            {
-                
-                temSupplyTotal = await _seedSymbolSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId);
-            }
-            else
-            {
-                temSupplyTotal =
-                    await _nftInfoNewSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId, collectionId);
-            }
-
-            if (nftCollectionExtensionIndex.SupplyTotal != temSupplyTotal)
-            {
-                nftCollectionExtensionIndex.SupplyTotal = temSupplyTotal;
-                changeFlag = UpdateChangeFlag(changeFlag, true);
-            }
-
-            if (changeFlag)
-            {
-                await _nftCollectionExtensionRepository.UpdateAsync(nftCollectionExtensionIndex);
-            }
-            
+            return 1;
         }
-        catch (Exception ex)
+
+        var collectionTradeInfoOptions = _collectionTradeInfoOptions?.CurrentValue;
+        if (collectionTradeInfoOptions != null && collectionTradeInfoOptions.GrayIsOn)
         {
-            _logger.LogError(ex, "nftCollection trade information add or update fail: {Data}",
-                JsonConvert.SerializeObject(eventData));
+            if (!collectionTradeInfoOptions.CollectionIdList.Contains(collectionId))
+            {
+                _logger.LogDebug("NFTCollectionTradeEto Gray mode. not contain this   collectionId={A}",
+                    collectionId);
+                return 1;
+            }
         }
-        finally
+
+        var chainId = eventData.ChainId;
+        var id = eventData.Id;
+        var currentOrdinal = eventData.CurrentOrdinal;
+        var nftCollectionExtensionIndex = await _nftCollectionExtensionRepository.GetAsync(collectionId);
+
+        if (nftCollectionExtensionIndex == null)
         {
-            stopwatch.Stop();
-            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
-            _logger.LogInformation("NFTCollectionTradeEto ={A} end , spend: {B} Milliseconds",
-                JsonConvert.SerializeObject(eventData), elapsedMilliseconds);
+            _logger.LogError("collectionExtension is null . collectionId ={A}", collectionId);
+            return 1;
         }
+
+        var changeFlag = false;
+        var temChangeFlag = false;
+        temChangeFlag =
+            await SaveCurrentHourRecordAsync(id, chainId, collectionId, currentOrdinal, nftCollectionExtensionIndex);
+
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+        if (eventData.InitFlag)
+        {
+            _logger.LogDebug("SavePreHourRecordInitAsync {A}", collectionId);
+            await SavePreHourRecordInitAsync(id, chainId, collectionId, currentOrdinal);
+        }
+        else
+        {
+            await SavePreHourRecordAsync(id, chainId, collectionId, currentOrdinal);
+        }
+
+        temChangeFlag =
+            await BuildPreDayFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildPreWeekFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildPreMonthFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildPreAllFloorPriceAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+
+        temChangeFlag =
+            await BuildDayTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildCurrentWeekTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildCurrentMonthTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildCurrentAllTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildPreWeekTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        temChangeFlag =
+            await BuildPreMonthTradeInfoAsync(eventData.CurrentOrdinal, collectionId, nftCollectionExtensionIndex);
+        changeFlag = UpdateChangeFlag(changeFlag, temChangeFlag);
+
+        var temSupplyTotal = 0l;
+        if (nftCollectionExtensionIndex.NFTSymbol.Equals(SymbolHelper.SEED_COLLECTION))
+        {
+            temSupplyTotal = await _seedSymbolSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId);
+        }
+        else
+        {
+            temSupplyTotal =
+                await _nftInfoNewSyncedProvider.CalCollectionItemSupplyTotalAsync(chainId, collectionId);
+        }
+
+        if (nftCollectionExtensionIndex.SupplyTotal != temSupplyTotal)
+        {
+            nftCollectionExtensionIndex.SupplyTotal = temSupplyTotal;
+            changeFlag = UpdateChangeFlag(changeFlag, true);
+        }
+
+        if (changeFlag)
+        {
+            await _nftCollectionExtensionRepository.UpdateAsync(nftCollectionExtensionIndex);
+        }
+
+        return 1;
     }
 
-    private bool UpdateChangeFlag(bool originFlag,bool newTemFlag)
+    public virtual async Task HandleEventAsync(NFTCollectionTradeEto eventData)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var result = await HandleEventInnerAsync(eventData);
+        if (result <= 0)
+        {
+            _logger.LogError("nftCollection trade information add or update fail: {Data}",
+                JsonConvert.SerializeObject(eventData));
+        }
+
+        stopwatch.Stop();
+        var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+        _logger.LogInformation("NFTCollectionTradeEto ={A} end , spend: {B} Milliseconds",
+            JsonConvert.SerializeObject(eventData), elapsedMilliseconds);
+    }
+
+    private bool UpdateChangeFlag(bool originFlag, bool newTemFlag)
     {
         if (newTemFlag)
         {
@@ -181,19 +200,21 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
 
         return originFlag;
     }
-    
-    private async Task<bool> SaveCurrentHourRecordAsync(string id, string chainId, string collectionId, long currentOrdinal,NFTCollectionExtensionIndex nftCollectionExtensionIndex)
+
+    private async Task<bool> SaveCurrentHourRecordAsync(string id, string chainId, string collectionId,
+        long currentOrdinal, NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var beginUtcStamp = currentOrdinal;
         var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
-        var result = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId, id);
-        
+        var result =
+            await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId, id);
+
         await _hourlyCollectionTradeRecordRepository.AddOrUpdateAsync(result);
-        
-        if (nftCollectionExtensionIndex.FloorPrice != result.FloorPrice || 
+
+        if (nftCollectionExtensionIndex.FloorPrice != result.FloorPrice ||
             nftCollectionExtensionIndex.CurrentDaySalesTotal != result.SalesTotal ||
             nftCollectionExtensionIndex.CurrentDayVolumeTotal != result.VolumeTotal
-            )
+           )
         {
             nftCollectionExtensionIndex.FloorPrice = result.FloorPrice;
             nftCollectionExtensionIndex.CurrentDaySalesTotal = result.SalesTotal;
@@ -220,43 +241,43 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
 
             var beginUtcStamp = preHourTimestamp;
             var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
-            var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId,
+            var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId,
+                collectionId,
                 temId);
             await _hourlyCollectionTradeRecordRepository.AddAsync(record);
         }
-
     }
-    
-    private async Task SavePreHourRecordInitAsync(string id, string chainId, string collectionId, long currentOrdinal)
+
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTCollectionTradeHandler.SavePreHourRecordInitAsync error",
+        TargetType = typeof(ExceptionHandlingService),
+        LogOnly = true,
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new[] { "id", "chainId", "collectionId", "currentOrdinal" }
+    )]
+    public virtual async Task SavePreHourRecordInitAsync(string id, string chainId, string collectionId,
+        long currentOrdinal)
     {
         var preHourTimestamp = currentOrdinal;
         for (var i = 1; i <= 24 * 30 * 15; i++)
         {
             _logger.LogDebug("SavePreHourRecordInitAsync {A} {B}", collectionId, i);
-            try
+            preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
+            var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
+                TimeHelper.GetUnixTimestampSecondsFormatted(preHourTimestamp));
+            var preRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(temId);
+            if (preRecord != null)
             {
-                preHourTimestamp = TimeHelper.GetBeforeUtcHourStartTimestamp(preHourTimestamp, 1);
-                var temId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
-                    TimeHelper.GetUnixTimestampSecondsFormatted(preHourTimestamp));
-                var preRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(temId);
-                if (preRecord != null)
-                {
-                    continue;
-                }
-
-                var beginUtcStamp = preHourTimestamp;
-                var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
-                var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId, collectionId,
-                    temId);
-                await _hourlyCollectionTradeRecordRepository.AddAsync(record);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e,"SavePreHourRecordInitAsync error {A} {B}", collectionId, i);
+                continue;
             }
 
+            var beginUtcStamp = preHourTimestamp;
+            var endUtcStamp = TimeHelper.GetNextUtcHourStartTimestamp(beginUtcStamp);
+            var record = await SaveHourlyCollectionTradeRecordIndexAsync(beginUtcStamp, endUtcStamp, chainId,
+                collectionId,
+                temId);
+            await _hourlyCollectionTradeRecordRepository.AddAsync(record);
         }
-
     }
 
     private async Task<bool> BuildDayTradeInfoAsync(long currentOrdinal, string collectionId,
@@ -265,7 +286,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var changeFlag = false;
         var temFlag = await BuildCurrentDayTradeInfoAsync(currentOrdinal, collectionId, nftCollectionExtensionIndex);
         changeFlag = UpdateChangeFlag(changeFlag, temFlag);
-        
+
         temFlag = await BuildPreDayTradeInfoAsync(currentOrdinal, collectionId, nftCollectionExtensionIndex);
         changeFlag = UpdateChangeFlag(changeFlag, temFlag);
 
@@ -276,9 +297,10 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentDayVolumeTotalChange = temVolumeTotalChange;
             changeFlag = UpdateChangeFlag(changeFlag, true);
         }
-        
+
         return changeFlag;
     }
+
     private async Task<bool> BuildCurrentDayTradeInfoAsync(long currentOrdinal, string collectionId,
         NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
@@ -293,13 +315,14 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentDayVolumeTotal = temVolumeTotal;
             changeFlag = true;
         }
-        
+
         var temSalesTotal = resultList.Sum(obj => obj.SalesTotal);
         if (nftCollectionExtensionIndex.CurrentDaySalesTotal != temSalesTotal)
         {
             nftCollectionExtensionIndex.CurrentDaySalesTotal = temSalesTotal;
             changeFlag = true;
         }
+
         return changeFlag;
     }
 
@@ -311,14 +334,14 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var resultList = await QueryRecordList(beginOrdinal, endordinal, collectionId);
 
         var changeFlag = false;
-        
+
         var temVolumeTotal = resultList.Sum(obj => obj.VolumeTotal);
         if (nftCollectionExtensionIndex.PreviousDayVolumeTotal != temVolumeTotal)
         {
             nftCollectionExtensionIndex.PreviousDayVolumeTotal = temVolumeTotal;
             changeFlag = true;
         }
-        
+
         var temSalesTotal = resultList.Sum(obj => obj.SalesTotal);
         if (nftCollectionExtensionIndex.PreviousDaySalesTotal != temSalesTotal)
         {
@@ -343,22 +366,23 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentWeekVolumeTotal = temVolumeTotal;
             changeFlag = true;
         }
-        
+
         var temSalesTotal = resultList.Sum(obj => obj.SalesTotal);
         if (nftCollectionExtensionIndex.CurrentWeekSalesTotal != temSalesTotal)
         {
             nftCollectionExtensionIndex.CurrentWeekSalesTotal = temSalesTotal;
             changeFlag = true;
         }
+
         return changeFlag;
     }
-    
+
     private async Task<bool> BuildCurrentMonthTradeInfoAsync(long currentOrdinal, string collectionId,
         NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var beginOrdinal = TimeHelper.GetBeforeUtcHourStartTimestamp(currentOrdinal, 24 * 29 + 23);
         var endordinal = currentOrdinal;
-        
+
         var changeFlag = false;
         var temVolumeTotal = await QueryVolumeTotalSumAsync(beginOrdinal, endordinal, collectionId);
         if (nftCollectionExtensionIndex.CurrentMonthVolumeTotal != temVolumeTotal)
@@ -366,22 +390,23 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentMonthVolumeTotal = temVolumeTotal;
             changeFlag = true;
         }
-        
+
         var temSalesTotal = await QuerySalesTotalSumAsync(beginOrdinal, endordinal, collectionId);
         if (nftCollectionExtensionIndex.CurrentMonthSalesTotal != temSalesTotal)
         {
             nftCollectionExtensionIndex.CurrentMonthSalesTotal = temSalesTotal;
             changeFlag = true;
         }
+
         return changeFlag;
     }
-    
+
     private async Task<bool> BuildCurrentAllTradeInfoAsync(long currentOrdinal, string collectionId,
         NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var beginOrdinal = 0;
         var endordinal = currentOrdinal;
-        
+
         var changeFlag = false;
         var temVolumeTotal = await QueryVolumeTotalSumAsync(beginOrdinal, endordinal, collectionId);
         if (nftCollectionExtensionIndex.CurrentAllVolumeTotal != temVolumeTotal)
@@ -389,13 +414,14 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentAllVolumeTotal = temVolumeTotal;
             changeFlag = true;
         }
-        
+
         var temSalesTotal = await QuerySalesTotalSumAsync(beginOrdinal, endordinal, collectionId);
         if (nftCollectionExtensionIndex.CurrentAllSalesTotal != temSalesTotal)
         {
             nftCollectionExtensionIndex.CurrentAllSalesTotal = temSalesTotal;
             changeFlag = true;
         }
+
         return changeFlag;
     }
 
@@ -407,14 +433,14 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var resultList = await QueryRecordList(beginOrdinal, endordinal, collectionId);
 
         var changeFlag = false;
-        
+
         var temVolumeTotal = resultList.Sum(obj => obj.VolumeTotal);
         if (nftCollectionExtensionIndex.PreviousWeekVolumeTotal != temVolumeTotal)
         {
             nftCollectionExtensionIndex.PreviousWeekVolumeTotal = temVolumeTotal;
             changeFlag = true;
         }
-        
+
         var temSalesTotal = resultList.Sum(obj => obj.SalesTotal);
         if (nftCollectionExtensionIndex.PreviousWeekSalesTotal != temSalesTotal)
         {
@@ -430,26 +456,25 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentWeekVolumeTotalChange = temVolumeTotalChange;
             changeFlag = true;
         }
-        
+
         return changeFlag;
-        
     }
-    
+
     private async Task<bool> BuildPreMonthTradeInfoAsync(long currentOrdinal, string collectionId,
         NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var beginOrdinal = TimeHelper.GetBeforeUtcHourStartTimestamp(currentOrdinal, 24 * 30 * 2);
         var endordinal = TimeHelper.GetBeforeUtcHourStartTimestamp(currentOrdinal, 24 * 30);
-        
+
         var changeFlag = false;
-        
+
         var temVolumeTotal = await QueryVolumeTotalSumAsync(beginOrdinal, endordinal, collectionId);
         if (nftCollectionExtensionIndex.PreviousMonthVolumeTotal != temVolumeTotal)
         {
             nftCollectionExtensionIndex.PreviousMonthVolumeTotal = temVolumeTotal;
             changeFlag = true;
         }
-        
+
         var temSalesTotal = await QuerySalesTotalSumAsync(beginOrdinal, endordinal, collectionId);
         if (nftCollectionExtensionIndex.PreviousMonthSalesTotal != temSalesTotal)
         {
@@ -465,9 +490,8 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             nftCollectionExtensionIndex.CurrentMonthVolumeTotalChange = temVolumeTotalChange;
             changeFlag = true;
         }
-        
+
         return changeFlag;
-        
     }
 
     public async Task<decimal> QueryVolumeTotalSumAsync(long beginOrdinal, long endOrdinal, string collectionId)
@@ -500,7 +524,7 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var volumeTotalSum = response.Aggregations.Sum("volume_total_sum").Value;
         return (decimal)volumeTotalSum.GetValueOrDefault(0);
     }
-    
+
     public async Task<long> QuerySalesTotalSumAsync(long beginOrdinal, long endOrdinal, string collectionId)
     {
         var response = await _elasticClient.SearchAsync<dynamic>(s => s
@@ -531,8 +555,9 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         var volumeTotalSum = response.Aggregations.Sum("sales_total_sum").Value;
         return (long)volumeTotalSum.GetValueOrDefault(0);
     }
-    
-    private async Task<List<HourlyCollectionTradeRecordIndex>> QueryRecordList(long beginOrdinal,long endOrdinal,string collectionId)
+
+    private async Task<List<HourlyCollectionTradeRecordIndex>> QueryRecordList(long beginOrdinal, long endOrdinal,
+        string collectionId)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<HourlyCollectionTradeRecordIndex>, QueryContainer>>();
         mustQuery.Add(q => q.Range(i
@@ -541,52 +566,67 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
             => i.Field(f => f.Ordinal).LessThanOrEquals(endOrdinal)));
         mustQuery.Add(q => q.Term(i
             => i.Field(f => f.CollectionId).Value(collectionId)));
-        QueryContainer Filter(QueryContainerDescriptor<HourlyCollectionTradeRecordIndex> f)=> 
+
+        QueryContainer Filter(QueryContainerDescriptor<HourlyCollectionTradeRecordIndex> f) =>
             f.Bool(b => b.Must(mustQuery));
-        
+
         var result = await _hourlyCollectionTradeRecordRepository.GetSortListAsync(Filter);
         return result?.Item2;
     }
-    
-    private async Task<bool> BuildPreDayFloorPriceAsync(long currentOrdinal,string collectionId,NFTCollectionExtensionIndex nftCollectionExtensionIndex)
+
+    private async Task<bool> BuildPreDayFloorPriceAsync(long currentOrdinal, string collectionId,
+        NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var preDayOrdinal = TimeHelper.GetPreDayUtcHourStartTimestamp(currentOrdinal);
-        var preId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,TimeHelper.GetUnixTimestampSecondsFormatted(preDayOrdinal));
+        var preId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
+            TimeHelper.GetUnixTimestampSecondsFormatted(preDayOrdinal));
         var preDayRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(preId);
         if (preDayRecord != null && preDayOrdinal != preDayRecord.FloorPrice)
         {
             nftCollectionExtensionIndex.PreviousDayFloorPrice = preDayRecord.FloorPrice;
-            nftCollectionExtensionIndex.CurrentDayFloorChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice,nftCollectionExtensionIndex.PreviousDayFloorPrice);
+            nftCollectionExtensionIndex.CurrentDayFloorChange =
+                PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice,
+                    nftCollectionExtensionIndex.PreviousDayFloorPrice);
             return true;
         }
+
         return false;
     }
-    
-    private async Task<bool> BuildPreWeekFloorPriceAsync(long currentOrdinal,string collectionId,NFTCollectionExtensionIndex nftCollectionExtensionIndex)
+
+    private async Task<bool> BuildPreWeekFloorPriceAsync(long currentOrdinal, string collectionId,
+        NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var preWeekOrdinal = TimeHelper.GetPreWeekUtcHourStartTimestamp(currentOrdinal);
-        var preId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,TimeHelper.GetUnixTimestampSecondsFormatted(preWeekOrdinal));
+        var preId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
+            TimeHelper.GetUnixTimestampSecondsFormatted(preWeekOrdinal));
         var preWeekRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(preId);
         if (preWeekRecord != null && nftCollectionExtensionIndex.PreviousWeekFloorPrice != preWeekRecord.FloorPrice)
         {
             nftCollectionExtensionIndex.PreviousWeekFloorPrice = preWeekRecord.FloorPrice;
-            nftCollectionExtensionIndex.CurrentWeekFloorChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice,nftCollectionExtensionIndex.PreviousWeekFloorPrice);
+            nftCollectionExtensionIndex.CurrentWeekFloorChange =
+                PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice,
+                    nftCollectionExtensionIndex.PreviousWeekFloorPrice);
             return true;
         }
+
         return false;
     }
-    
-    private async Task<bool> BuildPreMonthFloorPriceAsync(long currentOrdinal,string collectionId,NFTCollectionExtensionIndex nftCollectionExtensionIndex)
+
+    private async Task<bool> BuildPreMonthFloorPriceAsync(long currentOrdinal, string collectionId,
+        NFTCollectionExtensionIndex nftCollectionExtensionIndex)
     {
         var preMonthOrdinal = TimeHelper.GetPreMonthUtcHourStartTimestamp(currentOrdinal);
-        var preId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,TimeHelper.GetUnixTimestampSecondsFormatted(preMonthOrdinal));
+        var preId = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId,
+            TimeHelper.GetUnixTimestampSecondsFormatted(preMonthOrdinal));
         var preMonthRecord = await _hourlyCollectionTradeRecordRepository.GetAsync(preId);
         if (preMonthRecord != null && nftCollectionExtensionIndex.PreviousMonthFloorPrice != preMonthRecord.FloorPrice)
         {
             nftCollectionExtensionIndex.PreviousMonthFloorPrice = preMonthRecord.FloorPrice;
-            nftCollectionExtensionIndex.CurrentMonthFloorChange = PercentageCalculatorHelper.CalculatePercentage(nftCollectionExtensionIndex.FloorPrice,nftCollectionExtensionIndex.PreviousMonthFloorPrice);
+            nftCollectionExtensionIndex.CurrentMonthFloorChange = PercentageCalculatorHelper.CalculatePercentage(
+                nftCollectionExtensionIndex.FloorPrice, nftCollectionExtensionIndex.PreviousMonthFloorPrice);
             return true;
         }
+
         return false;
     }
 
@@ -604,12 +644,13 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
         return false;
     }
 
-    private async Task<HourlyCollectionTradeRecordIndex> SaveHourlyCollectionTradeRecordIndexAsync(long beginUtcStamp,long endUtcStamp,string chainId,string collectionId,string id)
+    private async Task<HourlyCollectionTradeRecordIndex> SaveHourlyCollectionTradeRecordIndexAsync(long beginUtcStamp,
+        long endUtcStamp, string chainId, string collectionId, string id)
     {
         var attributionTime = TimeHelper.FromUnixTimestampSeconds(beginUtcStamp);
         var result = await _collectionProvider.GetNFTCollectionTradeAsync(
             chainId, collectionId, beginUtcStamp, endUtcStamp);
-        
+
         var hourlyCollectionTradeRecordIndex = await _hourlyCollectionTradeRecordRepository.GetAsync(id);
 
         if (hourlyCollectionTradeRecordIndex == null)
@@ -631,13 +672,11 @@ public class NFTCollectionTradeHandler : IDistributedEventHandler<NFTCollectionT
                 SalesTotal = 0
             };
         }
-        
+
         hourlyCollectionTradeRecordIndex.FloorPrice = result.FloorPrice;
         hourlyCollectionTradeRecordIndex.VolumeTotal = result.VolumeTotal;
         hourlyCollectionTradeRecordIndex.SalesTotal = result.SalesTotal;
 
         return hourlyCollectionTradeRecordIndex;
-
     }
-    
 }

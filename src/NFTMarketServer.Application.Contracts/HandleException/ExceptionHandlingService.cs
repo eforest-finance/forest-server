@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AElf.ExceptionHandler;
 using NFTMarketServer.Ai;
+using NFTMarketServer.Basic;
 
 namespace NFTMarketServer.Contracts.HandleException;
 
@@ -21,6 +22,14 @@ public class ExceptionHandlingService
         {
             ExceptionHandlingStrategy = ExceptionHandlingStrategy.Return,
             ReturnValue = null
+        };
+    }
+    public static async Task<FlowBehavior> HandleExceptionGraphQLRetrun(Exception ex)
+    {
+        return new FlowBehavior
+        {
+            ExceptionHandlingStrategy = ExceptionHandlingStrategy.Return,
+            ReturnValue = CommonConstant.LongError
         };
     }
     public static async Task<FlowBehavior> HandleExceptionRetrunFlag(Exception ex, bool flag)

@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using AElf.ExceptionHandler;
 using GraphQL;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NFTMarketServer.Common;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.Market;
 using NFTMarketServer.NFT.Index;
 using Volo.Abp.Application.Dtos;
@@ -56,13 +58,15 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
         _logger = logger;
     }
 
-
-    public async Task<PagedResultDto<IndexerNFTListingInfo>> GetNFTListingsAsync(GetNFTListingsDto dto)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTListingProvider.GetNFTListingsAsync query GraphQL error dto", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"dto"}
+    )]
+    public virtual async Task<PagedResultDto<IndexerNFTListingInfo>> GetNFTListingsAsync(GetNFTListingsDto dto)
     {
-        try
-        {
-
-            var res = await _graphQlHelper.QueryAsync<NFTListingPage>(new GraphQLRequest
+       var res = await _graphQlHelper.QueryAsync<NFTListingPage>(new GraphQLRequest
             {
                 Query = @"query (
                     $skipCount:Int!,
@@ -120,22 +124,19 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 }
             });
             return res?.nftListingInfo;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "GetNFTListingsAsync query GraphQL error dto={DTO}", JsonConvert.SerializeObject(dto));
-            throw;
-        }
     }
-
-    public async Task<IndexerNFTListingInfos> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount, string owner, List<string> chainIdList,
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTListingProvider.GetCollectedNFTListingsAsync query GraphQL error", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"skipCount","maxResultCount","owner","chainIdList","nftInfoIdList"}
+    )]
+    public virtual async Task<IndexerNFTListingInfos> GetCollectedNFTListingsAsync(int skipCount, int maxResultCount, string owner, List<string> chainIdList,
         List<string> nftInfoIdList)
     {
-        try
+        var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTListingInfos>(new GraphQLRequest
         {
-            var indexerCommonResult = await _graphQlHelper.QueryAsync<IndexerNFTListingInfos>(new GraphQLRequest
-            {
-                Query = @"query (
+            Query = @"query (
                     $skipCount:Int!,
                     $maxResultCount:Int!,
                     $chainIdList:[String!]!,
@@ -172,25 +173,18 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                     }
                   }
                 }",
-                Variables = new
-                {
-                    chainIdList = chainIdList, 
-                    nFTInfoIdList = nftInfoIdList,
-                    owner = owner,
-                    skipCount = skipCount, 
-                    maxResultCount = maxResultCount, 
-                    expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
-                }
-            });
-            return indexerCommonResult?.Data;
-            
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "GetCollectedNFTListingsAsync query GraphQL error owner={A} chainIdList={B} nftInfoIdList={C}",
-                owner, JsonConvert.SerializeObject(chainIdList), JsonConvert.SerializeObject(nftInfoIdList));
-            throw;
-        }
+            Variables = new
+            {
+                chainIdList = chainIdList, 
+                nFTInfoIdList = nftInfoIdList,
+                owner = owner,
+                skipCount = skipCount, 
+                maxResultCount = maxResultCount, 
+                expireTimeGt = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
+            }
+        });
+        return indexerCommonResult?.Data;
+
     }
 
     public async Task<IndexerNFTListingInfo> GetMinListingNftAsync(string nftInfoId)
@@ -322,12 +316,15 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
             });
         return indexerCommonResult?.Data;
     }
-    
-    public async Task<PagedResultDto<IndexerNFTListingInfo>> GetAllNFTListingsByHeightAsync(GetNFTListingsDto dto)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTListingProvider.GetAllNFTListingsByHeightAsync query GraphQL error dto", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"dto"}
+    )]
+    public virtual async Task<PagedResultDto<IndexerNFTListingInfo>> GetAllNFTListingsByHeightAsync(GetNFTListingsDto dto)
     {
-        try
-        {
-            var res = await _graphQlHelper.QueryAsync<NFTListingAllPage>(new GraphQLRequest
+        var res = await _graphQlHelper.QueryAsync<NFTListingAllPage>(new GraphQLRequest
             {
                 Query = @"query (
                     $skipCount:Int!,
@@ -384,11 +381,5 @@ public class NFTListingProvider : INFTListingProvider, ISingletonDependency
                 }
             });
             return res?.nftListingInfoAll;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "GetAllNFTListingsByHeightAsync query GraphQL error dto={DTO}", JsonConvert.SerializeObject(dto));
-            throw;
-        }
     }
 }

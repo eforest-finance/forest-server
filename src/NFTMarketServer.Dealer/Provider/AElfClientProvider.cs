@@ -4,11 +4,13 @@ using System.Threading.Tasks;
 using AElf;
 using AElf.Client.Dto;
 using AElf.Client.Service;
+using AElf.ExceptionHandler;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Common;
 using NFTMarketServer.Dealer.Options;
+using NFTMarketServer.HandleException;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.Dealer.Provider;
@@ -81,20 +83,14 @@ public class AelfClientProvider: IAelfClientProvider, ISingletonDependency
         value.MergeFrom(ByteArrayHelper.HexStringToByteArray(result));
         return value;
     }
-
-    public async Task<MerklePathDto> GetMerklePathAsync(string chainId, string txId)
+    [ExceptionHandler(typeof(Exception),
+        Message = "AelfClientProvider.GetMerklePathAsync There was an error getting the merkle path, try again later", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"chainId", "txId" }
+    )]
+    public virtual async Task<MerklePathDto> GetMerklePathAsync(string chainId, string txId)
     {
-        try
-        {
-            return await Client(chainId).GetMerklePathByTransactionIdAsync(txId);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "{chainId}-{txId} There was an error getting the merkle path, try again later", chainId,
-                txId);
-            return null;
-        }
+        return await Client(chainId).GetMerklePathByTransactionIdAsync(txId);
     }
-    
-    
 }

@@ -1,9 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NFTMarketServer.Common;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using Volo.Abp.DependencyInjection;
@@ -31,46 +33,44 @@ public class NFTCollectionExtensionHandler : IDistributedEventHandler<NFTCollect
         _logger = logger;
     }
 
-
-    public async Task HandleEventAsync(NFTCollectionExtraEto eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTCollectionExtensionHandler.HandleEventAsync nftCollectionExtension information add or update fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        LogOnly = true,
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"eventData" }
+    )]
+    public virtual async Task HandleEventAsync(NFTCollectionExtraEto eventData)
     {
-        try
+        var nftCollectionExtensionIndex = new NFTCollectionExtensionIndex();
+        var originInfo = await _nftCollectionExtensionRepository.GetAsync(eventData.Id);
+        if (originInfo != null)
         {
-            var nftCollectionExtensionIndex = new NFTCollectionExtensionIndex();
-            var originInfo = await _nftCollectionExtensionRepository.GetAsync(eventData.Id);
-            if (originInfo != null)
-            {
-                nftCollectionExtensionIndex = _objectMapper.Map(eventData,originInfo);
-            }
-            else
-            {
-                nftCollectionExtensionIndex =
-                    _objectMapper.Map<NFTCollectionExtraEto, NFTCollectionExtensionIndex>(eventData);
-            }
+            nftCollectionExtensionIndex = _objectMapper.Map(eventData,originInfo);
+        }
+        else
+        {
+            nftCollectionExtensionIndex =
+                _objectMapper.Map<NFTCollectionExtraEto, NFTCollectionExtensionIndex>(eventData);
+        }
             
-            await _nftCollectionExtensionRepository.AddOrUpdateAsync(nftCollectionExtensionIndex);
+        await _nftCollectionExtensionRepository.AddOrUpdateAsync(nftCollectionExtensionIndex);
 
-            _logger.LogDebug("nftCollectionExtension information add or update success: {NftCollectionExtensionIndex}",
-                JsonConvert.SerializeObject(nftCollectionExtensionIndex));
+        _logger.LogDebug("nftCollectionExtension information add or update success: {NftCollectionExtensionIndex}",
+            JsonConvert.SerializeObject(nftCollectionExtensionIndex));
 
-            var collectionId = eventData.Id;
-            var chainId = eventData.ChainId;
-            var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
-            var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
-            var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
-            await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
-            {
-                Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId, utcHourStartStr),
-                CollectionId = collectionId,
-                ChainId = chainId,
-                CurrentOrdinal = utcHourStartTimestamp,
-                CurrentOrdinalStr = utcHourStartStr
-            });
-        }
-        catch (Exception ex)
+        var collectionId = eventData.Id;
+        var chainId = eventData.ChainId;
+        var utcHourStartTimestamp = TimeHelper.GetUtcHourStartTimestamp();
+        var utcHourStart = TimeHelper.FromUnixTimestampSeconds(utcHourStartTimestamp);
+        var utcHourStartStr = TimeHelper.GetDateTimeFormatted(utcHourStart);
+        await _distributedEventBus.PublishAsync(new NFTCollectionTradeEto
         {
-            _logger.LogError(ex, "nftCollectionExtension information add or update fail: {Data}",
-                JsonConvert.SerializeObject(eventData));
-        }
+            Id = IdGenerateHelper.GetHourlyCollectionTradeRecordId(collectionId, utcHourStartStr),
+            CollectionId = collectionId,
+            ChainId = chainId,
+            CurrentOrdinal = utcHourStartTimestamp,
+            CurrentOrdinalStr = utcHourStartStr
+        });
     }
 }

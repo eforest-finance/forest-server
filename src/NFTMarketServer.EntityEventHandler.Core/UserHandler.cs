@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.Users.Eto;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.DependencyInjection;
@@ -27,39 +29,37 @@ public class UserHandler : IDistributedEventHandler<UserInformationEto>, ITransi
         _objectMapper = objectMapper;
         _logger = logger;
     }
-
-    public async Task HandleEventAsync(UserInformationEto eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "UserHandler.HandleEventAsync User information add or update fail:", 
+        LogOnly = true,
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"eventData" }
+    )]
+    public virtual async Task HandleEventAsync(UserInformationEto eventData)
     {
-        try
+        var userInfo = _objectMapper.Map<UserInformationEto, UserIndex>(eventData);
+        if (eventData.CaAddressSide !=null)
         {
-            var userInfo = _objectMapper.Map<UserInformationEto, UserIndex>(eventData);
-            if (eventData.CaAddressSide !=null)
+            List<UserAddress> userAddresses = new List<UserAddress>();
+            foreach (var addressMap in eventData.CaAddressSide)
             {
-                List<UserAddress> userAddresses = new List<UserAddress>();
-                foreach (var addressMap in eventData.CaAddressSide)
+                UserAddress userAddress = new UserAddress
                 {
-                    UserAddress userAddress = new UserAddress
-                    {
-                        ChainId = addressMap.Key,
-                        Address = addressMap.Value
-                    };
-                    userAddresses.Add(userAddress);
-                }
-
-                userInfo.CaAddressListSide = userAddresses;
+                    ChainId = addressMap.Key,
+                    Address = addressMap.Value
+                };
+                userAddresses.Add(userAddress);
             }
-            await _userRepository.AddOrUpdateAsync(userInfo);
 
-            if (userInfo != null)
-            {
-                _logger.LogDebug("User information add or update success: {userInformation}",
-                    JsonConvert.SerializeObject(userInfo));
-            }
+            userInfo.CaAddressListSide = userAddresses;
         }
-        catch (Exception ex)
+        await _userRepository.AddOrUpdateAsync(userInfo);
+
+        if (userInfo != null)
         {
-            _logger.LogError(ex, "User information add or update fail: {Data}",
-                JsonConvert.SerializeObject(eventData));
+            _logger.LogDebug("User information add or update success: {userInformation}",
+                JsonConvert.SerializeObject(userInfo));
         }
     }
 }

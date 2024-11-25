@@ -228,12 +228,15 @@ namespace NFTMarketServer.Market
                 TotalCount = collectedNFTListings.TotalRecordCount
             };
         }
-        
-        public async Task<ResultDto<string>> StatisticsUserListRecord(GetNFTListingsInput input)
+        [ExceptionHandler(typeof(Exception),
+            Message = "NFTListingAppService.StatisticsUserListRecord ERROR", 
+            TargetType = typeof(ExceptionHandlingService), 
+            MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrunResultDto),
+            LogTargets = new []{"input"}
+        )]
+        public virtual async Task<ResultDto<string>> StatisticsUserListRecord(GetNFTListingsInput input)
         {
-            try
-            {
-                var statisticsSwitch = _statisticsOptionsMonitor.CurrentValue.StatisticsSwitch;
+            var statisticsSwitch = _statisticsOptionsMonitor.CurrentValue.StatisticsSwitch;
                 var sendTxSwitch = _statisticsOptionsMonitor.CurrentValue.SendTxSwitch;
                 _logger.LogInformation("StatisticsUserListRecord Step0 statisticsSwitch:{A} sendTxSwitch:{B}", statisticsSwitch, sendTxSwitch);
 
@@ -307,13 +310,6 @@ namespace NFTMarketServer.Market
                     Thread.Sleep(1000);
                 }
                 return new ResultDto<string>() {Success = true, Message = "update address count " + listDictionary.Count};
-
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "StatisticsUserListRecord ERROR");
-                return new ResultDto<string>() {Success = false, Message = e.Message};
-            }
         }
         
         public static string TransferCollectionSymbol(string symbol)

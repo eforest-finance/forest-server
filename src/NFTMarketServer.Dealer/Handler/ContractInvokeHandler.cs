@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AElf.Client.Dto;
+using AElf.ExceptionHandler;
 using AElf.Types;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ using NFTMarketServer.Dealer.Dtos;
 using NFTMarketServer.Dealer.Etos;
 using NFTMarketServer.Dealer.Options;
 using NFTMarketServer.Dealer.Provider;
+using NFTMarketServer.HandleException;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
@@ -72,6 +74,7 @@ public class ContractInvokeHandler : IDistributedEventHandler<ContractInvokeEto>
             {
                 return;
             }
+
             await _contractInvokeProvider.AddUpdateAsync(grainDto);
 
             await _contractProvider.SendTransactionAsync(contractParam.ChainId, transaction);
@@ -90,79 +93,76 @@ public class ContractInvokeHandler : IDistributedEventHandler<ContractInvokeEto>
         }
     }
 
-
-    private async Task UpdateResultAsync(string chainId, Hash transactionId, ContractInvokeGrainDto grainDto)
+    [ExceptionHandler(typeof(Exception),
+        Message = "ContractInvokeHandler.UpdateResultAsync Timed out waiting for transactionId result",
+        TargetType = typeof(ExceptionHandlingService),
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new[] { "chainId", "transactionId", "grainDto" }
+    )]
+    public virtual async Task UpdateResultAsync(string chainId, Hash transactionId, ContractInvokeGrainDto grainDto)
     {
         var cts = new CancellationTokenSource(_chainOption.CurrentValue.InvokeExpireSeconds * 1000);
         while (!cts.IsCancellationRequested)
         {
-            try
+            var rawTxResult = await _contractProvider.QueryTransactionResultAsync(chainId, transactionId);
+            if (rawTxResult == null)
             {
-                var rawTxResult = await _contractProvider.QueryTransactionResultAsync(chainId, transactionId);
-                if (rawTxResult == null)
+                _logger.LogDebug(
+                    "ContractInvoke result callback error, bizType={BizType}, bizId={BizId}, txId={TxId},  ExecutionCount = {ExecutionCount}",
+                    grainDto.BizType, grainDto.BizId, transactionId,
+                    grainDto.ExecutionCount);
+                await _distributedEventBus.PublishAsync(new ContractInvokeResultEto
                 {
-                    _logger.LogDebug(
-                        "ContractInvoke result callback error, bizType={BizType}, bizId={BizId}, txId={TxId},  ExecutionCount = {ExecutionCount}",
-                        grainDto.BizType, grainDto.BizId, transactionId,
-                        grainDto.ExecutionCount);
-                    await _distributedEventBus.PublishAsync(new ContractInvokeResultEto
+                    BizType = grainDto.BizType,
+                    BizId = grainDto.BizId,
+                    TransactionResult = new TransactionResultDto
                     {
-                        BizType = grainDto.BizType,
-                        BizId = grainDto.BizId,
-                        TransactionResult = new TransactionResultDto
-                        {
-                            TransactionId = transactionId.ToHex(),
-                            Status = TransactionResultStatus.FAILED.ToString(),
-                            Error = "unknown"
-                        },
-                        RawTransaction = grainDto.RawTransaction
-                    });
-                    return;
-                }
-
-                if (grainDto.TransactionStatus.IsNullOrEmpty() || grainDto.TransactionStatus != rawTxResult.Status)
-                {
-                    var txResultJson = JsonConvert.SerializeObject(rawTxResult);
-                    grainDto.TransactionStatusFlow.Add(new TransactionStatus
-                    {
-                        TimeStamp = DateTime.UtcNow.ToUtcString(),
-                        Status = rawTxResult.Status,
-                        TransactionResult = rawTxResult.Status == TransactionResultStatus.PENDING.ToString() 
-                                            || rawTxResult.Status == TransactionResultStatus.MINED.ToString()
-                            ? null
-                            : txResultJson
-                    });
-                    grainDto.TransactionResult = txResultJson;
-                    grainDto.TransactionStatus = rawTxResult.Status;
-                    grainDto.Status = grainDto.TransactionStatus == TransactionResultStatus.MINED.ToString()
-                        ? ContractInvokeSendStatus.Success.ToString()
-                        : ContractInvokeSendStatus.Sent.ToString();
-                    _logger.LogDebug(
-                        "ContractInvoke result update, bizType={BizType}, bizId={BizId}, txId={TxId}, status={TxStatus}",
-                        grainDto.BizType, grainDto.BizId, transactionId, rawTxResult.Status);
-                    await _contractInvokeProvider.AddUpdateAsync(grainDto);
-                }
-
-                if (rawTxResult.Status != TransactionResultStatus.NOTEXISTED.ToString() &&
-                    rawTxResult.Status != TransactionResultStatus.PENDING.ToString())
-                {
-                    _logger.LogDebug(
-                        "ContractInvoke result callback, bizType={BizType}, bizId={BizId}, txId={TxId}, status={TxStatus} error = {Error},ExecutionCount = {ExecutionCount}",
-                        grainDto.BizType, grainDto.BizId, transactionId, rawTxResult.Status, rawTxResult.Error,
-                        grainDto.ExecutionCount);
-                    await _distributedEventBus.PublishAsync(new ContractInvokeResultEto
-                    {
-                        BizType = grainDto.BizType,
-                        BizId = grainDto.BizId,
-                        TransactionResult = rawTxResult,
-                        RawTransaction = grainDto.RawTransaction
-                    });
-                    break;
-                }
+                        TransactionId = transactionId.ToHex(),
+                        Status = TransactionResultStatus.FAILED.ToString(),
+                        Error = "unknown"
+                    },
+                    RawTransaction = grainDto.RawTransaction
+                });
+                return;
             }
-            catch (Exception e)
+
+            if (grainDto.TransactionStatus.IsNullOrEmpty() || grainDto.TransactionStatus != rawTxResult.Status)
             {
-                _logger.LogError(e, "Timed out waiting for transactionId {TransactionId} result", transactionId);
+                var txResultJson = JsonConvert.SerializeObject(rawTxResult);
+                grainDto.TransactionStatusFlow.Add(new TransactionStatus
+                {
+                    TimeStamp = DateTime.UtcNow.ToUtcString(),
+                    Status = rawTxResult.Status,
+                    TransactionResult = rawTxResult.Status == TransactionResultStatus.PENDING.ToString()
+                                        || rawTxResult.Status == TransactionResultStatus.MINED.ToString()
+                        ? null
+                        : txResultJson
+                });
+                grainDto.TransactionResult = txResultJson;
+                grainDto.TransactionStatus = rawTxResult.Status;
+                grainDto.Status = grainDto.TransactionStatus == TransactionResultStatus.MINED.ToString()
+                    ? ContractInvokeSendStatus.Success.ToString()
+                    : ContractInvokeSendStatus.Sent.ToString();
+                _logger.LogDebug(
+                    "ContractInvoke result update, bizType={BizType}, bizId={BizId}, txId={TxId}, status={TxStatus}",
+                    grainDto.BizType, grainDto.BizId, transactionId, rawTxResult.Status);
+                await _contractInvokeProvider.AddUpdateAsync(grainDto);
+            }
+
+            if (rawTxResult.Status != TransactionResultStatus.NOTEXISTED.ToString() &&
+                rawTxResult.Status != TransactionResultStatus.PENDING.ToString())
+            {
+                _logger.LogDebug(
+                    "ContractInvoke result callback, bizType={BizType}, bizId={BizId}, txId={TxId}, status={TxStatus} error = {Error},ExecutionCount = {ExecutionCount}",
+                    grainDto.BizType, grainDto.BizId, transactionId, rawTxResult.Status, rawTxResult.Error,
+                    grainDto.ExecutionCount);
+                await _distributedEventBus.PublishAsync(new ContractInvokeResultEto
+                {
+                    BizType = grainDto.BizType,
+                    BizId = grainDto.BizId,
+                    TransactionResult = rawTxResult,
+                    RawTransaction = grainDto.RawTransaction
+                });
                 break;
             }
 

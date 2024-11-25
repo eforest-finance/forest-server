@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Eto;
@@ -35,45 +37,43 @@ public class NFTListingChangeHandler : IConsumer<NewIndexEvent<NFTListingChangeE
         _marketHubGroupProvider = marketHubGroupProvider;
         _choiceNFTInfoNewFlagOptionsMonitor = choiceNFTInfoNewFlagOptionsMonitor;
     }
-    
-    public async Task Consume(ConsumeContext<NewIndexEvent<NFTListingChangeEto>> eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTListingChangeHandler.Consume NFTListingChangeHandler fail:", 
+        LogOnly = true,
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"eventData"}
+    )]
+    public virtual async Task Consume(ConsumeContext<NewIndexEvent<NFTListingChangeEto>> eventData)
     {
-        try
-        {
-            var nftListingChange = eventData.Message.Data;
+        var nftListingChange = eventData.Message.Data;
 
-            if (!SymbolHelper.CheckSymbolIsNFTInfoId(nftListingChange.NftId))
-            {
-                _logger.LogDebug("NFTListingChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftListingChange.NftId);
-                return;
-            }
-            
-            _logger.LogInformation(
-                "NFTListingChangeHandler: {groupName}, symbol:{Bidder},nftInfoId:{NFTInfoId}, chainid:{ChainId} start time {time}",
-                _marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal()
-                , eventData.Message.Data.Symbol,eventData.Message.Data.NftId,eventData.Message.Data.ChainId, DateTime.Now.ToString());
-            
-            
-            var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
-                .ChoiceNFTInfoNewFlagIsOn ?? false;
-
-            if (choiceNFTInfoNewFlag && nftListingChange.NftId != null && nftListingChange.ChainId != null)
-            {
-                await _nftInfoAppService.AddOrUpdateNftInfoNewByIdAsync(nftListingChange.NftId,nftListingChange.ChainId);
-            }
-            
-            var groupName =
-                _marketHubGroupProvider.QueryNameForReceiveListingChangeSignal(eventData.Message.Data.Symbol);
-            var signal = new ChangeSignalBaseDto
-            {
-                HasChanged = true
-            };
-            await _hubContext.Clients.Group(groupName).SendAsync(_marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal(), signal);
-        }
-        catch (Exception ex)
+        if (!SymbolHelper.CheckSymbolIsNFTInfoId(nftListingChange.NftId))
         {
-            _logger.LogError(ex, "NFTListingChangeHandler fail: {Data}",
-                JsonConvert.SerializeObject(eventData));
+            _logger.LogDebug("NFTListingChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftListingChange.NftId);
+            return;
         }
+            
+        _logger.LogInformation(
+            "NFTListingChangeHandler: {groupName}, symbol:{Bidder},nftInfoId:{NFTInfoId}, chainid:{ChainId} start time {time}",
+            _marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal()
+            , eventData.Message.Data.Symbol,eventData.Message.Data.NftId,eventData.Message.Data.ChainId, DateTime.Now.ToString());
+            
+            
+        var choiceNFTInfoNewFlag = _choiceNFTInfoNewFlagOptionsMonitor?.CurrentValue?
+            .ChoiceNFTInfoNewFlagIsOn ?? false;
+
+        if (choiceNFTInfoNewFlag && nftListingChange.NftId != null && nftListingChange.ChainId != null)
+        {
+            await _nftInfoAppService.AddOrUpdateNftInfoNewByIdAsync(nftListingChange.NftId,nftListingChange.ChainId);
+        }
+            
+        var groupName =
+            _marketHubGroupProvider.QueryNameForReceiveListingChangeSignal(eventData.Message.Data.Symbol);
+        var signal = new ChangeSignalBaseDto
+        {
+            HasChanged = true
+        };
+        await _hubContext.Clients.Group(groupName).SendAsync(_marketHubGroupProvider.QueryMethodNameForReceiveListingChangeSignal(), signal);
     }
 }

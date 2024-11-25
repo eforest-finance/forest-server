@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Caching.Distributed;
@@ -17,6 +18,7 @@ using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Common;
 using NFTMarketServer.File;
 using NFTMarketServer.Grains.Grain.Synchronize;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Market;
 using NFTMarketServer.NFT;
@@ -108,48 +110,45 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         _userBalanceProvider = userBalanceProvider;
         _dealInfoProvider = dealInfoProvider;
     }
-    
-    public async Task<CreateSeedResultDto> CreateSeedAsync(CreateSeedDto input)
+    [ExceptionHandler(typeof(Exception),
+        Message = "SeedAppService.CreateSeedAsync An error occurred during synchronous job.", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"input"}
+    )]
+    public virtual async Task<CreateSeedResultDto> CreateSeedAsync(CreateSeedDto input)
     {
-        try
+        var syncData = await _synchronizeTransactionProvider.GetSynchronizeJobBySymbolAsync(input.Seed);
+        if (!string.IsNullOrEmpty(syncData.TxHash) || !string.IsNullOrEmpty(syncData.Status))
         {
-            var syncData = await _synchronizeTransactionProvider.GetSynchronizeJobBySymbolAsync(input.Seed);
-            if (!string.IsNullOrEmpty(syncData.TxHash) || !string.IsNullOrEmpty(syncData.Status))
-            {
-                _logger.LogWarning("This seed {Symbol} status {Status} had registry.", input.Seed, syncData.Status);
-                throw new UserFriendlyException($"This seed {input.Seed} status {syncData.Status} had registry.");
-            }
-
-            var id = GuidGenerator.Create().ToString();
-            var synchronizeTransactionJobGrain = _clusterClient.GetGrain<ISynchronizeTxJobGrain>(id);
-
-            var createSeedJob = _objectMapper.Map<CreateSeedDto, CreateSeedJobGrainDto>(input);
-            createSeedJob.Status = SynchronizeTransactionJobStatus.SeedCreating;
-
-            _logger.LogInformation("id {ID} Seed: {seed} Synchronize-Transaction-Job will be created", id, input.Seed);
-            var result = await synchronizeTransactionJobGrain.CreateSeedJobAsync(createSeedJob);
-
-            if (!result.Success)
-            {
-                _logger.LogError("Create seed Job fail, seed: {seed}.", input.Seed);
-                throw new UserFriendlyException($"Create seed Job fail, seed: {input.Seed}.");
-            }
-
-            var etoData = _objectMapper.Map<SynchronizeTxJobGrainDto, SynchronizeTransactionInfoEto>(result.Data);
-            etoData.Id = id;
-            etoData.LastModifyTime = TimeStampHelper.GetTimeStampInMilliseconds();
-            _logger.LogInformation("id {ID} TxHash: {TxHash} Synchronize-Job will be created", id, etoData.TxHash);
-            await _distributedEventBus.PublishAsync(etoData);
-            return new CreateSeedResultDto()
-            {
-                TxHash = etoData.TxHash
-            };
+            _logger.LogWarning("This seed {Symbol} status {Status} had registry.", input.Seed, syncData.Status);
+            throw new UserFriendlyException($"This seed {input.Seed} status {syncData.Status} had registry.");
         }
-        catch (Exception e)
+
+        var id = GuidGenerator.Create().ToString();
+        var synchronizeTransactionJobGrain = _clusterClient.GetGrain<ISynchronizeTxJobGrain>(id);
+
+        var createSeedJob = _objectMapper.Map<CreateSeedDto, CreateSeedJobGrainDto>(input);
+        createSeedJob.Status = SynchronizeTransactionJobStatus.SeedCreating;
+
+        _logger.LogInformation("id {ID} Seed: {seed} Synchronize-Transaction-Job will be created", id, input.Seed);
+        var result = await synchronizeTransactionJobGrain.CreateSeedJobAsync(createSeedJob);
+
+        if (!result.Success)
         {
-            _logger.LogError(e, "An error occurred during synchronous job. Symbol:{Symbol}", input.Seed);
-            throw new UserFriendlyException($"An error occurred during synchronous job. Symbol:{input.Seed}");
+            _logger.LogError("Create seed Job fail, seed: {seed}.", input.Seed);
+            throw new UserFriendlyException($"Create seed Job fail, seed: {input.Seed}.");
         }
+
+        var etoData = _objectMapper.Map<SynchronizeTxJobGrainDto, SynchronizeTransactionInfoEto>(result.Data);
+        etoData.Id = id;
+        etoData.LastModifyTime = TimeStampHelper.GetTimeStampInMilliseconds();
+        _logger.LogInformation("id {ID} TxHash: {TxHash} Synchronize-Job will be created", id, etoData.TxHash);
+        await _distributedEventBus.PublishAsync(etoData);
+        return new CreateSeedResultDto()
+        {
+            TxHash = etoData.TxHash
+        };
     }
 
     public async Task<PagedResultDto<SpecialSeedDto>> GetSpecialSymbolListAsync(QuerySpecialListInput input)
@@ -370,12 +369,15 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         };
         return bidPricePayInfo;
     }
-
-    public async Task<SeedDto> SearchSeedInfoAsync(SearchSeedInput input)
+    [ExceptionHandler(typeof(Exception),
+        Message = "SeedAppService.SearchSeedInfoAsync Search Seed info error.", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"input"}
+    )]
+    public virtual async Task<SeedDto> SearchSeedInfoAsync(SearchSeedInput input)
     {
-        try
-        {
-            input.Symbol = input.Symbol.ToUpper();
+        input.Symbol = input.Symbol.ToUpper();
             AssertHelper.IsTrue(AllType.Contains(input.TokenType), "Invalid symbol type");
             AssertHelper.IsTrue(input.TokenType == TokenType.FT.ToString()
                 ? SymbolHelper.MatchSymbolPattern(input.Symbol)
@@ -457,16 +459,6 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             }
 
             return await ConvertSeedDtoAsync(seedInfoDto);
-        }
-        catch (UserFriendlyException e)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Search Seed info error, symbol={Symbol}, type={Type}", input.Symbol, input.TokenType);
-            throw new UserFriendlyException("Internal error, please try again later.");
-        }
     }
 
     private async Task<SeedDto> ConvertSeedDtoAsync(SeedInfoDto seedInfoDto)
