@@ -18,7 +18,6 @@ public class ForestMongoCollectionConstants
         {"NFTMarketServer.Grains.State.NFTInfo.TreeUserActivityRecordState", "TreeUserActivityRecordGrain"},
         {"NFTMarketServer.Grains.State.NFTInfo.TreeUserInfoState", "TreeUserInfoGrain"},
         {"NFTMarketServer.Grains.State.NFTInfo.TreeUserPointsDetailState", "TreeUserPointsDetailGrain"},
-        {"NFTMarketServer.Grains.State.Order.NFTOrderState", "NFTOrderGrain"},
 
         //not find code
         //{"", "SynchronizeTransactionJobGrain"},
@@ -26,7 +25,7 @@ public class ForestMongoCollectionConstants
 
         //discard
         {"NFTMarketServer.Grains.State.Verify.OwnerShipVerifyOrderState", "OwnerShipVerifyOrderGrain"},
-        {"NFTMarketServer.Grains.State.Order.NFTOrderState", "NFTOrderGrain"},
+        {"NFTMarketServer.Grains.State.Order.NFTOrderState", "NFTOrderGrain"}
 
     };
 }
