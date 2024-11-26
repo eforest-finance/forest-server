@@ -153,7 +153,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     public async Task<PagedResultDto<SpecialSeedDto>> GetSpecialSymbolListAsync(QuerySpecialListInput input)
     {
-        if (input == null)
+        try
+        {
+             if (input == null)
         {
             return new PagedResultDto<SpecialSeedDto>
             {
@@ -299,6 +301,17 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             Items = result,
             TotalCount = totalCount
         };
+        }
+        catch (Excepton e)
+        {
+            _logger.LogError(e,"GetSpecialSymbolListAsync Exception msg:{A}", JsonConvert.SerializeObject(e));
+        }
+        return new PagedResultDto<SpecialSeedDto>
+        {
+            Items = new List<SpecialSeedDto>(),
+            TotalCount = 0
+        };
+       
     }
     
     public async Task<PagedResultDto<BiddingSeedDto>> GetBiddingSeedsAsync(GetBiddingSeedsInput input)
@@ -1074,4 +1087,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         return $"popular:price:{symbol}";
     }
 
+}
+
+public class Excepton : Exception
+{
 }
