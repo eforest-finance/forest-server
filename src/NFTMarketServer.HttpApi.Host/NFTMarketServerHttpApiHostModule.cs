@@ -57,7 +57,7 @@ namespace NFTMarketServer;
     typeof(AbpEventBusRabbitMqModule),
     typeof(NFTMarketServerCoinGeckoApiModule),
     typeof(AbpBlobStoringAliyunModule)
-   // typeof(AOPExceptionModule)
+   , typeof(AOPExceptionModule)
 )]
 public class NFTMarketServerHttpApiHostModule : AbpModule
 {

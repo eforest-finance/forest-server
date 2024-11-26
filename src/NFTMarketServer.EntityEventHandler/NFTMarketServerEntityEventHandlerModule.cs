@@ -36,6 +36,7 @@ namespace NFTMarketServer;
     typeof(AbpAspNetCoreSerilogModule),
     typeof(NFTMarketServerWorkerModule),
     typeof(AOPExceptionModule),
+    typeof(AOPExceptionModule),
     typeof(AbpEventBusRabbitMqModule))]
 public class NFTMarketServerEntityEventHandlerModule : AbpModule
 {

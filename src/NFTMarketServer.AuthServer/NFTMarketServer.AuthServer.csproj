@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="AElf.Cryptography" Version="1.5.0" />
-    <PackageReference Include="AElf.ExceptionHandler.ABP" Version="8.2.7" />
+    <PackageReference Include="AElf.ExceptionHandler.ABP" Version="8.2.8" />
     <PackageReference Include="AElf.Types" Version="1.5.0" />
     <PackageReference Include="GraphQL.Client" Version="5.1.0" />
     <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="5.1.0" />
