@@ -2074,12 +2074,6 @@ namespace NFTMarketServer.NFT
         public async Task<PagedResultDto<CompositeNFTInfoIndexDto>> GetMyHoldNFTInfosV2Async(
             GetMyHoldNFTInfosInput input)
         {
-            if (input.Address.IsNullOrEmpty())
-            {
-                _logger.LogInformation("GetMyHoldNFTInfosV2Async address is null");
-                throw new Exception("param address can not be null");
-            }
-
             var queryUserBalanceIndexInput = new QueryUserBalanceIndexInput()
             {
                 Address = input.Address,
@@ -2142,7 +2136,8 @@ namespace NFTMarketServer.NFT
                     Sorting = input.Sorting,
                     PriceHigh = input.PriceHigh,
                     PriceLow = input.PriceLow,
-                    HasListingFlag = input.HasListingFlag
+                    HasListingFlag = input.HasListingFlag,
+                    Address = input.Address
                 };
 
                 return PageSeedBriefInfoIndexDto(request, seedResult.Item2, maxOfferDict, accountDtoDict, minListDict,
@@ -2174,7 +2169,8 @@ namespace NFTMarketServer.NFT
                     Sorting = input.Sorting,
                     PriceHigh = input.PriceHigh,
                     PriceLow = input.PriceLow,
-                    HasListingFlag = input.HasListingFlag
+                    HasListingFlag = input.HasListingFlag,
+                    Address = input.Address
                 };
 
                 return PageCompositeNFTInfoIndexDto(request, nftResult.Item2, maxOfferDict, accountDtoDict, minListDict,
