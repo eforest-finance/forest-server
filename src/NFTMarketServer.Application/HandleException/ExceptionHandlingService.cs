@@ -21,7 +21,7 @@ public class ExceptionHandlingService
         return new FlowBehavior
         {
             ExceptionHandlingStrategy = ExceptionHandlingStrategy.Return,
-            ReturnValue = -1
+            ReturnValue = (decimal)-1
         };
     }
     public static async Task<FlowBehavior> HandleExceptionFailRetrun(Exception ex)
@@ -33,7 +33,7 @@ public class ExceptionHandlingService
         };
     }
     
-    public static async Task<FlowBehavior> HandleExceptionSeedSyncRetrun(Exception ex)
+    public static async Task<FlowBehavior> HandleExceptionSeedSyncReturn(Exception ex)
     {
         return new FlowBehavior
         {

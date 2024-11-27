@@ -49,7 +49,7 @@ public class SeedSymbolSyncDataService : ScheduleSyncDataService
     [ExceptionHandler(typeof(Exception),
         Message = "SeedSymbolSyncDataService.SyncIndexerRecordsSingleAsync: Something is wrong for SyncIndexerRecordsAsync reset height", 
         TargetType = typeof(ExceptionHandlingService), 
-        MethodName = nameof(ExceptionHandlingService.HandleExceptionSeedSyncRetrun),
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionSeedSyncReturn),
         LogTargets = new []{"chainId", "lastEndHeight", "newIndexHeight" }
     )]
     public virtual async Task<long> SyncIndexerRecordsSingleAsync(string chainId, long lastEndHeight, long newIndexHeight)
