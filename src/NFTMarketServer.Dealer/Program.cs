@@ -30,7 +30,6 @@ namespace NFTMarketServer.Dealer
                 .Enrich.FromLogContext()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
-
             try
             {
                 Log.Information("Starting NFTMarketServer.Dealer.");
