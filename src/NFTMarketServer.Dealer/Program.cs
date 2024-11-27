@@ -39,8 +39,8 @@ namespace NFTMarketServer.Dealer
                 builder.Host.AddAppSettingsSecretsJson()
                     .UseAutofac()
                     .UseAElfExceptionHandler()
-                    .UseOrleansClient()
                     .UseApollo() 
+                    .UseOrleansClient()
                     .UseSerilog();
                 await builder.AddApplicationAsync<NFTMarketServerDealerModule>();
                 var app = builder.Build();
