@@ -81,8 +81,25 @@ namespace NFTMarketServer.Market
                 }
                 var getNftListingsDto = _objectMapper.Map<GetNFTListingsInput, GetNFTListingsDto>(input);
                 var listingDto = await _nftListingProvider.GetNFTListingsAsync(getNftListingsDto);
+                if (listingDto == null || listingDto.TotalCount == 0)
+                {
+                    return new PagedResultDto<NFTListingIndexDto>
+                    {
+                        Items = null,
+                        TotalCount = 0
+                    };
+                }
 
                 var listingOwner = listingDto.Items.Select(i => i?.Owner ?? "").ToList();
+                if (listingOwner.IsNullOrEmpty())
+                {
+                    return new PagedResultDto<NFTListingIndexDto>
+                    {
+                        Items = null,
+                        TotalCount = 0
+                    };
+                }
+
                 var collectionCreator =
                     listingDto.Items.Select(i => i?.NftCollectionDto?.CreatorAddress ?? "").ToList();
                 
