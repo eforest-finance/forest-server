@@ -39,58 +39,52 @@ public class ContractInvokeHandler : IDistributedEventHandler<ContractInvokeEto>
         _distributedEventBus = distributedEventBus;
         _chainOption = chainOption;
     }
-
-    public async Task HandleEventAsync(ContractInvokeEto eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "ContractInvokeHandler.HandleEventAsync is fail invoke contract for",
+        TargetType = typeof(ExceptionHandlingService),
+        LogOnly = true,
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new[] { "eventData"}
+    )]
+    public virtual async Task HandleEventAsync(ContractInvokeEto eventData)
     {
         var contractParam = eventData.ContractParamDto;
         var count = 0;
-        try
+        Hash transactionId;
+        Transaction transaction;
+        int RepeatCount = 0;
+        do
         {
-            Hash transactionId;
-            Transaction transaction;
-            int RepeatCount = 0;
-            do
-            {
-                RepeatCount++;
-                transactionId = _contractProvider.CreateTransaction(contractParam.ChainId, contractParam.Sender,
-                    contractParam.ContractName, contractParam.ContractMethod,
-                    ByteString.FromBase64(contractParam.BizData),
-                    out transaction);
-                await Task.Delay(_chainOption.CurrentValue.QueryTransactionDelayMillis);
-            } while (transactionId == null && RepeatCount <= 5);
+            RepeatCount++;
+            transactionId = _contractProvider.CreateTransaction(contractParam.ChainId, contractParam.Sender,
+                contractParam.ContractName, contractParam.ContractMethod,
+                ByteString.FromBase64(contractParam.BizData),
+                out transaction);
+            await Task.Delay(_chainOption.CurrentValue.QueryTransactionDelayMillis);
+        } while (transactionId == null && RepeatCount <= 5);
 
-            if (transactionId == null)
-            {
-                _logger.LogError("invoke contract CreateTransaction error {BizType}_{BizId} ERROR count {Count}",
-                    eventData.ContractParamDto.BizType, eventData.ContractParamDto.BizId, count);
-            }
-
-            var grainDto = await _contractInvokeProvider.GetByIdAsync(contractParam.BizType, contractParam.BizId);
-            grainDto.RawTransaction = transaction.ToByteString().ToBase64();
-            grainDto.TransactionId = transactionId.ToHex();
-            grainDto.ExecutionCount += 1;
-            count = grainDto.ExecutionCount;
-            if (grainDto.ExecutionCount > 5)
-            {
-                return;
-            }
-
-            await _contractInvokeProvider.AddUpdateAsync(grainDto);
-
-            await _contractProvider.SendTransactionAsync(contractParam.ChainId, transaction);
-
-            await UpdateResultAsync(contractParam.ChainId, transactionId, grainDto);
-        }
-        catch (UserFriendlyException e)
+        if (transactionId == null)
         {
-            _logger.LogWarning(e, "invoke contract for {BizType}_{BizId} FAILED count {Count}",
+            _logger.LogError("invoke contract CreateTransaction error {BizType}_{BizId} ERROR count {Count}",
                 eventData.ContractParamDto.BizType, eventData.ContractParamDto.BizId, count);
         }
-        catch (Exception e)
+
+        var grainDto = await _contractInvokeProvider.GetByIdAsync(contractParam.BizType, contractParam.BizId);
+        grainDto.RawTransaction = transaction.ToByteString().ToBase64();
+        grainDto.TransactionId = transactionId.ToHex();
+        grainDto.ExecutionCount += 1;
+        count = grainDto.ExecutionCount;
+        if (grainDto.ExecutionCount > 5)
         {
-            _logger.LogError(e, "invoke contract for {BizType}_{BizId} ERROR count {Count}",
-                eventData.ContractParamDto.BizType, eventData.ContractParamDto.BizId, count);
+            return;
         }
+
+        await _contractInvokeProvider.AddUpdateAsync(grainDto);
+
+        await _contractProvider.SendTransactionAsync(contractParam.ChainId, transaction);
+
+        await UpdateResultAsync(contractParam.ChainId, transactionId, grainDto);
+        
     }
 
     [ExceptionHandler(typeof(Exception),
