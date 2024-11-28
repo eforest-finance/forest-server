@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using NFTMarketServer.Common;
 using NFTMarketServer.Dealer.Dtos;
 using NFTMarketServer.Grains.State.Dealer;
@@ -9,22 +10,26 @@ namespace NFTMarketServer.Grains.Grain.Dealer.ContractInvoker;
 public class ContractInvokeGrain : Grain<ContractInvokeState>, IContractInvokeGrain
 {
     private readonly IObjectMapper _objectMapper;
+    private readonly ILogger<ContractInvokeGrain> _logger;
 
-    public ContractInvokeGrain(IObjectMapper objectMapper)
+    public ContractInvokeGrain(IObjectMapper objectMapper,ILogger<ContractInvokeGrain> logger)
     {
         _objectMapper = objectMapper;
+        _logger = logger;
     }
 
-    public override async Task OnActivateAsync()
+    public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("OnActivateAsync()");
         await ReadStateAsync();
-        await base.OnActivateAsync();
+        await base.OnActivateAsync(cancellationToken);
     }
 
-    public override async Task OnDeactivateAsync()
+    public override async Task OnDeactivateAsync(DeactivationReason reason, CancellationToken token)
     {
+        _logger.LogInformation("OnDeactivateAsync({Reason})", reason);
         await WriteStateAsync();
-        await base.OnDeactivateAsync();
+        await base.OnDeactivateAsync(reason, token);
     }
     
     public async Task<GrainResultDto<ContractInvokeGrainDto>> UpdateAsync(ContractInvokeGrainDto input)

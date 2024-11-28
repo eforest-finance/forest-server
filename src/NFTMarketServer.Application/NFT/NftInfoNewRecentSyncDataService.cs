@@ -67,11 +67,11 @@ public class NftInfoNewRecentSyncDataService : ScheduleSyncDataService
             var innerKey = nftInfo.Symbol + nftInfo.BlockHeight;
             if (symbolList != null && symbolList.Contains(innerKey))
             {
-                _logger.Debug("GetSyncNftInfoNewRecentRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
+                _logger.LogDebug("GetSyncNftInfoNewRecentRecordsAsync duplicated symbol: {symbol}", nftInfo.Symbol);
                 continue;
             }
             
-            _logger.Debug("GetSyncNftInfoNewRecentRecordsAsync NFTInfoSymbol {NFTInfoSymbol}",nftInfo.Symbol);
+            _logger.LogDebug("GetSyncNftInfoNewRecentRecordsAsync NFTInfoSymbol {NFTInfoSymbol}",nftInfo.Symbol);
             
 
             blockHeight = Math.Max(blockHeight, nftInfo.BlockHeight);

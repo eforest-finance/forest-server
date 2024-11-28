@@ -4,6 +4,7 @@ using AElf.Client.Service;
 using AElf.Contracts.MultiToken;
 using AElf.Contracts.ProxyAccountContract;
 using AElf.Contracts.TokenAdapterContract;
+using AElf.ExceptionHandler;
 using AElf.Types;
 using Forest.Contracts.Auction;
 using Forest.SymbolRegistrar;
@@ -12,6 +13,7 @@ using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.State.Synchronize;
 using Orleans;
@@ -109,79 +111,79 @@ public class SynchronizeTxJobGrain : Grain<SynchronizeState>, ISynchronizeTxJobG
         };
     }
 
-    public async Task<GrainResultDto<SynchronizeTxJobGrainDto>> ExecuteJobAsync(
+    [ExceptionHandler(typeof(Exception),
+        Message = "An error occurred during job execution and will be retried",
+        TargetType = typeof(ExceptionHandlingService),
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        ReturnDefault = ReturnDefault.New,
+        LogTargets = new[] { "input" }
+    )]
+    public virtual async Task<GrainResultDto<SynchronizeTxJobGrainDto>> ExecuteJobAsync(
         SynchronizeTxJobGrainDto input)
     {
         State = _objectMapper.Map<SynchronizeTxJobGrainDto, SynchronizeState>(input);
-
-        try
+        switch (State.Status)
         {
-            switch (State.Status)
-            {
-                // ProxyAccountsAndToken
-                case SynchronizeTransactionJobStatus.ProxyAccountsAndTokenCreating:
-                    await HandleProxyAccountAndTokenCreatingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.ProxyAccountsAndTokenValidating:
-                    await HandleProxyAccountAndTokenValidatingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.WaitingProxyAccountsAndTokenIndexing:
-                    await HandleWaitingProxyAccountAndTokenIndexingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.CrossChainProxyAccountsAndTokenSyncing:
-                    await HandleCrossChainProxyAccountAndTokenSyncingAsync();
-                    break;
-                // Collection|NFT
-                case SynchronizeTransactionJobStatus.TokenCreating:
-                    await HandleTokenCreatingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.TokenValidating:
-                    await HandleTokenValidatingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.WaitingIndexing:
-                    await HandleWaitingIndexingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.CrossChainTokenCreating:
-                    await HandleCrossChainTokenCreatingAsync();
-                    break;
-                // Seed
-                case SynchronizeTransactionJobStatus.SeedCreated:
-                    await HandleSeedCreatedAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.SeedValidating:
-                    await HandleSeedValidatingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.SeedWaitingIndexing:
-                    await HandleSeedWaitingIndexingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.SeedCrossChainReceiving:
-                    await HandleSeedCrossChainReceivingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.SeedCrossChainCreating:
-                    await HandleSeedCrossChainCreatingAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.SeedCreateAuction:
-                    await HandleSeedCreateAuctionAsync();
-                    break;
-                case SynchronizeTransactionJobStatus.AuctionCreating:
-                    await HandleSeedCreateAuctioningAsync();
-                    break;
-            }
+            // ProxyAccountsAndToken
+            case SynchronizeTransactionJobStatus.ProxyAccountsAndTokenCreating:
+                await HandleProxyAccountAndTokenCreatingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.ProxyAccountsAndTokenValidating:
+                await HandleProxyAccountAndTokenValidatingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.WaitingProxyAccountsAndTokenIndexing:
+                await HandleWaitingProxyAccountAndTokenIndexingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.CrossChainProxyAccountsAndTokenSyncing:
+                await HandleCrossChainProxyAccountAndTokenSyncingAsync();
+                break;
+            // Collection|NFT
+            case SynchronizeTransactionJobStatus.TokenCreating:
+                await HandleTokenCreatingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.TokenValidating:
+                await HandleTokenValidatingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.WaitingIndexing:
+                await HandleWaitingIndexingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.CrossChainTokenCreating:
+                await HandleCrossChainTokenCreatingAsync();
+                break;
+            // Seed
+            case SynchronizeTransactionJobStatus.SeedCreated:
+                await HandleSeedCreatedAsync();
+                break;
+            case SynchronizeTransactionJobStatus.SeedValidating:
+                await HandleSeedValidatingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.SeedWaitingIndexing:
+                await HandleSeedWaitingIndexingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.SeedCrossChainReceiving:
+                await HandleSeedCrossChainReceivingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.SeedCrossChainCreating:
+                await HandleSeedCrossChainCreatingAsync();
+                break;
+            case SynchronizeTransactionJobStatus.SeedCreateAuction:
+                await HandleSeedCreateAuctionAsync();
+                break;
+            case SynchronizeTransactionJobStatus.AuctionCreating:
+                await HandleSeedCreateAuctioningAsync();
+                break;
+        }
 
-            return new GrainResultDto<SynchronizeTxJobGrainDto>()
-            {
-                Data = _objectMapper.Map<SynchronizeState, SynchronizeTxJobGrainDto>(State),
-            };
-        }
-        catch (Exception ex)
+        return new GrainResultDto<SynchronizeTxJobGrainDto>()
         {
-            _logger.LogError(ex, "An error occurred during job execution and will be retried: {TxHash}", State.TxHash);
-            return new GrainResultDto<SynchronizeTxJobGrainDto>()
-            {
-                Data = _objectMapper.Map<SynchronizeState, SynchronizeTxJobGrainDto>(State),
-                Success = false
-            };
-        }
+            Data = _objectMapper.Map<SynchronizeState, SynchronizeTxJobGrainDto>(State),
+        };
+        /*_logger.LogError(ex, "An error occurred during job execution and will be retried: {TxHash}", State.TxHash);
+        return new GrainResultDto<SynchronizeTxJobGrainDto>()
+        {
+            Data = _objectMapper.Map<SynchronizeState, SynchronizeTxJobGrainDto>(State),
+            Success = false
+        };*/
     }
 
     #region Seed Create and crossChain
@@ -243,7 +245,7 @@ public class SynchronizeTxJobGrain : Grain<SynchronizeState>, ISynchronizeTxJobG
     {
         var txResult = await GetTxResultAsync(State.ToChainId, State.CrossChainCreateTokenTxId);
         if (!await CheckTxStatusAsync(txResult)) return;
-        
+
         var indexHeight = await GetIndexHeightAsync(State.ToChainId);
         if (indexHeight < State.CrossChainTransferHeight)
         {
@@ -747,20 +749,16 @@ public class SynchronizeTxJobGrain : Grain<SynchronizeState>, ISynchronizeTxJobG
         var client = _blockchainClientFactory.GetClient(chainId);
         return await client.GetTransactionResultAsync(txId);
     }
-
-    private async Task<MerklePathDto> GetMerklePathAsync(string chainId, string txId)
+    [ExceptionHandler(typeof(Exception),
+        Message = "SynchronizeTxJobGrain.GetMerklePathAsync There was an error getting the merkle path, try again later", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"chainId", "txId"}
+    )]
+    public virtual async Task<MerklePathDto> GetMerklePathAsync(string chainId, string txId)
     {
-        try
-        {
-            var client = _blockchainClientFactory.GetClient(chainId);
-            return await client.GetMerklePathByTransactionIdAsync(txId);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "{chainId}-{txId} There was an error getting the merkle path, try again later", chainId,
-                txId);
-            return null;
-        }
+        var client = _blockchainClientFactory.GetClient(chainId);
+        return await client.GetMerklePathByTransactionIdAsync(txId);
     }
 
     private async Task<long> GetIndexHeightAsync(string chainId)

@@ -1,8 +1,10 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.NFT.Eto;
 using NFTMarketServer.NFT.Index;
 using Volo.Abp.DependencyInjection;
@@ -26,25 +28,23 @@ public class NFTDropExtensionHandler : IDistributedEventHandler<NFTDropExtraEto>
         _objectMapper = objectMapper;
         _logger = logger;
     }
-    
-    public async Task HandleEventAsync(NFTDropExtraEto eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTDropExtensionHandler.HandleEventAsync nftInfoExtension information add or update fail", 
+        LogOnly = true,
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"eventData" }
+    )]
+    public virtual async Task HandleEventAsync(NFTDropExtraEto eventData)
     {
-        try
-        {
-            var nftDropExtensionIndex = _objectMapper.Map<NFTDropExtraEto, NFTDropExtensionIndex>(eventData);
+        var nftDropExtensionIndex = _objectMapper.Map<NFTDropExtraEto, NFTDropExtensionIndex>(eventData);
 
-            await _nftDropExtensionRepository.AddOrUpdateAsync(nftDropExtensionIndex);
+        await _nftDropExtensionRepository.AddOrUpdateAsync(nftDropExtensionIndex);
 
-            if (nftDropExtensionIndex != null)
-            {
-                _logger.LogDebug("nftInfoExtension information add or update success: {userInformation}",
-                    JsonConvert.SerializeObject(nftDropExtensionIndex));
-            }
-        }
-        catch (Exception ex)
+        if (nftDropExtensionIndex != null)
         {
-            _logger.LogError(ex, "nftInfoExtension information add or update fail: {Data}",
-                JsonConvert.SerializeObject(eventData));
+            _logger.LogDebug("nftInfoExtension information add or update success: {userInformation}",
+                JsonConvert.SerializeObject(nftDropExtensionIndex));
         }
     }
 }

@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NFTMarketServer.Provider;
-using Orleans.Runtime;
 
 namespace NFTMarketServer.Dealer.ContractInvoker;
 
@@ -40,7 +39,7 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
 
     public override async Task<ContractParamDto> AdaptToContractParamAsync<TDropFinishBizDto>(TDropFinishBizDto invokeBizDto)
     {
-        _logger.Debug("NFTDrop Finish AdaptToContractParamAsync begin");
+        _logger.LogDebug("NFTDrop Finish AdaptToContractParamAsync begin");
         AssertHelper.NotNull(invokeBizDto, "DropFinish empty");
         AssertHelper.NotNull(invokeBizDto is NFTDropFinishBizDto, "Invalid DropFinishBizDto type");
         
@@ -69,14 +68,14 @@ public class NFTDropFinishInvoker : AbstractContractInvoker
             }.ToByteString().ToBase64()
         };
         
-        _logger.Debug("NFTDrop Finish AdaptToContractParamAsync end, param: {data}", JsonConvert.SerializeObject(contractParamDto));
+        _logger.LogDebug("NFTDrop Finish AdaptToContractParamAsync end, param: {data}", JsonConvert.SerializeObject(contractParamDto));
         return contractParamDto;
     }
 
     public override async Task ResultCallbackAsync(string bizId, bool invokeSuccess, TransactionResultDto result,
         string rawTransaction)
     {
-        _logger.Debug($"NFTDrop Finish ResultCallbackAsync， result: {result}", JsonConvert.SerializeObject(result));
+        _logger.LogDebug($"NFTDrop Finish ResultCallbackAsync， result: {result}", JsonConvert.SerializeObject(result));
         return;
     }
 }

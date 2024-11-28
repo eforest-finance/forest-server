@@ -184,7 +184,7 @@ namespace NFTMarketServer.NFT
             var dropExtensionMap = await _dropExtensionProvider.BatchGetNFTDropExtensionAsync(ids);
             if (!dropExtensionMap.IsNullOrEmpty())
             {
-                _logger.Debug("Fill dropExtension: {dropExtension}", JsonConvert.SerializeObject(dropExtensionMap));
+                _logger.LogDebug("Fill dropExtension: {dropExtension}", JsonConvert.SerializeObject(dropExtensionMap));
                 var extensionInfo = dropExtensionMap[input.DropId];
                 _objectMapper.Map(extensionInfo, dropDetailDto);
             }
@@ -193,7 +193,7 @@ namespace NFTMarketServer.NFT
                 await _dropCollectionExtensionProvider.GetNFTCollectionExtensionAsync(dropDetailDto.CollectionId);
             if (collectionInfo != null)
             {
-                _logger.Debug("Fill collectionInfo: {collectionInfo}", JsonConvert.SerializeObject(collectionInfo));
+                _logger.LogDebug("Fill collectionInfo: {collectionInfo}", JsonConvert.SerializeObject(collectionInfo));
                 dropDetailDto.CollectionLogo = collectionInfo.LogoImage;
                 dropDetailDto.CollectionName = collectionInfo.TokenName;
             }
@@ -211,7 +211,7 @@ namespace NFTMarketServer.NFT
             }
             
             dropDetailDto.AddressClaimAmount = claimInfo.ClaimTotal;
-            _logger.Debug("Fill claimInfo: {claimInfo}", JsonConvert.SerializeObject(claimInfo));
+            _logger.LogDebug("Fill claimInfo: {claimInfo}", JsonConvert.SerializeObject(claimInfo));
 
             return dropDetailDto;
         }

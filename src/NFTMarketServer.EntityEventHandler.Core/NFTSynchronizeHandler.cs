@@ -1,7 +1,9 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Synchronize.Eto;
 using Volo.Abp.DependencyInjection;
@@ -25,21 +27,18 @@ public class NFTSynchronizeHandler : IDistributedEventHandler<SynchronizeTransac
         _objectMapper = objectMapper;
         _logger = logger;
     }
-
-    public async Task HandleEventAsync(SynchronizeTransactionInfoEto eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NFTSynchronizeHandler.HandleEventAsync An error occurred while processing the event,txHash", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRethrow),
+        LogTargets = new []{"eventData" }
+    )]
+    public virtual async Task HandleEventAsync(SynchronizeTransactionInfoEto eventData)
     {
-        try
-        {
-            var syncTx = _objectMapper.Map<SynchronizeTransactionInfoEto, SynchronizeTransactionInfoIndex>(eventData);
+        var syncTx = _objectMapper.Map<SynchronizeTransactionInfoEto, SynchronizeTransactionInfoIndex>(eventData);
 
-            await _synchronizeTransactionInfoRepository.AddOrUpdateAsync(syncTx);
+        await _synchronizeTransactionInfoRepository.AddOrUpdateAsync(syncTx);
 
-            _logger.LogInformation("Transaction {txHash} add or update success.", eventData.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while processing the event,txHash {txHash}", eventData.Id);
-            throw new Exception($"An error occurred while processing the event,txHash {eventData.Id}", ex);
-        }
+        _logger.LogInformation("Transaction {txHash} add or update success.", eventData.Id);
     }
 }

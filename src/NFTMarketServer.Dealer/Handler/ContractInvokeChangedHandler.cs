@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Dealer.Dtos;
 using NFTMarketServer.Dealer.Etos;
 using NFTMarketServer.Dealer.Index;
+using NFTMarketServer.HandleException;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
@@ -25,25 +27,16 @@ public class ContractInvokeChangedHandler : IDistributedEventHandler<ContractInv
         _contractInvokeRepository = contractInvokeRepository;
         _objectMapper = objectMapper;
     }
-
-    public async Task HandleEventAsync(ContractInvokeChangedEto eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "ContractInvokeChangedHandler.HandleEventAsync invoke contract for",
+        TargetType = typeof(ExceptionHandlingService),
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new[] { "eventData"}
+    )]
+    public virtual async Task HandleEventAsync(ContractInvokeChangedEto eventData)
     {
         var grainDto = eventData.ContractInvokeGrainDto;
-        try
-        {
-            // save index data to ES
-            var index = _objectMapper.Map<ContractInvokeGrainDto, ContractInvokeIndex>(grainDto);
-            await _contractInvokeRepository.AddOrUpdateAsync(index);
-        }
-        catch (UserFriendlyException e)
-        {
-            _logger.LogWarning(e, "invoke contract for {BizType}_{BizId} ({Guid}) FAILED",
-                eventData.ContractInvokeGrainDto.BizType, eventData.ContractInvokeGrainDto.BizId, grainDto.Id);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "invoke contract for {BizType}_{BizId} ({Guid})  ERROR",
-                eventData.ContractInvokeGrainDto.BizType, eventData.ContractInvokeGrainDto.BizId, grainDto.Id);
-        }
+        var index = _objectMapper.Map<ContractInvokeGrainDto, ContractInvokeIndex>(grainDto);
+        await _contractInvokeRepository.AddOrUpdateAsync(index);
     }
 }
