@@ -13,6 +13,7 @@ public static class CommonConstant
     public const int IntNegativeOne = -1;
     public const int IntTen = 10;
     public const int IntOneThousand = 1000;
+    public const int IntTenThousand = 10000;
     public const int IntMaxCount = 100;
     public const int IntThreeHundred = 300;
     public const int RecentSearchNumber = 30000;

@@ -566,7 +566,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         input.Address = input.Address.Where(addr => addr.NotNullOrEmpty()).ToList();
         AssertHelper.NotEmpty(input.Address, "Address invalid");
 
-        var seedInfoDto = await DoMySeedAsync(input);
+        var seedInfoDto = new MySeedDto();
+
+        seedInfoDto = await DoMySeedWithFilterAsync(input);
 
         var mySeedDto = new PagedResultDto<SeedDto>()
         {
@@ -583,14 +585,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             return null;
         }
-        //todo
-
-        var target = await _seedSymbolIndexRepository.GetAsync("AELF-SEED-3022");
-        _logger.LogInformation("AELF-SEED-3022 {A}",JsonConvert.SerializeObject(target));
-        var target2 = await _seedSymbolIndexRepository.GetAsync("tDVV-SEED-3022");
-        _logger.LogInformation("tDVV-SEED-3022 {A}",JsonConvert.SerializeObject(target2));
         
-        //todo
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
         
         if (input.TokenType != null)
@@ -605,12 +600,13 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         var shouldQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
 
-        if (input.Status == null)
-        {
-            BuildForSeedStatusNull(input,shouldQuery);
-        }else {
-            BuildForSeedStatusNoNull(input, shouldQuery, mustQuery);
-        }
+        BuildForSeedStatusNull(input,shouldQuery);
+        // if (input.Status == null)
+        // {
+        //     BuildForSeedStatusNull(input,shouldQuery);
+        // }else {
+        //     BuildForSeedStatusNoNull(input, shouldQuery, mustQuery);
+        // }
         
         if (shouldQuery.Any())
         {
@@ -654,6 +650,90 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             SeedDtoList = seedInfoDtos
         };
     }
+    
+    private async Task<MySeedDto> DoMySeedWithFilterAsync(
+        MySeedInput input)
+    {
+        if (input.Address.IsNullOrEmpty())
+        {
+            return null;
+        }
+        
+        var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+        
+        if (input.TokenType != null)
+        {
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.TokenType).Value(input.TokenType)));
+        }
+
+        if (!string.IsNullOrEmpty(input.ChainId))
+        {
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.ChainId).Value(input.ChainId)));
+        }
+
+        var shouldQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+
+        if (input.Status == null)
+        {
+            BuildForSeedStatusNull(input,shouldQuery);
+        }else {
+            BuildForSeedStatusNoNull(input, shouldQuery, mustQuery);
+        }
+        
+        if (shouldQuery.Any())
+        {
+            mustQuery.Add(q =>
+                q.Bool(b => b.Should(shouldQuery)));
+        }
+
+        QueryContainer Filter(QueryContainerDescriptor<SeedSymbolIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        // var mySeedSymbolIndex = await _seedSymbolIndexRepository.GetListAsync(Filter, null, sortExp: o => o.SeedExpTimeSecond,
+        //     SortOrder.Descending, input.MaxResultCount, input.SkipCount);
+
+        var mySeedSymbolIndex = await _seedSymbolIndexRepository.GetListAsync(Filter, null,
+            sortExp: o => o.SeedExpTimeSecond,
+            SortOrder.Descending, CommonConstant.IntTenThousand);
+        var seedInfoDtos = new List<SeedDto>();
+        if (mySeedSymbolIndex.Item1 > 0)
+        {
+            var filterItemList = mySeedSymbolIndex.Item2
+                .GroupBy(e => e.SeedOwnedSymbol)
+                .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
+                .OrderByDescending(e => e.SeedExpTimeSecond)
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+                .ToList();
+            foreach (var seedSymbolIndex in filterItemList)
+            {
+                var seedListDto = new SeedDto();
+                seedListDto.SeedSymbol = seedSymbolIndex.Symbol;
+                seedListDto.ChainId = seedSymbolIndex.ChainId;
+                seedListDto.SeedName = seedSymbolIndex.TokenName;
+                seedListDto.Id = IdGenerateHelper.GetTsmSeedSymbolId(seedSymbolIndex.ChainId,seedSymbolIndex.SeedOwnedSymbol);
+                seedListDto.Symbol = seedSymbolIndex.SeedOwnedSymbol;
+                seedListDto.ExpireTime = DateTimeHelper.ToUnixTimeMilliseconds(seedSymbolIndex.SeedExpTime);
+                seedListDto.TokenType = EnumHelper.ToEnumString(seedSymbolIndex.TokenType);
+                seedListDto.Status = seedSymbolIndex.SeedStatus ?? SeedStatus.UNREGISTERED;
+                if (seedSymbolIndex.ExternalInfoDictionary != null)
+                {
+                    var key = EnumDescriptionHelper.GetEnumDescription(TokenCreatedExternalInfoEnum.NFTImageUrl);
+                    seedListDto.SeedImage = seedSymbolIndex.ExternalInfoDictionary.Where(kv => kv.Key.Equals(key))
+                        .Select(kv => kv.Value)
+                        .FirstOrDefault("");
+                }
+                seedInfoDtos.Add(seedListDto);
+            }
+        }
+
+        return new MySeedDto()
+        {
+            TotalRecordCount = mySeedSymbolIndex.Item1,
+            SeedDtoList = seedInfoDtos
+        };
+    }
+    
     private static void BuildForSeedStatusNull(MySeedInput input,List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>> shouldQuery)
     {
         input?.Address
@@ -706,7 +786,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                         q.Term(i => i.Field(f => f.ChainId).Value(parts.Last())));
                 }
 
-                if (input.Status != SeedStatus.UNREGISTERED)
+                if (input.Status != SeedStatus.UNREGISTERED && input.Status != SeedStatus.NOTSUPPORT)
                 {
                     mustQuery.Add(q => q.Term(i =>
                         i.Field(f => f.SeedStatus).Value(input.Status)));
