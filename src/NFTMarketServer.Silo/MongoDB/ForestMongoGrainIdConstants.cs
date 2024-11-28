@@ -5,7 +5,7 @@ public class ForestMongoGrainIdConstants
     public static readonly Dictionary<string, string> GrainSpecificIdPrefix = new Dictionary<string, string>()
     {
         {"ContractServiceGraphQL","GrainReference=00000000000000000000000000000000060000007b0691e0"},
-        {"ContractInvoke","GrainReference=a29db13d603fa7b16c171f67e052ae9403ffffffc9d19f6b"},
+        //{"ContractInvoke","GrainReference=a29db13d603fa7b16c171f67e052ae9403ffffffc9d19f6b"},
         {"SymbolIcon","GrainReference=0000000000000000000000000000000006ffffffb5a4dc5e"},
         {"InscriptionAmount","GrainReference=000000000000000000000000000000000600000068d4baf5"},
         {"InscriptionItemCrossChain","GrainReference=0000000000000000000000000000000006ffffffc31194a9"},
