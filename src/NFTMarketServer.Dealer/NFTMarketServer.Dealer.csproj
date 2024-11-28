@@ -43,8 +43,7 @@
         <ProjectReference Include="..\NFTMarketServer.Application.Contracts\NFTMarketServer.Application.Contracts.csproj" />
         <ProjectReference Include="..\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
     </ItemGroup>
-
-
+    
     <ItemGroup>
         <None Remove="appsettings.json" />
         <Content Include="appsettings.json">
