@@ -1,9 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Eto;
 using Volo.Abp.DependencyInjection;
@@ -25,29 +27,26 @@ public class NewMessageChangeHandler : IConsumer<NewIndexEvent<MessageChangeEto>
         _hubContext = hubContext;
         _marketHubGroupProvider = marketHubGroupProvider;
     }
-
-    public async Task Consume(ConsumeContext<NewIndexEvent<MessageChangeEto>> eventData)
+    [ExceptionHandler(typeof(Exception),
+        Message = "NewMessageChangeHandler.Consume MessageChangeHandler fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"eventData" }
+    )]
+    public virtual async Task Consume(ConsumeContext<NewIndexEvent<MessageChangeEto>> eventData)
     {
-        try
-        {
-            var address = eventData.Message.Data.Address;
-            var groupName =
-                _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(eventData.Message.Data.Address);
+        var address = eventData.Message.Data.Address;
+        var groupName =
+            _marketHubGroupProvider.QueryNameForReceiveMessageChangeSignal(eventData.Message.Data.Address);
 
-            _logger.LogDebug(
-                "MessageChangeHandler: groupName:{A}, address:{B}", groupName, address);
+        _logger.LogDebug(
+            "MessageChangeHandler: groupName:{A}, address:{B}", groupName, address);
 
-            var signal = new ChangeSignalBaseDto
-            {
-                HasChanged = true
-            };
-            await _hubContext.Clients.Group(groupName)
-                .SendAsync(_marketHubGroupProvider.QueryMethodNameForReceiveMessageChangeSignal(), signal);
-        }
-        catch (Exception ex)
+        var signal = new ChangeSignalBaseDto
         {
-            _logger.LogError(ex, "MessageChangeHandler fail: {Data}",
-                JsonConvert.SerializeObject(eventData));
-        }
+            HasChanged = true
+        };
+        await _hubContext.Clients.Group(groupName)
+            .SendAsync(_marketHubGroupProvider.QueryMethodNameForReceiveMessageChangeSignal(), signal);
     }
 }

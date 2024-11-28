@@ -93,7 +93,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
         {
             if (data?.Value == null)
             {
-                _logger.Debug("ExpiredNftMaxOfferSync null check");
+                _logger.LogDebug("ExpiredNftMaxOfferSync null check");
                 continue;
             }
             
@@ -102,7 +102,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
 
             if (nftInfoIdWithTimeList != null && nftInfoIdWithTimeList.Contains(nftInfoIdWithTime))
             {
-                _logger.Debug($"ExpiredNftMaxOfferSync duplicated nftInfoIdWithTime: {nftInfoIdWithTime}",
+                _logger.LogDebug($"ExpiredNftMaxOfferSync duplicated nftInfoIdWithTime: {nftInfoIdWithTime}",
                     nftInfoIdWithTime);
                 continue;
             }
@@ -110,7 +110,7 @@ public class ExpiredNftMaxOfferSyncDataService : ScheduleSyncDataService
             changeFlag = true;
             var nftInfoId = data.Key;
             var maxOfferInfo = data.Value;
-            _logger.Debug("ExpiredNftMaxOfferSync nftInfoId ={A} offer.symbol={B} maxOfferInfo.id={C}", nftInfoId,
+            _logger.LogDebug("ExpiredNftMaxOfferSync nftInfoId ={A} offer.symbol={B} maxOfferInfo.id={C}", nftInfoId,
                 maxOfferInfo.Symbol, maxOfferInfo?.Id);
 
             await _bus.Publish<NewIndexEvent<NFTOfferChangeDto>>(new NewIndexEvent<NFTOfferChangeDto>

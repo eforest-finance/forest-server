@@ -36,7 +36,7 @@ public class NewOfferChangeHandler : IConsumer<NewIndexEvent<NFTOfferChangeDto>>
         var nftOfferChangeDto = eventData.Message.Data;
         if (!SymbolHelper.CheckSymbolIsNFTInfoId(nftOfferChangeDto.NftId))
         {
-            _logger.Debug("NewOfferChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftOfferChangeDto.NftId);
+            _logger.LogDebug("NewOfferChangeHandler  nftInfoId is not common nft {NFTInfoId}",nftOfferChangeDto.NftId);
             return;
         }
         

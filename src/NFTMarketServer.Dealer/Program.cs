@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler.ABP;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,7 +10,7 @@ using NFTMarketServer.Dealer;
 using Serilog;
 using Serilog.Events;
 
-namespace NFTMarketServer.ContractEventHandler
+namespace NFTMarketServer.Dealer
 {
     public class Program
     {
@@ -28,7 +30,6 @@ namespace NFTMarketServer.ContractEventHandler
                 .Enrich.FromLogContext()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
-
             try
             {
                 Log.Information("Starting NFTMarketServer.Dealer.");
@@ -36,12 +37,16 @@ namespace NFTMarketServer.ContractEventHandler
                 builder.Configuration.AddJsonFile("apollo.appsettings.json");
                 builder.Host.AddAppSettingsSecretsJson()
                     .UseAutofac()
+                    .UseAElfExceptionHandler()
                     .UseApollo() 
+                    .UseOrleansClient()
                     .UseSerilog();
                 await builder.AddApplicationAsync<NFTMarketServerDealerModule>();
                 var app = builder.Build();
+               // CreateHostBuilder(args).Build().Run();
                 await app.InitializeApplicationAsync();
                 await app.RunAsync();
+                Log.Information("Starting NFTMarketServer.Dealer. started");
                 return 0;
             }
             catch (Exception ex)
@@ -53,6 +58,15 @@ namespace NFTMarketServer.ContractEventHandler
             {
                 Log.CloseAndFlush();
             }
+        }
+        
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
+                .UseOrleansClient()
+                //.UseAutofac()
+                //.ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+                .UseSerilog();
         }
     }
 }

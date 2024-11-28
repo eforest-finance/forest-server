@@ -3,11 +3,13 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.File;
+using NFTMarketServer.HandleException;
 using Volo.Abp;
 using Volo.Abp.AspNetCore.Mvc;
 
@@ -47,34 +49,34 @@ public class FileController : AbpController
     [HttpPost]
     [Authorize]
     [Route("update-image")]
-    public async Task<string> UpdateImage([Required] IFormFile file)
+    [ExceptionHandler(typeof(Exception),
+        Message = "FileController.UpdateImage is fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        ReturnDefault = ReturnDefault.Default,
+        LogTargets = new []{"file"}
+    )]
+    
+    public virtual async Task<string> UpdateImage([Required] IFormFile file)
     {
-        try
+        if (file == null || file.Length == 0)
         {
-            if (file == null || file.Length == 0)
-            {
-                _logger.LogError("UpdateImage: File is null or empty");
-                return "";
-            }
-
-            var extension = Path.GetExtension(file.FileName).ToLower();
-            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
-            if (!allowedExtensions.Contains(extension))
-            {
-                _logger.LogError("UpdateImage: File type is not allowed");
-                return "";
-            }
-
-            await using var stream = file.OpenReadStream();
-            var utf8Bytes = stream.GetAllBytes();
-            return await _symbolIconAppService.UpdateNFTIconAsync(utf8Bytes,
-                "drop_" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "_" + file.FileName);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "UpdateImage: An unexpected error occurred - {Message}", e.Message);
+            _logger.LogError("UpdateImage: File is null or empty");
             return "";
         }
+
+        var extension = Path.GetExtension(file.FileName).ToLower();
+        string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
+        if (!allowedExtensions.Contains(extension))
+        {
+            _logger.LogError("UpdateImage: File type is not allowed");
+            return "";
+        }
+
+        await using var stream = file.OpenReadStream();
+        var utf8Bytes = stream.GetAllBytes();
+        return await _symbolIconAppService.UpdateNFTIconAsync(utf8Bytes,
+            "drop_" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + "_" + file.FileName);
     }
     
     [HttpGet]

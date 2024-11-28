@@ -99,7 +99,7 @@ public class SeedMainChainCreateScheduleService : ScheduleSyncDataService
             var innerKey = seedChange.Symbol + seedChange.BlockHeight;
             if (symbolList != null && symbolList.Contains(innerKey))
             {
-                _logger.Debug("HandleSeedMainChainCreateAsync duplicated symbol: {symbol}", seedChange.Symbol);
+                _logger.LogDebug("HandleSeedMainChainCreateAsync duplicated symbol: {symbol}", seedChange.Symbol);
                 continue;
             }
             //mark maxProcessedBlockHeight

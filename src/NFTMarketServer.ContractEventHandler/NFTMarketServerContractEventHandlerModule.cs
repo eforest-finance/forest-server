@@ -1,4 +1,5 @@
 ﻿using System;
+using AElf.ExceptionHandler.ABP;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -45,7 +46,8 @@ namespace NFTMarketServer.ContractEventHandler
         typeof(NFTMarketServerMongoDbModule),
         typeof(AbpAspNetCoreSerilogModule),
         typeof(AbpSwashbuckleModule),
-        typeof(AbpAspNetCoreMvcUiMultiTenancyModule)
+        typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
+        typeof(AOPExceptionModule)
     )]
     public class NFTMarketServerContractEventHandlerModule : AbpModule
     {
@@ -81,7 +83,7 @@ namespace NFTMarketServer.ContractEventHandler
 
         private static void ConfigureOrleans(ServiceConfigurationContext context, IConfiguration configuration)
         {
-            context.Services.AddSingleton(o =>
+            /*context.Services.AddSingleton(o =>
             {
                 return new ClientBuilder()
                     .ConfigureDefaults()
@@ -100,7 +102,7 @@ namespace NFTMarketServer.ContractEventHandler
                         parts.AddApplicationPart(typeof(NFTMarketServerGrainsModule).Assembly).WithReferences())
                     .ConfigureLogging(builder => builder.AddProvider(o.GetService<ILoggerProvider>()))
                     .Build();
-            });
+            });*/
         }
 
         private void ConfigureRedis(
@@ -119,14 +121,14 @@ namespace NFTMarketServer.ContractEventHandler
 
         private static void StartOrleans(IServiceProvider serviceProvider)
         {
-            var client = serviceProvider.GetRequiredService<IClusterClient>();
-            AsyncHelper.RunSync(async () => await client.Connect());
+            /*var client = serviceProvider.GetRequiredService<IClusterClient>();
+            AsyncHelper.RunSync(async () => await client.Connect());*/
         }
 
         private static void StopOrleans(IServiceProvider serviceProvider)
         {
-            var client = serviceProvider.GetRequiredService<IClusterClient>();
-            AsyncHelper.RunSync(client.Close);
+            /*var client = serviceProvider.GetRequiredService<IClusterClient>();
+            AsyncHelper.RunSync(client.Close);*/
         }
 
         //Disable TokenCleanupService
