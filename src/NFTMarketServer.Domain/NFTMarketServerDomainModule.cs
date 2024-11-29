@@ -29,7 +29,7 @@ namespace NFTMarketServer
         // typeof(AbpPermissionManagementDomainIdentityModule),
         // typeof(AbpIdentityServerDomainModule),
         // typeof(AbpPermissionManagementDomainIdentityServerModule),
-        //typeof(AbpSettingManagementDomainModule),
+        typeof(AbpSettingManagementDomainModule),
         typeof(AbpTenantManagementDomainModule),
         typeof(AbpEmailingModule),
         typeof(AElfIndexingElasticsearchModule)
