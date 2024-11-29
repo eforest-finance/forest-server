@@ -68,13 +68,17 @@ public class ContractInvokeHandler : IDistributedEventHandler<ContractInvokeEto>
             _logger.LogError("invoke contract CreateTransaction error {BizType}_{BizId} ERROR count {Count}",
                 eventData.ContractParamDto.BizType, eventData.ContractParamDto.BizId, count);
         }
+        else
+        {
+            _logger.LogDebug("invoke contract CreateTransaction transactionId={A}",transactionId);
+        }
 
         var grainDto = await _contractInvokeProvider.GetByIdAsync(contractParam.BizType, contractParam.BizId);
         grainDto.RawTransaction = transaction.ToByteString().ToBase64();
         grainDto.TransactionId = transactionId.ToHex();
         grainDto.ExecutionCount += 1;
         count = grainDto.ExecutionCount;
-        if (grainDto.ExecutionCount > 5)
+        if (grainDto.ExecutionCount > 10)
         {
             return;
         }
