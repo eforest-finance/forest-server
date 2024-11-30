@@ -48,6 +48,7 @@ public class ContractInvokeHandler : IDistributedEventHandler<ContractInvokeEto>
     )]
     public virtual async Task HandleEventAsync(ContractInvokeEto eventData)
     {
+        _logger.LogDebug("ContractInvokeHandler eventData={A}",JsonConvert.SerializeObject(eventData));
         var contractParam = eventData.ContractParamDto;
         var count = 0;
         Hash transactionId;
@@ -60,12 +61,13 @@ public class ContractInvokeHandler : IDistributedEventHandler<ContractInvokeEto>
                 contractParam.ContractName, contractParam.ContractMethod,
                 ByteString.FromBase64(contractParam.BizData),
                 out transaction);
+            _logger.LogDebug("ContractInvokeHandler invoke contract CreateTransaction transactionId={A}",transactionId);
             await Task.Delay(_chainOption.CurrentValue.QueryTransactionDelayMillis);
-        } while (transactionId == null && RepeatCount <= 5);
+        } while (transactionId == null && RepeatCount <= 6);
 
         if (transactionId == null)
         {
-            _logger.LogError("invoke contract CreateTransaction error {BizType}_{BizId} ERROR count {Count}",
+            _logger.LogError("ContractInvokeHandler transactionId is null ,invoke contract CreateTransaction error {BizType}_{BizId} ERROR count {Count}",
                 eventData.ContractParamDto.BizType, eventData.ContractParamDto.BizId, count);
         }
 
@@ -74,8 +76,10 @@ public class ContractInvokeHandler : IDistributedEventHandler<ContractInvokeEto>
         grainDto.TransactionId = transactionId.ToHex();
         grainDto.ExecutionCount += 1;
         count = grainDto.ExecutionCount;
-        if (grainDto.ExecutionCount > 5)
+        if (grainDto.ExecutionCount > 6)
         {
+            _logger.LogError("ContractInvokeHandler ExecutionCount Max {BizType}_{BizId} ExecutionCount: {Count}",
+                eventData.ContractParamDto.BizType, eventData.ContractParamDto.BizId, count);
             return;
         }
 

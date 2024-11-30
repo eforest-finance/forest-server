@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Nest;
 using Newtonsoft.Json;
 using NFTMarketServer.Basic;
@@ -293,6 +294,14 @@ namespace NFTMarketServer.NFT
             var imageUrl = GetNftImageUrl(index.Symbol, index.ExternalInfoDictionary);
             if (imageUrl.IsNullOrEmpty())
             {
+                if (collection.LogoImage.IsNullOrEmpty())
+                {
+                    collection.LogoImage  = index.ExternalInfoDictionary.FirstOrDefault(o => o.Key == "__nft_image_url")?.Value;
+                    if (collection.LogoImage.IsNullOrEmpty())
+                    {
+                        collection.LogoImage = index.ExternalInfoDictionary.FirstOrDefault(o => o.Key == "inscription_image")?.Value;
+                    }
+                }
                 collection.LogoImage = FTHelper.BuildIpfsUrl(collection.LogoImage);
                 return collection;
             }

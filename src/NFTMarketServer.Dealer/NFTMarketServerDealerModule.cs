@@ -19,11 +19,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using NFTMarketServer.Basic;
+using NFTMarketServer.CoinGeckoApi;
 using NFTMarketServer.Common;
 using NFTMarketServer.Dealer.ContractInvoker;
 using NFTMarketServer.Dealer.Options;
 using NFTMarketServer.Dealer.Provider;
 using NFTMarketServer.Grains;
+using NFTMarketServer.MongoDB;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
 using Orleans;
@@ -48,14 +50,15 @@ namespace NFTMarketServer.Dealer
     [DependsOn(
         typeof(NFTMarketServerGrainsModule),
         typeof(NFTMarketServerDomainModule),
-        typeof(AbpAutofacModule),
         typeof(AbpBackgroundWorkersModule),
-        typeof(AbpEventBusRabbitMqModule),
         typeof(AbpBackgroundWorkersQuartzModule),
         typeof(AbpAutoMapperModule),
+        typeof(AOPExceptionModule),
+        typeof(AbpAutofacModule),
+        typeof(NFTMarketServerMongoDbModule),
+        typeof(NFTMarketServerCoinGeckoApiModule),
         typeof(AbpAspNetCoreSerilogModule),
-        typeof(AOPExceptionModule)
-    )]
+        typeof(AbpEventBusRabbitMqModule))]
     public class NFTMarketServerDealerModule : AbpModule
     {
         public override void ConfigureServices(ServiceConfigurationContext context)
