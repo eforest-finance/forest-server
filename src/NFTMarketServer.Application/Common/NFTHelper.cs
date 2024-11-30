@@ -51,10 +51,14 @@ public static class NFTHelper
         return string.Join(NFTSymbolBasicConstants.NFTSymbolSeparator, tick,
             NFTSymbolBasicConstants.FirstItemSymbolSuffix);
     }
-    
+    1
     public static string GetNftImageUrl(List<IndexerExternalInfoDictionary> externalInfo, Func<string> getImageUrlFunc)
     {
         var nftImageUrl = externalInfo.FirstOrDefault(o => o.Key == "__nft_image_url")?.Value;
+        if (nftImageUrl.IsNullOrEmpty())
+        {
+            nftImageUrl = externalInfo.FirstOrDefault(o => o.Key == "inscription_image")?.Value;
+        }
         return nftImageUrl.IsNullOrEmpty() ? getImageUrlFunc() : nftImageUrl;
     }
 
