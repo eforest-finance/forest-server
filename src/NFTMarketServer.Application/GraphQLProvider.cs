@@ -76,11 +76,16 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         await grain.SetStateAsync(height);
     }
 
-    public async Task<long> GetIndexBlockHeightAsync(string chainId)
+    public async Task<long> GetIndexBlockHeightAsync(string chainId, BusinessQueryChainType queryChainType)
     {
         var result = new AelfScanTokenAppResponse();
 
-        var resultStr = await _httpService.SendGetRequest(_graphQLOptions.CurrentValue.BasicConfiguration,
+        var syncStateUrl = queryChainType == BusinessQueryChainType.InscriptionCrossChain
+            ? _graphQLOptions.CurrentValue.InscriptionBasicConfiguration
+            : _graphQLOptions.CurrentValue
+                .BasicConfiguration;
+        
+        var resultStr = await _httpService.SendGetRequest(syncStateUrl,
             new Dictionary<string, string>());
         if (resultStr.IsNullOrEmpty()) return 0;
         result = JsonConvert.DeserializeObject<AelfScanTokenAppResponse>(resultStr);
