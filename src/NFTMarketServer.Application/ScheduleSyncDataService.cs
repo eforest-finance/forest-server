@@ -33,7 +33,7 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
     public virtual async Task DealDataSingleChainAsync(string chainId, bool resetHeightFlag, long resetHeight,
         BusinessQueryChainType businessQueryChainType)
     {
-        if (resetHeightFlag)
+        if (resetHeightFlag && businessQueryChainType != BusinessQueryChainType.InscriptionCrossChain)
         {
             await _graphQlProvider.SetLastEndHeightAsync(chainId, businessQueryChainType, resetHeight);
             _logger.LogInformation(
