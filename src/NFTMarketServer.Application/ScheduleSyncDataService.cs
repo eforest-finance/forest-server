@@ -43,7 +43,7 @@ public abstract class ScheduleSyncDataService : IScheduleSyncDataService
         }
 
         var lastEndHeight = await _graphQlProvider.GetLastEndHeightAsync(chainId, businessQueryChainType);
-        var newIndexHeight = await _graphQlProvider.GetIndexBlockHeightAsync(chainId);
+        var newIndexHeight = await _graphQlProvider.GetIndexBlockHeightAsync(chainId, businessQueryChainType);
         _logger.LogInformation(
             "Start deal data for businessType: {businessQueryChainType} chainId: {chainId} lastEndHeight: {lastEndHeight} newIndexHeight: {newIndexHeight}",
             businessQueryChainType, chainId, lastEndHeight, newIndexHeight);
