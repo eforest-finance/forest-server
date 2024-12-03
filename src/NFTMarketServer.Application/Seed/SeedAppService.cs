@@ -728,6 +728,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 seedListDto.ExpireTime = DateTimeHelper.ToUnixTimeMilliseconds(seedSymbolIndex.SeedExpTime);
                 seedListDto.TokenType = EnumHelper.ToEnumString(seedSymbolIndex.TokenType);
                 seedListDto.Status = seedSymbolIndex.SeedStatus ?? SeedStatus.UNREGISTERED;
+                seedListDto.SeedType = seedSymbolIndex.SeedType;
                 if (seedSymbolIndex.ExternalInfoDictionary != null)
                 {
                     var key = EnumDescriptionHelper.GetEnumDescription(TokenCreatedExternalInfoEnum.NFTImageUrl);
@@ -1181,18 +1182,34 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             throw new Exception("Login address and parameter buyerAddress are inconsistent");
         }
+        
+        var queryList = await _graphQlProvider.GetTsmSeedBySymbolsAsync("", new List<string>(){input.SeedSymbol});
+        _logger.LogInformation(
+            "GetSpecialSeedRenewParamAsync.GetTsmSeedBySymbolsAsync symbol: {symbol} queryList:{querylist}",input.SeedSymbol, JsonConvert.SerializeObject(queryList));
+        if (queryList.IsNullOrEmpty())
+        {
+            throw new Exception("can not find last seed price");
+        }
+
+        var lastPrice = queryList.FirstOrDefault(x => x.TokenPrice.Amount > 0);
+        if (lastPrice.TokenPrice.Symbol.IsNullOrEmpty())
+        {
+            throw new Exception("can not find last seed price");
+        }
+
+        var priceSymbol = lastPrice.TokenPrice.Symbol;
+        var priceAmount = lastPrice.TokenPrice.Amount;
+        
         var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-        var priceSymbol = "ELF";
-        var priceAmount = 300000000;
         var requestStr = string.Concat(input.BuyerAddress, input.SeedSymbol, priceSymbol, priceAmount);
         var requestHash =  BuildRequestHash(string.Concat(requestStr, opTime));
-            
+        
         var response = new SeedRenewParamDto()
         {
             Buyer = input.BuyerAddress,
             SeedSymbol = input.SeedSymbol,
             PriceSymbol = priceSymbol,
-            PriceAmount = priceAmount,
+            PriceAmount = (long)priceAmount,
             OpTime = opTime,
             RequestHash = requestHash
         };
