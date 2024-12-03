@@ -496,7 +496,7 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         var str = new GraphQLRequest
         {
             Query =
-                @"query($chainId:String!,$seedSymbols:[String!]){
+                @"query($chainId:String,$seedSymbols:[String!]!){
             seedDtoList:getTsmSeedInfosBySymbol(dto: {chainId:$chainId,seedSymbols:$seedSymbols})
             {
                 id,
