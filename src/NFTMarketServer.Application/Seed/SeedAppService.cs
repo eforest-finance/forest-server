@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using AElf;
 using AElf.Indexing.Elasticsearch;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
 using Nest;
 using Newtonsoft.Json;
@@ -16,6 +18,7 @@ using NFTMarketServer.Bid;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Common;
 using NFTMarketServer.File;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.Synchronize;
 using NFTMarketServer.Helper;
 using NFTMarketServer.Market;
@@ -30,6 +33,7 @@ using NFTMarketServer.Seed.Provider;
 using NFTMarketServer.Synchronize.Eto;
 using NFTMarketServer.Synchronize.Provider;
 using NFTMarketServer.Tokens;
+using NFTMarketServer.Users;
 using Orleans;
 using Orleans.Runtime;
 using Volo.Abp;
@@ -60,6 +64,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private readonly INESTRepository<SeedPriceIndex, string> _seedPriceIndexRepository;
     private readonly INESTRepository<UniqueSeedPriceIndex, string> _uniqueSeedPriceIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
+    private readonly IUserAppService _userAppService;
+    private readonly IOptionsMonitor<SeedRenewOptions> _platformOptionsMonitor;
+
     private readonly IGraphQLProvider _graphQlProvider;
     private readonly ITsmSeedProvider _tsmSeedProvider;
     private readonly INFTListingProvider _nftListingProvider;
@@ -84,7 +91,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         IUserBalanceProvider userBalanceProvider,
         INFTDealInfoProvider dealInfoProvider,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
-        IDistributedCache<PriceInfo> distributedCache)
+        IDistributedCache<PriceInfo> distributedCache,
+        IUserAppService userAppService,
+        IOptionsMonitor<SeedRenewOptions> platformOptionsMonitor)
     {
         _objectMapper = objectMapper;
         _logger = logger;
@@ -107,6 +116,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         _nftOfferProvider = nftOfferProvider;
         _userBalanceProvider = userBalanceProvider;
         _dealInfoProvider = dealInfoProvider;
+        _userAppService = userAppService;
+        _platformOptionsMonitor = platformOptionsMonitor;
+
     }
     
     public async Task<CreateSeedResultDto> CreateSeedAsync(CreateSeedDto input)
@@ -888,7 +900,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         await UpdateSeedSymbolOtherInfoAsync(seedSymbol);
     }
-
+    
     public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
     {
         seedSymbol.FuzzySymbol = seedSymbol.Symbol;
@@ -1160,6 +1172,42 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private string GetPopularTokenPriceCacheKey(string symbol)
     {
         return $"popular:price:{symbol}";
+    }
+    
+    public async Task<SeedRenewParamDto> GetSpecialSeedRenewParamAsync(SpecialSeedRenewDto input)
+    {
+        var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+        if (currentUserAddress != input.BuyerAddress)
+        {
+            throw new Exception("Login address and parameter buyerAddress are inconsistent");
+        }
+        var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+        var priceSymbol = "ELF";
+        var priceAmount = 300000000;
+        var requestStr = string.Concat(input.BuyerAddress, input.SeedSymbol, priceSymbol, priceAmount);
+        var requestHash =  BuildRequestHash(string.Concat(requestStr, opTime));
+            
+        var response = new SeedRenewParamDto()
+        {
+            Buyer = input.BuyerAddress,
+            SeedSymbol = input.SeedSymbol,
+            PriceSymbol = priceSymbol,
+            PriceAmount = priceAmount,
+            OpTime = opTime,
+            RequestHash = requestHash
+        };
+        return response;
+    }
+    
+    private string BuildRequestHash(string request)
+    {
+        var hashVerifyKey = _platformOptionsMonitor.CurrentValue.HashVerifyKey;
+        if (hashVerifyKey.IsNullOrEmpty())
+        {
+            throw new Exception("have not config seed renew HashVerifyKey");
+        }
+        var requestHash = HashHelper.ComputeFrom(string.Concat(request, hashVerifyKey));
+        return requestHash.ToHex();
     }
 
 }

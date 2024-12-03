@@ -100,4 +100,12 @@ public class SeedController : AbpController
     {
         return await _seedAppService.GetSeedRankingWeightInfosAsync();
     }
+    
+    [HttpPost]
+    [Route("seed-renew")]
+    [Authorize]
+    public async Task<SeedRenewParamDto> SeedRenew(SpecialSeedRenewDto request)
+    {
+        return await _seedAppService.GetSpecialSeedRenewParamAsync(request);
+    }
 }

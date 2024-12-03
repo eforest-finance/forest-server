@@ -134,3 +134,8 @@ public class InviteReward
 
 }
 
+public class SeedRenewOptions
+{
+    public string HashVerifyKey{ get; set; }
+}
+
