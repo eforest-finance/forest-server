@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
@@ -24,6 +25,7 @@ using Orleans;
 using Volo.Abp.DependencyInjection;
 using TokenType = NFTMarketServer.Seed.Dto.TokenType;
 using NFTMarketServer.Common.Http;
+using NFTMarketServer.Contracts.HandleException;
 
 namespace NFTMarketServer;
 
@@ -49,40 +51,41 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         _httpService = httpService;
     }
 
-
-    public async Task<long> GetLastEndHeightAsync(string chainId, BusinessQueryChainType queryChainType)
+    [ExceptionHandler(typeof(Exception),
+        Message = "GraphQLProvider.GetLastEndHeightAsync:GetIndexBlockHeight on chain error", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionGraphQLRetrun),
+        LogTargets = new []{"chainId", "queryChainType" }
+    )]
+    public virtual async Task<long> GetLastEndHeightAsync(string chainId, BusinessQueryChainType queryChainType)
     {
-        try
-        {
-            var grain = _clusterClient.GetGrain<IContractServiceGraphQLGrain>(queryChainType.ToString() + chainId);
-            return await grain.GetStateAsync();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "GetIndexBlockHeight on chain {id} error", chainId);
-            return CommonConstant.LongError;
-        }
+        var grain = _clusterClient.GetGrain<IContractServiceGraphQLGrain>(queryChainType.ToString() + chainId);
+        return await grain.GetStateAsync();
     }
 
-    public async Task SetLastEndHeightAsync(string chainId, BusinessQueryChainType queryChainType, long height)
+    [ExceptionHandler(typeof(Exception),
+        Message = "GraphQLProvider.SetLastEndHeightAsync:SetIndexBlockHeight on chain error", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionGraphQLRetrun),
+        LogTargets = new []{"chainId", "queryChainType", "height" }
+    )]
+    public virtual async Task SetLastEndHeightAsync(string chainId, BusinessQueryChainType queryChainType, long height)
     {
-        try
-        {
-            var grain = _clusterClient.GetGrain<IContractServiceGraphQLGrain>(queryChainType.ToString() +
-                                                                              chainId);
-            await grain.SetStateAsync(height);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "SetIndexBlockHeight on chain {id} error", chainId);
-        }
+        var grain = _clusterClient.GetGrain<IContractServiceGraphQLGrain>(queryChainType.ToString() +
+                                                                          chainId);
+        await grain.SetStateAsync(height);
     }
 
-    public async Task<long> GetIndexBlockHeightAsync(string chainId)
+    public async Task<long> GetIndexBlockHeightAsync(string chainId, BusinessQueryChainType queryChainType)
     {
         var result = new AelfScanTokenAppResponse();
 
-        var resultStr = await _httpService.SendGetRequest(_graphQLOptions.CurrentValue.BasicConfiguration,
+        var syncStateUrl = queryChainType == BusinessQueryChainType.InscriptionCrossChain
+            ? _graphQLOptions.CurrentValue.InscriptionBasicConfiguration
+            : _graphQLOptions.CurrentValue
+                .BasicConfiguration;
+        
+        var resultStr = await _httpService.SendGetRequest(syncStateUrl,
             new Dictionary<string, string>());
         if (resultStr.IsNullOrEmpty()) return 0;
         result = JsonConvert.DeserializeObject<AelfScanTokenAppResponse>(resultStr);

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NFTMarketServer.Chain;
 using NFTMarketServer.Chains;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.NFT.Dtos;
 using NFTMarketServer.NFT.Etos;
 using NFTMarketServer.NFT.Index;
@@ -47,27 +49,25 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
         _objectMapper = objectMapper;
         _distributedCache = distributedCache;
     }
-    
+    [ExceptionHandler(typeof(Exception),
+        Message = "TreePointsRecordsSyncScheduleService.GetSyncTreePointsRecordsAsync is fail", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"chainId", "lastEndHeight", "newIndexHeight" }
+    )]
+    public virtual async Task<IndexerTreePointsRecordPage> GetSyncTreePointsRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
+    {
+        return await _treeGamePointsRecordProvider.GetSyncTreePointsRecordsAsync(lastEndHeight,
+            newIndexHeight, chainId);
+    }
+
     public override async Task<long> SyncIndexerRecordsAsync(string chainId, long lastEndHeight, long newIndexHeight)
     {
         var skipCount = 0;
         long maxProcessedBlockHeight = -1;
         //Paging for logical processing
         var changePageInfo = new IndexerTreePointsRecordPage();
-        try
-        {
-            changePageInfo = await _treeGamePointsRecordProvider.GetSyncTreePointsRecordsAsync(lastEndHeight,
-                newIndexHeight, chainId);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, 
-                "HandleTreePointsRecordAsync Exception lastEndHeight={A} newIndexHeight={B} msg:{C}", lastEndHeight,
-                newIndexHeight, e.Message);
-            changePageInfo = null;
-        }
-
-   
+        changePageInfo = await GetSyncTreePointsRecordsAsync(chainId, lastEndHeight, newIndexHeight);
 
         if (changePageInfo.TotalRecordCount ==0 || changePageInfo.TreePointsChangeRecordList.IsNullOrEmpty())
         {
@@ -101,7 +101,7 @@ public class TreePointsRecordsSyncScheduleService : ScheduleSyncDataService
             var innerKey = record.Id;
             if (recordList != null && recordList.Contains(innerKey))
             {
-                _logger.Debug("HandleTreePointsRecordAsync duplicated bizKey: {A}", record.Id);
+                _logger.LogDebug("HandleTreePointsRecordAsync duplicated bizKey: {A}", record.Id);
                 continue;
             }
             

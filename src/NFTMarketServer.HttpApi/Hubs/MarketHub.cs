@@ -1,9 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using ImageMagick;
 using Microsoft.AspNetCore.SignalR;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Bid.Dtos;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.Helper;
 using NFTMarketServer.NFT;
 using Volo.Abp.AspNetCore.SignalR;
@@ -160,18 +162,17 @@ public class MarketHub  : AbpHub
     
         await TryRemoveFromGroupAsync(Context.ConnectionId, _marketHubGroupProvider.GetNtfOfferChangeGroupName(nftId));
     }
-    
-    private async Task<bool> TryRemoveFromGroupAsync(string connectionId, string groupName)
+    [ExceptionHandler(typeof(Exception),
+        Message = "MarketHub.TryRemoveFromGroupAsync", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        ReturnDefault = ReturnDefault.Default,
+        LogTargets = new []{"connectionId", "groupName" }
+    )]
+    public virtual async  Task<bool> TryRemoveFromGroupAsync(string connectionId, string groupName)
     {
-        try
-        {
-            await Groups.RemoveFromGroupAsync(connectionId, groupName);
-            return true;
-        }
-        catch (Exception e)
-        {
-            return false;
-        }
+        await Groups.RemoveFromGroupAsync(connectionId, groupName);
+        return true;
     }
     
     public override async Task OnDisconnectedAsync(Exception? exception)

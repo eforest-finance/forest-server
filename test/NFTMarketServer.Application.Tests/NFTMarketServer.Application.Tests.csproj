@@ -3,11 +3,12 @@
   <Import Project="..\..\common.props" />
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>NFTMarketServer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.1.0" />
     <ProjectReference Include="..\..\src\NFTMarketServer.Application\NFTMarketServer.Application.csproj" />
     <ProjectReference Include="..\..\src\NFTMarketServer.AuthServer\NFTMarketServer.AuthServer.csproj" />
     <ProjectReference Include="..\..\src\NFTMarketServer.CoinGeckoApi\NFTMarketServer.CoinGeckoApi.csproj" />

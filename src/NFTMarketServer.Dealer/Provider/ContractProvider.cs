@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Client.Dto;
+using AElf.Contracts.CrossChain;
+using AElf.ExceptionHandler;
 using AElf.Types;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
@@ -12,6 +14,7 @@ using Microsoft.Extensions.Options;
 using NFTMarketServer.Common;
 using NFTMarketServer.Dealer.Helper;
 using NFTMarketServer.Dealer.Options;
+using NFTMarketServer.HandleException;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.Dealer.Provider;
@@ -72,22 +75,31 @@ public class ContractProvider : IContractProvider, ISingletonDependency
     {
         return _accounts.GetOrAdd(accountName, InitAccount);
     }
+    [ExceptionHandler(typeof(Exception),
+        Message = "ContractProvider.GetChainStatusAsync error", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"chainId"}
+    )]
+    public virtual async Task<ChainStatusDto> GetChainStatusAsync(string chainId)
+    {
+        var status = _aelfClientProvider.GetChainStatusAsync(chainId).GetAwaiter().GetResult();
+        return status;
+    }
 
     public Hash CreateTransaction(string chainId, string senderName, string contractName, string methodName,
         ByteString param, out Transaction transaction)
     {
         var address = ContractAddress(chainId, contractName);
         ChainStatusDto status;
-        try
+        status = GetChainStatusAsync(chainId).GetAwaiter().GetResult();
+        if (status == null)
         {
-            status = _aelfClientProvider.GetChainStatusAsync(chainId).GetAwaiter().GetResult();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "GetChainStatusAsync chainId error {ChainId} ", chainId);
+            _logger.LogError("GetChainStatusAsync chainId error {ChainId} ", chainId);
             transaction = null;
             return null;
         }
+        
         var height = status.BestChainHeight;
         var blockHash = status.BestChainHash;
         var account = Account(senderName);
@@ -107,52 +119,44 @@ public class ContractProvider : IContractProvider, ISingletonDependency
         transaction.Signature = account.GetSignatureWith(transactionId.ToByteArray());
         return transactionId;
     }
-
-    public  async Task SendTransactionAsync(string chainId, Transaction transaction)
+    [ExceptionHandler(typeof(Exception),
+        Message = "ContractProvider.SendTransactionAsync Send transaction failed on chain", 
+        LogOnly = true,
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"chainId","transaction"}
+    )]
+    public virtual async Task SendTransactionAsync(string chainId, Transaction transaction)
     {
-        try
+        _logger.LogDebug(
+            "Send transaction on chain {ChainId}, transactionId:{TransactionId}", chainId, transaction.GetHash());
+        var sendResult = await _aelfClientProvider.SendTransactionAsync(chainId, new SendTransactionInput()
         {
-            _logger.LogDebug(
-                "Send transaction on chain {ChainId}, transactionId:{TransactionId}", chainId, transaction.GetHash());
-            var sendResult = await _aelfClientProvider.SendTransactionAsync(chainId, new SendTransactionInput()
-            {
-                RawTransaction = transaction.ToByteArray().ToHex()
-            });
-            _logger.LogDebug(
-                "Send transaction on chain {ChainId}, transactionId:{TransactionId}, transaction: {Transaction}",
-                chainId, sendResult.TransactionId, transaction.ToByteArray().ToHex());
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Send transaction failed on chain {ChainId}, transactionId:{TransactionId}",
-                chainId, transaction.GetHash());
-        }
-      
+            RawTransaction = transaction.ToByteArray().ToHex()
+        });
+        _logger.LogDebug(
+            "Send transaction on chain {ChainId}, transactionId:{TransactionId}, transaction: {Transaction}",
+            chainId, sendResult.TransactionId, transaction.ToByteArray().ToHex());
     }
     
     
-
-    public async Task<TransactionResultDto> QueryTransactionResultAsync(string chainId, Hash transactionId)
+    [ExceptionHandler(typeof(Exception),
+        Message = "ContractProvider.QueryTransactionResultAsync failed on chain", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"chainId", "transactionId"}
+    )]
+    public virtual async Task<TransactionResultDto> QueryTransactionResultAsync(string chainId, Hash transactionId)
     {
-        try
-        {
-            _logger.LogDebug(
-                "Send transaction on chain {ChainId}, transactionId:{TransactionId}", chainId, transactionId.ToHex());
-            var txResult = await _aelfClientProvider.GetTransactionResultAsync(chainId, transactionId.ToHex());
+        _logger.LogDebug(
+            "Send transaction on chain {ChainId}, transactionId:{TransactionId}", chainId, transactionId.ToHex());
+        var txResult = await _aelfClientProvider.GetTransactionResultAsync(chainId, transactionId.ToHex());
 
-            _logger.LogDebug(
-                "Query transaction on chain {ChainId}, transactionId:{TransactionId}, status: {Status}",
-                chainId, transactionId.ToHex(), txResult.Status);
+        _logger.LogDebug(
+            "Query transaction on chain {ChainId}, transactionId:{TransactionId}, status: {Status}",
+            chainId, transactionId.ToHex(), txResult.Status);
 
-            return txResult;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "GetTransactionResultAsync failed on chain {ChainId}, transactionId:{TransactionId}",
-                chainId, transactionId.ToHex());
-        }
-
-        return null;
+        return txResult;
     }
 
     public async Task<T> CallTransactionAsync<T>(string chainId, Transaction transaction)

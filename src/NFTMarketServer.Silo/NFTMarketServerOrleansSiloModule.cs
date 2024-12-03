@@ -1,3 +1,4 @@
+using AElf.ExceptionHandler.ABP;
 using Microsoft.Extensions.DependencyInjection;
 using NFTMarketServer.Grains;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
@@ -10,7 +11,8 @@ namespace NFTMarketServer.Silo;
 
 [DependsOn(typeof(AbpAutofacModule),
     typeof(NFTMarketServerGrainsModule),
-    typeof(AbpAspNetCoreSerilogModule)
+    typeof(AbpAspNetCoreSerilogModule),
+    typeof(AOPExceptionModule)
 )]
 public class NFTMarketServerOrleansSiloModule : AbpModule
 {

@@ -91,7 +91,7 @@ public class UserBalanceSyncScheduleService : ScheduleSyncDataService
             var innerKey = userBalance.Id + userBalance.BlockHeight;
             if (balanceList != null && balanceList.Contains(innerKey))
             {
-                _logger.Debug("HandleUserBalanceAsync duplicated bizKey: {A}", userBalance.Id);
+                _logger.LogDebug("HandleUserBalanceAsync duplicated bizKey: {A}", userBalance.Id);
                 continue;
             }
             

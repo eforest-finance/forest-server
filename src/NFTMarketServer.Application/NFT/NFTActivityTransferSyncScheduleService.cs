@@ -89,7 +89,7 @@ public class NFTActivityTransferSyncScheduleService : ScheduleSyncDataService
             var innerKey = nftActivity.Id + nftActivity.BlockHeight;
             if (activityList != null && activityList.Contains(innerKey))
             {
-                _logger.Debug("HandleNFTActivityTransferAsync duplicated bizKey: {A}", nftActivity.Id);
+                _logger.LogDebug("HandleNFTActivityTransferAsync duplicated bizKey: {A}", nftActivity.Id);
                 continue;
             }
             

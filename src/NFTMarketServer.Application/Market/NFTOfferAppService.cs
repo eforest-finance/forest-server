@@ -29,7 +29,7 @@ namespace NFTMarketServer.Market
         private readonly INFTCollectionExtensionProvider _nftCollectionExtensionProvider;
         private readonly IUserBalanceProvider _balanceProvider;
         private readonly ICompositeNFTProvider _compositeNFTProvider;
-        
+        private const int MaxQueryOfferParamSize = 200;
         private readonly IObjectMapper _objectMapper;
         private readonly ILogger<NFTOfferAppService> _logger;
         
@@ -201,9 +201,29 @@ namespace NFTMarketServer.Market
                 return result;
             }
             
-            var nftOfferIndexes =
-                await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
-                    string.Empty, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, string.Empty, nftInfoIds, string.Empty, string.Empty, input.Address);
+            var offers = new List<IndexerNFTOffer>();
+            if(!nftInfoIds.IsNullOrEmpty())
+            {
+                var groupInfoIds = GroupInfoIds(nftInfoIds);
+                foreach (var infoIds in groupInfoIds)
+                {
+                    var subResult = await _nftOfferProvider.GetNFTOfferIndexesAsync(input.SkipCount, input.MaxResultCount,
+                        string.Empty, input.ChainList.IsNullOrEmpty()?new List<string>():input.ChainList, string.Empty, infoIds, string.Empty, string.Empty, input.Address);
+                    if (subResult != null && subResult.TotalRecordCount > 0 &&
+                        !subResult.IndexerNFTOfferList.IsNullOrEmpty())
+                    {
+                        offers.AddRange(subResult.IndexerNFTOfferList);
+                    }
+
+                }
+            }
+            var nftOfferIndexes = new IndexerNFTOffers()
+            {
+                TotalRecordCount = offers.Count,
+                IndexerNFTOfferList = offers
+            };
+
+
             if (nftOfferIndexes == null || nftOfferIndexes.IndexerNFTOfferList.IsNullOrEmpty())
             {
                 return result;
@@ -230,7 +250,21 @@ namespace NFTMarketServer.Market
 
             return Map(result, nftOfferIndexes, nftCollectionExtensionDic, accounts, compositeNFTInfoDic);
         }
+        
+        private static IEnumerable<List<string>> GroupInfoIds(List<string> originalList)
+        {
+            const int groupPageCount = 100;
+            var groupedList = new List<List<string>>();
+ 
+            for (var i = 0; i < originalList.Count; i += groupPageCount)
+            {
+                var count = Math.Min(100, originalList.Count - i); 
+                var subList = originalList.GetRange(i, count);
+                groupedList.Add(subList);
+            }
 
+            return groupedList;
+        }
         private PagedResultDto<CollectedCollectionOffersDto> Map(
             PagedResultDto<CollectedCollectionOffersDto> result,
             IndexerNFTOffers nftOfferIndexes,

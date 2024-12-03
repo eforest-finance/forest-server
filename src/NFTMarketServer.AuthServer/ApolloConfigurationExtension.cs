@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace NFTMarketServer;
+namespace NFTMarketServer.Auth;
 
 public static class ApolloConfigurationExtension
 {

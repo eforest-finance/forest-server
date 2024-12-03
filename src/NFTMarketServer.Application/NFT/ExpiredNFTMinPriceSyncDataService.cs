@@ -100,7 +100,7 @@ public class ExpiredNftMinPriceSyncDataService : ScheduleSyncDataService
 
             if (nftInfoIdWithTimeList != null && nftInfoIdWithTimeList.Contains(nftInfoIdWithTime))
             {
-                _logger.Debug($"ExpiredNftMinPriceSync duplicated nftInfoIdWithTime: {nftInfoIdWithTime}", nftInfoIdWithTime);
+                _logger.LogDebug($"ExpiredNftMinPriceSync duplicated nftInfoIdWithTime: {nftInfoIdWithTime}", nftInfoIdWithTime);
                 continue;
             }
 

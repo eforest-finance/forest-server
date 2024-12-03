@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Client.Dto;
+using AElf.ExceptionHandler;
 using AElf.Types;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
@@ -16,6 +17,7 @@ using NFTMarketServer.Dealer.Etos;
 using NFTMarketServer.Dealer.Index;
 using NFTMarketServer.Dealer.Options;
 using NFTMarketServer.Dealer.Provider;
+using NFTMarketServer.HandleException;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.DistributedLocking;
 using Volo.Abp.EventBus.Distributed;
@@ -83,37 +85,34 @@ public class ContractInvokerWorker : IContractInvokerWorker, ISingletonDependenc
         _logger.LogInformation("ContractInvokerWorker finish, total : {Count}", count);
     }
 
-
-    private async Task UpdateResult(ContractInvokeIndex contractInvokeIndex)
+    [ExceptionHandler(typeof(Exception),
+        Message = "ContractInvokerWorker.UpdateResult ContractInvokerProvider updateResult error,", 
+        TargetType = typeof(ExceptionHandlingService), 
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionRetrun),
+        LogTargets = new []{"contractInvokeIndex"}
+    )]
+    public virtual async Task UpdateResult(ContractInvokeIndex contractInvokeIndex)
     {
-        try
+        AssertHelper.NotEmpty(contractInvokeIndex.TransactionId, "transactionId empty");
+        var transactionId = Hash.LoadFromHex(contractInvokeIndex.TransactionId);
+        var rawTxResult =
+            await _contractProvider.QueryTransactionResultAsync(contractInvokeIndex.ChainId, transactionId);
+        if (rawTxResult == null || rawTxResult.Status == contractInvokeIndex.Status)
         {
-            AssertHelper.NotEmpty(contractInvokeIndex.TransactionId, "transactionId empty");
-            var transactionId = Hash.LoadFromHex(contractInvokeIndex.TransactionId);
-            var rawTxResult =
-                await _contractProvider.QueryTransactionResultAsync(contractInvokeIndex.ChainId, transactionId);
-            if (rawTxResult == null || rawTxResult.Status == contractInvokeIndex.Status)
-            {
-                return;
-            }
-
-            var grainDto =
-                await _contractInvokeProvider.GetByIdAsync(contractInvokeIndex.BizType, contractInvokeIndex.BizId);
-
-            if (rawTxResult.Status == TransactionResultStatus.PENDING.ToString())
-            {
-                // waiting
-                return;
-            }
-
-            // SaveTxResultAsync can be time consuming and No need to wait for the end.
-            _ = SaveTxResultAsync(contractInvokeIndex, grainDto, rawTxResult);
+            return;
         }
-        catch (Exception e)
+
+        var grainDto =
+            await _contractInvokeProvider.GetByIdAsync(contractInvokeIndex.BizType, contractInvokeIndex.BizId);
+
+        if (rawTxResult.Status == TransactionResultStatus.PENDING.ToString())
         {
-            _logger.LogError(e, "ContractInvokerProvider updateResult error, id={Id}",
-                contractInvokeIndex.Id.ToString());
+            // waiting
+            return;
         }
+
+        // SaveTxResultAsync can be time consuming and No need to wait for the end.
+        _ = SaveTxResultAsync(contractInvokeIndex, grainDto, rawTxResult);
     }
 
     private async Task SaveTxResultAsync(ContractInvokeIndex contractInvokeIndex,

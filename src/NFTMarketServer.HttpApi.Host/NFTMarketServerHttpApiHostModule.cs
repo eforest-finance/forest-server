@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using AElf.ExceptionHandler.ABP;
 using AutoResponseWrapper;
 using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
@@ -56,6 +57,7 @@ namespace NFTMarketServer;
     typeof(AbpEventBusRabbitMqModule),
     typeof(NFTMarketServerCoinGeckoApiModule),
     typeof(AbpBlobStoringAliyunModule)
+   , typeof(AOPExceptionModule)
 )]
 public class NFTMarketServerHttpApiHostModule : AbpModule
 {
@@ -177,8 +179,8 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
             options.Languages.Add(new LanguageInfo("en-GB", "en-GB", "English (UK)"));
             options.Languages.Add(new LanguageInfo("fi", "fi", "Finnish"));
             options.Languages.Add(new LanguageInfo("fr", "fr", "Français"));
-            options.Languages.Add(new LanguageInfo("hi", "hi", "Hindi", "in"));
-            options.Languages.Add(new LanguageInfo("it", "it", "Italian", "it"));
+            options.Languages.Add(new LanguageInfo("hi", "hi", "Hindi"));
+            options.Languages.Add(new LanguageInfo("it", "it", "Italian"));
             options.Languages.Add(new LanguageInfo("hu", "hu", "Magyar"));
             options.Languages.Add(new LanguageInfo("pt-BR", "pt-BR", "Português"));
             options.Languages.Add(new LanguageInfo("ru", "ru", "Русский"));
@@ -186,8 +188,8 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
             options.Languages.Add(new LanguageInfo("tr", "tr", "Türkçe"));
             options.Languages.Add(new LanguageInfo("zh-Hans", "zh-Hans", "简体中文"));
             options.Languages.Add(new LanguageInfo("zh-Hant", "zh-Hant", "繁體中文"));
-            options.Languages.Add(new LanguageInfo("de-DE", "de-DE", "Deutsch", "de"));
-            options.Languages.Add(new LanguageInfo("es", "es", "Español", "es"));
+            options.Languages.Add(new LanguageInfo("de-DE", "de-DE", "Deutsch"));
+            options.Languages.Add(new LanguageInfo("es", "es", "Español"));
         });
     }
 
@@ -229,7 +231,7 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
 
     private static void ConfigureOrleans(ServiceConfigurationContext context, IConfiguration configuration)
     {
-        context.Services.AddSingleton(o =>
+        /*context.Services.AddSingleton(o =>
         {
             return new ClientBuilder()
                 .ConfigureDefaults()
@@ -248,7 +250,7 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
                     parts.AddApplicationPart(typeof(NFTMarketServerGrainsModule).Assembly).WithReferences())
                 .ConfigureLogging(builder => builder.AddProvider(o.GetService<ILoggerProvider>()))
                 .Build();
-        });
+        });*/
     }
 
     private void ConfigureGraphQl(ServiceConfigurationContext context,
@@ -295,25 +297,25 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
         app.UseUnitOfWork();
         app.UseConfiguredEndpoints();
 
-        StartOrleans(context.ServiceProvider);
+        //StartOrleans(context.ServiceProvider);
     }
 
-    public override void OnApplicationShutdown(ApplicationShutdownContext context)
+    /*public override void OnApplicationShutdown(ApplicationShutdownContext context)
     {
         StopOrleans(context.ServiceProvider);
-    }
+    }*/
 
-    private static void StartOrleans(IServiceProvider serviceProvider)
+    /*private static void StartOrleans(IServiceProvider serviceProvider)
     {
         var client = serviceProvider.GetRequiredService<IClusterClient>();
         AsyncHelper.RunSync(async () => await client.Connect());
-    }
+    }*/
 
-    private static void StopOrleans(IServiceProvider serviceProvider)
+    /*private static void StopOrleans(IServiceProvider serviceProvider)
     {
         var client = serviceProvider.GetRequiredService<IClusterClient>();
         AsyncHelper.RunSync(client.Close);
-    }
+    }*/
     
     private static void ConfigureDistributedLocking(
         ServiceConfigurationContext context,

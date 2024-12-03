@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Users.Dto;
 using Orleans;
@@ -8,22 +9,26 @@ namespace NFTMarketServer.Grains.Grain.NFTInfo;
 public class PlatformNFTTokenIdGrain : Grain<PlatformNFTTokenIdState>, IPlatformNFTTokenIdGrain
 {
     private readonly IObjectMapper _objectMapper;
+    private readonly ILogger<PlatformNFTTokenIdGrain> _logger;
 
-    public PlatformNFTTokenIdGrain(IObjectMapper objectMapper)
+    public PlatformNFTTokenIdGrain(IObjectMapper objectMapper, ILogger<PlatformNFTTokenIdGrain> logger)
     {
         _objectMapper = objectMapper;
+        _logger = logger;
     }
     
-    public override async Task OnActivateAsync()
+    public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("OnActivateAsync()");
         await ReadStateAsync();
-        await base.OnActivateAsync();
+        await base.OnActivateAsync(cancellationToken);
     }
 
-    public override async Task OnDeactivateAsync()
+    public override async Task OnDeactivateAsync(DeactivationReason reason, CancellationToken token)
     {
+        _logger.LogInformation("OnDeactivateAsync({Reason})", reason);
         await WriteStateAsync();
-        await base.OnDeactivateAsync();
+        await base.OnDeactivateAsync(reason, token);
     }
     
     public async Task<GrainResultDto<PlatformNFTTokenIdGrainDto>> GetPlatformNFTCurrentTokenIdAsync()

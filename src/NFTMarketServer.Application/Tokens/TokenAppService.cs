@@ -1,8 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
+using MassTransit.Futures.Contracts;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NFTMarketServer.HandleException;
 using NFTMarketServer.Options;
 using Volo.Abp;
 using Volo.Abp.Caching;
@@ -27,6 +30,18 @@ namespace NFTMarketServer.Tokens
             _logger = logger;
         }
 
+        [ExceptionHandler(typeof(Exception),
+            Message = "TokenAppService.GetHistoryPriceAsync is fail",
+            TargetType = typeof(ExceptionHandlingService),
+            MethodName = nameof(ExceptionHandlingService.HandleExceptionSymbolPriceRetrun),
+            LogTargets = new[] { "symbol", "dateTime" }
+        )]
+        public virtual async Task<decimal> GetHistoryPriceAsync(string symbol, DateTime priceTime)
+        {
+            var price = await _tokenMarketDataProvider.GetHistoryPriceAsync(symbol, priceTime);
+            return price;
+        }
+
         public async Task<TokenMarketDataDto> GetTokenMarketDataAsync(string symbol, DateTime? time)
         {
             if (!time.HasValue)
@@ -43,19 +58,17 @@ namespace NFTMarketServer.Tokens
             }
 
             var price = new decimal(0);
-            try
+            price = await GetHistoryPriceAsync(symbol, priceTime);
+            if (price <= 0)
             {
-                price = await _tokenMarketDataProvider.GetHistoryPriceAsync(symbol, priceTime);
-            }
-            catch (Exception e)
-            {
-                _logger.LogInformation(e, "GetHistoryPriceAsync e ,then defaultCache");
+                _logger.LogInformation("GetHistoryPriceAsync e ,then defaultCache");
                 var defaultCacheKey = GetDefaultTokenMarketDataCacheKey(symbol);
                 var defaultMarketData = await _distributedCache.GetAsync(defaultCacheKey);
-                _logger.LogInformation(e, "GetHistoryPriceAsync e ,then defaultCache, price={A} symbol={B}",
+                _logger.LogInformation("GetHistoryPriceAsync e ,then defaultCache, price={A} symbol={B}",
                     defaultMarketData?.Price, defaultMarketData?.Symbol);
                 return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(defaultMarketData);
             }
+
             var marketData = new TokenMarketData
             {
                 Price = price,
@@ -66,6 +79,18 @@ namespace NFTMarketServer.Tokens
 
             await _distributedCache.SetAsync(cacheKey, marketData);
             return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(marketData);
+        }
+
+        [ExceptionHandler(typeof(Exception),
+            Message = "TokenAppService.GetCurrentPriceBySymbolNoFromCatchAsync is fail", 
+            TargetType = typeof(ExceptionHandlingService), 
+            MethodName = nameof(ExceptionHandlingService.HandleExceptionSymbolPriceRetrun),
+            LogTargets = new []{"symbol"}
+        )]
+        public virtual Task<decimal> GetCurrentPriceBySymbolNoFromCatchAsync(string symbol)
+        {
+            var price = _tokenMarketDataProvider.GetPriceAsync(symbol);
+            return price;
         }
 
         private async Task<TokenMarketDataDto> GetCurrentPriceAsync(string symbol)
@@ -80,18 +105,16 @@ namespace NFTMarketServer.Tokens
             var defaultCacheKey = GetDefaultTokenMarketDataCacheKey(symbol);
             
             var price = new decimal(0);
-            try
+            price = await GetCurrentPriceBySymbolNoFromCatchAsync(symbol);
+            if (price <= 0)
             {
-                price = await _tokenMarketDataProvider.GetPriceAsync(symbol);
-            }
-            catch (Exception e)
-            {
-                _logger.LogInformation(e, "GetCurrentPriceAsync e ,then defaultCache");
+                _logger.LogInformation("GetCurrentPriceAsync e ,then defaultCache");
                 var defaultMarketData = await _distributedCache.GetAsync(defaultCacheKey);
-                _logger.LogInformation(e, "GetCurrentPriceAsync e ,then defaultCache, price={A} symbol={B}",
+                _logger.LogInformation("GetCurrentPriceAsync e ,then defaultCache, price={A} symbol={B}",
                     defaultMarketData?.Price, defaultMarketData?.Symbol);
-                return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(defaultMarketData);
+                return ObjectMapper.Map<TokenMarketData, TokenMarketDataDto>(defaultMarketData); 
             }
+            
             var marketData = new TokenMarketData
             {
                 Price = price,
