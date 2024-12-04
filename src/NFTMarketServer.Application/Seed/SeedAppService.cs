@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AElf.ExceptionHandler;
 using AElf;
+using AElf.Client.Dto;
+using AElf.Client.Service;
 using AElf.Indexing.Elasticsearch;
+using Forest.Contracts.SymbolRegistrar;
+using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -43,6 +46,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Caching;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
+using SeedType = NFTMarketServer.Seed.Dto.SeedType;
 using TokenType = NFTMarketServer.Seed.Dto.TokenType;
 
 namespace NFTMarketServer.Seed;
@@ -67,7 +71,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private readonly INESTRepository<UniqueSeedPriceIndex, string> _uniqueSeedPriceIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
     private readonly IUserAppService _userAppService;
-    private readonly IOptionsMonitor<SeedRenewOptions> _platformOptionsMonitor;
+    private readonly IOptionsMonitor<SeedRenewOptions> _seedRenewOptionsMonitor;
+    private readonly IBlockchainClientFactory<AElfClient> _blockchainClientFactory;
 
     private readonly IGraphQLProvider _graphQlProvider;
     private readonly ITsmSeedProvider _tsmSeedProvider;
@@ -95,7 +100,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
         IDistributedCache<PriceInfo> distributedCache,
         IUserAppService userAppService,
-        IOptionsMonitor<SeedRenewOptions> platformOptionsMonitor)
+        IOptionsMonitor<SeedRenewOptions> seedRenewOptionsMonitor,
+        IBlockchainClientFactory<AElfClient> blockchainClientFactory
+        )
     {
         _objectMapper = objectMapper;
         _logger = logger;
@@ -119,7 +126,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         _userBalanceProvider = userBalanceProvider;
         _dealInfoProvider = dealInfoProvider;
         _userAppService = userAppService;
-        _platformOptionsMonitor = platformOptionsMonitor;
+        _seedRenewOptionsMonitor = seedRenewOptionsMonitor;
+        _blockchainClientFactory = blockchainClientFactory;
 
     }
 
@@ -1263,13 +1271,74 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     
     private string BuildRequestHash(string request)
     {
-        var hashVerifyKey = _platformOptionsMonitor.CurrentValue.HashVerifyKey;
+        var hashVerifyKey = _seedRenewOptionsMonitor.CurrentValue.HashVerifyKey;
         if (hashVerifyKey.IsNullOrEmpty())
         {
             throw new Exception("have not config seed renew HashVerifyKey");
         }
         var requestHash = HashHelper.ComputeFrom(string.Concat(request, hashVerifyKey));
         return requestHash.ToHex();
+    }
+    
+    public async Task<bool> BidSeedRenew(AuctionInfoDto input)
+    {
+        var seedSymbol = input.SeedSymbol;
+        var bidFinishTime = input.EndTime;
+        var renewSwitch = _seedRenewOptionsMonitor.CurrentValue.RenewSwitch;
+        if (!renewSwitch)
+        {
+            _logger.LogInformation("Bid Seed renew switch is close");
+            return true;
+        }
+        //get request param
+        var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+        var requestStr = string.Concat(seedSymbol, bidFinishTime, opTime);
+        var requestHash =  BuildRequestHash(string.Concat(requestStr));
+        
+        //send tx
+        var chainId = _seedRenewOptionsMonitor.CurrentValue.RenewChainId;
+        var contractAddress = _seedRenewOptionsMonitor.CurrentValue.SymbolRegistarContractMainChainAddress;
+        var privateKey = _seedRenewOptionsMonitor.CurrentValue.PrivateKey;
+        var client = _blockchainClientFactory.GetClient(chainId);
+        var renewInput = new BidFinishSeedRenewInput()
+        {
+            SeedSymbol = seedSymbol,
+            BidFinishTime = bidFinishTime,
+            OpTime = opTime,
+            RequestHash = requestHash
+        };
+        var seedRenewRaw =
+            await GenerateRawTransaction(client, "BidFinishSeedRenew", renewInput,
+                contractAddress, privateKey);
+        _logger.LogInformation(
+            "BidSeedRenew create raw SeedSymbol:{A} BidFinishTime:{B} OpTime:{C} RequestHash:{D} seedRenewRaw:{E}", renewInput.SeedSymbol,
+            renewInput.BidFinishTime, renewInput.OpTime, renewInput.RequestHash, seedRenewRaw);
+        
+        var result = await client.SendTransactionAsync(new SendTransactionInput()
+            { RawTransaction = seedRenewRaw });
+        await Task.Delay(3000);
+        
+        var transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
+        var times = 0;
+        while ((transactionResult.Status is "PENDING" or "NOTEXISTED") && times < 60)
+        {
+            times++;
+            await Task.Delay(1000);
+            transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
+        }
+
+        bool isSuccess = transactionResult.Status == "MINED";
+        _logger.LogInformation(
+            "BidSeedRenew sendTx is {isSuccess} SeedSymbol:{A} BidFinishTime:{B} OpTime:{C} RequestHash:{D} tx:{E}", isSuccess, renewInput.SeedSymbol,
+            renewInput.BidFinishTime, renewInput.OpTime, renewInput.RequestHash, JsonConvert.SerializeObject(transactionResult));
+        return isSuccess;
+    }
+    private async Task<string> GenerateRawTransaction(AElfClient client, string methodName, IMessage param,
+        string contractAddress, string privateKey)
+    {
+        return client.SignTransaction(privateKey, await client.GenerateTransactionAsync(
+                client.GetAddressFromPrivateKey(privateKey), contractAddress, methodName, param))
+            .ToByteArray().ToHex();
     }
 }
 public class Excepton : Exception
