@@ -1291,7 +1291,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             return true;
         }
         //get request param
-        var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+        var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)/1000;
         var requestStr = string.Concat(seedSymbol, bidFinishTime, opTime);
         var requestHash =  BuildRequestHash(string.Concat(requestStr));
         
@@ -1336,9 +1336,18 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private async Task<string> GenerateRawTransaction(AElfClient client, string methodName, IMessage param,
         string contractAddress, string privateKey)
     {
-        return client.SignTransaction(privateKey, await client.GenerateTransactionAsync(
-                client.GetAddressFromPrivateKey(privateKey), contractAddress, methodName, param))
-            .ToByteArray().ToHex();
+        try
+        {
+            return client.SignTransaction(privateKey, await client.GenerateTransactionAsync(
+                    client.GetAddressFromPrivateKey(privateKey), contractAddress, methodName, param))
+                .ToByteArray().ToHex();
+        }
+        catch (Exception e)
+        {
+            throw e;
+        }
+
+        
     }
 }
 public class Excepton : Exception

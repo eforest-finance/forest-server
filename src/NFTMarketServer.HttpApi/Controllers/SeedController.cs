@@ -118,7 +118,7 @@ public class SeedController : AbpController
         var renewParam = new AuctionInfoDto()
         {
             SeedSymbol = request.SeedSymbol,
-            FinishTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)
+            EndTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)/1000-300
         };
         return await _seedAppService.BidSeedRenew(renewParam);
     }
