@@ -786,15 +786,15 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 seedListDto.Status = seedSymbolIndex.SeedStatus ?? SeedStatus.UNREGISTERED;
                 seedListDto.SeedType = seedSymbolIndex.SeedType;
                 
-                seedListDto.TokenPrice.Symbol = seedSymbolIndex.PriceSymbol;
-                seedListDto.TokenPrice.Amount = seedSymbolIndex.Price; 
+                //seedListDto.TokenPrice.Symbol = seedSymbolIndex.PriceSymbol;
+                //seedListDto.TokenPrice.Amount = seedSymbolIndex.Price; 
                 
                 var price = await GetSeedPriceAsync(seedListDto.Symbol);
-                /*if (price != null)
+                if (price != null)
                 {
                     seedListDto.TokenPrice.Symbol = price.Symbol;
                     seedListDto.TokenPrice.Amount = price.Amount; 
-                }*/
+                }
 
                 if (seedSymbolIndex.ExternalInfoDictionary != null)
                 {
