@@ -46,6 +46,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Caching;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
+using Exception = System.Exception;
 using SeedType = NFTMarketServer.Seed.Dto.SeedType;
 using TokenType = NFTMarketServer.Seed.Dto.TokenType;
 
@@ -706,11 +707,10 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         var tsmSeedSymbolIndex = await _tsmSeedSymbolIndexRepository.GetAsync(Filter);
         _logger.LogInformation("GetSeedPriceAsync symbol:{symbol}, tsmSeedSymbolIndex:{seedIndex}",symbol,JsonConvert.SerializeObject(tsmSeedSymbolIndex));
-        if (tsmSeedSymbolIndex == null)
+        if (tsmSeedSymbolIndex == null || tsmSeedSymbolIndex.TokenPrice == null || tsmSeedSymbolIndex.TokenPrice.Symbol.IsNullOrEmpty())
         {
             return null;
         }
-
         var priceInfo = new PriceInfo
         {
             Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
@@ -789,12 +789,16 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 //seedListDto.TokenPrice.Symbol = seedSymbolIndex.PriceSymbol;
                 //seedListDto.TokenPrice.Amount = seedSymbolIndex.Price; 
                 
-                /*var price = await GetSeedPriceAsync(seedListDto.Symbol);
+                var price = await GetSeedPriceAsync(seedListDto.Symbol);
                 if (price != null)
                 {
-                    seedListDto.TokenPrice.Symbol = price.Symbol;
-                    seedListDto.TokenPrice.Amount = price.Amount; 
-                }*/
+                    var tokenPrice = new TokenPriceDto()
+                    {
+                        Symbol = price.Symbol,
+                        Amount = price.Amount
+                    };
+                    seedListDto.TokenPrice = tokenPrice;
+                }
 
                 if (seedSymbolIndex.ExternalInfoDictionary != null)
                 {
