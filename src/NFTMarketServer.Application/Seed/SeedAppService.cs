@@ -694,7 +694,25 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             SeedDtoList = seedInfoDtos
         };
     }
-    
+
+    private async Task<PriceInfo> GetSeedPriceAsync(string seedSymbol)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<TsmSeedSymbolIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(seedSymbol)));
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.IsBurned).Value(false)));
+
+        QueryContainer Filter(QueryContainerDescriptor<TsmSeedSymbolIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var tsmSeedSymbolIndex = await _tsmSeedSymbolIndexRepository.GetAsync(Filter);
+        var priceInfo = new PriceInfo
+        {
+            Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
+            Symbol = NFTMarketServerConsts.AElfNativeTokenSymbol
+        };
+        return priceInfo;
+    }
+
     private async Task<MySeedDto> DoMySeedWithFilterAsync(
         MySeedInput input)
     {
@@ -761,6 +779,13 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 seedListDto.TokenType = EnumHelper.ToEnumString(seedSymbolIndex.TokenType);
                 seedListDto.Status = seedSymbolIndex.SeedStatus ?? SeedStatus.UNREGISTERED;
                 seedListDto.SeedType = seedSymbolIndex.SeedType;
+                var price = await GetSeedPriceAsync(seedListDto.Symbol);
+                if (price != null)
+                {
+                    seedListDto.TokenPrice.Symbol = price.Symbol;
+                    seedListDto.TokenPrice.Amount = price.Amount; 
+                }
+
                 if (seedSymbolIndex.ExternalInfoDictionary != null)
                 {
                     var key = EnumDescriptionHelper.GetEnumDescription(TokenCreatedExternalInfoEnum.NFTImageUrl);
