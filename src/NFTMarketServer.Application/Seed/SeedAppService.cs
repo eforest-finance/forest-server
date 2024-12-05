@@ -695,16 +695,22 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         };
     }
 
-    private async Task<PriceInfo> GetSeedPriceAsync(string seedSymbol)
+    private async Task<PriceInfo> GetSeedPriceAsync(string symbol)
     {
         var mustQuery = new List<Func<QueryContainerDescriptor<TsmSeedSymbolIndex>, QueryContainer>>();
-        mustQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(seedSymbol)));
-        mustQuery.Add(q => q.Term(i => i.Field(f => f.IsBurned).Value(false)));
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(symbol)));
+        //mustQuery.Add(q => q.Term(i => i.Field(f => f.IsBurned).Value(false)));
 
         QueryContainer Filter(QueryContainerDescriptor<TsmSeedSymbolIndex> f)
             => f.Bool(b => b.Must(mustQuery));
 
         var tsmSeedSymbolIndex = await _tsmSeedSymbolIndexRepository.GetAsync(Filter);
+        _logger.LogInformation("GetSeedPriceAsync symbol:{symbol}, tsmSeedSymbolIndex:{seedIndex}",symbol,JsonConvert.SerializeObject(tsmSeedSymbolIndex));
+        if (tsmSeedSymbolIndex == null)
+        {
+            return null;
+        }
+
         var priceInfo = new PriceInfo
         {
             Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
@@ -782,8 +788,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 
                 seedListDto.TokenPrice.Symbol = seedSymbolIndex.PriceSymbol;
                 seedListDto.TokenPrice.Amount = seedSymbolIndex.Price; 
-                /*var price = await GetSeedPriceAsync(seedListDto.Symbol);
-                if (price != null)
+                
+                var price = await GetSeedPriceAsync(seedListDto.Symbol);
+                /*if (price != null)
                 {
                     seedListDto.TokenPrice.Symbol = price.Symbol;
                     seedListDto.TokenPrice.Amount = price.Amount; 
