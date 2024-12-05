@@ -911,9 +911,17 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     public async Task AddOrUpdateTsmSeedInfoAsync(SeedDto seedDto)
     {
-        await UpdateSeedSymbolAsync(IdGenerateHelper.GetSeedMainChainChangeId(seedDto.ChainId, seedDto.SeedSymbol),
-            seedDto.ChainId);
-
+        if (!seedDto.SeedSymbol.IsNullOrEmpty())
+        {
+            await UpdateSeedSymbolAsync(IdGenerateHelper.GetSeedMainChainChangeId(seedDto.ChainId, seedDto.SeedSymbol),
+                seedDto.ChainId);
+        }
+        else
+        {
+            _logger.LogDebug("SeedSymbol is null Symbol={A} SeedType={B} chainId={C}", seedDto.Symbol,
+                seedDto.SeedType.ToString(), seedDto.ChainId);
+        }
+        
         var tsmSeedSymbolIndex = ObjectMapper.Map<SeedDto, TsmSeedSymbolIndex>(seedDto);
 
         //in case the price information is overwritten by indexer seed info
@@ -972,7 +980,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         if (seedSymbol == null)
         {
-            _logger.LogError("AddOrUpdateSeedSymbolAsync fromNFTInfo and localNFTInfo are null!");
+            _logger.LogError(
+                "AddOrUpdateSeedSymbolAsync fromNFTInfo and localNFTInfo are null! seedSymbolIndexId={A} chainId={B}",
+                seedSymbolIndexId, chainId);
             return;
         }
 
