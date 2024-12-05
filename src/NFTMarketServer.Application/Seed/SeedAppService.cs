@@ -789,12 +789,12 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 //seedListDto.TokenPrice.Symbol = seedSymbolIndex.PriceSymbol;
                 //seedListDto.TokenPrice.Amount = seedSymbolIndex.Price; 
                 
-                var price = await GetSeedPriceAsync(seedListDto.Symbol);
+                /*var price = await GetSeedPriceAsync(seedListDto.Symbol);
                 if (price != null)
                 {
                     seedListDto.TokenPrice.Symbol = price.Symbol;
                     seedListDto.TokenPrice.Amount = price.Amount; 
-                }
+                }*/
 
                 if (seedSymbolIndex.ExternalInfoDictionary != null)
                 {
