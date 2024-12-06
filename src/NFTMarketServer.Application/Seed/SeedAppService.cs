@@ -782,7 +782,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                     .Take(input.MaxResultCount)
                     .ToList();
             }
-            else if (input.Status == SeedStatus.REGISTERED)
+            else if (input.Status == SeedStatus.UNREGISTERED)
             {
                 var temList = mySeedSymbolIndex.Item2
                     .GroupBy(e => e.SeedOwnedSymbol)
