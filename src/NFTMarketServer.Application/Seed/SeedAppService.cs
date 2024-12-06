@@ -763,15 +763,39 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             sortExp: o => o.SeedExpTimeSecond,
             SortOrder.Descending, CommonConstant.IntTenThousand);
         var seedInfoDtos = new List<SeedDto>();
+        var nowSeconds = TimeHelper.ToUtcSeconds(DateTime.UtcNow);
+        var totalRecordCount = mySeedSymbolIndex.Item1;
         if (mySeedSymbolIndex.Item1 > 0)
         {
-            var filterItemList = mySeedSymbolIndex.Item2
-                .GroupBy(e => e.SeedOwnedSymbol)
-                .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
-                .OrderByDescending(e => e.SeedExpTimeSecond)
-                .Skip(input.SkipCount)
-                .Take(input.MaxResultCount)
-                .ToList();
+            var filterItemList = new List<SeedSymbolIndex>();
+            if (input.Status == SeedStatus.NOTSUPPORT)
+            {
+                var temList = mySeedSymbolIndex.Item2
+                    .GroupBy(e => e.SeedOwnedSymbol)
+                    .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
+                    .OrderByDescending(e => e.SeedExpTimeSecond)
+                    .Where(i => i.SeedExpTimeSecond < nowSeconds)
+                    .ToList();
+                totalRecordCount = temList.Count;
+                filterItemList = temList
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount)
+                    .ToList();
+            }
+            else
+            {
+                var temList = mySeedSymbolIndex.Item2
+                    .GroupBy(e => e.SeedOwnedSymbol)
+                    .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
+                    .OrderByDescending(e => e.SeedExpTimeSecond)
+                    .ToList();
+                totalRecordCount = temList.Count;
+                filterItemList = temList
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount)
+                    .ToList();
+            }
+            
             foreach (var seedSymbolIndex in filterItemList)
             {
                 var seedListDto = new SeedDto();
@@ -814,7 +838,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         return new MySeedDto()
         {
-            TotalRecordCount = mySeedSymbolIndex.Item1,
+            TotalRecordCount = totalRecordCount,
             SeedDtoList = seedInfoDtos
         };
     }
