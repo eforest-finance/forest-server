@@ -782,7 +782,20 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                     .Take(input.MaxResultCount)
                     .ToList();
             }
-            else
+            else if (input.Status == SeedStatus.REGISTERED)
+            {
+                var temList = mySeedSymbolIndex.Item2
+                    .GroupBy(e => e.SeedOwnedSymbol)
+                    .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
+                    .OrderByDescending(e => e.SeedExpTimeSecond)
+                    .Where(i => i.SeedExpTimeSecond > nowSeconds)
+                    .ToList();
+                totalRecordCount = temList.Count;
+                filterItemList = temList
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount)
+                    .ToList();
+            }else
             {
                 var temList = mySeedSymbolIndex.Item2
                     .GroupBy(e => e.SeedOwnedSymbol)
