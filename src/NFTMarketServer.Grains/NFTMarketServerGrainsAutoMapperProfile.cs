@@ -57,5 +57,10 @@ public class NFTMarketServerGrainsAutoMapperProfile : Profile
         CreateMap<TreeGameUserInfoDto, TreeUserInfoState>();
         CreateMap<TreeUserActivityRecordState, TreeUserActivityRecordGrainDto>();
         CreateMap<TreeUserActivityRecordGrainDto, TreeUserActivityRecordState>();
+        
+        CreateMap<SynchronizeAITokenJobGrainDto, SynchronizeAITokenState>();
+        CreateMap<SynchronizeAITokenState, SynchronizeAITokenJobGrainDto>();
+
+        
     }
 }

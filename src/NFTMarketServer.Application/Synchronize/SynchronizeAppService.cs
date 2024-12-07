@@ -26,12 +26,14 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
     private readonly IClusterClient _clusterClient;
     private readonly IDistributedEventBus _distributedEventBus;
     private readonly ISynchronizeTransactionProvider _synchronizeTransactionProvider;
+    private readonly ISynchronizeAITokenProvider _synchronizeAITokenProvider;
     private readonly IBidAppService _bidAppService;
 
     public SynchronizeAppService(ISynchronizeTransactionProvider synchronizeTransactionProvider,
         IClusterClient clusterClient, IObjectMapper objectMapper, ILogger<SynchronizeAppService> logger,
         IBidAppService bidAppService,
-        IDistributedEventBus distributedEventBus)
+        IDistributedEventBus distributedEventBus,
+        ISynchronizeAITokenProvider synchronizeAITokenProvider)
     {
         _synchronizeTransactionProvider = synchronizeTransactionProvider;
         _clusterClient = clusterClient;
@@ -39,6 +41,7 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
         _logger = logger;
         _distributedEventBus = distributedEventBus;
         _bidAppService = bidAppService;
+        _synchronizeAITokenProvider = synchronizeAITokenProvider;
     }
 
     public async Task<SyncResultDto> GetSyncResultByTxHashAsync(GetSyncResultByTxHashDto input)
@@ -186,6 +189,37 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
         syncTxEtoData.LastModifyTime = TimeStampHelper.GetTimeStampInMilliseconds();
 
         await _distributedEventBus.PublishAsync(syncTxEtoData);
+    }
+
+    public async Task<SendNFTSyncResponseDto> AddAITokenSyncJobAsync(SendNFTSyncDto input)
+    {
+        if (input == null || input.Symbol.IsNullOrEmpty())
+        {
+            throw new UserFriendlyException("symbol is null");
+        }
+
+        _logger.LogInformation("AddAITokenSyncJobAsync start {symbol}", input.Symbol);
+
+        var synchronizeAiTokenJobGrain = _clusterClient.GetGrain<ISynchronizeAITokenJobGrain>(input.Symbol);
+        var syncRecord = await synchronizeAiTokenJobGrain.GetSynchronizeAITokenJobAsync();
+        if (syncRecord != null && !syncRecord.Data.Id.IsNullOrEmpty())
+        {
+            throw new UserFriendlyException("you have sync this symbol");
+        }
+        
+        syncRecord = await synchronizeAiTokenJobGrain.CreateSynchronizeAITokenJobAsync(
+            new SaveSynchronizeAITokenJobGrainDto()
+            {
+                Symbol = input.Symbol,
+                Message = ""
+            });
+
+        //add es
+        var syncIndex =
+            _objectMapper.Map<SynchronizeAITokenJobGrainDto, SynchronizeAITokenJobInfoIndex>(syncRecord.Data);
+        await _synchronizeAITokenProvider.SaveSynchronizeJobAsync(syncIndex);
+        _logger.LogInformation("AddAITokenSyncJobAsync end {symbol}", input.Symbol);
+        return new SendNFTSyncResponseDto();
     }
 
 
