@@ -1315,11 +1315,11 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     
     public async Task<SeedRenewParamDto> GetSpecialSeedRenewParamAsync(SpecialSeedRenewDto input)
     {
-        var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+        /*var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
         if (currentUserAddress != input.BuyerAddress)
         {
             throw new Exception("Login address and parameter buyerAddress are inconsistent");
-        }
+        }*/
         
         var queryList = await _graphQlProvider.GetTsmSeedBySymbolsAsync("", new List<string>(){input.SeedSymbol});
         _logger.LogInformation(
