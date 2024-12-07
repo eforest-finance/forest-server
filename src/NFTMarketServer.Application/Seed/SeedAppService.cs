@@ -1340,7 +1340,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         var priceAmount = lastPrice.TokenPrice.Amount;
         
         var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
-        var requestStr = string.Concat(input.BuyerAddress, input.SeedSymbol, priceSymbol, priceAmount);
+        var requestStr = string.Concat(input.BuyerAddress, input.SeedSymbol, priceSymbol, (long)priceAmount);
         var requestHash =  BuildRequestHash(string.Concat(requestStr, opTime));
         
         var response = new SeedRenewParamDto()
