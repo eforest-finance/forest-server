@@ -1363,6 +1363,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             throw new Exception("have not config seed renew HashVerifyKey");
         }
         var requestHash = HashHelper.ComputeFrom(string.Concat(request, hashVerifyKey));
+        _logger.LogInformation("seed renew request:{A} key:{B} hash:{C}",request,hashVerifyKey, requestHash);
         return requestHash.ToHex();
     }
     
