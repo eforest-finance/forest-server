@@ -521,6 +521,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         }
 
         
+        
         if (seedDto.TopBidPrice != null)
         {
             seedDto.TopBidPrice.Amount = FTHelper.GetRealELFAmount(seedDto.TopBidPrice.Amount);
