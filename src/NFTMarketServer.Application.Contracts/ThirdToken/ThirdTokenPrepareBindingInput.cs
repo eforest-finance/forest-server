@@ -16,7 +16,7 @@ public class ThirdTokenDto
     [Required] public string Symbol { get; set; }
     [Required] public string TokenImage { get; set; }
     [Required] public long TotalSupply { get; set; }
-    [Required] public long Owner { get; set; }
+    [Required] public string Owner { get; set; }
     [Required] public string ThirdChain { get; set; }
     [Required] public string ContractAddress { get; set; }
 }
