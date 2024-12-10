@@ -57,6 +57,7 @@ using NFTMarketServer.Users.Eto;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.AutoMapper;
 using ExternalInfoDictionary = NFTMarketServer.Entities.ExternalInfoDictionary;
+using SynchronizeAITokenJobGrainDto = NFTMarketServer.Grains.Grain.Synchronize.Ai.SynchronizeAITokenJobGrainDto;
 using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
 
 namespace NFTMarketServer;
@@ -470,6 +471,8 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             .ForPath(t => t.TokenImage, m => m.MapFrom(f => f.ThirdTokens.TokenImage))
             .ForPath(t => t.ContractAddress, m => m.MapFrom(f => f.ThirdTokens.ContractAddress))
             ;
+        CreateMap<SynchronizeAITokenJobGrainDto, SynchronizeAITokenJobInfoIndex>();
+        CreateMap<SynchronizeAITokenJobInfoIndex, SynchronizeAITokenJobGrainDto>();
 
     }
 }

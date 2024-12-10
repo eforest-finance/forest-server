@@ -32,6 +32,8 @@ public class InitJobsService : BackgroundService
             x => x.Invoke(), _workerOptionsMonitor.CurrentValue?.Workers?.GetValueOrDefault("IContractInvokerWorker")?.Cron ?? WorkerOption.DefaultCron);
         _recurringJobs.AddOrUpdate<INFTDropFinishWorker>("INFTDropFinishWorker",
             x => x.CheckExpireDrop(), _workerOptionsMonitor.CurrentValue?.Workers?.GetValueOrDefault("INFTDropFinishWorker")?.Cron ?? WorkerOption.DefaultCron);
+        _recurringJobs.AddOrUpdate<ISyncAITokenWorker>("ISyncAITokenWorker",
+            x => x.DoWorkAsync(), _workerOptionsMonitor.CurrentValue?.Workers?.GetValueOrDefault("ISyncAITokenWorker")?.Cron ?? WorkerOption.DefaultCron);
         _logger.LogInformation("An exception occurred while creating recurring jobs. end");
         return Task.CompletedTask;
     }
