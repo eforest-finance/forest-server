@@ -126,7 +126,6 @@ public class SymbolMarketTokenAppService : ISymbolMarketTokenAppService, ISingle
         };
     }
 
-
     private SymbolMarketTokenDto Map(IndexerSymbolMarketToken index, List<string> inputAddress,
         Dictionary<string, NFTInfoExtensionIndex> nftInfoExtensionIndexListDic,
         Dictionary<string,string> fullAddressListMap)
