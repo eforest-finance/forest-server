@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace NFTMarketServer;
 
+
 public static class FileContentHelper
 {
     private static List<string> _imageContentTypes = new List<string>
