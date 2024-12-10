@@ -93,3 +93,4 @@ jobs:
                 commit_sha: 'sha-${{ needs.build-and-push-image.outputs.short_sha }}',
               }
             })
+            
