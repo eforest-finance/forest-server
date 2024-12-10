@@ -81,6 +81,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private readonly INFTOfferProvider _nftOfferProvider;
     private readonly IUserBalanceProvider _userBalanceProvider;
     private readonly INFTDealInfoProvider _dealInfoProvider;
+    private readonly IOptionsMonitor<ChainOptions> _chainOptionsMonitor;
     private const decimal MinMarkupDenominator = 10000;
     private const double ExpirationDays = 2;
 
@@ -102,7 +103,8 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         IDistributedCache<PriceInfo> distributedCache,
         IUserAppService userAppService,
         IOptionsMonitor<SeedRenewOptions> seedRenewOptionsMonitor,
-        IBlockchainClientFactory<AElfClient> blockchainClientFactory
+        IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+        IOptionsMonitor<ChainOptions> chainOptionsMonitor
         )
     {
         _objectMapper = objectMapper;
@@ -129,6 +131,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         _userAppService = userAppService;
         _seedRenewOptionsMonitor = seedRenewOptionsMonitor;
         _blockchainClientFactory = blockchainClientFactory;
+        _chainOptionsMonitor = chainOptionsMonitor;
 
     }
 
@@ -1034,12 +1037,39 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     
     public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
     {
+        if (seedSymbol.ChainId != CommonConstant.MainChainId)
+        {
+            var id = IdGenerateHelper.GetSeedSymbolId(GetDefaultSideChainId(), seedSymbol.Symbol);
+            var mainSeedSymbolIndex = await _seedSymbolIndexRepository.GetAsync(id);
+            if (mainSeedSymbolIndex != null && mainSeedSymbolIndex.SeedExpTimeSecond > seedSymbol.SeedExpTimeSecond)
+            {
+                _logger.LogDebug("update SeedExpTimeSecond from mainchain chainId={A} symbol={B}", seedSymbol.ChainId,
+                    seedSymbol.Symbol);
+                seedSymbol.SeedExpTimeSecond = mainSeedSymbolIndex.SeedExpTimeSecond;
+                seedSymbol.SeedExpTime = mainSeedSymbolIndex.SeedExpTime;
+            }
+        }
+        
         seedSymbol.FuzzySymbol = seedSymbol.Symbol;
         seedSymbol.FuzzyTokenName = seedSymbol.TokenName;
         seedSymbol.FuzzyTokenId = SymbolHelper.GetTrailingNumber(seedSymbol.Symbol);
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbol);
     }
 
+    private string GetDefaultSideChainId()
+    {
+        var chainIds = _chainOptionsMonitor.CurrentValue.ChainInfos.Keys;
+        foreach (var chainId in chainIds)
+        {
+            if (!chainId.Equals(CommonConstant.MainChainId))
+            {
+                return chainId;
+            }
+        }
+
+        return "";
+    }
+    
     private async Task UpdateSeedSymbolOtherInfoAsync(SeedSymbolIndex seedSymbolIndex)
     {
         if (seedSymbolIndex.ChainId.Equals(CommonConstant.MainChainId))
