@@ -40,4 +40,9 @@ public static class IdGenerator
         }
         return new string(result);
     }
+    
+    public static string GenerateId(params string[] paramArr)
+    {
+        return string.Join("_", paramArr);
+    }
 }
