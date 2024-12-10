@@ -8,6 +8,7 @@ public class SymbolMarketTokenDto : EntityDto<string>
     public string Symbol { get; set; }
     public string TokenImage { get; set; }
     public string Issuer { get; set; }
+    public string Owner { get; set; }
     public int Decimals { get; set; }
     public long TotalSupply { get; set; }
     public long CurrentSupply { get; set; }
