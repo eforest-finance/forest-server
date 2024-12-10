@@ -17,6 +17,7 @@ using NFTMarketServer.Grains.Grain.Inscription;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.Grains.Grain.Order;
 using NFTMarketServer.Grains.Grain.Synchronize;
+using NFTMarketServer.Grains.Grain.ThirdToken;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Grains.Grain.Verify;
 using NFTMarketServer.Grains.State.Dealer;
@@ -44,6 +45,8 @@ using NFTMarketServer.SymbolMarketToken;
 using NFTMarketServer.SymbolMarketToken.Index;
 using NFTMarketServer.Synchronize.Dto;
 using NFTMarketServer.Synchronize.Eto;
+using NFTMarketServer.ThirdToken;
+using NFTMarketServer.ThirdToken.Index;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Trait;
 using NFTMarketServer.Tree;
@@ -450,6 +453,23 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         
         CreateMap<TreeActivityIndex, TreeActivityDto>();
         CreateMap<TreeActivityDto, TreeActivityIndex>();
+        
+        CreateMap<TokenRelationIndex, MyThirdTokenDto>()
+            .ForMember(t => t.ThirdTokenName, m => m.MapFrom(f => f.ThirdToken))
+            ;
+        CreateMap<ThirdTokenPrepareBindingInput, TokenRelationGrainDto>()
+            .ForPath(t => t.ThirdToken, m => m.MapFrom(f => f.ThirdTokens.TokenName))
+            .ForPath(t => t.ThirdChain, m => m.MapFrom(f => f.ThirdTokens.ThirdChain))
+            ;
+        CreateMap<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>()
+            .ForPath(t => t.TokenName, m => m.MapFrom(f => f.ThirdTokens.TokenName))
+            .ForPath(t => t.Chain, m => m.MapFrom(f => f.ThirdTokens.ThirdChain))
+            .ForPath(t => t.TotalSupply, m => m.MapFrom(f => f.ThirdTokens.TotalSupply))
+            .ForPath(t => t.Owner, m => m.MapFrom(f => f.ThirdTokens.Owner))
+            .ForPath(t => t.Symbol, m => m.MapFrom(f => f.ThirdTokens.Symbol))
+            .ForPath(t => t.TokenImage, m => m.MapFrom(f => f.ThirdTokens.TokenImage))
+            .ForPath(t => t.ContractAddress, m => m.MapFrom(f => f.ThirdTokens.ContractAddress))
+            ;
 
     }
 }
