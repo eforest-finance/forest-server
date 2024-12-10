@@ -1079,6 +1079,18 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             return;
         }
 
+        var mainChainSeedSymbol = await _graphQlProvider.GetSyncSeedSymbolRecordAsync(
+            IdGenerateHelper.GetSeedSymbolId(seedSymbolIndex.Symbol, CommonConstant.MainChainId),
+            CommonConstant.MainChainId);
+
+        if (mainChainSeedSymbol != null && mainChainSeedSymbol.SeedExpTimeSecond > seedSymbolIndex.SeedExpTimeSecond)
+        {
+            _logger.LogDebug("UpdateSeedSymbolOtherInfoAsync modify SeedExpTimeSecond");
+            seedSymbolIndex.SeedExpTimeSecond = mainChainSeedSymbol.SeedExpTimeSecond;
+            seedSymbolIndex.SeedExpTime = mainChainSeedSymbol.SeedExpTime;
+        }
+        
+        
         var getNftListingsDto = new GetNFTListingsDto
         {
             ChainId = seedSymbolIndex.ChainId,
