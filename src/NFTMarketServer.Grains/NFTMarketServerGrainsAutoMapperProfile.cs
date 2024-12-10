@@ -61,6 +61,7 @@ public class NFTMarketServerGrainsAutoMapperProfile : Profile
         CreateMap<TreeUserActivityRecordState, TreeUserActivityRecordGrainDto>();
         CreateMap<TreeUserActivityRecordGrainDto, TreeUserActivityRecordState>();
         CreateMap<ThirdTokenGrainDto, ThirdTokenState>().ReverseMap();
+        CreateMap<TokenRelationGrainDto, TokenRelationState>().ReverseMap();
         
         CreateMap<SynchronizeAITokenJobGrainDto, SynchronizeAITokenState>();
         CreateMap<SynchronizeAITokenState, SynchronizeAITokenJobGrainDto>();

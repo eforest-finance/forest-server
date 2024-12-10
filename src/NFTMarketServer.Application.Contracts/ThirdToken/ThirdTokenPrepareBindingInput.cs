@@ -8,6 +8,7 @@ public class ThirdTokenPrepareBindingInput
     [Required] public string AelfToken { get; set; }
     [Required] public string AelfChain { get; set; }
     [Required] public ThirdTokenDto ThirdTokens { get; set; }
+    [Required] public string Signature { get; set; }
 }
 
 public class ThirdTokenDto

@@ -50,7 +50,6 @@ public class SymbolMarketTokenController : AbpController
 
     [HttpGet]
     [Route("my-third-token")]
-    [Authorize]
     public async Task<List<MyThirdTokenDto>> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
     {
         return await _thirdTokenService.GetMyThirdTokenListAsync(input);
@@ -58,7 +57,6 @@ public class SymbolMarketTokenController : AbpController
 
     [HttpPost]
     [Route("prepare-binding")]
-    [Authorize]
     public async Task<ThirdTokenPrepareBindingDto> ThirdTokenPrepareBindingAsync(ThirdTokenPrepareBindingInput input)
     {
         return await _thirdTokenService.ThirdTokenPrepareBindingAsync(input);
@@ -66,7 +64,6 @@ public class SymbolMarketTokenController : AbpController
 
     [HttpPost]
     [Route("binding")]
-    [Authorize]
     public async Task ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
         await _thirdTokenService.ThirdTokenBindingAsync(input);
