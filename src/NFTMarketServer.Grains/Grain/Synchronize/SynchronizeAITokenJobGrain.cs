@@ -116,7 +116,7 @@ public class SynchronizeAITokenJobGrain : Grain<SynchronizeAITokenState>, ISynch
             {
                 Symbol = symbol
             }, State.FromChainId, tokenAddress));
-        if (tokenInfo.Symbol != symbol)
+        if (tokenInfo == null || tokenInfo.Symbol != symbol)
         {
             return false;
         }
