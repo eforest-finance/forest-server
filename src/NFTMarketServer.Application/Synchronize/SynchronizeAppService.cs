@@ -6,6 +6,7 @@ using NFTMarketServer.Basic;
 using NFTMarketServer.Bid;
 using NFTMarketServer.Common;
 using NFTMarketServer.Grains.Grain.Synchronize;
+using NFTMarketServer.Grains.Grain.Synchronize.Ai;
 using NFTMarketServer.HandleException;
 using NFTMarketServer.NFT.Index;
 using NFTMarketServer.Synchronize.Dto;
@@ -191,7 +192,7 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
         await _distributedEventBus.PublishAsync(syncTxEtoData);
     }
 
-    public async Task<SendNFTSyncResponseDto> AddAITokenSyncJobAsync(SendNFTSyncDto input)
+    public async Task<SendNFTSyncResponseDto> AddAITokenSyncJobAsync(SendNFTAISyncDto input)
     {
         if (input == null || input.Symbol.IsNullOrEmpty())
         {
@@ -211,7 +212,9 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
             new SaveSynchronizeAITokenJobGrainDto()
             {
                 Symbol = input.Symbol,
-                Message = ""
+                Message = "",
+                FromChainId = input.FromChainId,
+                ToChainId = input.ToChainId
             });
 
         //add es

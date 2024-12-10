@@ -54,7 +54,7 @@ using NFTMarketServer.Users.Eto;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.AutoMapper;
 using ExternalInfoDictionary = NFTMarketServer.Entities.ExternalInfoDictionary;
-using SynchronizeAITokenJobGrainDto = NFTMarketServer.Grains.Grain.Synchronize.SynchronizeAITokenJobGrainDto;
+using SynchronizeAITokenJobGrainDto = NFTMarketServer.Grains.Grain.Synchronize.Ai.SynchronizeAITokenJobGrainDto;
 using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
 
 namespace NFTMarketServer;

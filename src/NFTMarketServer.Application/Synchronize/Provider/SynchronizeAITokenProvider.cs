@@ -14,8 +14,7 @@ public interface ISynchronizeAITokenProvider
 {
     public Task SaveSynchronizeJobAsync(SynchronizeAITokenJobInfoIndex syncIndex);
     public Task<SynchronizeAITokenJobInfoIndex> GetSynchronizeJobBySymbolAsync(string symbol);
-    public Task<List<SynchronizeAITokenJobInfoIndex>> GetSynchronizeJobByStatusAsync(List<string> status);
-
+    public Task<Tuple<long, List<SynchronizeAITokenJobInfoIndex>>> GetSynchronizeJobByStatusAsync(List<string> status);
 }
 
 public class SynchronizeAITokenProvider : ISynchronizeAITokenProvider, ISingletonDependency
@@ -52,7 +51,8 @@ public class SynchronizeAITokenProvider : ISynchronizeAITokenProvider, ISingleto
             : syncTxs.FirstOrDefault();
     }
 
-    public Task<List<SynchronizeAITokenJobInfoIndex>> GetSynchronizeJobByStatusAsync(List<string> status)
+    public async Task<Tuple<long, List<SynchronizeAITokenJobInfoIndex>>> GetSynchronizeJobByStatusAsync(
+        List<string> status)
     {
         if (status.IsNullOrEmpty())
         {

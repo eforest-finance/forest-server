@@ -12,6 +12,6 @@ public interface ISynchronizeAppService
     
     Task SendSeedMainChainCreateSyncAsync(IndexerSeedMainChainChange input);
     
-    Task<SendNFTSyncResponseDto> AddAITokenSyncJobAsync(SendNFTSyncDto input);
+    Task<SendNFTSyncResponseDto> AddAITokenSyncJobAsync(SendNFTAISyncDto input);
 
 }

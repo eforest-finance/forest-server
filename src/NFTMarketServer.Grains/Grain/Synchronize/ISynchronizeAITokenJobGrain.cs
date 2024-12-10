@@ -1,6 +1,5 @@
-using Orleans;
 
-namespace NFTMarketServer.Grains.Grain.Synchronize;
+namespace NFTMarketServer.Grains.Grain.Synchronize.Ai;
 
 public interface ISynchronizeAITokenJobGrain : IGrainWithStringKey
 {
@@ -9,6 +8,6 @@ public interface ISynchronizeAITokenJobGrain : IGrainWithStringKey
     
     Task<GrainResultDto<SynchronizeAITokenJobGrainDto>> GetSynchronizeAITokenJobAsync();
 
-    Task<GrainResultDto<SynchronizeAITokenJobGrainDto>> ExecuteJobAsync(SynchronizeTxJobGrainDto input);
-    //Task<GrainResultDto<SynchronizeAITokenJobGrainDto>> CreateSeedJobAsync(CreateSeedJobGrainDto input);
+    Task<GrainResultDto<SynchronizeAITokenJobGrainDto>> ExecuteJobAsync(SynchronizeAITokenJobGrainDto input);
+
 }
