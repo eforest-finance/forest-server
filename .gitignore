@@ -275,3 +275,4 @@ src/NFTMarketServer.EntityHandler/Logs/*
 
 **/wwwroot/libs/*
 *.Development.json
+.DS_Store
