@@ -152,4 +152,9 @@ public class IdGenerateHelper
     {
         return GetId(chainId, seedOwnedSymbol);
     }
+    
+    public static string GetSeedSymbolId(string chainId,string seedSymbol)
+    {
+        return GetId(chainId, seedSymbol);
+    }
 }

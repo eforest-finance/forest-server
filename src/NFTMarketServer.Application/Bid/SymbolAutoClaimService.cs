@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Dealer.ContractInvoker;
 using NFTMarketServer.Dealer.Dtos;
+using NFTMarketServer.Seed;
+using NFTMarketServer.Seed.Provider;
 
 namespace NFTMarketServer.Bid;
 
@@ -17,14 +19,17 @@ public class SymbolAutoClaimService : NFTMarketServerAppService, ISymbolAutoClai
     private readonly ILogger<SymbolAutoClaimService> _logger;
     private readonly IBidAppService _bidAppService;
     private readonly IContractInvokerFactory _contractInvokerFactory;
+    private readonly ISeedAppService _seedAppService;
 
 
     public SymbolAutoClaimService(ILogger<SymbolAutoClaimService> logger,
-        IBidAppService bidAppService, IContractInvokerFactory contractInvokerFactory)
+        IBidAppService bidAppService, IContractInvokerFactory contractInvokerFactory,ISeedAppService seedAppService)
     {
         _logger = logger;
         _bidAppService = bidAppService;
         _contractInvokerFactory = contractInvokerFactory;
+        _seedAppService = seedAppService;
+
     }
 
     public async Task SyncSymbolClaimAsync()
@@ -48,6 +53,12 @@ public class SymbolAutoClaimService : NFTMarketServerAppService, ISymbolAutoClai
                 }
                 if (currentTime > auctionInfoDto.EndTime + Wait_Time)
                 {
+                    var renewResult = await _seedAppService.BidSeedRenew(auctionInfoDto);
+                    if (!renewResult)
+                    {
+                        continue;
+                    }
+
                     auctionInfoDto.FinishIdentifier = AuctionFinishType.Finishing;
                     await _bidAppService.UpdateSymbolAuctionInfoAsync(auctionInfoDto);
 

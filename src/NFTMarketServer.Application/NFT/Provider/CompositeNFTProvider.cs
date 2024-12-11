@@ -153,6 +153,12 @@ public class CompositeNFTProvider : ICompositeNFTProvider, ISingletonDependency
         }
 
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+        
+        mustQuery.Add(q=>
+            q.DateRange(i =>
+                i.Field(f => f.SeedExpTime)
+                    .GreaterThan(DateTime.Now))
+        );
 
         if (!searchName.IsNullOrEmpty() && !fuzzySearchSwitch)
         {

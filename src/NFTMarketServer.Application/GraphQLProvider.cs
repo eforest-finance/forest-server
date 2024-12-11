@@ -489,4 +489,53 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
 
         return graphQLResponse.Data.Inscription;
     }
+    
+    
+    public async Task<List<SeedDto>> GetTsmSeedBySymbolsAsync(string chainId, List<string> seedSymbols)
+    {
+        var str = new GraphQLRequest
+        {
+            Query =
+                @"query($chainId:String,$seedSymbols:[String!]!){
+            seedDtoList:getTsmSeedInfosBySymbol(dto: {chainId:$chainId,seedSymbols:$seedSymbols})
+            {
+                id,
+                chainId,
+				symbol,	
+				seedSymbol,
+       		    seedImage,
+                seedName,
+                blockHeight,
+                status,
+                registerTime,
+                expireTime,
+                tokenType,
+                seedType,
+                auctionType,
+                owner,
+                tokenPrice{
+                    symbol,
+                    amount
+                },
+                isBurned,
+                auctionStatus,
+                bidsCount,
+                biddersCount,
+                auctionEndTime,
+                topBidPrice{
+                    symbol,
+                    amount
+                }
+            }}",
+            Variables = new
+            {
+                chainId,
+                seedSymbols
+            }
+        };
+        var graphQlResponse = await _graphQLClient.SendQueryAsync<MySeedDto>(str);
+        return graphQlResponse.Data.SeedDtoList.IsNullOrEmpty()
+            ? new List<SeedDto>()
+            : graphQlResponse.Data.SeedDtoList;
+    }
 }
