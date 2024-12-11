@@ -18,7 +18,6 @@ public class AISynchronizeController : NFTMarketServerController
     {
         _synchronizeAppService = synchronizeAppService;
     }
-
     
     [HttpPost]
     [Route("sync-ai")]
