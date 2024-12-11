@@ -940,7 +940,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         decimal creatorLoyaltyRate = 0;
         if (!collectionLoyaltyRates.IsNullOrEmpty() &&
             collectionLoyaltyRates.FirstOrDefault(x => x.Symbol == symbol) != null)
-        {
+        { 
             creatorLoyaltyRate = collectionLoyaltyRates.FirstOrDefault(x => x.Symbol == symbol).Rate;
         }
 
