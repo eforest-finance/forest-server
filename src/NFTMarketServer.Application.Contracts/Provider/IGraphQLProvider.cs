@@ -13,7 +13,7 @@ public interface IGraphQLProvider
 {
     public Task<long> GetLastEndHeightAsync(string chainId, BusinessQueryChainType queryChainType);
     public Task SetLastEndHeightAsync(string chainId, BusinessQueryChainType queryChainType, long height);
-    public Task<long> GetIndexBlockHeightAsync(string chainId);
+    public Task<long> GetIndexBlockHeightAsync(string chainId, BusinessQueryChainType queryChainType);
     
     
     Task<List<AuctionInfoDto>> GetSyncSymbolAuctionRecordsAsync(string chainId, long startBlockHeight, long endBlockHeight);
@@ -39,5 +39,8 @@ public interface IGraphQLProvider
     
     Task<List<InscriptionDto>> GetIndexInscriptionAsync(string chainId, long beginBlockHeight,
         long endBlockHeight, int skipCount, int maxResultCount);
+    
+    Task<List<SeedDto>> GetTsmSeedBySymbolsAsync(string chainId, List<string> seedSymbols);
+
 
 }

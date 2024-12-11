@@ -134,3 +134,12 @@ public class InviteReward
 
 }
 
+public class SeedRenewOptions
+{
+    public bool RenewSwitch { get; set; }
+    public string HashVerifyKey{ get; set; }
+    public string RenewChainId { get; set; }
+    public string PrivateKey { get; set; }
+    public string SymbolRegistarContractMainChainAddress { get; set; }
+}
+

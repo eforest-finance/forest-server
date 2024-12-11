@@ -76,11 +76,16 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
         await grain.SetStateAsync(height);
     }
 
-    public async Task<long> GetIndexBlockHeightAsync(string chainId)
+    public async Task<long> GetIndexBlockHeightAsync(string chainId, BusinessQueryChainType queryChainType)
     {
         var result = new AelfScanTokenAppResponse();
 
-        var resultStr = await _httpService.SendGetRequest(_graphQLOptions.CurrentValue.BasicConfiguration,
+        var syncStateUrl = queryChainType == BusinessQueryChainType.InscriptionCrossChain
+            ? _graphQLOptions.CurrentValue.InscriptionBasicConfiguration
+            : _graphQLOptions.CurrentValue
+                .BasicConfiguration;
+        
+        var resultStr = await _httpService.SendGetRequest(syncStateUrl,
             new Dictionary<string, string>());
         if (resultStr.IsNullOrEmpty()) return 0;
         result = JsonConvert.DeserializeObject<AelfScanTokenAppResponse>(resultStr);
@@ -483,5 +488,54 @@ public class GraphQLProvider : IGraphQLProvider, ISingletonDependency
             });
 
         return graphQLResponse.Data.Inscription;
+    }
+    
+    
+    public async Task<List<SeedDto>> GetTsmSeedBySymbolsAsync(string chainId, List<string> seedSymbols)
+    {
+        var str = new GraphQLRequest
+        {
+            Query =
+                @"query($chainId:String,$seedSymbols:[String!]!){
+            seedDtoList:getTsmSeedInfosBySymbol(dto: {chainId:$chainId,seedSymbols:$seedSymbols})
+            {
+                id,
+                chainId,
+				symbol,	
+				seedSymbol,
+       		    seedImage,
+                seedName,
+                blockHeight,
+                status,
+                registerTime,
+                expireTime,
+                tokenType,
+                seedType,
+                auctionType,
+                owner,
+                tokenPrice{
+                    symbol,
+                    amount
+                },
+                isBurned,
+                auctionStatus,
+                bidsCount,
+                biddersCount,
+                auctionEndTime,
+                topBidPrice{
+                    symbol,
+                    amount
+                }
+            }}",
+            Variables = new
+            {
+                chainId,
+                seedSymbols
+            }
+        };
+        var graphQlResponse = await _graphQLClient.SendQueryAsync<MySeedDto>(str);
+        return graphQlResponse.Data.SeedDtoList.IsNullOrEmpty()
+            ? new List<SeedDto>()
+            : graphQlResponse.Data.SeedDtoList;
     }
 }

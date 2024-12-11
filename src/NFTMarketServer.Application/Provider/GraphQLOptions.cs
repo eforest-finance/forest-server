@@ -11,6 +11,7 @@ public class GraphQLOptions
     
     public string SchrodingerConfiguration { get; set; }
     public string BasicConfiguration { get; set; }
+    public string InscriptionBasicConfiguration { get; set; }
 
 }
 

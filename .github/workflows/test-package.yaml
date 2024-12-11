@@ -3,7 +3,7 @@ name: Build and Package
 on:
   push:
     branches:
-      - 'dev'
+      - 'feature/seed-postponement'
 env:
   DOTNET_INSTALL_DIR: "./.dotnet"
 
