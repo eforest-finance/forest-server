@@ -111,15 +111,4 @@ public class SeedController : AbpController
         return await _seedAppService.GetSpecialSeedRenewParamAsync(request);
     }
     
-    [HttpPost]
-    [Route("bidseed-renew")]
-    public async Task<bool> BidSeedRenew(SpecialSeedRenewDto request)
-    {
-        var renewParam = new AuctionInfoDto()
-        {
-            SeedSymbol = request.SeedSymbol,
-            EndTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)/1000-300
-        };
-        return await _seedAppService.BidSeedRenew(renewParam);
-    }
 }
