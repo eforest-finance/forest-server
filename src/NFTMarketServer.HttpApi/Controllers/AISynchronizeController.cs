@@ -19,6 +19,7 @@ public class AISynchronizeController : NFTMarketServerController
         _synchronizeAppService = synchronizeAppService;
     }
     
+    
     [HttpPost]
     [Route("sync-ai")]
     public Task<SendNFTSyncResponseDto> SendAITokenSyncAsync(SendNFTAISyncDto input)
