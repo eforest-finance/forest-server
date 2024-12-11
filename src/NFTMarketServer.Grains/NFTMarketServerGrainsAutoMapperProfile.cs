@@ -5,6 +5,7 @@ using NFTMarketServer.Grains.Grain.Inscription;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.Grains.Grain.Order;
 using NFTMarketServer.Grains.Grain.Synchronize;
+using NFTMarketServer.Grains.Grain.Synchronize.Ai;
 using NFTMarketServer.Grains.Grain.Tree;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Grains.Grain.Verify;
@@ -57,5 +58,10 @@ public class NFTMarketServerGrainsAutoMapperProfile : Profile
         CreateMap<TreeGameUserInfoDto, TreeUserInfoState>();
         CreateMap<TreeUserActivityRecordState, TreeUserActivityRecordGrainDto>();
         CreateMap<TreeUserActivityRecordGrainDto, TreeUserActivityRecordState>();
+        
+        CreateMap<SynchronizeAITokenJobGrainDto, SynchronizeAITokenState>();
+        CreateMap<SynchronizeAITokenState, SynchronizeAITokenJobGrainDto>();
+
+        
     }
 }

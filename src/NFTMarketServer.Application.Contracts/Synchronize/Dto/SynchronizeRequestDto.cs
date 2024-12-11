@@ -1,6 +1,4 @@
-using System;
 using System.ComponentModel.DataAnnotations;
-using Volo.Abp.Application.Dtos;
 
 namespace NFTMarketServer.Synchronize.Dto;
 
@@ -14,6 +12,13 @@ public class SendNFTSyncDto
 {
     // public Guid UserId { get; set; }
     [Required] public string TxHash { get; set; }
+    [Required] public string Symbol { get; set; }
+    [Required] public string FromChainId { get; set; }
+    [Required] public string ToChainId { get; set; }
+}
+
+public class SendNFTAISyncDto
+{
     [Required] public string Symbol { get; set; }
     [Required] public string FromChainId { get; set; }
     [Required] public string ToChainId { get; set; }
