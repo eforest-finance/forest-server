@@ -21,6 +21,7 @@ public class FileInput
     public string symbol { get; set; }
 }
 
+
 [RemoteService]
 [Area("app")]
 [ControllerName("File")]
