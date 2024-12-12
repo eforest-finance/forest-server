@@ -1,8 +1,6 @@
-using Volo.Abp.Application.Dtos;
-
 namespace NFTMarketServer.ThirdToken;
 
-public class MyThirdTokenDto : EntityDto<string>
+public class MyThirdTokenDto
 {
     public string AelfChain { get; set; }
     public string AelfToken { get; set; }
