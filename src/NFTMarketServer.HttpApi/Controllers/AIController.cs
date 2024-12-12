@@ -29,7 +29,7 @@ public class AIController : AbpController
 
     [HttpPost]
     [Route("create")]
-    public async Task<BookDto> CreateBookAsync( CreateBookCommand command)
+    public async Task<int> CreateBookAsync( CreateBookCommand command)
     {
         return await _bookAppService.CreateBookAsync(command);
     }

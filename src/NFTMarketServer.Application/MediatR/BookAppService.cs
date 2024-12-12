@@ -14,15 +14,15 @@ public class BookAppService :  IBookAppService //ApplicationService
         _mediator = mediator;
     }
 
-    public override async Task<BookDto> CreateBookAsync(CreateBookCommand command)
+    public override async Task<int> CreateBookAsync(CreateBookCommand command)
     {
         return await _mediator.Send(command);
     }
 
-    public override async Task<BookDto> CreateBookDtoAsync(CreateBookCommand command)
+    /*public override async Task<BookDto> CreateBookDtoAsync(CreateBookCommand command)
     {
         return await _mediator.Send(command);
-    }
+    }*/
 
     public override async Task<BookDto> GetBookAsync(GetBookQuery query)
     {
