@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using AElf.ExceptionHandler.ABP;
 using AutoResponseWrapper;
 using GraphQL.Client.Abstractions;
@@ -8,6 +9,7 @@ using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
 using Medallion.Threading;
 using Medallion.Threading.Redis;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
@@ -90,6 +92,8 @@ public class NFTMarketServerHttpApiHostModule : AbpModule
         ConfigureGraphQl(context, configuration);
         ConfigureDistributedLocking(context, configuration);
         context.Services.AddAutoResponseWrapper();
+        context.Services.AddMediatR(Assembly.GetExecutingAssembly());
+
     }
 
     private void ConfigureCache(IConfiguration configuration)

@@ -40,11 +40,11 @@ namespace NFTMarketServer.Host
 
                 var builder = WebApplication.CreateBuilder(args);
                 //configure apollo
-                builder.Configuration.AddJsonFile("apollo.appsettings.json");
+                //builder.Configuration.AddJsonFile("apollo.appsettings.json");
                 builder.Host.AddAppSettingsSecretsJson()
                     .UseAutofac()
                     .UseAElfExceptionHandler()
-                    .UseApollo()
+                   // .UseApollo()
                     .UseSerilog()
                     .UseOrleansClient();
                 await builder.AddApplicationAsync<NFTMarketServerHttpApiHostModule>();
