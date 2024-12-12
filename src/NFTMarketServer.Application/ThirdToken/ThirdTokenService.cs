@@ -1,12 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf;
+using Microsoft.Extensions.Options;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.ThirdToken;
 using NFTMarketServer.Helper;
 using NFTMarketServer.ThirdToken.Etos;
 using NFTMarketServer.ThirdToken.Index;
 using NFTMarketServer.ThirdToken.Provider;
+using NFTMarketServer.TreeGame;
 using Orleans;
+using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
@@ -19,14 +24,17 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
     private readonly IClusterClient _clusterClient;
     private readonly IObjectMapper _objectMapper;
     private readonly IDistributedEventBus _distributedEventBus;
+    private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
 
     public ThirdTokenService(IThirdTokenProvider thirdTokenProvider, IObjectMapper objectMapper,
-        IClusterClient clusterClient, IDistributedEventBus distributedEventBus)
+        IClusterClient clusterClient, IDistributedEventBus distributedEventBus,
+        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor)
     {
         _thirdTokenProvider = thirdTokenProvider;
         _objectMapper = objectMapper;
         _clusterClient = clusterClient;
         _distributedEventBus = distributedEventBus;
+        _platformOptionsMonitor = platformOptionsMonitor;
     }
 
     public async Task<List<MyThirdTokenDto>> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
@@ -63,6 +71,15 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
     public async Task<ThirdTokenPrepareBindingDto> ThirdTokenPrepareBindingAsync(ThirdTokenPrepareBindingInput input)
     {
+        var requestHash = BuildRequestHash(string.Concat(input.Address, input.AelfToken, input.AelfChain,
+            input.ThirdTokens.TokenName, input.ThirdTokens.Symbol, input.ThirdTokens.TokenImage,
+            input.ThirdTokens.TotalSupply.ToString(), input.ThirdTokens.Owner, input.ThirdTokens.ThirdChain,
+            input.ThirdTokens.ContractAddress));
+        if (requestHash != input.Signature)
+        {
+            throw new UserFriendlyException("invalid request");
+        }
+
         var id = GuidHelper.UniqId(input.Address, input.AelfChain, input.AelfToken, input.ThirdTokens.ThirdChain,
             input.ThirdTokens.TokenName);
         var tokenRelationGrain = _clusterClient.GetGrain<ITokenRelationGrain>(id.ToString());
@@ -83,6 +100,12 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
     public async Task ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
+        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId));
+        if (requestHash != input.Signature)
+        {
+            throw new UserFriendlyException("invalid request");
+        }
+
         var tokenRelationGrain = _clusterClient.GetGrain<ITokenRelationGrain>(input.BindingId);
         var tokenRelationRecord = await tokenRelationGrain.BoundAsync();
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(input.ThirdTokenId);
@@ -92,5 +115,12 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenEto>(thirdTokenRecord.Data));
+    }
+
+    private string BuildRequestHash(string request)
+    {
+        var hashVerifyKey = _platformOptionsMonitor.CurrentValue.HashVerifyKey ?? TreeGameConstants.HashVerifyKey;
+        var requestHash = HashHelper.ComputeFrom(string.Concat(request, hashVerifyKey));
+        return requestHash.ToHex();
     }
 }
