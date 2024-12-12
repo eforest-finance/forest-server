@@ -29,7 +29,7 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
 
     public async Task<List<ThirdTokenIndex>> GetThirdTokenListAsync(List<string> thirdToken, List<string> thirdChain)
     {
-        return null;
+        return await GetAllThirdTokenListAsync(thirdToken, thirdChain);
     }
 
     public async Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string address, string aelfToken)
@@ -52,6 +52,42 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
 
             QueryContainer Filter(QueryContainerDescriptor<TokenRelationIndex> f) => f.Bool(b => b.Must(mustQuery));
             var result = await _tokenRelationRepository.GetListAsync(Filter, skip: skipCount, limit: maxResultCount);
+
+            list = result.Item2;
+            var count = list.Count;
+            res.AddRange(list);
+            if (list.IsNullOrEmpty() || count < maxResultCount)
+            {
+                break;
+            }
+
+            skipCount += count;
+        } while (!list.IsNullOrEmpty());
+
+        return res;
+    }
+
+    private async Task<List<ThirdTokenIndex>> GetAllThirdTokenListAsync(List<string> thirdToken,
+        List<string> thirdChain)
+    {
+        if (thirdToken.IsNullOrEmpty() || thirdChain.IsNullOrEmpty())
+        {
+            return new List<ThirdTokenIndex>();
+        }
+
+        var res = new List<ThirdTokenIndex>();
+        var skipCount = 0;
+        var maxResultCount = 5000;
+        List<ThirdTokenIndex> list;
+        do
+        {
+            var mustQuery = new List<Func<QueryContainerDescriptor<ThirdTokenIndex>, QueryContainer>>();
+
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.TokenName).Terms(thirdToken)));
+            mustQuery.Add(q => q.Terms(i => i.Field(f => f.Chain).Terms(thirdChain)));
+
+            QueryContainer Filter(QueryContainerDescriptor<ThirdTokenIndex> f) => f.Bool(b => b.Must(mustQuery));
+            var result = await _repository.GetListAsync(Filter, skip: skipCount, limit: maxResultCount);
 
             list = result.Item2;
             var count = list.Count;
