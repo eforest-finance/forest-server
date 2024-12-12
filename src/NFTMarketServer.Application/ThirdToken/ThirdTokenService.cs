@@ -91,6 +91,11 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var thirdTokenGrainDto = _objectMapper.Map<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>(input);
         var thirdTokenRecord = await thirdTokenGrain.CreateThirdTokenAsync(thirdTokenGrainDto);
 
+        await _distributedEventBus.PublishAsync(
+            _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
+        await _distributedEventBus.PublishAsync(
+            _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenEto>(thirdTokenRecord.Data));
+        
         return new ThirdTokenPrepareBindingDto
         {
             BindingId = tokenRelationRecord.Data.Id,
