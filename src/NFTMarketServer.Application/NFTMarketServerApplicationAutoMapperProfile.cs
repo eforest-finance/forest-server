@@ -46,6 +46,7 @@ using NFTMarketServer.SymbolMarketToken.Index;
 using NFTMarketServer.Synchronize.Dto;
 using NFTMarketServer.Synchronize.Eto;
 using NFTMarketServer.ThirdToken;
+using NFTMarketServer.ThirdToken.Etos;
 using NFTMarketServer.ThirdToken.Index;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Trait;
@@ -473,6 +474,8 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
             ;
         CreateMap<SynchronizeAITokenJobGrainDto, SynchronizeAITokenJobInfoIndex>();
         CreateMap<SynchronizeAITokenJobInfoIndex, SynchronizeAITokenJobGrainDto>();
+        CreateMap<TokenRelationGrainDto, TokenRelationEto>();
+        CreateMap<ThirdTokenGrainDto, ThirdTokenEto>();
 
     }
 }
