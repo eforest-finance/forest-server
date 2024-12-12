@@ -64,8 +64,8 @@ public class SymbolMarketTokenController : AbpController
 
     [HttpPost]
     [Route("binding")]
-    public async Task ThirdTokenBindingAsync(ThirdTokenBindingInput input)
+    public async Task<string> ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
-        await _thirdTokenService.ThirdTokenBindingAsync(input);
+        return await _thirdTokenService.ThirdTokenBindingAsync(input);
     }
 }

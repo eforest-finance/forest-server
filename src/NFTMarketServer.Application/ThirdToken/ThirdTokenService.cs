@@ -103,7 +103,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         };
     }
 
-    public async Task ThirdTokenBindingAsync(ThirdTokenBindingInput input)
+    public async Task<string> ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
         var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId));
         if (requestHash != input.Signature)
@@ -120,6 +120,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenEto>(thirdTokenRecord.Data));
+        return "";
     }
 
     private string BuildRequestHash(string request)
