@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Market;
+using NFTMarketServer.Market.Publish;
 using NFTMarketServer.Seed;
 using NFTMarketServer.Seed.Dto;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.AspNetCore.Mvc;
+using Volo.Abp.Users;
 
 namespace NFTMarketServer.Controllers;
 
@@ -21,10 +23,12 @@ namespace NFTMarketServer.Controllers;
 public class AIController : AbpController
 {
     private readonly IBookAppService _bookAppService;
+    private readonly IUserService _userService;
 
-    public AIController(IBookAppService bookAppService)
+    public AIController(IBookAppService bookAppService,IUserService userService)
     {
         _bookAppService = bookAppService;
+        _userService = userService;
     }
 
     [HttpPost]
@@ -42,5 +46,11 @@ public class AIController : AbpController
         return await _bookAppService.GetBookAsync(new GetBookQuery(){Id = id});
     }
     
+    [HttpPost]
+    [Route("publish")]
+    public async Task<Task> CreateUserAsync()
+    {
+        return _userService.RegisterUserAsync("john.doe", "john.doe@example.com");
+    }
     
 }

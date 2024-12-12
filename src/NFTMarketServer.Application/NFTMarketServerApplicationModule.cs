@@ -17,6 +17,7 @@ using NFTMarketServer.Grains;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Inscription;
 using NFTMarketServer.Market;
+using NFTMarketServer.Market.Publish;
 using NFTMarketServer.NFT;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Options;
@@ -124,7 +125,9 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, UserBalanceSyncScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, TreePointsRecordsSyncScheduleService>();
             context.Services.AddMediatR(Assembly.GetExecutingAssembly());
+
             context.Services.AddSingleton<IBookAppService,BookAppService>();
+            context.Services.AddSingleton<IUserService,UserService>();
 
             Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
             Configure<AwsS3Option>(configuration.GetSection("AwsS3"));
