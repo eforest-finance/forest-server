@@ -39,5 +39,8 @@ public interface IGraphQLProvider
     
     Task<List<InscriptionDto>> GetIndexInscriptionAsync(string chainId, long beginBlockHeight,
         long endBlockHeight, int skipCount, int maxResultCount);
+    
+    Task<List<SeedDto>> GetTsmSeedBySymbolsAsync(string chainId, List<string> seedSymbols);
+
 
 }

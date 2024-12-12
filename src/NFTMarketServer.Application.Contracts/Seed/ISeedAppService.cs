@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NFTMarketServer.Seed.Dto;
-using NFTMarketServer.Synchronize.Dto;
-using NFTMarketServer.Provider;
+using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Seed.Dto;
 using NFTMarketServer.Seed.Index;
 using Volo.Abp.Application.Dtos;
@@ -33,4 +31,8 @@ public interface ISeedAppService
     Task UpdateSeedRankingWeightAsync(List<SeedRankingWeightDto> input);
     Task<PagedResultDto<SeedRankingWeightDto>> GetSeedRankingWeightInfosAsync();
     public Task UpdateSeedSymbolAsync(string seedSymbolIndexId, string chainId);
+    
+    Task<SeedRenewParamDto> GetSpecialSeedRenewParamAsync(SpecialSeedRenewDto input);
+    public Task<bool> BidSeedRenew (AuctionInfoDto input);
+
 }

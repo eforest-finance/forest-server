@@ -1,14 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AElf.ExceptionHandler;
+using AElf;
+using AElf.Client.Dto;
+using AElf.Client.Service;
 using AElf.Indexing.Elasticsearch;
+using Forest.Contracts.SymbolRegistrar;
+using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
 using Nest;
 using Newtonsoft.Json;
@@ -17,6 +22,7 @@ using NFTMarketServer.Bid;
 using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Common;
 using NFTMarketServer.File;
+using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.Synchronize;
 using NFTMarketServer.HandleException;
 using NFTMarketServer.Helper;
@@ -32,6 +38,7 @@ using NFTMarketServer.Seed.Provider;
 using NFTMarketServer.Synchronize.Eto;
 using NFTMarketServer.Synchronize.Provider;
 using NFTMarketServer.Tokens;
+using NFTMarketServer.Users;
 using Orleans;
 using Orleans.Runtime;
 using Volo.Abp;
@@ -39,6 +46,8 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Caching;
 using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.ObjectMapping;
+using Exception = System.Exception;
+using SeedType = NFTMarketServer.Seed.Dto.SeedType;
 using TokenType = NFTMarketServer.Seed.Dto.TokenType;
 
 namespace NFTMarketServer.Seed;
@@ -62,12 +71,17 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     private readonly INESTRepository<SeedPriceIndex, string> _seedPriceIndexRepository;
     private readonly INESTRepository<UniqueSeedPriceIndex, string> _uniqueSeedPriceIndexRepository;
     private readonly INESTRepository<SeedSymbolIndex, string> _seedSymbolIndexRepository;
+    private readonly IUserAppService _userAppService;
+    private readonly IOptionsMonitor<SeedRenewOptions> _seedRenewOptionsMonitor;
+    private readonly IBlockchainClientFactory<AElfClient> _blockchainClientFactory;
+
     private readonly IGraphQLProvider _graphQlProvider;
     private readonly ITsmSeedProvider _tsmSeedProvider;
     private readonly INFTListingProvider _nftListingProvider;
     private readonly INFTOfferProvider _nftOfferProvider;
     private readonly IUserBalanceProvider _userBalanceProvider;
     private readonly INFTDealInfoProvider _dealInfoProvider;
+    private readonly IOptionsMonitor<ChainOptions> _chainOptionsMonitor;
     private const decimal MinMarkupDenominator = 10000;
     private const double ExpirationDays = 2;
 
@@ -86,7 +100,12 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         IUserBalanceProvider userBalanceProvider,
         INFTDealInfoProvider dealInfoProvider,
         INESTRepository<SeedSymbolIndex, string> seedSymbolIndexRepository,
-        IDistributedCache<PriceInfo> distributedCache)
+        IDistributedCache<PriceInfo> distributedCache,
+        IUserAppService userAppService,
+        IOptionsMonitor<SeedRenewOptions> seedRenewOptionsMonitor,
+        IBlockchainClientFactory<AElfClient> blockchainClientFactory,
+        IOptionsMonitor<ChainOptions> chainOptionsMonitor
+        )
     {
         _objectMapper = objectMapper;
         _logger = logger;
@@ -109,6 +128,11 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         _nftOfferProvider = nftOfferProvider;
         _userBalanceProvider = userBalanceProvider;
         _dealInfoProvider = dealInfoProvider;
+        _userAppService = userAppService;
+        _seedRenewOptionsMonitor = seedRenewOptionsMonitor;
+        _blockchainClientFactory = blockchainClientFactory;
+        _chainOptionsMonitor = chainOptionsMonitor;
+
     }
 
     [ExceptionHandler(typeof(Exception),
@@ -584,7 +608,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         input.Address = input.Address.Where(addr => addr.NotNullOrEmpty()).ToList();
         AssertHelper.NotEmpty(input.Address, "Address invalid");
 
-        var seedInfoDto = await DoMySeedAsync(input);
+        var seedInfoDto = new MySeedDto();
+
+        seedInfoDto = await DoMySeedWithFilterAsync(input);
 
         var mySeedDto = new PagedResultDto<SeedDto>()
         {
@@ -601,14 +627,109 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         {
             return null;
         }
-        //todo
 
         var target = await _seedSymbolIndexRepository.GetAsync("AELF-SEED-3022");
         _logger.LogInformation("AELF-SEED-3022 {A}", JsonConvert.SerializeObject(target));
         var target2 = await _seedSymbolIndexRepository.GetAsync("tDVV-SEED-3022");
         _logger.LogInformation("tDVV-SEED-3022 {A}", JsonConvert.SerializeObject(target2));
 
-        //todo
+        
+        var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+        
+        if (input.TokenType != null)
+        {
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.TokenType).Value(input.TokenType)));
+        }
+
+        if (!string.IsNullOrEmpty(input.ChainId))
+        {
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.ChainId).Value(input.ChainId)));
+        }
+
+        var shouldQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
+
+        BuildForSeedStatusNull(input,shouldQuery);
+        // if (input.Status == null)
+        // {
+        //     BuildForSeedStatusNull(input,shouldQuery);
+        // }else {
+        //     BuildForSeedStatusNoNull(input, shouldQuery, mustQuery);
+        // }
+        
+        if (shouldQuery.Any())
+        {
+            mustQuery.Add(q =>
+                q.Bool(b => b.Should(shouldQuery)));
+        }
+
+        QueryContainer Filter(QueryContainerDescriptor<SeedSymbolIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var mySeedSymbolIndex = await _seedSymbolIndexRepository.GetListAsync(Filter, null, sortExp: o => o.SeedExpTimeSecond,
+            SortOrder.Descending, input.MaxResultCount, input.SkipCount);
+        var seedInfoDtos = new List<SeedDto>();
+        if (mySeedSymbolIndex.Item1 > 0)
+        {
+            foreach (var seedSymbolIndex in mySeedSymbolIndex.Item2)
+            {
+                var seedListDto = new SeedDto();
+                seedListDto.SeedSymbol = seedSymbolIndex.Symbol;
+                seedListDto.ChainId = seedSymbolIndex.ChainId;
+                seedListDto.SeedName = seedSymbolIndex.TokenName;
+                seedListDto.Id = IdGenerateHelper.GetTsmSeedSymbolId(seedSymbolIndex.ChainId,seedSymbolIndex.SeedOwnedSymbol);
+                seedListDto.Symbol = seedSymbolIndex.SeedOwnedSymbol;
+                seedListDto.ExpireTime = DateTimeHelper.ToUnixTimeMilliseconds(seedSymbolIndex.SeedExpTime);
+                seedListDto.TokenType = EnumHelper.ToEnumString(seedSymbolIndex.TokenType);
+                seedListDto.Status = seedSymbolIndex.SeedStatus ?? SeedStatus.UNREGISTERED;
+                if (seedSymbolIndex.ExternalInfoDictionary != null)
+                {
+                    var key = EnumDescriptionHelper.GetEnumDescription(TokenCreatedExternalInfoEnum.NFTImageUrl);
+                    seedListDto.SeedImage = seedSymbolIndex.ExternalInfoDictionary.Where(kv => kv.Key.Equals(key))
+                        .Select(kv => kv.Value)
+                        .FirstOrDefault("");
+                }
+                seedInfoDtos.Add(seedListDto);
+            }
+        }
+
+        return new MySeedDto()
+        {
+            TotalRecordCount = mySeedSymbolIndex.Item1,
+            SeedDtoList = seedInfoDtos
+        };
+    }
+
+    private async Task<PriceInfo> GetSeedPriceAsync(string symbol)
+    {
+        var mustQuery = new List<Func<QueryContainerDescriptor<TsmSeedSymbolIndex>, QueryContainer>>();
+        mustQuery.Add(q => q.Term(i => i.Field(f => f.Symbol).Value(symbol)));
+        //mustQuery.Add(q => q.Term(i => i.Field(f => f.IsBurned).Value(false)));
+
+        QueryContainer Filter(QueryContainerDescriptor<TsmSeedSymbolIndex> f)
+            => f.Bool(b => b.Must(mustQuery));
+
+        var tsmSeedSymbolIndex = await _tsmSeedSymbolIndexRepository.GetAsync(Filter);
+        _logger.LogInformation("GetSeedPriceAsync symbol:{symbol}, tsmSeedSymbolIndex:{seedIndex}",symbol,JsonConvert.SerializeObject(tsmSeedSymbolIndex));
+        if (tsmSeedSymbolIndex == null || tsmSeedSymbolIndex.TokenPrice == null || tsmSeedSymbolIndex.TokenPrice.Symbol.IsNullOrEmpty())
+        {
+            return null;
+        }
+        var priceInfo = new PriceInfo
+        {
+            Amount = Convert.ToInt64(tsmSeedSymbolIndex.TokenPrice.Amount),
+            Symbol = NFTMarketServerConsts.AElfNativeTokenSymbol
+        };
+        return priceInfo;
+    }
+
+    private async Task<MySeedDto> DoMySeedWithFilterAsync(
+        MySeedInput input)
+    {
+        if (input.Address.IsNullOrEmpty())
+        {
+            return null;
+        }
+        
         var mustQuery = new List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>>();
 
         if (input.TokenType != null)
@@ -640,14 +761,58 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         QueryContainer Filter(QueryContainerDescriptor<SeedSymbolIndex> f)
             => f.Bool(b => b.Must(mustQuery));
-
+        
         var mySeedSymbolIndex = await _seedSymbolIndexRepository.GetListAsync(Filter, null,
             sortExp: o => o.SeedExpTimeSecond,
-            SortOrder.Descending, input.MaxResultCount, input.SkipCount);
+            SortOrder.Descending, CommonConstant.IntTenThousand);
         var seedInfoDtos = new List<SeedDto>();
+        var nowSeconds = TimeHelper.ToUtcSeconds(DateTime.UtcNow);
+        var totalRecordCount = mySeedSymbolIndex.Item1;
         if (mySeedSymbolIndex.Item1 > 0)
         {
-            foreach (var seedSymbolIndex in mySeedSymbolIndex.Item2)
+            var filterItemList = new List<SeedSymbolIndex>();
+            if (input.Status == SeedStatus.NOTSUPPORT)
+            {
+                var temList = mySeedSymbolIndex.Item2
+                    .GroupBy(e => e.SeedOwnedSymbol)
+                    .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
+                    .OrderByDescending(e => e.SeedExpTimeSecond)
+                    .Where(i => i.SeedExpTimeSecond < nowSeconds)
+                    .ToList();
+                totalRecordCount = temList.Count;
+                filterItemList = temList
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount)
+                    .ToList();
+            }
+            else if (input.Status == SeedStatus.UNREGISTERED)
+            {
+                var temList = mySeedSymbolIndex.Item2
+                    .GroupBy(e => e.SeedOwnedSymbol)
+                    .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
+                    .OrderByDescending(e => e.SeedExpTimeSecond)
+                    .Where(i => i.SeedExpTimeSecond > nowSeconds)
+                    .ToList();
+                totalRecordCount = temList.Count;
+                filterItemList = temList
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount)
+                    .ToList();
+            }else
+            {
+                var temList = mySeedSymbolIndex.Item2
+                    .GroupBy(e => e.SeedOwnedSymbol)
+                    .Select(g => g.OrderByDescending(e => e.SeedExpTimeSecond).First())
+                    .OrderByDescending(e => e.SeedExpTimeSecond)
+                    .ToList();
+                totalRecordCount = temList.Count;
+                filterItemList = temList
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount)
+                    .ToList();
+            }
+            
+            foreach (var seedSymbolIndex in filterItemList)
             {
                 var seedListDto = new SeedDto();
                 seedListDto.SeedSymbol = seedSymbolIndex.Symbol;
@@ -659,6 +824,22 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                 seedListDto.ExpireTime = DateTimeHelper.ToUnixTimeMilliseconds(seedSymbolIndex.SeedExpTime);
                 seedListDto.TokenType = EnumHelper.ToEnumString(seedSymbolIndex.TokenType);
                 seedListDto.Status = seedSymbolIndex.SeedStatus ?? SeedStatus.UNREGISTERED;
+                seedListDto.SeedType = seedSymbolIndex.SeedType;
+                
+                //seedListDto.TokenPrice.Symbol = seedSymbolIndex.PriceSymbol;
+                //seedListDto.TokenPrice.Amount = seedSymbolIndex.Price; 
+                
+                var price = await GetSeedPriceAsync(seedListDto.Symbol);
+                if (price != null)
+                {
+                    var tokenPrice = new TokenPriceDto()
+                    {
+                        Symbol = price.Symbol,
+                        Amount = price.Amount
+                    };
+                    seedListDto.TokenPrice = tokenPrice;
+                }
+
                 if (seedSymbolIndex.ExternalInfoDictionary != null)
                 {
                     var key = EnumDescriptionHelper.GetEnumDescription(TokenCreatedExternalInfoEnum.NFTImageUrl);
@@ -673,13 +854,13 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         return new MySeedDto()
         {
-            TotalRecordCount = mySeedSymbolIndex.Item1,
+            TotalRecordCount = totalRecordCount,
             SeedDtoList = seedInfoDtos
         };
     }
 
-    private static void BuildForSeedStatusNull(MySeedInput input,
-        List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>> shouldQuery)
+    
+    private static void BuildForSeedStatusNull(MySeedInput input,List<Func<QueryContainerDescriptor<SeedSymbolIndex>, QueryContainer>> shouldQuery)
     {
         input?.Address
             .ForEach(address =>
@@ -732,7 +913,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
                         q.Term(i => i.Field(f => f.ChainId).Value(parts.Last())));
                 }
 
-                if (input.Status != SeedStatus.UNREGISTERED)
+                if (input.Status != SeedStatus.UNREGISTERED && input.Status != SeedStatus.NOTSUPPORT)
                 {
                     mustQuery.Add(q => q.Term(i =>
                         i.Field(f => f.SeedStatus).Value(input.Status)));
@@ -757,7 +938,7 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
         decimal creatorLoyaltyRate = 0;
         if (!collectionLoyaltyRates.IsNullOrEmpty() &&
             collectionLoyaltyRates.FirstOrDefault(x => x.Symbol == symbol) != null)
-        {
+        { 
             creatorLoyaltyRate = collectionLoyaltyRates.FirstOrDefault(x => x.Symbol == symbol).Rate;
         }
 
@@ -774,9 +955,17 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
     public async Task AddOrUpdateTsmSeedInfoAsync(SeedDto seedDto)
     {
-        await UpdateSeedSymbolAsync(IdGenerateHelper.GetSeedMainChainChangeId(seedDto.ChainId, seedDto.SeedSymbol),
-            seedDto.ChainId);
-
+        if (!seedDto.SeedSymbol.IsNullOrEmpty())
+        {
+            await UpdateSeedSymbolAsync(IdGenerateHelper.GetSeedMainChainChangeId(seedDto.ChainId, seedDto.SeedSymbol),
+                seedDto.ChainId);
+        }
+        else
+        {
+            _logger.LogDebug("SeedSymbol is null Symbol={A} SeedType={B} chainId={C}", seedDto.Symbol,
+                seedDto.SeedType.ToString(), seedDto.ChainId);
+        }
+        
         var tsmSeedSymbolIndex = ObjectMapper.Map<SeedDto, TsmSeedSymbolIndex>(seedDto);
 
         //in case the price information is overwritten by indexer seed info
@@ -835,7 +1024,9 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         if (seedSymbol == null)
         {
-            _logger.LogError("AddOrUpdateSeedSymbolAsync fromNFTInfo and localNFTInfo are null!");
+            _logger.LogError(
+                "AddOrUpdateSeedSymbolAsync fromNFTInfo and localNFTInfo are null! seedSymbolIndexId={A} chainId={B}",
+                seedSymbolIndexId, chainId);
             return;
         }
 
@@ -843,15 +1034,42 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
 
         await UpdateSeedSymbolOtherInfoAsync(seedSymbol);
     }
-
+    
     public async Task AddOrUpdateSeedSymbolAsync(SeedSymbolIndex seedSymbol)
     {
+        if (seedSymbol.ChainId != CommonConstant.MainChainId)
+        {
+            var id = IdGenerateHelper.GetSeedSymbolId(GetDefaultSideChainId(), seedSymbol.Symbol);
+            var mainSeedSymbolIndex = await _seedSymbolIndexRepository.GetAsync(id);
+            if (mainSeedSymbolIndex != null && mainSeedSymbolIndex.SeedExpTimeSecond > seedSymbol.SeedExpTimeSecond)
+            {
+                _logger.LogDebug("update SeedExpTimeSecond from mainchain chainId={A} symbol={B}", seedSymbol.ChainId,
+                    seedSymbol.Symbol);
+                seedSymbol.SeedExpTimeSecond = mainSeedSymbolIndex.SeedExpTimeSecond;
+                seedSymbol.SeedExpTime = mainSeedSymbolIndex.SeedExpTime;
+            }
+        }
+        
         seedSymbol.FuzzySymbol = seedSymbol.Symbol;
         seedSymbol.FuzzyTokenName = seedSymbol.TokenName;
         seedSymbol.FuzzyTokenId = SymbolHelper.GetTrailingNumber(seedSymbol.Symbol);
         await _seedSymbolIndexRepository.AddOrUpdateAsync(seedSymbol);
     }
 
+    private string GetDefaultSideChainId()
+    {
+        var chainIds = _chainOptionsMonitor.CurrentValue.ChainInfos.Keys;
+        foreach (var chainId in chainIds)
+        {
+            if (!chainId.Equals(CommonConstant.MainChainId))
+            {
+                return chainId;
+            }
+        }
+
+        return "";
+    }
+    
     private async Task UpdateSeedSymbolOtherInfoAsync(SeedSymbolIndex seedSymbolIndex)
     {
         if (seedSymbolIndex.ChainId.Equals(CommonConstant.MainChainId))
@@ -859,6 +1077,18 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
             return;
         }
 
+        var mainChainSeedSymbol = await _graphQlProvider.GetSyncSeedSymbolRecordAsync(
+            IdGenerateHelper.GetSeedSymbolId(seedSymbolIndex.Symbol, CommonConstant.MainChainId),
+            CommonConstant.MainChainId);
+
+        if (mainChainSeedSymbol != null && mainChainSeedSymbol.SeedExpTimeSecond > seedSymbolIndex.SeedExpTimeSecond)
+        {
+            _logger.LogDebug("UpdateSeedSymbolOtherInfoAsync modify SeedExpTimeSecond");
+            seedSymbolIndex.SeedExpTimeSecond = mainChainSeedSymbol.SeedExpTimeSecond;
+            seedSymbolIndex.SeedExpTime = mainChainSeedSymbol.SeedExpTime;
+        }
+        
+        
         var getNftListingsDto = new GetNFTListingsDto
         {
             ChainId = seedSymbolIndex.ChainId,
@@ -1124,8 +1354,131 @@ public class SeedAppService : NFTMarketServerAppService, ISeedAppService
     {
         return $"popular:price:{symbol}";
     }
-}
+    
+    public async Task<SeedRenewParamDto> GetSpecialSeedRenewParamAsync(SpecialSeedRenewDto input)
+    {
+        /*var currentUserAddress =  await _userAppService.GetCurrentUserAddressAsync();
+        if (currentUserAddress != input.BuyerAddress)
+        {
+            throw new Exception("Login address and parameter buyerAddress are inconsistent");
+        }*/
+        
+        var queryList = await _graphQlProvider.GetTsmSeedBySymbolsAsync("", new List<string>(){input.SeedSymbol});
+        _logger.LogInformation(
+            "GetSpecialSeedRenewParamAsync.GetTsmSeedBySymbolsAsync symbol: {symbol} queryList:{querylist}",input.SeedSymbol, JsonConvert.SerializeObject(queryList));
+        if (queryList.IsNullOrEmpty())
+        {
+            throw new Exception("can not find last seed price");
+        }
 
+
+        var lastPrice = queryList.FirstOrDefault(x => x.TokenPrice.Amount > 0);
+        if (lastPrice.TokenPrice.Symbol.IsNullOrEmpty())
+        {
+            throw new Exception("can not find last seed price");
+        }
+
+        var priceSymbol = lastPrice.TokenPrice.Symbol;
+        var priceAmount = lastPrice.TokenPrice.Amount;
+        
+        var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow);
+        var requestStr = string.Concat(input.BuyerAddress, input.SeedSymbol, priceSymbol, (long)priceAmount);
+        var requestHash =  BuildRequestHash(string.Concat(requestStr, opTime));
+        
+        var response = new SeedRenewParamDto()
+        {
+            Buyer = input.BuyerAddress,
+            SeedSymbol = input.SeedSymbol,
+            PriceSymbol = priceSymbol,
+            PriceAmount = (long)priceAmount,
+            OpTime = opTime,
+            RequestHash = requestHash
+        };
+        return response;
+    }
+    
+    private string BuildRequestHash(string request)
+    {
+        var hashVerifyKey = _seedRenewOptionsMonitor.CurrentValue.HashVerifyKey;
+        if (hashVerifyKey.IsNullOrEmpty())
+        {
+            throw new Exception("have not config seed renew HashVerifyKey");
+        }
+        var requestHash = HashHelper.ComputeFrom(string.Concat(request, hashVerifyKey));
+        _logger.LogInformation("seed renew request:{A} key:{B} hash:{C}",request,hashVerifyKey, requestHash);
+        return requestHash.ToHex();
+    }
+    
+    public async Task<bool> BidSeedRenew(AuctionInfoDto input)
+    {
+        var seedSymbol = input.SeedSymbol;
+        var bidFinishTime = input.EndTime;
+        var renewSwitch = _seedRenewOptionsMonitor.CurrentValue.RenewSwitch;
+        if (!renewSwitch)
+        {
+            _logger.LogInformation("Bid Seed renew switch is close");
+            return true;
+        }
+        //get request param
+        var opTime = DateTimeHelper.ToUnixTimeMilliseconds(DateTime.UtcNow)/1000;
+        var requestStr = string.Concat(seedSymbol, bidFinishTime, opTime);
+        var requestHash =  BuildRequestHash(string.Concat(requestStr));
+        
+        //send tx
+        var chainId = _seedRenewOptionsMonitor.CurrentValue.RenewChainId;
+        var contractAddress = _seedRenewOptionsMonitor.CurrentValue.SymbolRegistarContractMainChainAddress;
+        var privateKey = _seedRenewOptionsMonitor.CurrentValue.PrivateKey;
+        var client = _blockchainClientFactory.GetClient(chainId);
+        var renewInput = new BidFinishSeedRenewInput()
+        {
+            SeedSymbol = seedSymbol,
+            BidFinishTime = bidFinishTime,
+            OpTime = opTime,
+            RequestHash = requestHash
+        };
+        var seedRenewRaw =
+            await GenerateRawTransaction(client, "BidFinishSeedRenew", renewInput,
+                contractAddress, privateKey);
+        _logger.LogInformation(
+            "BidSeedRenew create raw SeedSymbol:{A} BidFinishTime:{B} OpTime:{C} RequestHash:{D} seedRenewRaw:{E}", renewInput.SeedSymbol,
+            renewInput.BidFinishTime, renewInput.OpTime, renewInput.RequestHash, seedRenewRaw);
+        
+        var result = await client.SendTransactionAsync(new SendTransactionInput()
+            { RawTransaction = seedRenewRaw });
+        await Task.Delay(3000);
+        
+        var transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
+        var times = 0;
+        while ((transactionResult.Status is "PENDING" or "NOTEXISTED") && times < 60)
+        {
+            times++;
+            await Task.Delay(1000);
+            transactionResult = await client.GetTransactionResultAsync(result.TransactionId);
+        }
+
+        bool isSuccess = transactionResult.Status == "MINED";
+        _logger.LogInformation(
+            "BidSeedRenew sendTx is {isSuccess} SeedSymbol:{A} BidFinishTime:{B} OpTime:{C} RequestHash:{D} tx:{E}", isSuccess, renewInput.SeedSymbol,
+            renewInput.BidFinishTime, renewInput.OpTime, renewInput.RequestHash, JsonConvert.SerializeObject(transactionResult));
+        return isSuccess;
+    }
+    private async Task<string> GenerateRawTransaction(AElfClient client, string methodName, IMessage param,
+        string contractAddress, string privateKey)
+    {
+        try
+        {
+            return client.SignTransaction(privateKey, await client.GenerateTransactionAsync(
+                    client.GetAddressFromPrivateKey(privateKey), contractAddress, methodName, param))
+                .ToByteArray().ToHex();
+        }
+        catch (Exception e)
+        {
+            throw e;
+        }
+
+        
+    }
+}
 public class Excepton : Exception
 {
 }

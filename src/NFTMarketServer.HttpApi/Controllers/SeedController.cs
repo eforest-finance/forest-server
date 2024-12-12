@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NFTMarketServer.Bid.Dtos;
 using NFTMarketServer.Seed;
 using NFTMarketServer.Seed.Dto;
 using Volo.Abp;
@@ -100,4 +102,13 @@ public class SeedController : AbpController
     {
         return await _seedAppService.GetSeedRankingWeightInfosAsync();
     }
+    
+    [HttpPost]
+    [Route("seed-renew")]
+    [Authorize]
+    public async Task<SeedRenewParamDto> SeedRenew(SpecialSeedRenewDto request)
+    {
+        return await _seedAppService.GetSpecialSeedRenewParamAsync(request);
+    }
+    
 }
