@@ -46,7 +46,8 @@ public class SymbolMarketTokenProvider : ISymbolMarketTokenProvider, ISingletonD
                            supply,
                            issued,
                            issueChainId,
-                           issueManagerList
+                           issueManagerList,
+                           owner
                         }
                 }
             }",
