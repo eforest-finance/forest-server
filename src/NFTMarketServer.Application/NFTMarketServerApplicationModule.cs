@@ -3,7 +3,12 @@ using System.Linq;
 using System.Reflection;
 using AElf.ExceptionHandler.ABP;
 using AElf.Whitelist;
+using Castle.Core.Logging;
 using Elasticsearch.Net;
+/*using EventFlow;
+using EventFlow.AspNetCore.Extensions;
+using EventFlow.Elasticsearch.Extensions;
+using EventFlow.Extensions;*/
 using Medallion.Threading;
 using Medallion.Threading.Redis;
 using MediatR;
@@ -29,6 +34,7 @@ using NFTMarketServer.TreeGame.Provider;
 using StackExchange.Redis;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.EventBus;
 using Volo.Abp.EventBus.RabbitMq;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
@@ -52,6 +58,8 @@ namespace NFTMarketServer
         typeof(NFTMarketServerGrainsModule),
        // typeof(AElfWhitelistApplicationModule),
         typeof(AbpEventBusRabbitMqModule),
+        typeof(AbpEventBusModule),
+
         typeof(AOPExceptionModule)
     )]
     public class NFTMarketServerApplicationModule : AbpModule
@@ -126,6 +134,16 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, TreePointsRecordsSyncScheduleService>();
             context.Services.AddMediatR(Assembly.GetExecutingAssembly());
 
+            /*
+            context.Services.AddEventFlow(options => options
+                .AddAspNetCore()
+                .ConfigureElasticsearch(new Uri("http://localhost:9200"))
+                //.AddDefaults(typeof(Startup).Assembly)
+            );
+            */
+
+            
+            //context.Services.AddControllers();
             context.Services.AddSingleton<IBookAppService,BookAppService>();
             context.Services.AddSingleton<IUserService,UserService>();
 
