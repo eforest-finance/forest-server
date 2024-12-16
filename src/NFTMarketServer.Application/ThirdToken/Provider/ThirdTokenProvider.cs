@@ -69,10 +69,9 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
         var url = thirdTokenInfo.Url;
         var web3 = new Web3(url);
         var contract = web3.Eth.GetContract(abi, thirdTokenInfo.ContractAddress);
-        var getTokenInfoFunction = contract.GetFunction("getTokenInfo");
-        await getTokenInfoFunction
-            .CallDeserializingToObjectAsync<ThirdTokenInfoContractDto>(tokenName, tokenSymbol);
-        return true;
+        var doesTokenExistFunction = contract.GetFunction("doesTokenExist");
+
+        return await doesTokenExistFunction.CallAsync<bool>(tokenName, tokenSymbol);
     }
 
     private async Task<List<TokenRelationIndex>> GetAllTokenRelationListAsync(string address, string aelfToken)

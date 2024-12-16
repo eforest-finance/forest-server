@@ -113,7 +113,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         }
 
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(input.ThirdTokenId);
-        var thirdToken = await thirdTokenGrain.FinishedAsync();
+        var thirdToken = await thirdTokenGrain.GetThirdTokenAsync();
         if (thirdToken.Success == false)
         {
             throw new UserFriendlyException("invalid token");
