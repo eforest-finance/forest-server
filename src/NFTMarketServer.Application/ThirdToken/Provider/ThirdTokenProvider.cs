@@ -1,8 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
+using Microsoft.Extensions.Options;
 using Nest;
+using Nethereum.Web3;
+using NFTMarketServer.Contracts.HandleException;
+using NFTMarketServer.Options;
 using NFTMarketServer.ThirdToken.Index;
 using Volo.Abp.DependencyInjection;
 
@@ -12,18 +18,23 @@ public interface IThirdTokenProvider
 {
     Task<List<ThirdTokenIndex>> GetThirdTokenListAsync(List<string> thirdToken, List<string> thirdChain);
     Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string address, string aelfToken);
+    Task<ThirdTokenInfo> GetThirdTokenInfoAsync(string chainName);
+    Task<bool> CheckThirdTokenExistAsync(string chainName, string tokenName, string tokenSymbol);
 }
 
 public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
 {
     private readonly INESTRepository<ThirdTokenIndex, string> _repository;
     private readonly INESTRepository<TokenRelationIndex, string> _tokenRelationRepository;
+    private readonly IOptionsMonitor<ThirdTokenInfosOptions> _thirdTokenInfosOptionsMonitor;
 
     public ThirdTokenProvider(INESTRepository<TokenRelationIndex, string> tokenRelationRepository,
-        INESTRepository<ThirdTokenIndex, string> repository)
+        INESTRepository<ThirdTokenIndex, string> repository,
+        IOptionsMonitor<ThirdTokenInfosOptions> thirdTokenInfosOptionsMonitor)
     {
         _tokenRelationRepository = tokenRelationRepository;
         _repository = repository;
+        _thirdTokenInfosOptionsMonitor = thirdTokenInfosOptionsMonitor;
     }
 
 
@@ -35,6 +46,33 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
     public async Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string address, string aelfToken)
     {
         return await GetAllTokenRelationListAsync(address, aelfToken);
+    }
+
+    public async Task<ThirdTokenInfo> GetThirdTokenInfoAsync(string chainName)
+    {
+        var thirdTokenInfoDic = _thirdTokenInfosOptionsMonitor.CurrentValue.Chains
+            .ToDictionary(x => x.ChainName, x => x);
+        return thirdTokenInfoDic.TryGetValue(chainName, out var info) ? info : null;
+    }
+
+    [ExceptionHandler(typeof(Exception),
+        Message = "ThirdTokenProvider.CheckThirdTokenExistAsync",
+        TargetType = typeof(ExceptionHandlingService),
+        MethodName = nameof(ExceptionHandlingService.HandleExceptionBoolRetrun),
+        LogTargets = new[] { "chainName", "tokenName", "tokenSymbol" }
+    )]
+    public async Task<bool> CheckThirdTokenExistAsync(string chainName, string tokenName,
+        string tokenSymbol)
+    {
+        var thirdTokenInfo = await GetThirdTokenInfoAsync(chainName);
+        var abi = _thirdTokenInfosOptionsMonitor.CurrentValue.Abi;
+        var url = thirdTokenInfo.Url;
+        var web3 = new Web3(url);
+        var contract = web3.Eth.GetContract(abi, thirdTokenInfo.ContractAddress);
+        var getTokenInfoFunction = contract.GetFunction("getTokenInfo");
+        await getTokenInfoFunction
+            .CallDeserializingToObjectAsync<ThirdTokenInfoContractDto>(tokenName, tokenSymbol);
+        return true;
     }
 
     private async Task<List<TokenRelationIndex>> GetAllTokenRelationListAsync(string address, string aelfToken)

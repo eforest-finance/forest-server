@@ -52,4 +52,13 @@ public class ThirdTokenGrain : Grain<ThirdTokenState>, IThirdTokenGrain
             Data = _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenState>(State)
         };
     }
+
+    public async Task<GrainResultDto<ThirdTokenGrainDto>> GetThirdTokenAsync()
+    {
+        return new GrainResultDto<ThirdTokenGrainDto>
+        {
+            Success = true,
+            Data = _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenState>(State)
+        };
+    }
 }

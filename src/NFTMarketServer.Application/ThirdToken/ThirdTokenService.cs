@@ -95,11 +95,12 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenEto>(thirdTokenRecord.Data));
-        
+
         return new ThirdTokenPrepareBindingDto
         {
             BindingId = tokenRelationRecord.Data.Id,
-            ThirdTokenId = thirdTokenRecord.Data.Id
+            ThirdTokenId = thirdTokenRecord.Data.Id,
+            ChainName = thirdTokenRecord.Data.Chain
         };
     }
 
@@ -111,11 +112,23 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             throw new UserFriendlyException("invalid request");
         }
 
+        var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(input.ThirdTokenId);
+        var thirdToken = await thirdTokenGrain.FinishedAsync();
+        if (thirdToken.Success == false)
+        {
+            throw new UserFriendlyException("invalid token");
+        }
+
+        var thirdTokenExist = await _thirdTokenProvider
+            .CheckThirdTokenExistAsync(thirdToken.Data.Chain, thirdToken.Data.TokenName, thirdToken.Data.Symbol);
+        if (!thirdTokenExist)
+        {
+            throw new UserFriendlyException("invalid token");
+        }
+
         var tokenRelationGrain = _clusterClient.GetGrain<ITokenRelationGrain>(input.BindingId);
         var tokenRelationRecord = await tokenRelationGrain.BoundAsync();
-        var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(input.ThirdTokenId);
         var thirdTokenRecord = await thirdTokenGrain.FinishedAsync();
-
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(

@@ -4,4 +4,5 @@ public interface IThirdTokenGrain : IGrainWithStringKey
 {
     Task<GrainResultDto<ThirdTokenGrainDto>> CreateThirdTokenAsync(ThirdTokenGrainDto input);
     Task<GrainResultDto<ThirdTokenGrainDto>> FinishedAsync();
+    Task<GrainResultDto<ThirdTokenGrainDto>> GetThirdTokenAsync();
 }
