@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NFTMarketServer.Grains.Grain.ApplicationHandler;
 using NFTMarketServer.Grains.Grain.ThirdToken;
@@ -25,16 +26,18 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
     private readonly IObjectMapper _objectMapper;
     private readonly IDistributedEventBus _distributedEventBus;
     private readonly IOptionsMonitor<TreeGameOptions> _platformOptionsMonitor;
+    private readonly ILogger<ThirdTokenService> _logger;
 
     public ThirdTokenService(IThirdTokenProvider thirdTokenProvider, IObjectMapper objectMapper,
         IClusterClient clusterClient, IDistributedEventBus distributedEventBus,
-        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor)
+        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor, ILogger<ThirdTokenService> logger)
     {
         _thirdTokenProvider = thirdTokenProvider;
         _objectMapper = objectMapper;
         _clusterClient = clusterClient;
         _distributedEventBus = distributedEventBus;
         _platformOptionsMonitor = platformOptionsMonitor;
+        _logger = logger;
     }
 
     public async Task<List<MyThirdTokenDto>> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
@@ -116,6 +119,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var thirdToken = await thirdTokenGrain.GetThirdTokenAsync();
         if (thirdToken.Success == false)
         {
+            _logger.LogWarning("not found third token");
             throw new UserFriendlyException("invalid token");
         }
 
@@ -123,6 +127,8 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             .CheckThirdTokenExistAsync(thirdToken.Data.Chain, thirdToken.Data.TokenName, thirdToken.Data.Symbol);
         if (!thirdTokenExist)
         {
+            _logger.LogWarning("not found in contract. chain: {chain}, token: {token},symbol: {symbol}",
+                thirdToken.Data.Chain, thirdToken.Data.TokenName, thirdToken.Data.Symbol);
             throw new UserFriendlyException("invalid token");
         }
 
