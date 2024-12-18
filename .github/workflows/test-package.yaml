@@ -3,7 +3,7 @@ name: Build and Package
 on:
   push:
     branches:
-      - 'feature/token-deploy'
+      - 'feature/token-deploy-1219'
 env:
   DOTNET_INSTALL_DIR: "./.dotnet"
 
