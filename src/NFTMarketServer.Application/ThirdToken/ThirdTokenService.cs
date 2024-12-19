@@ -89,7 +89,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var tokenRelationGrainDto = _objectMapper.Map<ThirdTokenPrepareBindingInput, TokenRelationGrainDto>(input);
         var tokenRelationRecord = await tokenRelationGrain.CreateTokenRelationAsync(tokenRelationGrainDto);
 
-        var thirdTokenId = GuidHelper.UniqId(input.Address);
+        var thirdTokenId = GuidHelper.UniqId(input.Address, input.ThirdTokens.ThirdChain, input.ThirdTokens.TokenName,input.ThirdTokens.Symbol);
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(thirdTokenId.ToString());
         var thirdTokenGrainDto = _objectMapper.Map<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>(input);
         var thirdTokenRecord = await thirdTokenGrain.CreateThirdTokenAsync(thirdTokenGrainDto);
