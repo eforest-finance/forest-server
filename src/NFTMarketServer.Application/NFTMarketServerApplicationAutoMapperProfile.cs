@@ -17,6 +17,7 @@ using NFTMarketServer.Grains.Grain.Inscription;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.Grains.Grain.Order;
 using NFTMarketServer.Grains.Grain.Synchronize;
+using NFTMarketServer.Grains.Grain.ThirdToken;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Grains.Grain.Verify;
 using NFTMarketServer.Grains.State.Dealer;
@@ -44,6 +45,9 @@ using NFTMarketServer.SymbolMarketToken;
 using NFTMarketServer.SymbolMarketToken.Index;
 using NFTMarketServer.Synchronize.Dto;
 using NFTMarketServer.Synchronize.Eto;
+using NFTMarketServer.ThirdToken;
+using NFTMarketServer.ThirdToken.Etos;
+using NFTMarketServer.ThirdToken.Index;
 using NFTMarketServer.Tokens;
 using NFTMarketServer.Trait;
 using NFTMarketServer.Tree;
@@ -54,6 +58,7 @@ using NFTMarketServer.Users.Eto;
 using NFTMarketServer.Users.Index;
 using Volo.Abp.AutoMapper;
 using ExternalInfoDictionary = NFTMarketServer.Entities.ExternalInfoDictionary;
+using SynchronizeAITokenJobGrainDto = NFTMarketServer.Grains.Grain.Synchronize.Ai.SynchronizeAITokenJobGrainDto;
 using TokenInfoDto = NFTMarketServer.NFT.Dtos.TokenInfoDto;
 
 namespace NFTMarketServer;
@@ -450,6 +455,31 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         
         CreateMap<TreeActivityIndex, TreeActivityDto>();
         CreateMap<TreeActivityDto, TreeActivityIndex>();
+        
+        CreateMap<TokenRelationIndex, MyThirdTokenDto>()
+            .ForMember(t => t.ThirdTokenName, m => m.MapFrom(f => f.ThirdToken))
+            .ForMember(t => t.ThirdSymbol, m => m.MapFrom(f => f.ThirdTokenSymbol))
+            .ForMember(t => t.Address, m => m.MapFrom(f => f.Address))
+            ;
+        CreateMap<ThirdTokenPrepareBindingInput, TokenRelationGrainDto>()
+            .ForPath(t => t.ThirdToken, m => m.MapFrom(f => f.ThirdTokens.TokenName))
+            .ForPath(t => t.ThirdChain, m => m.MapFrom(f => f.ThirdTokens.ThirdChain))
+            .ForPath(t => t.ThirdTokenSymbol, m => m.MapFrom(f => f.ThirdTokens.Symbol))
+            ;
+        CreateMap<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>()
+            .ForPath(t => t.TokenName, m => m.MapFrom(f => f.ThirdTokens.TokenName))
+            .ForPath(t => t.Chain, m => m.MapFrom(f => f.ThirdTokens.ThirdChain))
+            .ForPath(t => t.TotalSupply, m => m.MapFrom(f => f.ThirdTokens.TotalSupply))
+            .ForPath(t => t.Owner, m => m.MapFrom(f => f.ThirdTokens.Owner))
+            .ForPath(t => t.Symbol, m => m.MapFrom(f => f.ThirdTokens.Symbol))
+            .ForPath(t => t.TokenImage, m => m.MapFrom(f => f.ThirdTokens.TokenImage))
+            .ForPath(t => t.ContractAddress, m => m.MapFrom(f => f.ThirdTokens.ContractAddress))
+            .ForPath(t => t.Address, m => m.MapFrom(f => f.Address))
+            ;
+        CreateMap<SynchronizeAITokenJobGrainDto, SynchronizeAITokenJobInfoIndex>();
+        CreateMap<SynchronizeAITokenJobInfoIndex, SynchronizeAITokenJobGrainDto>();
+        CreateMap<TokenRelationGrainDto, TokenRelationEto>();
+        CreateMap<ThirdTokenGrainDto, ThirdTokenEto>();
 
     }
 }

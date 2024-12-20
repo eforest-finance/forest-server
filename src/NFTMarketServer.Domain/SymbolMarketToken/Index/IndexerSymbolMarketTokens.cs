@@ -17,6 +17,8 @@ public class IndexerSymbolMarketToken : IndexerCommonResult<IndexerSymbolMarketT
     public string TokenName { get; set; }
     
     public string Issuer { get; set; }
+    public string Owner { get; set; }
+
     public long IssueChainId { get; set; }
     public int Decimals { get; set; }
     public long TotalSupply { get; set; }

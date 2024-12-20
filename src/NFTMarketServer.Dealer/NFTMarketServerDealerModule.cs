@@ -28,6 +28,7 @@ using NFTMarketServer.Grains;
 using NFTMarketServer.MongoDB;
 using NFTMarketServer.NFT.Provider;
 using NFTMarketServer.Provider;
+using NFTMarketServer.Synchronize;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Providers.MongoDB.Configuration;
@@ -86,7 +87,8 @@ namespace NFTMarketServer.Dealer
             context.Services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
             context.Services.AddSingleton<INFTDropInfoProvider, NFTDropInfoProvider>();
             context.Services.AddSingleton<IContractInvoker, NFTDropFinishInvoker>();
-            
+            context.Services.AddSingleton<ISynchronizeAITokenAppService, SynchronizeAITokenAppService>();
+
             
             Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
             Configure<ForestChainOptions>(configuration.GetSection("Forest"));
