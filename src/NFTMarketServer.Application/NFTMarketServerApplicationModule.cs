@@ -134,6 +134,7 @@ namespace NFTMarketServer
             Configure<PlatformNFTOptions>(configuration.GetSection("PlatformNFT"));
             Configure<TreeGameOptions>(configuration.GetSection("TreeGame"));
             Configure<SeedRenewOptions>(configuration.GetSection("SeedRenew"));
+            Configure<ThirdTokenInfosOptions>(configuration.GetSection("ThirdTokenInfos"));
 
             ConfigureTokenBucketService(context, configuration);
             ConfigureDistributedLocking(context, configuration);

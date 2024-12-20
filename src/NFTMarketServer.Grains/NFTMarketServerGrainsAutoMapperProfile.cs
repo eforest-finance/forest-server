@@ -5,6 +5,8 @@ using NFTMarketServer.Grains.Grain.Inscription;
 using NFTMarketServer.Grains.Grain.NFTInfo;
 using NFTMarketServer.Grains.Grain.Order;
 using NFTMarketServer.Grains.Grain.Synchronize;
+using NFTMarketServer.Grains.Grain.ThirdToken;
+using NFTMarketServer.Grains.Grain.Synchronize.Ai;
 using NFTMarketServer.Grains.Grain.Tree;
 using NFTMarketServer.Grains.Grain.Users;
 using NFTMarketServer.Grains.Grain.Verify;
@@ -14,6 +16,7 @@ using NFTMarketServer.Grains.State.Inscription;
 using NFTMarketServer.Grains.State.NFTInfo;
 using NFTMarketServer.Grains.State.Order;
 using NFTMarketServer.Grains.State.Synchronize;
+using NFTMarketServer.Grains.State.ThirdToken;
 using NFTMarketServer.Grains.State.Users;
 using NFTMarketServer.Grains.State.Verify;
 using NFTMarketServer.TreeGame;
@@ -45,10 +48,10 @@ public class NFTMarketServerGrainsAutoMapperProfile : Profile
         CreateMap<NftCollectionExtensionState, NftCollectionExtensionGrainDto>();
         CreateMap<NftCollectionExtensionGrainDto, NftCollectionExtensionState>();
         CreateMap<SymbolIconGrainState, SymbolIconGrainDto>().ReverseMap();
-        
+
         //order
         CreateMap<NFTOrderGrainDto, NFTOrderState>().ReverseMap();
-        
+
         CreateMap<ContractInvokeGrainDto, ContractInvokeState>().ReverseMap();
         CreateMap<InscriptionInscribeState, InscriptionInscribeGrainDto>().ReverseMap();
         CreateMap<InscriptionAmountState, InscriptionAmountGrainDto>().ReverseMap();
@@ -57,5 +60,12 @@ public class NFTMarketServerGrainsAutoMapperProfile : Profile
         CreateMap<TreeGameUserInfoDto, TreeUserInfoState>();
         CreateMap<TreeUserActivityRecordState, TreeUserActivityRecordGrainDto>();
         CreateMap<TreeUserActivityRecordGrainDto, TreeUserActivityRecordState>();
+        CreateMap<ThirdTokenGrainDto, ThirdTokenState>().ReverseMap();
+        CreateMap<TokenRelationGrainDto, TokenRelationState>().ReverseMap();
+        
+        CreateMap<SynchronizeAITokenJobGrainDto, SynchronizeAITokenState>();
+        CreateMap<SynchronizeAITokenState, SynchronizeAITokenJobGrainDto>();
+
+        
     }
 }
