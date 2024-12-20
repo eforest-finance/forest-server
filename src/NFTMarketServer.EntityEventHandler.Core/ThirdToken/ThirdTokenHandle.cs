@@ -37,6 +37,8 @@ public class ThirdTokenHandle : IDistributedEventHandler<ThirdTokenEto>, ISingle
     )]
     public virtual async Task HandleEventAsync(ThirdTokenEto eventData)
     {
+        _logger.LogInformation("ThirdTokenHandle: {Data}", JsonConvert.SerializeObject(eventData));
+
         var index = _objectMapper.Map<ThirdTokenEto, ThirdTokenIndex>(eventData);
 
         await _repository.AddOrUpdateAsync(index);

@@ -51,13 +51,14 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             thirdChainDic.Values.SelectMany(x => x.Select(t => t.ThirdToken)).ToList(), thirdChainDic.Keys.ToList());
 
         var thirdTokenIdDic = thirdTokenList
-            .ToDictionary(x => IdGenerator.GenerateId(x.TokenName, x.Chain), x => x);
+            .ToDictionary(x => GuidHelper.UniqId(x.TokenName, x.Symbol, x.Chain, x.Address), x => x);
 
         var result = _objectMapper.Map<List<TokenRelationIndex>, List<MyThirdTokenDto>>(tokenRelationList);
 
         result.ForEach(dto =>
         {
-            if (!thirdTokenIdDic.TryGetValue(IdGenerator.GenerateId(dto.ThirdTokenName, dto.ThirdChain),
+            if (!thirdTokenIdDic.TryGetValue(
+                    GuidHelper.UniqId(dto.ThirdTokenName, dto.ThirdSymbol, dto.ThirdChain, dto.Address),
                     out var thirdToken))
             {
                 return;
@@ -89,7 +90,8 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var tokenRelationGrainDto = _objectMapper.Map<ThirdTokenPrepareBindingInput, TokenRelationGrainDto>(input);
         var tokenRelationRecord = await tokenRelationGrain.CreateTokenRelationAsync(tokenRelationGrainDto);
 
-        var thirdTokenId = GuidHelper.UniqId(input.Address, input.ThirdTokens.ThirdChain, input.ThirdTokens.TokenName,input.ThirdTokens.Symbol);
+        var thirdTokenId = GuidHelper.UniqId(input.Address, input.ThirdTokens.ThirdChain, input.ThirdTokens.TokenName,
+            input.ThirdTokens.Symbol);
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(thirdTokenId.ToString());
         var thirdTokenGrainDto = _objectMapper.Map<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>(input);
         var thirdTokenRecord = await thirdTokenGrain.CreateThirdTokenAsync(thirdTokenGrainDto);

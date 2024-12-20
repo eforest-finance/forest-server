@@ -17,4 +17,5 @@ public class ThirdTokenEto
     public string TokenImage { get; set; }
     public string ContractAddress { get; set; }
     public ThirdTokenStatus ThirdTokenStatus { get; set; }
+    public string Address { get; set; }
 }

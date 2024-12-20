@@ -10,4 +10,5 @@ public class MyThirdTokenDto
     public string ThirdTokenImage { get; set; }
     public string ThirdContractAddress { get; set; }
     public long ThirdTotalSupply { get; set; }
+    public string Address { get; set; }
 }

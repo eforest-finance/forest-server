@@ -39,6 +39,8 @@ public class TokenRelationHandle : IDistributedEventHandler<TokenRelationEto>, I
     )]
     public virtual async Task HandleEventAsync(TokenRelationEto eventData)
     {
+        _logger.LogInformation("TokenRelationHandle: {Data}", JsonConvert.SerializeObject(eventData));
+
         var index = _objectMapper.Map<TokenRelationEto, TokenRelationIndex>(eventData);
 
         await _repository.AddOrUpdateAsync(index);

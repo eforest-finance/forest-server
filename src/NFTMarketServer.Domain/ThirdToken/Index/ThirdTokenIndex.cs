@@ -17,6 +17,7 @@ public class ThirdTokenIndex : NFTMarketEntity<string>, IIndexBuild
     [Keyword] public string TokenImage { get; set; }
     [Keyword] public string ContractAddress { get; set; }
     public ThirdTokenStatus ThirdTokenStatus { get; set; }
+    [Keyword] public string Address { get; set; }
 }
 
 public enum ThirdTokenStatus
