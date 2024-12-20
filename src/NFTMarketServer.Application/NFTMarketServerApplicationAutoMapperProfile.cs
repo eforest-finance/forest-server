@@ -458,11 +458,13 @@ public class NFTMarketServerApplicationAutoMapperProfile : Profile
         
         CreateMap<TokenRelationIndex, MyThirdTokenDto>()
             .ForMember(t => t.ThirdTokenName, m => m.MapFrom(f => f.ThirdToken))
+            .ForMember(t => t.ThirdSymbol, m => m.MapFrom(f => f.ThirdTokenSymbol))
             .ForMember(t => t.Address, m => m.MapFrom(f => f.Address))
             ;
         CreateMap<ThirdTokenPrepareBindingInput, TokenRelationGrainDto>()
             .ForPath(t => t.ThirdToken, m => m.MapFrom(f => f.ThirdTokens.TokenName))
             .ForPath(t => t.ThirdChain, m => m.MapFrom(f => f.ThirdTokens.ThirdChain))
+            .ForPath(t => t.ThirdTokenSymbol, m => m.MapFrom(f => f.ThirdTokens.Symbol))
             ;
         CreateMap<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>()
             .ForPath(t => t.TokenName, m => m.MapFrom(f => f.ThirdTokens.TokenName))

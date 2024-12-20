@@ -15,4 +15,5 @@ public class TokenRelationEto
     public long CreateTime { get; set; }
     public long UpdateTime { get; set; }
     public RelationStatus RelationStatus { get; set; }
+    public string ThirdTokenSymbol { get; set; }
 }

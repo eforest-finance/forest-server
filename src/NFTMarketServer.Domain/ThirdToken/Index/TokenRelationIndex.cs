@@ -12,6 +12,7 @@ public class TokenRelationIndex : NFTMarketEntity<string>, IIndexBuild
     [Keyword] public string AelfToken { get; set; }
     [Keyword] public string ThirdChain { get; set; }
     [Keyword] public string ThirdToken { get; set; }
+    [Keyword] public string ThirdTokenSymbol { get; set; }
     public long CreateTime { get; set; }
     public long UpdateTime { get; set; }
     public RelationStatus RelationStatus { get; set; }

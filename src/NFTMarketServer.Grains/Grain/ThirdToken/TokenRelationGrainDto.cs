@@ -14,4 +14,5 @@ public class TokenRelationGrainDto
     [Id(6)] public long CreateTime { get; set; }
     [Id(7)] public long UpdateTime { get; set; }
     [Id(8)] public RelationStatus RelationStatus { get; set; }
+    [Id(9)] public string ThirdTokenSymbol { get; set; }
 }
