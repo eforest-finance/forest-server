@@ -27,10 +27,10 @@ public class ScheduleSyncDataContext : ITransientDependency, IScheduleSyncDataCo
 
     public async Task DealAsync(BusinessQueryChainType businessType, bool resetHeightFlag, long resetHeight)
     {
-        // var stopwatch = Stopwatch.StartNew();
-        // await _syncDataServiceMap.GetOrDefault(businessType).DealDataAsync(resetHeightFlag, resetHeight);
-        // stopwatch.Stop();
-        // _logger.LogInformation("It took {Elapsed} ms to execute synchronized data for businessType: {businessType}",
-        //     stopwatch.ElapsedMilliseconds, businessType);
+        var stopwatch = Stopwatch.StartNew();
+        await _syncDataServiceMap.GetOrDefault(businessType).DealDataAsync(resetHeightFlag, resetHeight);
+        stopwatch.Stop();
+        _logger.LogInformation("It took {Elapsed} ms to execute synchronized data for businessType: {businessType}",
+            stopwatch.ElapsedMilliseconds, businessType);
     }
 }
