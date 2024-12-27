@@ -17,4 +17,6 @@ public class ThirdTokenGrainDto
     [Id(9)] public string ContractAddress { get; set; }
     [Id(10)] public ThirdTokenStatus ThirdTokenStatus { get; set; }
     [Id(11)] public string Address { get; set; }
+    [Id(12)] public string TokenContractAddress { get; set; }
+    [Id(13)] public string AssociatedTokenAccount { get; set; }
 }

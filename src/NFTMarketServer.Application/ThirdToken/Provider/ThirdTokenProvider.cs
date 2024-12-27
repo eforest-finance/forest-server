@@ -6,10 +6,10 @@ using AElf.ExceptionHandler;
 using AElf.Indexing.Elasticsearch;
 using Microsoft.Extensions.Options;
 using Nest;
-using Nethereum.Web3;
 using NFTMarketServer.Contracts.HandleException;
 using NFTMarketServer.Options;
 using NFTMarketServer.ThirdToken.Index;
+using NFTMarketServer.ThirdToken.Strategy;
 using Volo.Abp.DependencyInjection;
 
 namespace NFTMarketServer.ThirdToken.Provider;
@@ -19,7 +19,9 @@ public interface IThirdTokenProvider
     Task<List<ThirdTokenIndex>> GetThirdTokenListAsync(List<string> thirdToken, List<string> thirdChain);
     Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string address, string aelfToken);
     Task<ThirdTokenInfo> GetThirdTokenInfoAsync(string chainName);
-    Task<bool> CheckThirdTokenExistAsync(string chainName, string tokenName, string tokenSymbol);
+
+    Task<bool> CheckThirdTokenExistAsync(string chainName, string tokenName, string tokenSymbol, string deployedAddress,
+        string associatedTokenAccount);
 }
 
 public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
@@ -27,14 +29,16 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
     private readonly INESTRepository<ThirdTokenIndex, string> _repository;
     private readonly INESTRepository<TokenRelationIndex, string> _tokenRelationRepository;
     private readonly IOptionsMonitor<ThirdTokenInfosOptions> _thirdTokenInfosOptionsMonitor;
+    private readonly ThirdTokenStrategyFactory _factory;
 
     public ThirdTokenProvider(INESTRepository<TokenRelationIndex, string> tokenRelationRepository,
         INESTRepository<ThirdTokenIndex, string> repository,
-        IOptionsMonitor<ThirdTokenInfosOptions> thirdTokenInfosOptionsMonitor)
+        IOptionsMonitor<ThirdTokenInfosOptions> thirdTokenInfosOptionsMonitor, ThirdTokenStrategyFactory factory)
     {
         _tokenRelationRepository = tokenRelationRepository;
         _repository = repository;
         _thirdTokenInfosOptionsMonitor = thirdTokenInfosOptionsMonitor;
+        _factory = factory;
     }
 
 
@@ -62,16 +66,13 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
         LogTargets = new[] { "chainName", "tokenName", "tokenSymbol" }
     )]
     public async Task<bool> CheckThirdTokenExistAsync(string chainName, string tokenName,
-        string tokenSymbol)
+        string tokenSymbol, string deployedAddress, string associatedTokenAccount)
     {
         var thirdTokenInfo = await GetThirdTokenInfoAsync(chainName);
+        var thirdTokenStrategy = _factory.GetStrategy(thirdTokenInfo.Type);
         var abi = _thirdTokenInfosOptionsMonitor.CurrentValue.Abi;
-        var url = thirdTokenInfo.Url;
-        var web3 = new Web3(url);
-        var contract = web3.Eth.GetContract(abi, thirdTokenInfo.ContractAddress);
-        var doesTokenExistFunction = contract.GetFunction("doesTokenExist");
-
-        return await doesTokenExistFunction.CallAsync<bool>(tokenName, tokenSymbol);
+        return await thirdTokenStrategy.CheckThirdTokenExistAsync(tokenName, tokenSymbol, deployedAddress,
+            associatedTokenAccount, thirdTokenInfo, abi);
     }
 
     private async Task<List<TokenRelationIndex>> GetAllTokenRelationListAsync(string address, string aelfToken)
@@ -86,6 +87,7 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
 
             mustQuery.Add(q => q.Term(i => i.Field(f => f.Address).Value(address)));
             mustQuery.Add(q => q.Term(i => i.Field(f => f.AelfToken).Value(aelfToken)));
+            mustQuery.Add(q => q.Term(i => i.Field(f => f.RelationStatus).Value(RelationStatus.Bound)));
 
             QueryContainer Filter(QueryContainerDescriptor<TokenRelationIndex> f) => f.Bool(b => b.Must(mustQuery));
             var result = await _tokenRelationRepository.GetListAsync(Filter, skip: skipCount, limit: maxResultCount);

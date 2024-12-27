@@ -18,4 +18,6 @@ public class ThirdTokenEto
     public string ContractAddress { get; set; }
     public ThirdTokenStatus ThirdTokenStatus { get; set; }
     public string Address { get; set; }
+    public string TokenContractAddress { get; set; }
+    public string AssociatedTokenAccount { get; set; }
 }

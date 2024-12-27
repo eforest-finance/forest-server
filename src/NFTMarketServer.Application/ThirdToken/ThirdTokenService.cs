@@ -22,6 +22,7 @@ namespace NFTMarketServer.ThirdToken;
 public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 {
     private readonly IThirdTokenProvider _thirdTokenProvider;
+    private readonly ITokenVerifyProvider _tokenVerifyProvider;
     private readonly IClusterClient _clusterClient;
     private readonly IObjectMapper _objectMapper;
     private readonly IDistributedEventBus _distributedEventBus;
@@ -30,7 +31,8 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
     public ThirdTokenService(IThirdTokenProvider thirdTokenProvider, IObjectMapper objectMapper,
         IClusterClient clusterClient, IDistributedEventBus distributedEventBus,
-        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor, ILogger<ThirdTokenService> logger)
+        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor, ILogger<ThirdTokenService> logger,
+        ITokenVerifyProvider tokenVerifyProvider)
     {
         _thirdTokenProvider = thirdTokenProvider;
         _objectMapper = objectMapper;
@@ -38,6 +40,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         _distributedEventBus = distributedEventBus;
         _platformOptionsMonitor = platformOptionsMonitor;
         _logger = logger;
+        _tokenVerifyProvider = tokenVerifyProvider;
     }
 
     public async Task<List<MyThirdTokenDto>> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
@@ -111,7 +114,10 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
     public async Task<string> ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
-        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId));
+        var associatedTokenAccount = input.AssociatedTokenAccount;
+        var deployedTokenContractAddress = input.TokenContractAddress;
+        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId,
+            deployedTokenContractAddress, associatedTokenAccount));
         if (requestHash != input.Signature)
         {
             throw new UserFriendlyException("invalid request");
@@ -125,8 +131,10 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             throw new UserFriendlyException("invalid token");
         }
 
-        var thirdTokenExist = await _thirdTokenProvider
-            .CheckThirdTokenExistAsync(thirdToken.Data.Chain, thirdToken.Data.TokenName, thirdToken.Data.Symbol);
+        await AutoVerifyTokenAsync(thirdToken.Data);
+
+        var thirdTokenExist = await _thirdTokenProvider.CheckThirdTokenExistAsync(thirdToken.Data.Chain,
+            thirdToken.Data.TokenName, thirdToken.Data.Symbol, deployedTokenContractAddress, associatedTokenAccount);
         if (!thirdTokenExist)
         {
             _logger.LogWarning("not found in contract. chain: {chain}, token: {token},symbol: {symbol}",
@@ -136,12 +144,18 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
         var tokenRelationGrain = _clusterClient.GetGrain<ITokenRelationGrain>(input.BindingId);
         var tokenRelationRecord = await tokenRelationGrain.BoundAsync();
-        var thirdTokenRecord = await thirdTokenGrain.FinishedAsync();
+        var thirdTokenRecord =
+            await thirdTokenGrain.FinishedAsync(deployedTokenContractAddress, associatedTokenAccount);
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenEto>(thirdTokenRecord.Data));
         return "";
+    }
+
+    private async Task AutoVerifyTokenAsync(ThirdTokenGrainDto dto)
+    {
+        await _tokenVerifyProvider.AutoVerifyTokenAsync(dto);
     }
 
     private string BuildRequestHash(string request)
