@@ -120,7 +120,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             deployedTokenContractAddress, associatedTokenAccount));
         if (requestHash != input.Signature)
         {
-            throw new UserFriendlyException("invalid request");
+            throw new UserFriendlyException("invalid request.");
         }
 
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(input.ThirdTokenId);
