@@ -43,7 +43,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         _tokenVerifyProvider = tokenVerifyProvider;
     }
 
-    public async Task<List<MyThirdTokenDto>> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
+    public async Task<MyThirdTokenResult> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
     {
         var tokenRelationList = await _thirdTokenProvider.GetTokenRelationListAsync(input.Address, input.AelfToken);
         var thirdChainDic = tokenRelationList
@@ -69,11 +69,15 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
             dto.ThirdSymbol = thirdToken.Symbol;
             dto.ThirdTokenImage = thirdToken.TokenImage;
-            dto.ThirdContractAddress = thirdToken.ContractAddress;
+            dto.ThirdContractAddress = thirdToken.TokenContractAddress;
             dto.ThirdTotalSupply = thirdToken.TotalSupply;
         });
 
-        return result;
+        return new MyThirdTokenResult()
+        {
+            TotalCount = result.Count,
+            Items = result
+        };
     }
 
     public async Task<ThirdTokenPrepareBindingDto> ThirdTokenPrepareBindingAsync(ThirdTokenPrepareBindingInput input)
