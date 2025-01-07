@@ -120,8 +120,9 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
     {
         var associatedTokenAccount = input.AssociatedTokenAccount;
         var deployedTokenContractAddress = input.TokenContractAddress;
+        var mintToAddress = input.MintToAddress;
         var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId,
-            deployedTokenContractAddress, associatedTokenAccount));
+            deployedTokenContractAddress, associatedTokenAccount, mintToAddress));
         if (requestHash != input.Signature)
         {
             throw new UserFriendlyException("invalid request.");
