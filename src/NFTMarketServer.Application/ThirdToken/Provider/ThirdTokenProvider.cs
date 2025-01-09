@@ -20,7 +20,7 @@ public interface IThirdTokenProvider
     Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string address, string aelfToken);
     Task<ThirdTokenInfo> GetThirdTokenInfoAsync(string chainName);
 
-    Task<bool> CheckThirdTokenExistAsync(string chainName, string tokenName, string tokenSymbol, string deployedAddress,
+    Task<ThirdTokenExistDto> CheckThirdTokenExistAsync(string chainName, string tokenName, string tokenSymbol, string deployedAddress,
         string associatedTokenAccount);
 }
 
@@ -65,7 +65,7 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
         MethodName = nameof(ExceptionHandlingService.HandleExceptionBoolRetrun),
         LogTargets = new[] { "chainName", "tokenName", "tokenSymbol" }
     )]
-    public async Task<bool> CheckThirdTokenExistAsync(string chainName, string tokenName,
+    public async Task<ThirdTokenExistDto> CheckThirdTokenExistAsync(string chainName, string tokenName,
         string tokenSymbol, string deployedAddress, string associatedTokenAccount)
     {
         var thirdTokenInfo = await GetThirdTokenInfoAsync(chainName);

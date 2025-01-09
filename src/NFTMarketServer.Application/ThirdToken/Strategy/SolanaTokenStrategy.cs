@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using NFTMarketServer.Common.Http;
 using NFTMarketServer.Options;
 using NFTMarketServer.ThirdToken.Index;
+using NFTMarketServer.ThirdToken.Provider;
 
 namespace NFTMarketServer.ThirdToken.Strategy;
 
@@ -16,7 +17,7 @@ public class SolanaTokenStrategy : IThirdTokenStrategy
         _httpService = httpService;
     }
 
-    public async Task<bool> CheckThirdTokenExistAsync(string tokenName, string tokenSymbol, string deployedAddress,
+    public async Task<ThirdTokenExistDto> CheckThirdTokenExistAsync(string tokenName, string tokenSymbol, string deployedAddress,
         string associatedTokenAccount, ThirdTokenInfo info, string abi)
     {
         var param = new SolanaRequest
@@ -31,7 +32,10 @@ public class SolanaTokenStrategy : IThirdTokenStrategy
         var res = await _httpService.SendPostRequest(info.Url, requestBody, header, 3);
         var result = JsonConvert.DeserializeObject<SolanaResponse>(res);
 
-        return result.Error == null && result.Result.Value.Amount != "0";
+        return new ThirdTokenExistDto()
+        {
+            Exist = result.Error == null && result.Result.Value.Amount != "0"
+        };
     }
 
     public new ThirdTokenType GetThirdTokenType()
