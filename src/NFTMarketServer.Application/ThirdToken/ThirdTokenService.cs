@@ -85,7 +85,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var requestHash = BuildRequestHash(string.Concat(input.Address, input.AelfToken, input.AelfChain,
             input.ThirdTokens.TokenName, input.ThirdTokens.Symbol, input.ThirdTokens.TokenImage,
             input.ThirdTokens.TotalSupply.ToString(), input.ThirdTokens.Owner, input.ThirdTokens.ThirdChain,
-            input.ThirdTokens.ContractAddress));
+            input.ThirdTokens.ContractAddress, input.ThirdTokens.AccountId));
         if (requestHash != input.Signature)
         {
             throw new UserFriendlyException("invalid request");
@@ -101,6 +101,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             input.ThirdTokens.Symbol);
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(thirdTokenId.ToString());
         var thirdTokenGrainDto = _objectMapper.Map<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>(input);
+        thirdTokenGrainDto.TokenContractAddress = input.ThirdTokens.AccountId;
         var thirdTokenRecord = await thirdTokenGrain.CreateThirdTokenAsync(thirdTokenGrainDto);
 
         await _distributedEventBus.PublishAsync(
@@ -119,10 +120,9 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
     public async Task<string> ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
         var associatedTokenAccount = input.AssociatedTokenAccount;
-        var deployedTokenContractAddress = input.TokenContractAddress;
         var mintToAddress = input.MintToAddress;
-        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId,
-            deployedTokenContractAddress, associatedTokenAccount, mintToAddress));
+        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId, 
+            associatedTokenAccount, mintToAddress));
         if (requestHash != input.Signature)
         {
             throw new UserFriendlyException("invalid request.");
@@ -139,7 +139,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         await AutoVerifyTokenAsync(thirdToken.Data);
 
         var thirdTokenExist = await _thirdTokenProvider.CheckThirdTokenExistAsync(thirdToken.Data.Chain,
-            thirdToken.Data.TokenName, thirdToken.Data.Symbol, deployedTokenContractAddress, associatedTokenAccount);
+            thirdToken.Data.TokenName, thirdToken.Data.Symbol, thirdToken.Data.TokenContractAddress, associatedTokenAccount);
         if (!thirdTokenExist)
         {
             _logger.LogWarning("not found in contract. chain: {chain}, token: {token},symbol: {symbol}",
@@ -150,7 +150,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var tokenRelationGrain = _clusterClient.GetGrain<ITokenRelationGrain>(input.BindingId);
         var tokenRelationRecord = await tokenRelationGrain.BoundAsync();
         var thirdTokenRecord =
-            await thirdTokenGrain.FinishedAsync(deployedTokenContractAddress, associatedTokenAccount);
+            await thirdTokenGrain.FinishedAsync("", associatedTokenAccount);
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(

@@ -20,4 +20,5 @@ public class ThirdTokenDto
     [Required] public string Owner { get; set; }
     [Required] public string ThirdChain { get; set; }
     [Required] public string ContractAddress { get; set; }
+    public string AccountId { get; set; } = "";
 }
