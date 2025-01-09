@@ -120,9 +120,10 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
     public async Task<string> ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
         var associatedTokenAccount = input.AssociatedTokenAccount;
+        var deployedTokenContractAddress = input.TokenContractAddress;
         var mintToAddress = input.MintToAddress;
-        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId, 
-            associatedTokenAccount, mintToAddress));
+        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId,
+            deployedTokenContractAddress, associatedTokenAccount, mintToAddress));
         if (requestHash != input.Signature)
         {
             throw new UserFriendlyException("invalid request.");
@@ -150,7 +151,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var tokenRelationGrain = _clusterClient.GetGrain<ITokenRelationGrain>(input.BindingId);
         var tokenRelationRecord = await tokenRelationGrain.BoundAsync();
         var thirdTokenRecord =
-            await thirdTokenGrain.FinishedAsync("", associatedTokenAccount);
+            await thirdTokenGrain.FinishedAsync(deployedTokenContractAddress, associatedTokenAccount);
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
