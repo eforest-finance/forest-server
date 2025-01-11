@@ -13,13 +13,13 @@ public class EvmTokenStrategy : IThirdTokenStrategy
     {
         var web3 = new Web3(info.Url);
         var contract = web3.Eth.GetContract(abi, info.ContractAddress);
-        var doesTokenExistFunction = contract.GetFunction("getTokenInfo");
+        var doesTokenExistFunction = contract.GetFunction("getTokenAddress");
 
-        var result = await doesTokenExistFunction.CallAsync<EvmDto>(tokenName, tokenSymbol);
+        var result = await doesTokenExistFunction.CallAsync<string>(tokenName, tokenSymbol);
         return new ThirdTokenExistDto()
         {
-            Exist = result.TokenAddress != null,
-            TokenContractAddress = result.TokenAddress
+            Exist = result != null,
+            TokenContractAddress = result
         };
     }
 
