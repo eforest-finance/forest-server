@@ -135,9 +135,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             _logger.LogWarning("not found third token");
             throw new UserFriendlyException("invalid token");
         }
-
-        await AutoVerifyTokenAsync(thirdToken.Data);
-
+        
         var thirdTokenExistDto = await _thirdTokenProvider.CheckThirdTokenExistAsync(thirdToken.Data.Chain,
             thirdToken.Data.TokenName, thirdToken.Data.Symbol, thirdToken.Data.TokenContractAddress, associatedTokenAccount);
         if (!thirdTokenExistDto.Exist)
@@ -151,6 +149,9 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var tokenRelationRecord = await tokenRelationGrain.BoundAsync();
         var thirdTokenRecord =
             await thirdTokenGrain.FinishedAsync(thirdTokenExistDto.TokenContractAddress, associatedTokenAccount);
+        
+        await AutoVerifyTokenAsync(thirdTokenRecord.Data);
+        
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
