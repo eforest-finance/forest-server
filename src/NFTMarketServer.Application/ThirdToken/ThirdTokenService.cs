@@ -156,7 +156,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenEto>(thirdTokenRecord.Data));
-        return "";
+        return thirdTokenExistDto.TokenContractAddress;
     }
 
     private async Task AutoVerifyTokenAsync(ThirdTokenGrainDto dto)

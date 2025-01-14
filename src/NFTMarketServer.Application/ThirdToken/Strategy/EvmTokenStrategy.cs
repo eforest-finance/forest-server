@@ -15,11 +15,11 @@ public class EvmTokenStrategy : IThirdTokenStrategy
         var contract = web3.Eth.GetContract(abi, info.ContractAddress);
         var doesTokenExistFunction = contract.GetFunction("getTokenAddress");
 
-        var result = await doesTokenExistFunction.CallAsync<string>(tokenName, tokenSymbol);
+        var tokenAddress = await doesTokenExistFunction.CallAsync<string>(tokenName, tokenSymbol);
         return new ThirdTokenExistDto()
         {
-            Exist = result != null,
-            TokenContractAddress = result
+            Exist = tokenAddress != "0x0000000000000000000000000000000000000000",
+            TokenContractAddress = tokenAddress
         };
     }
 
