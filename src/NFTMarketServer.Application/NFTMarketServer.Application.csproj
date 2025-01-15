@@ -51,7 +51,7 @@
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
         <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="13.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
-        <PackageReference Include="Nethereum.Web3" Version="4.26.0" />
+        <PackageReference Include="Nethereum.Web3" Version="4.7.0" />
 
 
     </ItemGroup>

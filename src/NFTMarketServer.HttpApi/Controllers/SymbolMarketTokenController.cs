@@ -50,7 +50,7 @@ public class SymbolMarketTokenController : AbpController
 
     [HttpGet]
     [Route("my-third-token")]
-    public async Task<List<MyThirdTokenDto>> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
+    public async Task<MyThirdTokenResult> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
     {
         return await _thirdTokenService.GetMyThirdTokenListAsync(input);
     }

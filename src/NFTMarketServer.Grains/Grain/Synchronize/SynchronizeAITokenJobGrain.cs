@@ -138,17 +138,21 @@ public class SynchronizeAITokenJobGrain : Grain<SynchronizeAITokenState>, ISynch
         var txRes = await SendTransactionAsync(State.FromChainId, State.ValidateTokenTx);
         State.Symbol = symbol;
         State.ValidateTokenTxId = txRes.TransactionId;
-
         return true;
     }
     private async Task HandleTokenCreatingAsync()
     {
         var symbol = State.Symbol;
-        if (!await ValidateTokenAsync(symbol)) return;
+        if (!await ValidateTokenAsync(symbol))
+        {
+            State.Status = SynchronizeTransactionJobStatus.Failed;
+            await WriteStateAsync();
+            return;
+        }
+
         State.Status = SynchronizeTransactionJobStatus.TokenValidating;
         _logger.LogInformation("Symbol is {symbol} update status to {status} in HandleTokenCreatingAsync.",
             State.Symbol, State.Status);
-        await WriteStateAsync();
     }
 
     private async Task HandleTokenValidatingAsync()

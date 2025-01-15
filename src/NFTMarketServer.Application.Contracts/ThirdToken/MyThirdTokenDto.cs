@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace NFTMarketServer.ThirdToken;
 
 public class MyThirdTokenDto
@@ -11,4 +13,10 @@ public class MyThirdTokenDto
     public string ThirdContractAddress { get; set; }
     public long ThirdTotalSupply { get; set; }
     public string Address { get; set; }
+}
+
+public class MyThirdTokenResult
+{
+    public List<MyThirdTokenDto> Items { get; set; }
+    public long TotalCount { get; set; }
 }
