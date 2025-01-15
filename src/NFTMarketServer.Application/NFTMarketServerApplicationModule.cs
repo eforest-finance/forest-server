@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using AElf.ExceptionHandler.ABP;
-using AElf.Whitelist;
 using Elasticsearch.Net;
 using Medallion.Threading;
 using Medallion.Threading.Redis;
@@ -21,6 +20,7 @@ using NFTMarketServer.OwnerShip.Verify;
 using NFTMarketServer.Provider;
 using NFTMarketServer.Redis;
 using NFTMarketServer.Seed;
+using NFTMarketServer.ThirdToken.Strategy;
 using NFTMarketServer.TreeGame.Provider;
 using StackExchange.Redis;
 using Volo.Abp.Account;
@@ -120,7 +120,12 @@ namespace NFTMarketServer
             context.Services.AddTransient<IScheduleSyncDataService, NFTActivityTransferSyncScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, UserBalanceSyncScheduleService>();
             context.Services.AddTransient<IScheduleSyncDataService, TreePointsRecordsSyncScheduleService>();
+            context.Services.AddSingleton<IThirdTokenStrategy, EvmTokenStrategy>();
+            context.Services.AddSingleton<IThirdTokenStrategy, SolanaTokenStrategy>();
+            context.Services.AddSingleton<IThirdTokenStrategy, TonTokenStrategy>();
 
+            context.Services.AddSingleton<ThirdTokenStrategyFactory>();
+            
             Configure<GraphQLOptions>(configuration.GetSection("GraphQL"));
             Configure<AwsS3Option>(configuration.GetSection("AwsS3"));
             Configure<PortkeyOption>(configuration.GetSection("Portkey"));

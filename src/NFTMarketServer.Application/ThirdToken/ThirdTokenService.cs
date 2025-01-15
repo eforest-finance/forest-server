@@ -22,6 +22,7 @@ namespace NFTMarketServer.ThirdToken;
 public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 {
     private readonly IThirdTokenProvider _thirdTokenProvider;
+    private readonly ITokenVerifyProvider _tokenVerifyProvider;
     private readonly IClusterClient _clusterClient;
     private readonly IObjectMapper _objectMapper;
     private readonly IDistributedEventBus _distributedEventBus;
@@ -30,7 +31,8 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
     public ThirdTokenService(IThirdTokenProvider thirdTokenProvider, IObjectMapper objectMapper,
         IClusterClient clusterClient, IDistributedEventBus distributedEventBus,
-        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor, ILogger<ThirdTokenService> logger)
+        IOptionsMonitor<TreeGameOptions> platformOptionsMonitor, ILogger<ThirdTokenService> logger,
+        ITokenVerifyProvider tokenVerifyProvider)
     {
         _thirdTokenProvider = thirdTokenProvider;
         _objectMapper = objectMapper;
@@ -38,9 +40,10 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         _distributedEventBus = distributedEventBus;
         _platformOptionsMonitor = platformOptionsMonitor;
         _logger = logger;
+        _tokenVerifyProvider = tokenVerifyProvider;
     }
 
-    public async Task<List<MyThirdTokenDto>> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
+    public async Task<MyThirdTokenResult> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
     {
         var tokenRelationList = await _thirdTokenProvider.GetTokenRelationListAsync(input.Address, input.AelfToken);
         var thirdChainDic = tokenRelationList
@@ -66,11 +69,15 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
             dto.ThirdSymbol = thirdToken.Symbol;
             dto.ThirdTokenImage = thirdToken.TokenImage;
-            dto.ThirdContractAddress = thirdToken.ContractAddress;
+            dto.ThirdContractAddress = thirdToken.TokenContractAddress;
             dto.ThirdTotalSupply = thirdToken.TotalSupply;
         });
 
-        return result;
+        return new MyThirdTokenResult()
+        {
+            TotalCount = result.Count,
+            Items = result
+        };
     }
 
     public async Task<ThirdTokenPrepareBindingDto> ThirdTokenPrepareBindingAsync(ThirdTokenPrepareBindingInput input)
@@ -78,7 +85,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
         var requestHash = BuildRequestHash(string.Concat(input.Address, input.AelfToken, input.AelfChain,
             input.ThirdTokens.TokenName, input.ThirdTokens.Symbol, input.ThirdTokens.TokenImage,
             input.ThirdTokens.TotalSupply.ToString(), input.ThirdTokens.Owner, input.ThirdTokens.ThirdChain,
-            input.ThirdTokens.ContractAddress));
+            input.ThirdTokens.ContractAddress, input.ThirdTokens.AccountId));
         if (requestHash != input.Signature)
         {
             throw new UserFriendlyException("invalid request");
@@ -94,6 +101,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             input.ThirdTokens.Symbol);
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(thirdTokenId.ToString());
         var thirdTokenGrainDto = _objectMapper.Map<ThirdTokenPrepareBindingInput, ThirdTokenGrainDto>(input);
+        thirdTokenGrainDto.TokenContractAddress = input.ThirdTokens.AccountId;
         var thirdTokenRecord = await thirdTokenGrain.CreateThirdTokenAsync(thirdTokenGrainDto);
 
         await _distributedEventBus.PublishAsync(
@@ -111,10 +119,13 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
     public async Task<string> ThirdTokenBindingAsync(ThirdTokenBindingInput input)
     {
-        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId));
+        var associatedTokenAccount = input.AssociatedTokenAccount;
+        var mintToAddress = input.MintToAddress;
+        var requestHash = BuildRequestHash(string.Concat(input.BindingId, input.ThirdTokenId, 
+            associatedTokenAccount, mintToAddress));
         if (requestHash != input.Signature)
         {
-            throw new UserFriendlyException("invalid request");
+            throw new UserFriendlyException("invalid request.");
         }
 
         var thirdTokenGrain = _clusterClient.GetGrain<IThirdTokenGrain>(input.ThirdTokenId);
@@ -124,10 +135,10 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
             _logger.LogWarning("not found third token");
             throw new UserFriendlyException("invalid token");
         }
-
-        var thirdTokenExist = await _thirdTokenProvider
-            .CheckThirdTokenExistAsync(thirdToken.Data.Chain, thirdToken.Data.TokenName, thirdToken.Data.Symbol);
-        if (!thirdTokenExist)
+        
+        var thirdTokenExistDto = await _thirdTokenProvider.CheckThirdTokenExistAsync(thirdToken.Data.Chain,
+            thirdToken.Data.TokenName, thirdToken.Data.Symbol, thirdToken.Data.TokenContractAddress, associatedTokenAccount);
+        if (!thirdTokenExistDto.Exist)
         {
             _logger.LogWarning("not found in contract. chain: {chain}, token: {token},symbol: {symbol}",
                 thirdToken.Data.Chain, thirdToken.Data.TokenName, thirdToken.Data.Symbol);
@@ -136,12 +147,21 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
         var tokenRelationGrain = _clusterClient.GetGrain<ITokenRelationGrain>(input.BindingId);
         var tokenRelationRecord = await tokenRelationGrain.BoundAsync();
-        var thirdTokenRecord = await thirdTokenGrain.FinishedAsync();
+        var thirdTokenRecord =
+            await thirdTokenGrain.FinishedAsync(thirdTokenExistDto.TokenContractAddress, associatedTokenAccount);
+        
+        await AutoVerifyTokenAsync(thirdTokenRecord.Data);
+        
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<TokenRelationGrainDto, TokenRelationEto>(tokenRelationRecord.Data));
         await _distributedEventBus.PublishAsync(
             _objectMapper.Map<ThirdTokenGrainDto, ThirdTokenEto>(thirdTokenRecord.Data));
-        return "";
+        return thirdTokenExistDto.TokenContractAddress;
+    }
+
+    private async Task AutoVerifyTokenAsync(ThirdTokenGrainDto dto)
+    {
+        await _tokenVerifyProvider.AutoVerifyTokenAsync(dto);
     }
 
     private string BuildRequestHash(string request)

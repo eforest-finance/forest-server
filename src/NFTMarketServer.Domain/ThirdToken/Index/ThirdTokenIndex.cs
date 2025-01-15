@@ -18,10 +18,19 @@ public class ThirdTokenIndex : NFTMarketEntity<string>, IIndexBuild
     [Keyword] public string ContractAddress { get; set; }
     public ThirdTokenStatus ThirdTokenStatus { get; set; }
     [Keyword] public string Address { get; set; }
+    [Keyword] public string TokenContractAddress { get; set; }
+    [Keyword] public string AssociatedTokenAccount { get; set; }
 }
 
 public enum ThirdTokenStatus
 {
     Creating = 0,
     Created = 1,
+}
+
+public enum ThirdTokenType
+{
+    Evm = 0,
+    Solana = 1,
+    Ton = 2,
 }

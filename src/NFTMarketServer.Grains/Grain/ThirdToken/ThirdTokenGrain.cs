@@ -42,9 +42,11 @@ public class ThirdTokenGrain : Grain<ThirdTokenState>, IThirdTokenGrain
         };
     }
 
-    public async Task<GrainResultDto<ThirdTokenGrainDto>> FinishedAsync()
+    public async Task<GrainResultDto<ThirdTokenGrainDto>> FinishedAsync(string deployedTokenContractAddress, string associatedTokenAccount)
     {
         State.ThirdTokenStatus = ThirdTokenStatus.Created;
+        State.TokenContractAddress = deployedTokenContractAddress;
+        State.AssociatedTokenAccount = associatedTokenAccount;
         await WriteStateAsync();
         return new GrainResultDto<ThirdTokenGrainDto>
         {
