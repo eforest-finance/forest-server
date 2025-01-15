@@ -203,10 +203,10 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
 
         var synchronizeAiTokenJobGrain = _clusterClient.GetGrain<ISynchronizeAITokenJobGrain>(input.Symbol);
         var syncRecord = await synchronizeAiTokenJobGrain.GetSynchronizeAITokenJobAsync();
-        if (syncRecord != null && !syncRecord.Data.Id.IsNullOrEmpty())
+        /*if (syncRecord != null && !syncRecord.Data.Id.IsNullOrEmpty())
         {
             throw new UserFriendlyException("you have sync this symbol");
-        }
+        }*/
         
         syncRecord = await synchronizeAiTokenJobGrain.CreateSynchronizeAITokenJobAsync(
             new SaveSynchronizeAITokenJobGrainDto()
