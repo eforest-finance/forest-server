@@ -4,6 +4,6 @@ namespace NFTMarketServer.ThirdToken;
 
 public class GetMyThirdTokenInput
 {
-    [Required] public string Address { get; set; }
+    public string Address { get; set; }
     [Required] public string AelfToken { get; set; }
 }

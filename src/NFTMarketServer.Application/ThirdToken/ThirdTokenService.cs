@@ -45,7 +45,7 @@ public class ThirdTokenService : IThirdTokenService, ISingletonDependency
 
     public async Task<MyThirdTokenResult> GetMyThirdTokenListAsync(GetMyThirdTokenInput input)
     {
-        var tokenRelationList = await _thirdTokenProvider.GetTokenRelationListAsync(input.Address, input.AelfToken);
+        var tokenRelationList = await _thirdTokenProvider.GetTokenRelationListAsync(input.AelfToken);
         var thirdChainDic = tokenRelationList
             .GroupBy(x => x.ThirdChain)
             .ToDictionary(g => g.Key, g => g.ToList());

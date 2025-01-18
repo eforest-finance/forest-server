@@ -17,7 +17,7 @@ namespace NFTMarketServer.ThirdToken.Provider;
 public interface IThirdTokenProvider
 {
     Task<List<ThirdTokenIndex>> GetThirdTokenListAsync(List<string> thirdToken, List<string> thirdChain);
-    Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string address, string aelfToken);
+    Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string aelfToken);
     Task<ThirdTokenInfo> GetThirdTokenInfoAsync(string chainName);
 
     Task<ThirdTokenExistDto> CheckThirdTokenExistAsync(string chainName, string tokenName, string tokenSymbol, string deployedAddress,
@@ -47,9 +47,9 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
         return await GetAllThirdTokenListAsync(thirdToken, thirdChain);
     }
 
-    public async Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string address, string aelfToken)
+    public async Task<List<TokenRelationIndex>> GetTokenRelationListAsync(string aelfToken)
     {
-        return await GetAllTokenRelationListAsync(address, aelfToken);
+        return await GetAllTokenRelationListAsync(aelfToken);
     }
 
     public async Task<ThirdTokenInfo> GetThirdTokenInfoAsync(string chainName)
@@ -75,7 +75,7 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
             associatedTokenAccount, thirdTokenInfo, abi);
     }
 
-    private async Task<List<TokenRelationIndex>> GetAllTokenRelationListAsync(string address, string aelfToken)
+    private async Task<List<TokenRelationIndex>> GetAllTokenRelationListAsync(string aelfToken)
     {
         var res = new List<TokenRelationIndex>();
         var skipCount = 0;
@@ -85,7 +85,6 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
         {
             var mustQuery = new List<Func<QueryContainerDescriptor<TokenRelationIndex>, QueryContainer>>();
 
-            mustQuery.Add(q => q.Term(i => i.Field(f => f.Address).Value(address)));
             mustQuery.Add(q => q.Term(i => i.Field(f => f.AelfToken).Value(aelfToken)));
             mustQuery.Add(q => q.Term(i => i.Field(f => f.RelationStatus).Value(RelationStatus.Bound)));
 
