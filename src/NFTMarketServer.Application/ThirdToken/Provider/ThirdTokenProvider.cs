@@ -85,7 +85,10 @@ public class ThirdTokenProvider : IThirdTokenProvider, ISingletonDependency
         {
             var mustQuery = new List<Func<QueryContainerDescriptor<TokenRelationIndex>, QueryContainer>>();
 
-            mustQuery.Add(q => q.Term(i => i.Field(f => f.Address).Value(address)));
+            if (!string.IsNullOrEmpty(address))
+            {
+                mustQuery.Add(q => q.Term(i => i.Field(f => f.Address).Value(address)));
+            }
             mustQuery.Add(q => q.Term(i => i.Field(f => f.AelfToken).Value(aelfToken)));
             mustQuery.Add(q => q.Term(i => i.Field(f => f.RelationStatus).Value(RelationStatus.Bound)));
 

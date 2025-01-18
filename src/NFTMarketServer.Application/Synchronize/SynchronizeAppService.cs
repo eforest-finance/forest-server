@@ -205,7 +205,10 @@ public class SynchronizeAppService : NFTMarketServerAppService, ISynchronizeAppS
         var syncRecord = await synchronizeAiTokenJobGrain.GetSynchronizeAITokenJobAsync();
         if (syncRecord != null && !syncRecord.Data.Id.IsNullOrEmpty())
         {
-            throw new UserFriendlyException("you have sync this symbol");
+            if (syncRecord.Data.Status != SynchronizeTransactionJobStatus.Failed)
+            {
+                throw new UserFriendlyException("you have sync this symbol or this symbol is running cross chain");
+            }
         }
         
         syncRecord = await synchronizeAiTokenJobGrain.CreateSynchronizeAITokenJobAsync(
