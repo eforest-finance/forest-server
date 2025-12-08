@@ -1,0 +1,189 @@
+// the version of the language, use proto3 for contracts
+syntax = "proto3";
+
+// some core imports for aelf chain types
+import "aelf/core.proto";
+import "aelf/options.proto";
+import "acs12.proto";
+
+// import for using the google.protobuf.* type.
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+// the name of the C# namespace in which the contract code will be,
+// generated code will also be in this namespace.
+option csharp_namespace = "Forest.Contracts.Auction";
+
+// the contract definition: a gRPC service definition.
+service AuctionContract {
+
+    // the full name of the C# class that will contain the state (here <namespace>.<state-class-name> format).
+    option (aelf.base) = "acs12.proto";
+    option (aelf.csharp_state) = "Forest.Contracts.Auction.AuctionContractState";
+
+    // Action
+    rpc Initialize(InitializeInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc SetAdmin(aelf.Address) returns (google.protobuf.Empty) {
+    }
+
+    rpc CreateAuction(CreateAuctionInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc PlaceBid(PlaceBidInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc Claim(ClaimInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc AddAuctionController(AddAuctionControllerInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc RemoveAuctionController(RemoveAuctionControllerInput) returns (google.protobuf.Empty) {
+    }
+
+    // View
+    rpc GetAuctionInfo(GetAuctionInfoInput) returns (AuctionInfo) {
+        option (aelf.is_view) = true;
+    }
+
+    rpc GetAdmin(google.protobuf.Empty) returns (aelf.Address) {
+        option (aelf.is_view) = true;
+    }
+
+    rpc GetCurrentCounter(google.protobuf.StringValue) returns (google.protobuf.Int64Value) {
+        option (aelf.is_view) = true;
+    }
+
+    rpc GetAuctionController(google.protobuf.Empty) returns (ControllerList) {
+        option (aelf.is_view) = true;
+    }
+}
+
+//Data structure
+message InitializeInput {
+    aelf.Address admin = 1;
+    repeated aelf.Address auction_controller = 2;
+}
+
+enum AuctionType {
+    UNKNOWN = 0;
+    ENGLISH = 1;
+}
+
+message AuctionConfig {
+    int64 duration = 1;
+    int32 min_markup = 2;
+    int64 countdown_time = 3;
+    int64 max_extension_time = 4;
+    bool start_immediately = 5;
+}
+
+message Price {
+    string symbol = 1;
+    int64 amount = 2;
+}
+
+message CreateAuctionInput {
+    AuctionType auction_type = 1;
+    string symbol = 2;
+    AuctionConfig auction_config = 3;
+    Price start_price = 4;
+    aelf.Address receiving_address = 5;
+}
+
+message PlaceBidInput {
+    aelf.Hash auction_id = 1;
+    Price price = 2;
+}
+
+message ClaimInput {
+    aelf.Hash auction_id = 1;
+}
+
+message GetAuctionInfoInput{
+    aelf.Hash auction_id = 1;
+}
+
+message AuctionInfo{
+    aelf.Hash auction_id = 1;
+    aelf.Address creator = 2;
+    string symbol = 3;
+    Price start_price = 4;
+    google.protobuf.Timestamp start_time = 5;
+    google.protobuf.Timestamp end_time = 6;
+    google.protobuf.Timestamp max_end_time = 7;
+    google.protobuf.Timestamp finish_time = 8;
+    AuctionType auction_type = 9;
+    BidInfo last_bid_info = 10;
+    AuctionConfig auction_config = 11;
+    aelf.Address receiving_address = 12;
+}
+
+message BidInfo{
+    aelf.Address bidder = 1;
+    Price price = 2;
+    google.protobuf.Timestamp bid_time = 3;
+}
+
+message ControllerList {
+    repeated aelf.Address controllers = 1;
+}
+
+message AddAuctionControllerInput{
+    ControllerList addresses = 1;
+}
+
+message RemoveAuctionControllerInput{
+    ControllerList addresses = 1;
+}
+
+// Log Event
+message AuctionCreated {
+    option (aelf.is_event) = true;
+    aelf.Address creator = 1;
+    aelf.Hash auction_id = 2;
+    Price start_price = 3;
+    google.protobuf.Timestamp start_time = 4;
+    google.protobuf.Timestamp end_time = 5;
+    google.protobuf.Timestamp max_end_time = 6;
+    AuctionType auction_type = 7;
+    string symbol = 8;
+    AuctionConfig auction_config = 9;
+    aelf.Address receiving_address = 10;
+}
+
+message BidPlaced {
+    option (aelf.is_event) = true;
+    aelf.Hash auction_id = 1;
+    aelf.Address bidder = 2;
+    Price price = 3;
+    google.protobuf.Timestamp bid_time = 4;
+}
+
+message AuctionTimeUpdated{
+    option (aelf.is_event) = true;
+    aelf.Hash auction_id = 1;
+    google.protobuf.Timestamp start_time = 2;
+    google.protobuf.Timestamp end_time = 3;
+    google.protobuf.Timestamp max_end_time = 4;
+}
+
+message Claimed {
+    option (aelf.is_event) = true;
+    aelf.Hash auction_id = 1;
+    google.protobuf.Timestamp finish_time = 2;
+    aelf.Address bidder = 3;
+}
+
+message AuctionControllerAdded {
+    option (aelf.is_event) = true;
+    ControllerList addresses = 1;
+}
+
+message AuctionControllerRemoved {
+    option (aelf.is_event) = true;
+    ControllerList addresses = 1;
+}

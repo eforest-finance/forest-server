@@ -1,0 +1,302 @@
+// the version of the language, use proto3 for contracts
+syntax = "proto3";
+
+// some core imports for aelf chain types
+import "aelf/core.proto";
+import "aelf/options.proto";
+import "acs12.proto";
+
+// import for using the google.protobuf.* type.
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+// the name of the C# namespace in which the contract code will be,
+// generated code will also be in this namespace.
+option csharp_namespace = "Forest.SymbolRegistrar";
+
+// the contract definition: a gRPC service definition.
+service SymbolRegistrarContract {
+
+    // the full name of the C# class that will contain the state (here <namespace>.<state-class-name> format).
+    option (aelf.base) = "acs12.proto";
+    option (aelf.csharp_state) = "Forest.SymbolRegistrar.SymbolRegistrarContractState";
+
+
+    // Action
+    rpc Initialize (InitializeInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc CreateSeed (CreateSeedInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc Buy(BuyInput) returns (google.protobuf.Empty){
+    }
+
+    // for Parliament contract
+    // when proposal has been approved special-seeds will be add
+    rpc AddSpecialSeeds(SpecialSeedList) returns (google.protobuf.Empty) {
+    }
+
+    // for Parliament contract
+    // when proposal has been approved special-seeds will be remove
+    rpc RemoveSpecialSeeds(SpecialSeedList) returns (google.protobuf.Empty) {
+    }
+    
+    // Admin
+    rpc SetAdmin(aelf.Address) returns (google.protobuf.Empty){
+    }
+
+    rpc SetLastSeedId(google.protobuf.Int64Value) returns (google.protobuf.Empty) {
+    }
+
+    rpc SetReceivingAccount (aelf.Address) returns (google.protobuf.Empty) {
+    }
+
+    rpc SetSeedsPrice(SeedsPriceInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc SetAuctionConfig(AuctionConfig) returns (google.protobuf.Empty) {
+    }
+
+    rpc AddSaleController(AddSaleControllerInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc RemoveSaleController(RemoveSaleControllerInput) returns (google.protobuf.Empty) {
+    }
+
+    rpc SetSeedExpirationConfig(SeedExpirationConfig) returns (google.protobuf.Empty) {
+    }
+
+    // View
+
+    // get seed price with length
+    rpc GetSeedsPrice(google.protobuf.Empty) returns (GetSeedsPriceOutput) {
+        option (aelf.is_view) = true;
+    }
+
+    rpc GetSpecialSeed(google.protobuf.StringValue) returns (SpecialSeed) {
+        option (aelf.is_view) = true;
+    }
+
+    rpc GetBizConfig(google.protobuf.Empty) returns (BizConfig) {
+        option (aelf.is_view) = true;
+    }
+
+    rpc GetSeedExpirationConfig(google.protobuf.Empty) returns (SeedExpirationConfig) {
+        option (aelf.is_view) = true;
+    }
+
+    rpc GetAuctionConfig(google.protobuf.Empty) returns (AuctionConfig) {
+        option (aelf.is_view) = true;
+    }
+    
+    rpc GetSaleController(google.protobuf.Empty) returns (ControllerList) {
+        option (aelf.is_view) = true;
+    }
+
+}
+
+
+//Data structure
+message InitializeInput {
+    aelf.Address administrator_address = 1;
+    aelf.Address receiving_account = 2;
+    SpecialSeedList special_seeds = 3;
+    SeedsPriceInput seeds_prices = 4;
+    aelf.Address proxy_account_address = 5;
+    AuctionConfig auctionConfig = 6;
+}
+
+
+message AuctionConfig {
+    int64 duration = 1; // 竞拍持续时间
+    int32 min_markup = 2; // 最小加价，可选，如果不填比上次高即可
+    int64 countdown_time = 3; // 阈值内，每次延长时间
+    int64 max_extension_time = 4; // 最大延长时间
+    bool start_immediately = 5;
+}
+
+message BizConfig {
+    aelf.Address administrator_address = 1;
+    aelf.Address receiving_account = 2;
+    bool admin_can_cetSpecialSeeds = 3;
+    AuctionConfig auction_config = 4;
+}
+
+message CreateSeedInput {
+    string symbol = 1;
+    aelf.Address to = 2;
+}
+
+message SeedInfo {
+    // The symbol of the token.
+    string symbol = 1;
+    string owned_symbol = 2;
+    int64 expire_time = 3;
+    SeedType seed_type = 4;
+    // The address of the buyer
+    aelf.Address to = 5;
+}
+
+message SeedsPriceInput {
+    // empty list will be ignore
+    PriceList ft_price_list = 1;
+    // empty list will be ignore
+    PriceList nft_price_list = 2;
+}
+
+message GetSeedsPriceOutput {
+    PriceList ft_price_list = 1;
+    PriceList nft_price_list = 2;
+}
+
+message PriceList {
+    repeated PriceItem value = 1;
+}
+
+message PriceItem {
+    // Price length
+    int32 symbol_length = 1;
+    // The token symbol should pay.
+    string symbol = 2;
+    // The token amount should pay.
+    int64 amount = 3;
+}
+
+enum AuctionType{
+    NONE = 0;
+    ENGLISH = 1;
+    DUTCH = 2;
+}
+
+enum SeedType {
+    UNKNOWN = 0;
+    DISABLE = 1;
+    // verify owner ship to buy
+    NOTABLE = 2;
+    // buy via bid
+    UNIQUE = 3;
+    // regular 
+    REGULAR = 4;
+}
+
+message SpecialSeed {
+    // special seed
+    SeedType seed_type = 1;
+    // seed target symbol
+    string symbol = 2;
+    // buy price symbol
+    string price_symbol = 3;
+    // buy price amount
+    int64 price_amount = 4;
+    // bid auctionType
+    AuctionType auction_type = 5;
+    // issue chain
+    string issue_chain = 6;
+    // contract of issue chain
+    string issue_chain_contract_address = 7;
+    // external info of seed
+    map<string, string> external_info = 8;
+}
+
+
+message BuyInput{
+    // the symbol to buy
+    string symbol = 1;
+    // which address to issue
+    aelf.Address issue_to = 2;
+}
+
+message ControllerList{
+    repeated aelf.Address controllers = 1;
+}
+
+message AddSaleControllerInput{
+    ControllerList addresses = 1;
+}
+
+message RemoveSaleControllerInput{
+    ControllerList addresses = 1;
+}
+
+
+message SpecialSeedList {
+    // seeds to add
+    repeated SpecialSeed value = 1;
+}
+
+message SeedExpirationConfig{
+    int64 expiration_time = 1;
+}
+
+message Price {
+    string symbol = 1;
+    int64 amount = 2;
+}
+
+// Log Event
+message SeedCreated {
+    option (aelf.is_event) = true;
+    // The symbol of the token.
+    string symbol = 1;
+    string owned_symbol = 2;
+    int64 expire_time = 3;
+    SeedType seed_type = 4;
+    // The address buyer
+    aelf.Address to = 5;
+}
+
+message SeedsPriceChanged {
+    option (aelf.is_event) = true;
+    PriceList ft_price_list = 1;
+    PriceList nft_price_list = 2;
+}
+
+message SpecialSeedAdded {
+    option (aelf.is_event) = true;
+    SpecialSeedList add_list = 1;
+}
+
+message SpecialSeedRemoved {
+    option (aelf.is_event) = true;
+    SpecialSeedList remove_list = 1;
+}
+
+message Bought {
+    option (aelf.is_event) = true;
+    aelf.Address buyer = 1;
+    string symbol = 2;
+    Price price = 4;
+}
+
+message SaleControllerAdded {
+    option (aelf.is_event) = true;
+    ControllerList addresses = 1;
+}
+
+message SaleControllerRemoved {
+    option (aelf.is_event) = true;
+    ControllerList addresses = 1;
+}
+
+message SymbolAuthorInput{
+    string symbol = 1;
+    string address = 2;
+}
+
+message SymbolAuthorMapped{
+    option (aelf.is_event) = true;
+    string symbol = 1;
+    string address = 2;
+}
+message AuctionEndTimeExtended{
+    option (aelf.is_event) = true;
+    string symbol = 1;
+    google.protobuf.Timestamp new_end_time = 2;
+}
+
+message SeedExpirationConfigChanged{
+    option (aelf.is_event) = true;
+    SeedExpirationConfig seed_expiration_config = 1;
+}

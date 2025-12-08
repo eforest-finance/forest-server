@@ -1,0 +1,575 @@
+/**
+ * Forest Contract.
+ */
+syntax = "proto3";
+
+package Forest;
+
+import "aelf/core.proto";
+import "aelf/options.proto";
+import "acs12.proto";
+import "authority_info.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Forest";
+
+service ForestContract {
+  option (aelf.csharp_state) = "Forest.ForestContractState";
+  option (aelf.base) = "acs12.proto";
+
+  rpc Initialize (InitializeInput) returns (google.protobuf.Empty) {
+  }
+
+  // For Sellers.
+  rpc ListWithFixedPrice (ListWithFixedPriceInput) returns (google.protobuf.Empty) {
+  }
+  rpc Deal (DealInput) returns (google.protobuf.Empty) {
+  }
+  rpc Delist (DelistInput) returns (google.protobuf.Empty) {
+  }
+  rpc BatchDeList (BatchDeListInput) returns (google.protobuf.Empty){
+  }
+
+  // For Buyers.
+  rpc MakeOffer (MakeOfferInput) returns (google.protobuf.Empty) {
+  }
+  rpc CancelOffer (CancelOfferInput) returns (google.protobuf.Empty) {
+  }
+  rpc CancelOfferListByExpireTime (CancelOfferListByExpireTimeInput) returns (google.protobuf.Empty) {
+  }
+  rpc BatchBuyNow (BatchBuyNowInput) returns (google.protobuf.Empty){
+  }
+
+  // For Creators.
+  rpc SetRoyalty (SetRoyaltyInput) returns (google.protobuf.Empty) {
+  }
+  rpc SetTokenWhiteList (SetTokenWhiteListInput) returns (google.protobuf.Empty) {
+  }
+
+  // For Admin.
+  rpc SetAdministrator(aelf.Address) returns (google.protobuf.Empty) {
+  }
+  rpc SetServiceFee (SetServiceFeeInput) returns (google.protobuf.Empty) {
+  }
+  rpc SetGlobalTokenWhiteList (StringList) returns (google.protobuf.Empty) {
+  }
+  rpc SetWhitelistContract(aelf.Address) returns (google.protobuf.Empty){
+  }
+  rpc SetBizConfig(BizConfig) returns (google.protobuf.Empty){
+  }
+
+  rpc SetOfferTotalAmount(SetOfferTotalAmountInput) returns (google.protobuf.Empty){
+  }
+
+  rpc SetAIServiceFee (SetAIServiceFeeInput) returns (google.protobuf.Empty) {
+  }
+
+  rpc CreateArt (CreateArtInput) returns (google.protobuf.Empty){
+  }
+
+  rpc AddAIImageSize (google.protobuf.StringValue) returns (google.protobuf.Empty){
+  }
+
+  rpc RemoveAIImageSize (google.protobuf.StringValue) returns (google.protobuf.Empty){
+  }
+
+  // Views.
+  rpc GetListedNFTInfoList (GetListedNFTInfoListInput) returns (ListedNFTInfoList) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetWhitelistId (GetWhitelistIdInput) returns (GetWhitelistIdOutput) {
+    option (aelf.is_view) = true;
+  }
+
+  rpc GetOfferAddressList (GetAddressListInput) returns (AddressList) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetOfferList (GetOfferListInput) returns (OfferList) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetTokenWhiteList (google.protobuf.StringValue) returns (StringList) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetGlobalTokenWhiteList (google.protobuf.Empty) returns (StringList) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetRoyalty (GetRoyaltyInput) returns (RoyaltyInfo) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetServiceFeeInfo (google.protobuf.Empty) returns (ServiceFeeInfo) {
+    option (aelf.is_view) = true;
+  }
+  
+  rpc GetAdministrator(google.protobuf.Empty) returns (aelf.Address) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetBizConfig(google.protobuf.Empty) returns (BizConfig){
+    option (aelf.is_view) = true;
+  }
+  rpc GetTotalOfferAmount(GetTotalOfferAmountInput) returns (GetTotalOfferAmountOutput){
+    option (aelf.is_view) = true;
+  }
+  rpc GetTotalEffectiveListedNFTAmount (GetTotalEffectiveListedNFTAmountInput) returns (GetTotalEffectiveListedNFTAmountOutput) {
+    option (aelf.is_view) = true;
+  }
+
+  rpc GetAIServiceFee (google.protobuf.Empty) returns (AIServiceFeeInfo) {
+    option (aelf.is_view) = true;
+  }
+  rpc GetAIImageSizes (google.protobuf.Empty) returns (StringList){
+    option (aelf.is_view) = true;
+  }
+
+  rpc GetCreateArtInfo (google.protobuf.StringValue) returns (CreateArtInfo){
+    option (aelf.is_view) = true;
+  }
+}
+
+// Structs.
+
+message ListedNFTInfo {
+  string symbol = 1;
+  aelf.Address owner = 3;
+  int64 quantity = 4;
+  ListType list_type = 5;
+  Price price = 6;
+  ListDuration duration = 7;
+}
+
+message ListedNFTInfoList {
+  repeated ListedNFTInfo value = 1;
+}
+
+
+message StringList {
+  repeated string value = 1;
+}
+
+message AddressList {
+  repeated aelf.Address value = 1;
+}
+
+message Price {
+  string symbol = 1;
+  int64 amount = 2;
+}
+
+message Offer {
+  aelf.Address from = 1;
+  aelf.Address to = 2;
+  Price price = 3;
+  google.protobuf.Timestamp expire_time = 4;
+  int64 quantity = 5;
+}
+
+message OfferList {
+  repeated Offer value = 1;
+}
+
+enum ListType {
+  NOT_LISTED = 0;
+  FIXED_PRICE = 1;
+}
+
+message ListDuration {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp public_time = 2;
+  int64 duration_hours = 3;
+  int32 duration_minutes =4;
+}
+
+message ListWithFixedPriceDuration {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp public_time = 2;
+  int32 duration_minutes = 3;
+}
+
+message DealInfo {
+  string symbol = 1;
+  int64 quantity = 3;
+  Price price = 4;
+  aelf.Address origin_owner = 5;
+  aelf.Address new_owner = 6;
+  google.protobuf.Timestamp deal_time = 7;
+}
+
+message CertainNFTRoyaltyInfo {
+  bool is_manually_set = 1;
+  int32 royalty = 2;
+}
+
+message ServiceFeeInfo {
+  int32 service_fee_rate = 1;
+  aelf.Address service_fee_receiver = 2;
+}
+
+message PriceTagInfo{
+  string tag_name = 1;
+  Price price = 2;
+}
+
+message WhitelistInfo {
+  PriceTagInfo price_tag = 1;
+  AddressList address_list = 2;
+}
+
+message WhitelistInfoList{
+  repeated WhitelistInfo whitelists = 1;
+}
+
+// Inputs.
+
+message InitializeInput {
+  //aelf.Address nft_contract_address = 1;
+  aelf.Address admin_address = 1;
+  int32 service_fee_rate = 2;
+  aelf.Address service_fee_receiver = 3;
+  int64 service_fee = 4;
+  aelf.Address whitelist_contract_address = 5;
+}
+
+message ListWithFixedPriceInput {
+  string symbol = 1;
+  Price price = 3;
+  int64 quantity = 4;
+  ListWithFixedPriceDuration duration = 5;
+  WhitelistInfoList whitelists = 6;
+  bool is_whitelist_available = 8;
+}
+
+message DelistInput {
+  string symbol = 1;
+  Price price = 2;
+  int64 quantity = 4;
+  google.protobuf.Timestamp start_time = 5;
+}
+
+message BatchDeListInput{
+  string symbol = 1;
+  Price price = 2;
+  int32 batch_delist_type = 3;
+}
+
+message MakeOfferInput {
+  string symbol = 1;
+  aelf.Address offer_to = 3;
+  int64 quantity = 4;
+  Price price = 5;
+  google.protobuf.Timestamp expire_time = 6;
+}
+
+message CancelOfferInput {
+  string symbol = 1;
+  Int32List index_list = 3;
+  aelf.Address offer_from = 4;
+}
+message CancelOfferListByExpireTimeInput {
+  string symbol = 1;
+  repeated CancelOffer cancel_offer_list =2;
+}
+
+message CancelOffer{
+  google.protobuf.Timestamp expire_time = 1;
+  aelf.Address offer_to = 2;
+  Price price = 3;
+}
+
+message BatchBuyNowInput{
+  string symbol = 1;
+  repeated FixPrice fix_price_list = 2;
+}
+
+message BatchBuyNowResult{
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  bool all_success_flag = 2;
+  FailPriceList fail_price_list = 3;
+}
+
+message FailPriceList {
+  repeated FailPrice value= 1;
+}
+
+message FailPrice{
+  int64 quantity = 1;
+  Price price = 2;
+}
+
+message FixPrice{
+  aelf.Address offer_to = 1;
+  int64 quantity = 2;
+  Price price = 3;
+  google.protobuf.Timestamp start_time = 4;
+}
+
+message Int32List {
+  repeated int32 value = 1;
+}
+
+message DealInput {
+  string symbol = 1;
+  aelf.Address offer_from = 3;
+  Price price = 4;
+  int64 quantity = 5;
+}
+
+message SetServiceFeeInput {
+  int32 service_fee_rate = 1;
+  aelf.Address service_fee_receiver = 2;
+}
+
+message SetRoyaltyInput {
+  string symbol = 1;
+  int32 royalty = 3;
+  aelf.Address royalty_fee_receiver = 4;
+}
+
+message SetTokenWhiteListInput {
+  string symbol = 1;
+  StringList token_white_list = 2;
+}
+
+message GetListedNFTInfoListInput {
+  string symbol = 1;
+  aelf.Address owner = 3;
+}
+
+message GetWhitelistIdInput{
+  string symbol = 1;
+  aelf.Address owner = 3;
+}
+
+message GetWhitelistIdOutput{
+  aelf.Hash whitelist_id = 1;
+  aelf.Hash project_id = 2;
+}
+
+message GetAddressListInput {
+  string symbol = 1;
+}
+
+message GetOfferListInput {
+  string symbol = 1;
+  aelf.Address address = 3;
+}
+
+message GetWhiteListAddressPriceListInput {
+  string symbol = 1;
+  aelf.Address owner = 3;
+}
+
+message GetRoyaltyInput {
+  string symbol = 1;
+}
+
+message RoyaltyInfo {
+  int32 royalty = 1;
+  aelf.Address royalty_fee_receiver = 2;
+}
+
+message BizConfig
+{
+  int32 maxListCount = 1;
+  int32 maxOfferCount = 2;
+  int32 maxTokenWhitelistCount = 3;
+  int32 maxOfferDealCount = 4;
+}
+
+message SetAIServiceFeeInput {
+  Price price = 1;
+  aelf.Address service_fee_receiver = 2;
+}
+
+message CreateArtInput {
+  string promt = 1;
+  string negative_prompt = 2;
+  string model = 3;
+  string quality = 4;
+  string style = 5;
+  string size = 6;
+  int32 number = 7;
+  string painting_style = 8;
+}
+
+message GetCreateArtInfoInput {
+  aelf.Address service_fee_receiver = 1;
+  string transaction_id = 2;
+}
+
+message AIServiceFeeInfo {
+  Price price = 1;
+  aelf.Address service_fee_receiver = 2;
+}
+
+message CreateArtInfo {
+  string promt = 1;
+  string negative_prompt = 2;
+  string model = 3;
+  string quality = 4;
+  string style = 5;
+  string size = 6;
+  int32 number = 7;
+  Price cost_price = 8;
+  string painting_style = 9;
+}
+
+// Events
+
+message FixedPriceNFTListed {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address owner = 3;
+  int64 quantity = 4;
+  Price price = 5;
+  ListDuration duration = 6;
+  bool is_merged_to_previous_listed_info = 7;
+  aelf.Hash whitelist_id = 8;
+}
+
+message NFTDelisted {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address owner = 3;
+  int64 quantity = 4;
+}
+
+message TokenWhiteListChanged {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  StringList token_white_list = 2;
+}
+
+message GlobalTokenWhiteListChanged {
+  option (aelf.is_event) = true;
+  StringList token_white_list = 1;
+}
+
+message OfferMade {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address offer_from = 3;
+  aelf.Address offer_to = 4;
+  Price price = 5;
+  int64 quantity = 6;
+  google.protobuf.Timestamp expire_time = 7;
+}
+
+message OfferCanceled {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address offer_from = 3;
+  aelf.Address offer_to = 4;
+  Int32List index_list = 5;
+}
+
+message OfferCanceledByExpireTime {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address offer_from = 2;
+  aelf.Address offer_to = 3;
+  google.protobuf.Timestamp expire_time = 4;
+}
+
+message Sold {
+  option (aelf.is_event) = true;
+  aelf.Address nft_from = 1;
+  aelf.Address nft_to = 2;
+  string nft_symbol = 3;
+  int64 nft_quantity = 5;
+  string purchase_symbol = 6;
+  int64 purchase_amount = 7;
+}
+
+message OfferAdded {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address offer_from = 3;
+  aelf.Address offer_to = 4;
+  Price price = 5;
+  int64 quantity = 6;
+  google.protobuf.Timestamp expire_time = 7;
+  int64 origin_balance = 8;
+  string origin_balance_symbol = 9;
+}
+
+message OfferChanged {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address offer_from = 3;
+  aelf.Address offer_to = 4;
+  Price price = 5;
+  int64 quantity = 6;
+  google.protobuf.Timestamp expire_time = 7;
+  int64 origin_balance = 8;
+  string origin_balance_symbol = 9;
+}
+
+message OfferRemoved {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address offer_from = 3;
+  aelf.Address offer_to = 4;
+  google.protobuf.Timestamp expire_time = 5;
+  Price price = 6;
+}
+
+message ListedNFTAdded {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address owner = 3;
+  int64 quantity = 4;
+  Price price = 5;
+  ListDuration duration = 6;
+  aelf.Hash whitelist_id = 7;
+}
+
+message ListedNFTChanged {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address owner = 3;
+  int64 quantity = 4;
+  Price price = 5;
+  ListDuration duration = 6;
+  ListDuration previous_duration = 7;
+  aelf.Hash whitelist_id = 8;
+}
+
+message ListedNFTRemoved {
+  option (aelf.is_event) = true;
+  string symbol = 1;
+  aelf.Address owner = 3;
+  ListDuration duration = 4;
+  Price price = 5;
+}
+
+message GetTotalOfferAmountInput {
+  aelf.Address address = 1;
+  string price_symbol = 2;
+}
+
+message GetTotalOfferAmountOutput {
+  string symbol = 1;
+  int64 allowance = 2;
+  int64 total_amount = 3;
+}
+
+message GetTotalEffectiveListedNFTAmountInput {
+  string symbol = 1;
+  aelf.Address address = 2;
+}
+
+message GetTotalEffectiveListedNFTAmountOutput {
+  string symbol = 1;
+  int64 allowance = 2;
+  int64 total_amount = 3;
+}
+
+message SetOfferTotalAmountInput{
+  aelf.Address address = 1;
+  string price_symbol = 2;
+  int64 total_amount = 3;
+}
+
+
