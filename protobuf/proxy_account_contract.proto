@@ -1,0 +1,165 @@
+// the version of the language, use proto3 for contracts
+syntax = "proto3";
+
+// some core imports for aelf chain types
+import "aelf/core.proto";
+import "aelf/options.proto";
+import "acs12.proto";
+
+// import for using the google.protobuf.* type.
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+// the name of the C# namespace in which the contract code will be,
+// generated code will also be in this namespace.
+option csharp_namespace = "AElf.Contracts.ProxyAccountContract";
+
+// the contract definition: a gRPC service definition.
+service ProxyAccountContract {
+
+  option (aelf.base) = "acs12.proto";
+  // the full name of the C# class that will contain the state (here <namespace>.<state-class-name> format).
+  option (aelf.csharp_state) = "AElf.Contracts.ProxyAccountContract.ProxyAccountContractState";
+
+  // Action
+  rpc Initialize(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  rpc SetProxyAccountContracts(SetProxyAccountContractsInput) returns (google.protobuf.Empty);
+
+  rpc SetAdmin(aelf.Address) returns (google.protobuf.Empty);
+
+  rpc SetMaxManagementAddressCount(google.protobuf.Int32Value) returns (google.protobuf.Empty);
+
+  rpc Create(CreateInput) returns (google.protobuf.Empty);
+
+  rpc AddManagementAddress(AddManagementAddressInput) returns (google.protobuf.Empty);
+
+  rpc RemoveManagementAddress(RemoveManagementAddressInput) returns (google.protobuf.Empty);
+
+  rpc ResetManagementAddress(ResetManagementAddressInput) returns (google.protobuf.Empty);
+
+  rpc ForwardCall(ForwardCallInput) returns (google.protobuf.Empty);
+
+  rpc ValidateProxyAccountExists(ValidateProxyAccountExistsInput) returns (google.protobuf.Empty);
+
+  rpc CrossChainSyncProxyAccount(CrossChainSyncProxyAccountInput) returns (google.protobuf.Empty);
+
+  // View
+  rpc GetAdmin(google.protobuf.Empty) returns (aelf.Address) {option (aelf.is_view) = true;}
+
+  rpc GetMaxManagementAddressCount(google.protobuf.Empty) returns (google.protobuf.Int32Value) {option (aelf.is_view) = true;}
+
+  rpc GetProxyAccountAddress(GetProxyAccountAddressInput) returns (aelf.Address) {option (aelf.is_view) = true;}
+
+  rpc GetProxyAccountByHash(aelf.Hash) returns (ProxyAccount) {option (aelf.is_view) = true;}
+
+  rpc GetProxyAccountByProxyAccountAddress(aelf.Address) returns (ProxyAccount) {option (aelf.is_view) = true;}
+
+  rpc GetCurrentCounter(google.protobuf.Empty) returns (google.protobuf.Int64Value) {option (aelf.is_view) = true;}
+
+  rpc GetProxyAccountHash(GetProxyAccountHashInput) returns (aelf.Hash) {option (aelf.is_view) = true;}
+}
+
+//Data structure
+message ProxyAccount {
+  repeated ManagementAddress management_addresses = 1;
+  int32 create_chain_id = 2;
+  aelf.Hash proxy_account_hash = 3;
+}
+
+message ManagementAddress {
+  aelf.Address address = 1;
+}
+
+message ManagementAddressList {
+  repeated ManagementAddress value = 1;
+}
+
+message SetProxyAccountContractsInput {
+  repeated ProxyAccountInfo proxy_account_infos = 1;
+}
+
+message ProxyAccountInfo {
+  int32 chain_id = 1;
+  aelf.Address contract_address = 2;
+}
+
+message CreateInput {
+  repeated ManagementAddress management_addresses = 1;
+}
+
+message AddManagementAddressInput {
+  aelf.Hash proxy_account_hash = 1;
+  ManagementAddress management_address = 2;
+}
+
+message RemoveManagementAddressInput {
+  aelf.Hash proxy_account_hash = 1;
+  ManagementAddress management_address = 2;
+}
+
+message ResetManagementAddressInput {
+  aelf.Hash proxy_account_hash = 1;
+  repeated ManagementAddress management_addresses = 2;
+}
+
+message ForwardCallInput {
+  aelf.Hash proxy_account_hash = 1;
+  aelf.Address contract_address = 2;
+  string method_name = 3;
+  bytes args = 4;
+}
+
+message ValidateProxyAccountExistsInput {
+  repeated ManagementAddress management_addresses = 1;
+  int32 create_chain_id = 2;
+  aelf.Hash proxy_account_hash = 3;
+}
+
+message CrossChainSyncProxyAccountInput {
+  int32 from_chain_id = 1;
+  int64 parent_chain_height = 2;
+  bytes transaction_bytes = 3;
+  aelf.MerklePath merkle_path = 4;
+}
+
+message GetProxyAccountAddressInput {
+  aelf.Hash proxy_account_hash = 1;
+  int32 chain_id = 2;
+}
+
+message GetProxyAccountHashInput {
+  aelf.Hash transaction_id = 1;
+  aelf.Hash block_hash = 2;
+  int64 counter = 3;
+}
+
+// Log Event
+message ProxyAccountCreated {
+  option (aelf.is_event) = true;
+  ManagementAddressList management_addresses = 1;
+  int32 create_chain_id = 2;
+  aelf.Hash proxy_account_hash = 3;
+  aelf.Address proxy_account_address = 4;
+}
+
+message ProxyAccountManagementAddressAdded {
+  option (aelf.is_event) = true;
+  ManagementAddress management_address = 1;
+  aelf.Hash proxy_account_hash = 2;
+  aelf.Address proxy_account_address = 3;
+}
+
+message ProxyAccountManagementAddressRemoved {
+  option (aelf.is_event) = true;
+  ManagementAddress management_address = 1;
+  aelf.Hash proxy_account_hash = 2;
+  aelf.Address proxy_account_address = 3;
+}
+
+message ProxyAccountManagementAddressReset {
+  option (aelf.is_event) = true;
+  ManagementAddressList management_addresses = 1;
+  aelf.Hash proxy_account_hash = 2;
+  aelf.Address proxy_account_address = 3;
+}
